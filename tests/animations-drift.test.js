@@ -15,7 +15,7 @@ test("animation easing support stays in sync with Route Graphics", () => {
   expect(easingKeys.length).toBeGreaterThan(0);
 
   for (const easing of easingKeys) {
-    expect(() =>
+    expect(
       validatePayload({
         type: "animation.create",
         payload: {
@@ -40,7 +40,7 @@ test("animation easing support stays in sync with Route Graphics", () => {
           },
         },
       }),
-    ).not.toThrow();
+    ).toEqual({ valid: true });
   }
 });
 
@@ -64,7 +64,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
   ]);
 
   for (const propertyName of liveTweenProperties) {
-    expect(() =>
+    expect(
       validatePayload({
         type: "animation.create",
         payload: {
@@ -83,11 +83,11 @@ test("animation live and replace tween properties stay in sync with Route Graphi
           },
         },
       }),
-    ).not.toThrow();
+    ).toEqual({ valid: true });
   }
 
   for (const propertyName of replaceTweenProperties) {
-    expect(() =>
+    expect(
       validatePayload({
         type: "animation.create",
         payload: {
@@ -108,12 +108,12 @@ test("animation live and replace tween properties stay in sync with Route Graphi
           },
         },
       }),
-    ).not.toThrow();
+    ).toEqual({ valid: true });
   }
 });
 
 test("animation mask variants from Route Graphics remain accepted", () => {
-  expect(() =>
+  expect(
     validatePayload({
       type: "animation.create",
       payload: {
@@ -131,9 +131,9 @@ test("animation mask variants from Route Graphics remain accepted", () => {
         },
       },
     }),
-  ).not.toThrow();
+  ).toEqual({ valid: true });
 
-  expect(() =>
+  expect(
     validatePayload({
       type: "animation.create",
       payload: {
@@ -151,5 +151,5 @@ test("animation mask variants from Route Graphics remain accepted", () => {
         },
       },
     }),
-  ).not.toThrow();
+  ).toEqual({ valid: true });
 });

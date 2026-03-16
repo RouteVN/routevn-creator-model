@@ -1,4 +1,4 @@
-file: "../src/index.js"
+file: "./support/putyApi.js"
 group: model
 suites: [processCommand, validatePayload, validateAgainstState]
 ---
@@ -17,6 +17,9 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items: {}
+              tree: []
           folder-prologue:
             id: folder-prologue
             type: folder
@@ -25,6 +28,9 @@ in:
             id: scene-b
             type: scene
             name: Flashback
+            sections:
+              items: {}
+              tree: []
         tree:
           - id: scene-a
             children: []
@@ -32,45 +38,17 @@ in:
             children:
               - id: scene-b
                 children: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: scene.move
       payload:
@@ -88,6 +66,9 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items: {}
+            tree: []
         folder-prologue:
           id: folder-prologue
           type: folder
@@ -96,6 +77,9 @@ out:
           id: scene-b
           type: scene
           name: Flashback
+          sections:
+            items: {}
+            tree: []
       tree:
         - id: scene-b
           children: []
@@ -103,45 +87,17 @@ out:
           children: []
         - id: folder-prologue
           children: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: scene.delete cascades descendant scenes sections and lines
 in:
@@ -155,6 +111,22 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Opening
+                  lines:
+                    items:
+                      line-a:
+                        id: line-a
+                        actions:
+                          say: hello
+                    tree:
+                      - id: line-a
+              tree:
+                - id: section-a
+                  children: []
           folder-prologue:
             id: folder-prologue
             type: folder
@@ -163,10 +135,29 @@ in:
             id: scene-b
             type: scene
             name: Flashback
+            sections:
+              items:
+                section-b:
+                  id: section-b
+                  name: Flashback
+                  lines:
+                    items:
+                      line-b:
+                        id: line-b
+                        actions:
+                          say: remember
+                    tree:
+                      - id: line-b
+              tree:
+                - id: section-b
+                  children: []
           scene-c:
             id: scene-c
             type: scene
             name: Outro
+            sections:
+              items: {}
+              tree: []
         tree:
           - id: scene-a
             children: []
@@ -176,71 +167,17 @@ in:
                 children: []
           - id: scene-c
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Opening
-          section-b:
-            id: section-b
-            sceneId: scene-b
-            name: Flashback
-        tree:
-          - id: section-a
-            children: []
-          - id: section-b
-            children: []
-      lines:
-        items:
-          line-a:
-            id: line-a
-            sectionId: section-a
-            actions:
-              say: hello
-          line-b:
-            id: line-b
-            sectionId: section-b
-            actions:
-              say: remember
-        tree:
-          - id: line-a
-            children: []
-          - id: line-b
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: scene.delete
       payload:
@@ -258,48 +195,23 @@ out:
           id: scene-c
           type: scene
           name: Outro
+          sections:
+            items: {}
+            tree: []
       tree:
         - id: scene-c
           children: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -324,75 +236,45 @@ in:
         initialSceneId: scene-a
       scenes:
         items:
+          folder-a:
+            id: folder-a
+            type: folder
+            name: Folder A
+          folder-b:
+            id: folder-b
+            type: folder
+            name: Folder B
           scene-a:
             id: scene-a
             type: scene
             name: Intro
-          folder-prologue:
-            id: folder-prologue
-            type: folder
-            name: Prologue
-          folder-nested:
-            id: folder-nested
-            type: folder
-            name: Nested
-          scene-b:
-            id: scene-b
-            type: scene
-            name: Flashback
+            sections:
+              items: {}
+              tree: []
         tree:
-          - id: scene-a
-            children: []
-          - id: folder-prologue
+          - id: folder-a
             children:
-              - id: folder-nested
+              - id: folder-b
                 children:
-                  - id: scene-b
+                  - id: scene-a
                     children: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: scene.move
       payload:
-        sceneId: folder-prologue
-        parentId: folder-nested
+        sceneId: folder-a
+        parentId: folder-b
+        position: last
 throws: "payload.parentId must not target the moved scene or its descendants"
 ---
 case: scene.delete rejects unknown scene ids
@@ -400,58 +282,34 @@ in:
   - state:
       project: {}
       story:
-        initialSceneId: scene-a
+        initialSceneId: null
       scenes:
         items:
           scene-a:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items: {}
+              tree: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: scene.delete
       payload:
         sceneIds:
-          - scene-missing
+          - scene-a
+          - scene-b
 throws: "payload.sceneIds must reference existing scenes"

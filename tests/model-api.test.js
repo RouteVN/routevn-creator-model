@@ -2,16 +2,19 @@ import { expect, test } from "vitest";
 
 import {
   SCHEMA_VERSION,
-  createInvariantValidationError,
-  createPayloadValidationError,
-  createPreconditionValidationError,
-  createStateValidationError,
   processCommand,
   validateAgainstState,
   validatePayload,
   validateState,
 } from "../src/index.js";
+import {
+  createInvariantValidationError,
+  createPayloadValidationError,
+  createPreconditionValidationError,
+  createStateValidationError,
+} from "../src/errors.js";
 import { listCommandTypes } from "../src/model.js";
+import { expectValidation } from "./support/expectValidation.js";
 
 test("public api exports functions only", () => {
   expect(SCHEMA_VERSION).toBe(1);
@@ -19,10 +22,39 @@ test("public api exports functions only", () => {
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
   expect(typeof processCommand).toBe("function");
-  expect(typeof createPayloadValidationError).toBe("function");
-  expect(typeof createPreconditionValidationError).toBe("function");
-  expect(typeof createStateValidationError).toBe("function");
-  expect(typeof createInvariantValidationError).toBe("function");
+});
+
+test("validation functions return valid results instead of throwing", () => {
+  expect(
+    validatePayload({
+      type: "story.update",
+      payload: {
+        data: {
+          initialSceneId: null,
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "story.update",
+      payload: {
+        data: {
+          title: "Invalid",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "payload",
+      code: "payload_validation_failed",
+      message: "payload.data.title is not allowed",
+    },
+  });
 });
 
 test("error factories return normal errors, not custom classes", () => {
@@ -37,13 +69,103 @@ test("error factories return normal errors, not custom classes", () => {
 });
 
 test("different error factories produce distinct public error codes", () => {
-  expect(createPayloadValidationError("x").code).toBe("payload_validation_failed");
+  expect(createPayloadValidationError("x").code).toBe(
+    "payload_validation_failed",
+  );
   expect(createPreconditionValidationError("x").code).toBe(
     "precondition_validation_failed",
   );
   expect(createStateValidationError("x").code).toBe("state_validation_failed");
   expect(createInvariantValidationError("x").code).toBe(
     "invariant_validation_failed",
+  );
+});
+
+test("validatePayload rejects duplicate scene ids in scene.delete", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "scene.delete",
+      payload: {
+        sceneIds: ["scene-a", "scene-a"],
+      },
+    }),
+  ).toThrow("payload.sceneIds[1] must be unique");
+});
+
+test("validatePayload rejects duplicate line ids in line.create", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "line.create",
+      payload: {
+        sectionId: "section-a",
+        lines: [
+          {
+            lineId: "line-a",
+            data: {
+              actions: {},
+            },
+          },
+          {
+            lineId: "line-a",
+            data: {
+              actions: {},
+            },
+          },
+        ],
+      },
+    }),
+  ).toThrow("payload.lines[1].lineId must be unique");
+});
+
+test("validatePayload rejects unsupported animation easing values", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "live",
+            tween: {
+              x: {
+                initialValue: 10,
+                keyframes: [
+                  {
+                    duration: 300,
+                    value: 50,
+                    easing: "easeInWhatever",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing",
+  );
+});
+
+test("validatePayload rejects invalid replace mask textures", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "replace",
+            mask: {
+              kind: "sequence",
+              textures: ["mask-a", ""],
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.mask.textures[1] must be a non-empty string",
   );
 });
 

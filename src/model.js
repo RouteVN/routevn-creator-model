@@ -18,8 +18,6 @@ import {
 
 const COLLECTION_KEYS = [
   "scenes",
-  "sections",
-  "lines",
   "images",
   "sounds",
   "videos",
@@ -105,7 +103,6 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "text-ref-dialogue-line-content",
   "container-ref-choice-item",
   "container-ref-dialogue-line",
-  "group",
 ];
 export const SCHEMA_VERSION = 1;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
@@ -114,33 +111,198 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "container-ref-choice-item",
   "container-ref-dialogue-line",
 ];
+const DOMAIN_ERROR_KIND_BY_NAME = {
+  PayloadValidationError: "payload",
+  PreconditionValidationError: "precondition",
+  StateValidationError: "state",
+  InvariantValidationError: "invariant",
+};
+
+const toPublicValidationError = (error) => {
+  const details = isPlainObject(error?.details) ? error.details : {};
+  const publicError = {
+    kind: DOMAIN_ERROR_KIND_BY_NAME[error.name],
+    code: error.code,
+    message: error.message,
+  };
+
+  if (isNonEmptyString(details.path)) {
+    publicError.path = details.path;
+  }
+
+  if (Object.keys(details).length > 0) {
+    publicError.details = details;
+  }
+
+  return publicError;
+};
+
+const VALID_RESULT = Object.freeze({
+  valid: true,
+});
+
+const createInvalidResult = ({ kind, code, message, path, details }) => {
+  const error = {
+    kind,
+    code,
+    message,
+  };
+
+  if (isNonEmptyString(path)) {
+    error.path = path;
+  }
+
+  if (isPlainObject(details) && Object.keys(details).length > 0) {
+    error.details = details;
+  }
+
+  return {
+    valid: false,
+    error,
+  };
+};
+
+const invalidPayload = (message, details = {}) =>
+  createInvalidResult({
+    kind: "payload",
+    code: "payload_validation_failed",
+    message,
+    path: details.path,
+    details,
+  });
+
+const invalidPrecondition = (message, details = {}) =>
+  createInvalidResult({
+    kind: "precondition",
+    code: "precondition_validation_failed",
+    message,
+    path: details.path,
+    details,
+  });
+
+const invalidState = (message, details = {}) =>
+  createInvalidResult({
+    kind: "state",
+    code: "state_validation_failed",
+    message,
+    path: details.path,
+    details,
+  });
+
+const invalidInvariant = (message, details = {}) =>
+  createInvalidResult({
+    kind: "invariant",
+    code: "invariant_validation_failed",
+    message,
+    path: details.path,
+    details,
+  });
+
+const toDomainErrorDetails = (publicError) => {
+  const details = isPlainObject(publicError?.details)
+    ? { ...publicError.details }
+    : {};
+
+  if (isNonEmptyString(publicError?.path)) {
+    details.path = publicError.path;
+  }
+
+  return details;
+};
+
+const captureValidation = (callback) =>
+  toPublicResult({
+    run: callback,
+    mapValue: (value) => {
+      if (value?.valid === false || value?.valid === true) {
+        return value;
+      }
+
+      return VALID_RESULT;
+    },
+  });
+
+const normalizePayloadResult = (result) => {
+  if (!result.valid) {
+    if (result.error && result.error.kind === "payload") {
+      return result;
+    }
+
+    if (!result.error) {
+      return invalidPayload("payload validation failed");
+    }
+
+    return invalidPayload(
+      result.error.message,
+      toDomainErrorDetails(result.error),
+    );
+  }
+
+  if (result.error && result.error.kind === "payload") {
+    return result;
+  }
+
+  return result;
+};
+
+const normalizeStateResult = (result) => {
+  if (!result.valid) {
+    return result;
+  }
+
+  return VALID_RESULT;
+};
+
+const toPublicResult = ({ run, mapValue }) => {
+  try {
+    const value = run();
+    return mapValue ? mapValue(value) : { valid: true };
+  } catch (error) {
+    if (DOMAIN_ERROR_KIND_BY_NAME[error?.name]) {
+      return {
+        valid: false,
+        error: toPublicValidationError(error),
+      };
+    }
+
+    throw error;
+  }
+};
+
+const invalidFromDomainError = (error) => ({
+  valid: false,
+  error: toPublicValidationError(error),
+});
+
+const invalidFromErrorFactory = (errorFactory, message, details) =>
+  invalidFromDomainError(errorFactory(message, details));
 
 const validateExactKeys = ({ value, expectedKeys, path, errorFactory }) => {
   if (!isPlainObject(value)) {
-    throw errorFactory(`${path} must be an object`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
   for (const key of Object.keys(value)) {
     if (!expectedKeys.includes(key)) {
-      throw errorFactory(`${path}.${key} is not allowed`);
+      return invalidFromErrorFactory(errorFactory, `${path}.${key} is not allowed`);
     }
   }
 
   for (const key of expectedKeys) {
     if (!Object.hasOwn(value, key)) {
-      throw errorFactory(`${path}.${key} is required`);
+      return invalidFromErrorFactory(errorFactory, `${path}.${key} is required`);
     }
   }
 };
 
 const validateAllowedKeys = ({ value, allowedKeys, path, errorFactory }) => {
   if (!isPlainObject(value)) {
-    throw errorFactory(`${path} must be an object`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
   for (const key of Object.keys(value)) {
     if (!allowedKeys.includes(key)) {
-      throw errorFactory(`${path}.${key} is not allowed`);
+      return invalidFromErrorFactory(errorFactory, `${path}.${key} is not allowed`);
     }
   }
 };
@@ -150,26 +312,31 @@ const validateOptionalPosition = ({ value, path, errorFactory }) => {
     return;
   }
 
-  validateAllowedKeys({
-    value,
-    allowedKeys: ["x", "y"],
-    path,
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["x", "y"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   const hasX = value.x !== undefined;
   const hasY = value.y !== undefined;
 
   if (!hasX && !hasY) {
-    throw errorFactory(`${path} must contain at least one of 'x' or 'y'`);
+    return invalidFromErrorFactory(errorFactory, `${path} must contain at least one of 'x' or 'y'`);
   }
 
   if (hasX && !isFiniteNumber(value.x)) {
-    throw errorFactory(`${path}.x must be a finite number`);
+    return invalidFromErrorFactory(errorFactory, `${path}.x must be a finite number`);
   }
 
   if (hasY && !isFiniteNumber(value.y)) {
-    throw errorFactory(`${path}.y must be a finite number`);
+    return invalidFromErrorFactory(errorFactory, `${path}.y must be a finite number`);
   }
 };
 
@@ -177,34 +344,63 @@ const validateSceneItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys: ["id", "type", "name", "position"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item?.type === "scene"
+            ? ["id", "type", "name", "position", "sections"]
+            : ["id", "type", "name", "position"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (item.type !== "scene" && item.type !== "folder") {
-      throw errorFactory(`${itemPath}.type must be 'scene' or 'folder'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'scene' or 'folder'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
-    validateOptionalPosition({
-      value: item.position,
-      path: `${itemPath}.position`,
-      errorFactory,
-    });
+    {
+      const result = validateOptionalPosition({
+        value: item.position,
+        path: `${itemPath}.position`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (item.type === "scene" && item.sections !== undefined) {
+      {
+        const result = validateNestedCollection({
+          collection: item.sections,
+          path: `${itemPath}.sections`,
+          itemValidator: validateSectionItems,
+          treeValidator: validateSectionTreeShape,
+          treeNodeLabel: "section",
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    }
   }
 };
 
@@ -212,27 +408,46 @@ const validateSectionItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys: ["id", "sceneId", "name"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: ["id", "name", "lines"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
-    }
-
-    if (!isNonEmptyString(item.sceneId)) {
-      throw errorFactory(`${itemPath}.sceneId must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+    }
+
+    if (item.lines !== undefined) {
+      if (item.lines !== undefined) {
+        {
+          const result = validateNestedCollection({
+            collection: item.lines,
+            path: `${itemPath}.lines`,
+            itemValidator: validateLineItems,
+            treeValidator: validateLineTreeFlatShape,
+            treeNodeLabel: "line",
+            errorFactory,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
+      }
     }
   }
 };
@@ -241,27 +456,28 @@ const validateLineItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys: ["id", "sectionId", "actions"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: ["id", "actions"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
-    }
-
-    if (!isNonEmptyString(item.sectionId)) {
-      throw errorFactory(`${itemPath}.sectionId must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isPlainObject(item.actions)) {
-      throw errorFactory(`${itemPath}.actions must be an object`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.actions must be an object`);
     }
   }
 };
@@ -271,64 +487,73 @@ const validateImageItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "image") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'image'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'image'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name", "description"]
-          : [
-              "id",
-              "type",
-              "name",
-              "description",
-              "fileId",
-              "fileType",
-              "fileSize",
-              "width",
-              "height",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "fileId",
+                "fileType",
+                "fileSize",
+                "width",
+                "height",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      throw errorFactory(`${itemPath}.description must be a string when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${itemPath}.description must be a string when provided`,
+      );
     }
 
     if (item.type === "image") {
       if (!isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        throw errorFactory(`${itemPath}.width must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.width must be a finite number`);
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        throw errorFactory(`${itemPath}.height must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.height must be a finite number`);
       }
     }
   }
@@ -339,56 +564,65 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "sound") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'sound'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'sound'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name", "description"]
-          : [
-              "id",
-              "type",
-              "name",
-              "description",
-              "fileId",
-              "fileType",
-              "fileSize",
-              "waveformDataFileId",
-              "duration",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "fileId",
+                "fileType",
+                "fileSize",
+                "waveformDataFileId",
+                "duration",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      throw errorFactory(`${itemPath}.description must be a string when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${itemPath}.description must be a string when provided`,
+      );
     }
 
     if (item.type === "sound") {
       if (!isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
       }
 
       if (
@@ -396,13 +630,13 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
         item.waveformDataFileId !== null &&
         !isNonEmptyString(item.waveformDataFileId)
       ) {
-        throw errorFactory(
+        return invalidFromErrorFactory(errorFactory, 
           `${itemPath}.waveformDataFileId must be a non-empty string or null when provided`,
         );
       }
 
       if (item.duration !== undefined && !isFiniteNumber(item.duration)) {
-        throw errorFactory(`${itemPath}.duration must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.duration must be a finite number`);
       }
     }
   }
@@ -413,69 +647,80 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "video") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'video'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'video'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name", "description"]
-          : [
-              "id",
-              "type",
-              "name",
-              "description",
-              "fileId",
-              "thumbnailFileId",
-              "fileType",
-              "fileSize",
-              "width",
-              "height",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "fileId",
+                "thumbnailFileId",
+                "fileType",
+                "fileSize",
+                "width",
+                "height",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      throw errorFactory(`${itemPath}.description must be a string when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${itemPath}.description must be a string when provided`,
+      );
     }
 
     if (item.type === "video") {
       if (!isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
 
       if (!isNonEmptyString(item.thumbnailFileId)) {
-        throw errorFactory(`${itemPath}.thumbnailFileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.thumbnailFileId must be a non-empty string`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        throw errorFactory(`${itemPath}.width must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.width must be a finite number`);
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        throw errorFactory(`${itemPath}.height must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.height must be a finite number`);
       }
     }
   }
@@ -483,71 +728,96 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
 
 const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
   if (!Array.isArray(keyframes) || keyframes.length === 0) {
-    throw errorFactory(`${path} must be a non-empty array`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be a non-empty array`);
   }
 
-  keyframes.forEach((keyframe, index) => {
+  for (const [index, keyframe] of keyframes.entries()) {
     const keyframePath = `${path}[${index}]`;
 
-    validateAllowedKeys({
-      value: keyframe,
-      allowedKeys: ["value", "duration", "easing", "relative"],
-      path: keyframePath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: keyframe,
+        allowedKeys: ["value", "duration", "easing", "relative"],
+        path: keyframePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!("value" in keyframe)) {
-      throw errorFactory(`${keyframePath}.value is required`);
+      return invalidFromErrorFactory(errorFactory, `${keyframePath}.value is required`);
     }
 
     if (!("duration" in keyframe)) {
-      throw errorFactory(`${keyframePath}.duration is required`);
+      return invalidFromErrorFactory(errorFactory, `${keyframePath}.duration is required`);
     }
 
     if (!isFiniteNumber(keyframe.value)) {
-      throw errorFactory(`${keyframePath}.value must be a finite number`);
+      return invalidFromErrorFactory(errorFactory, `${keyframePath}.value must be a finite number`);
     }
 
     if (!isFiniteNumber(keyframe.duration) || keyframe.duration < 1) {
-      throw errorFactory(`${keyframePath}.duration must be a finite number >= 1`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${keyframePath}.duration must be a finite number >= 1`,
+      );
     }
 
     if (
       keyframe.easing !== undefined &&
       !ANIMATION_EASING_KEYS.includes(keyframe.easing)
     ) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         `${keyframePath}.easing must be a supported Route Graphics easing`,
       );
     }
 
-    if (keyframe.relative !== undefined && typeof keyframe.relative !== "boolean") {
-      throw errorFactory(`${keyframePath}.relative must be a boolean when provided`);
+    if (
+      keyframe.relative !== undefined &&
+      typeof keyframe.relative !== "boolean"
+    ) {
+      return invalidFromErrorFactory(errorFactory, 
+        `${keyframePath}.relative must be a boolean when provided`,
+      );
     }
-  });
+  }
 };
 
 const validateTweenProperty = ({ config, path, errorFactory }) => {
-  validateAllowedKeys({
-    value: config,
-    allowedKeys: ["initialValue", "keyframes"],
-    path,
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: config,
+      allowedKeys: ["initialValue", "keyframes"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!("keyframes" in config)) {
-    throw errorFactory(`${path}.keyframes is required`);
+    return invalidFromErrorFactory(errorFactory, `${path}.keyframes is required`);
   }
 
-  if (config.initialValue !== undefined && !isFiniteNumber(config.initialValue)) {
-    throw errorFactory(`${path}.initialValue must be a finite number`);
+  if (
+    config.initialValue !== undefined &&
+    !isFiniteNumber(config.initialValue)
+  ) {
+    return invalidFromErrorFactory(errorFactory, `${path}.initialValue must be a finite number`);
   }
 
-  validateAnimationKeyframes({
-    keyframes: config.keyframes,
-    path: `${path}.keyframes`,
-    errorFactory,
-  });
+  {
+    const result = validateAnimationKeyframes({
+      keyframes: config.keyframes,
+      path: `${path}.keyframes`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 };
 
 const validateTweenDefinition = ({
@@ -558,49 +828,59 @@ const validateTweenDefinition = ({
   errorFactory,
 }) => {
   if (!isPlainObject(tween)) {
-    throw errorFactory(`${path} must be an object`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
   if (Object.keys(tween).length === 0) {
-    throw errorFactory(`${path} must include at least one tween property`);
+    return invalidFromErrorFactory(errorFactory, `${path} must include at least one tween property`);
   }
 
   for (const [propertyName, config] of Object.entries(tween)) {
     const propertyPath = `${path}.${propertyName}`;
 
     if (!allowedProperties.includes(propertyName)) {
-      throw errorFactory(`${propertyPath} ${unsupportedMessage}`);
+      return invalidFromErrorFactory(errorFactory, `${propertyPath} ${unsupportedMessage}`);
     }
 
-    validateTweenProperty({
-      config,
-      path: propertyPath,
-      errorFactory,
-    });
+    {
+      const result = validateTweenProperty({
+        config,
+        path: propertyPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateMaskDefinition = ({ mask, path, errorFactory }) => {
-  validateAllowedKeys({
-    value: mask,
-    allowedKeys: [
-      "kind",
-      "texture",
-      "textures",
-      "items",
-      "combine",
-      "channel",
-      "softness",
-      "invert",
-      "sample",
-      "progress",
-    ],
-    path,
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: mask,
+      allowedKeys: [
+        "kind",
+        "texture",
+        "textures",
+        "items",
+        "combine",
+        "channel",
+        "softness",
+        "invert",
+        "sample",
+        "progress",
+      ],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(mask.kind)) {
-    throw errorFactory(`${path}.kind must be a non-empty string`);
+    return invalidFromErrorFactory(errorFactory, `${path}.kind must be a non-empty string`);
   }
 
   if (
@@ -608,133 +888,186 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
     mask.kind !== "sequence" &&
     mask.kind !== "composite"
   ) {
-    throw errorFactory(`${path}.kind must be 'single', 'sequence', or 'composite'`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.kind must be 'single', 'sequence', or 'composite'`,
+    );
   }
 
   if (mask.texture !== undefined && !isNonEmptyString(mask.texture)) {
-    throw errorFactory(`${path}.texture must be a non-empty string when provided`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.texture must be a non-empty string when provided`,
+    );
   }
 
   if (mask.textures !== undefined) {
     if (!Array.isArray(mask.textures) || mask.textures.length === 0) {
-      throw errorFactory(`${path}.textures must be a non-empty array when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${path}.textures must be a non-empty array when provided`,
+      );
     }
 
-    mask.textures.forEach((texture, index) => {
+    for (const [index, texture] of mask.textures.entries()) {
       if (!isNonEmptyString(texture)) {
-        throw errorFactory(`${path}.textures[${index}] must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${path}.textures[${index}] must be a non-empty string`,
+        );
       }
-    });
+    }
   }
 
   if (mask.items !== undefined) {
     if (!Array.isArray(mask.items) || mask.items.length === 0) {
-      throw errorFactory(`${path}.items must be a non-empty array when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${path}.items must be a non-empty array when provided`,
+      );
     }
 
-    mask.items.forEach((item, index) => {
+    for (const [index, item] of mask.items.entries()) {
       const itemPath = `${path}.items[${index}]`;
 
-      validateAllowedKeys({
-        value: item,
-        allowedKeys: ["texture", "channel", "invert"],
-        path: itemPath,
-        errorFactory,
-      });
-
-      if (!isNonEmptyString(item.texture)) {
-        throw errorFactory(`${itemPath}.texture must be a non-empty string`);
+      {
+        const result = validateAllowedKeys({
+          value: item,
+          allowedKeys: ["texture", "channel", "invert"],
+          path: itemPath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      if (item.channel !== undefined && !MASK_CHANNEL_KEYS.includes(item.channel)) {
-        throw errorFactory(`${itemPath}.channel must be a supported mask channel`);
+      if (!isNonEmptyString(item.texture)) {
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.texture must be a non-empty string`);
+      }
+
+      if (
+        item.channel !== undefined &&
+        !MASK_CHANNEL_KEYS.includes(item.channel)
+      ) {
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.channel must be a supported mask channel`,
+        );
       }
 
       if (item.invert !== undefined && typeof item.invert !== "boolean") {
-        throw errorFactory(`${itemPath}.invert must be a boolean when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.invert must be a boolean when provided`,
+        );
       }
-    });
+    }
   }
 
   if (mask.combine !== undefined && !MASK_COMBINE_KEYS.includes(mask.combine)) {
-    throw errorFactory(`${path}.combine must be a supported mask combine mode`);
+    return invalidFromErrorFactory(errorFactory, `${path}.combine must be a supported mask combine mode`);
   }
 
   if (mask.channel !== undefined && !MASK_CHANNEL_KEYS.includes(mask.channel)) {
-    throw errorFactory(`${path}.channel must be a supported mask channel`);
+    return invalidFromErrorFactory(errorFactory, `${path}.channel must be a supported mask channel`);
   }
 
   if (mask.softness !== undefined && !isFiniteNumber(mask.softness)) {
-    throw errorFactory(`${path}.softness must be a finite number when provided`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.softness must be a finite number when provided`,
+    );
   }
 
   if (mask.invert !== undefined && typeof mask.invert !== "boolean") {
-    throw errorFactory(`${path}.invert must be a boolean when provided`);
+    return invalidFromErrorFactory(errorFactory, `${path}.invert must be a boolean when provided`);
   }
 
   if (mask.sample !== undefined && !isString(mask.sample)) {
-    throw errorFactory(`${path}.sample must be a string when provided`);
+    return invalidFromErrorFactory(errorFactory, `${path}.sample must be a string when provided`);
   }
 
   if (mask.progress !== undefined) {
-    validateTweenProperty({
-      config: mask.progress,
-      path: `${path}.progress`,
-      errorFactory,
-    });
+    {
+      const result = validateTweenProperty({
+        config: mask.progress,
+        path: `${path}.progress`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (mask.kind === "single" && !isNonEmptyString(mask.texture)) {
-    throw errorFactory(`${path}.texture is required when ${path}.kind is 'single'`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.texture is required when ${path}.kind is 'single'`,
+    );
   }
 
   if (mask.kind === "sequence" && mask.textures === undefined) {
-    throw errorFactory(`${path}.textures is required when ${path}.kind is 'sequence'`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.textures is required when ${path}.kind is 'sequence'`,
+    );
   }
 
   if (mask.kind === "composite" && mask.items === undefined) {
-    throw errorFactory(`${path}.items is required when ${path}.kind is 'composite'`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.items is required when ${path}.kind is 'composite'`,
+    );
   }
 };
 
 const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
-  validateAllowedKeys({
-    value: animation,
-    allowedKeys: ["type", "tween", "prev", "next", "mask"],
-    path,
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: animation,
+      allowedKeys: ["type", "tween", "prev", "next", "mask"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(animation.type)) {
-    throw errorFactory(`${path}.type must be a non-empty string`);
+    return invalidFromErrorFactory(errorFactory, `${path}.type must be a non-empty string`);
   }
 
   if (animation.type !== "live" && animation.type !== "replace") {
-    throw errorFactory(`${path}.type must be 'live' or 'replace'`);
+    return invalidFromErrorFactory(errorFactory, `${path}.type must be 'live' or 'replace'`);
   }
 
   if (animation.type === "live") {
-    if (animation.prev !== undefined || animation.next !== undefined || animation.mask !== undefined) {
-      throw errorFactory(`${path}.live animations cannot define prev, next, or mask`);
+    if (
+      animation.prev !== undefined ||
+      animation.next !== undefined ||
+      animation.mask !== undefined
+    ) {
+      return invalidFromErrorFactory(errorFactory, 
+        `${path}.live animations cannot define prev, next, or mask`,
+      );
     }
 
     if (animation.tween === undefined) {
-      throw errorFactory(`${path}.tween is required when ${path}.type is 'live'`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${path}.tween is required when ${path}.type is 'live'`,
+      );
     }
 
-    validateTweenDefinition({
-      tween: animation.tween,
-      allowedProperties: LIVE_TWEEN_PROPERTY_KEYS,
-      path: `${path}.tween`,
-      unsupportedMessage: "is not a supported live tween property",
-      errorFactory,
-    });
+    {
+      const result = validateTweenDefinition({
+        tween: animation.tween,
+        allowedProperties: LIVE_TWEEN_PROPERTY_KEYS,
+        path: `${path}.tween`,
+        unsupportedMessage: "is not a supported live tween property",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     return;
   }
 
   if (animation.tween !== undefined) {
-    throw errorFactory(`${path}.replace animations cannot define tween`);
+    return invalidFromErrorFactory(errorFactory, `${path}.replace animations cannot define tween`);
   }
 
   if (
@@ -742,7 +1075,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     animation.next === undefined &&
     animation.mask === undefined
   ) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       `${path} must define at least one of prev, next, or mask when ${path}.type is 'replace'`,
     );
   }
@@ -752,28 +1085,43 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
       continue;
     }
 
-    validateExactKeys({
-      value: animation[side],
-      expectedKeys: ["tween"],
-      path: `${path}.${side}`,
-      errorFactory,
-    });
+    {
+      const result = validateExactKeys({
+        value: animation[side],
+        expectedKeys: ["tween"],
+        path: `${path}.${side}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
-    validateTweenDefinition({
-      tween: animation[side].tween,
-      allowedProperties: REPLACE_TWEEN_PROPERTY_KEYS,
-      path: `${path}.${side}.tween`,
-      unsupportedMessage: "is not a supported replace tween property",
-      errorFactory,
-    });
+    {
+      const result = validateTweenDefinition({
+        tween: animation[side].tween,
+        allowedProperties: REPLACE_TWEEN_PROPERTY_KEYS,
+        path: `${path}.${side}.tween`,
+        unsupportedMessage: "is not a supported replace tween property",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (animation.mask !== undefined) {
-    validateMaskDefinition({
-      mask: animation.mask,
-      path: `${path}.mask`,
-      errorFactory,
-    });
+    {
+      const result = validateMaskDefinition({
+        mask: animation.mask,
+        path: `${path}.mask`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -782,37 +1130,47 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "animation") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'animation'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'animation'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : ["id", "type", "name", "animation"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "animation"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "animation") {
-      validateAnimationDefinition({
-        animation: item.animation,
-        path: `${itemPath}.animation`,
-        errorFactory,
-      });
+      {
+        const result = validateAnimationDefinition({
+          animation: item.animation,
+          path: `${itemPath}.animation`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
@@ -822,46 +1180,61 @@ const validateFontItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "font") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'font'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'font'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : ["id", "type", "name", "fileId", "fontFamily", "fileType", "fileSize"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : [
+                "id",
+                "type",
+                "name",
+                "fileId",
+                "fontFamily",
+                "fileType",
+                "fileSize",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "font") {
       if (!isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
 
       if (!isNonEmptyString(item.fontFamily)) {
-        throw errorFactory(`${itemPath}.fontFamily must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontFamily must be a non-empty string`);
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
       }
     }
   }
@@ -872,33 +1245,38 @@ const validateColorItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "color") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'color'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'color'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : ["id", "type", "name", "hex"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "hex"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "color" && !isHexColor(item.hex)) {
-      throw errorFactory(`${itemPath}.hex must be a #RRGGBB string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.hex must be a #RRGGBB string`);
     }
   }
 };
@@ -908,40 +1286,45 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "transform") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'transform'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'transform'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : [
-              "id",
-              "type",
-              "name",
-              "x",
-              "y",
-              "scaleX",
-              "scaleY",
-              "anchorX",
-              "anchorY",
-              "rotation",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : [
+                "id",
+                "type",
+                "name",
+                "x",
+                "y",
+                "scaleX",
+                "scaleY",
+                "anchorX",
+                "anchorY",
+                "rotation",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "transform") {
@@ -955,7 +1338,7 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
         "rotation",
       ]) {
         if (!isFiniteNumber(item[key])) {
-          throw errorFactory(`${itemPath}.${key} must be a finite number`);
+          return invalidFromErrorFactory(errorFactory, `${itemPath}.${key} must be a finite number`);
         }
       }
     }
@@ -969,15 +1352,15 @@ const validateVariableTypedValue = ({
   errorFactory,
 }) => {
   if (variableType === "string" && !isString(value)) {
-    throw errorFactory(`${path} must be a string`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be a string`);
   }
 
   if (variableType === "number" && !isFiniteNumber(value)) {
-    throw errorFactory(`${path} must be a finite number`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be a finite number`);
   }
 
   if (variableType === "boolean" && typeof value !== "boolean") {
-    throw errorFactory(`${path} must be a boolean`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be a boolean`);
   }
 };
 
@@ -986,53 +1369,71 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
     const variableType = item?.type;
 
-    if (variableType !== "folder" && !VARIABLE_TYPE_KEYS.includes(variableType)) {
-      throw errorFactory(
+    if (
+      variableType !== "folder" &&
+      !VARIABLE_TYPE_KEYS.includes(variableType)
+    ) {
+      return invalidFromErrorFactory(errorFactory, 
         `${itemPath}.type must be 'folder', 'string', 'number', or 'boolean'`,
       );
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        variableType === "folder"
-          ? ["id", "type", "name"]
-          : ["id", "type", "name", "scope", "default", "value"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          variableType === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "scope", "default", "value"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (variableType !== "folder") {
       if (!VARIABLE_SCOPE_KEYS.includes(item.scope)) {
-        throw errorFactory(
+        return invalidFromErrorFactory(errorFactory, 
           `${itemPath}.scope must be 'context', 'global-device', or 'global-account'`,
         );
       }
 
-      validateVariableTypedValue({
-        value: item.default,
-        variableType,
-        path: `${itemPath}.default`,
-        errorFactory,
-      });
-      validateVariableTypedValue({
-        value: item.value,
-        variableType,
-        path: `${itemPath}.value`,
-        errorFactory,
-      });
+      {
+        const result = validateVariableTypedValue({
+          value: item.default,
+          variableType,
+          path: `${itemPath}.default`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+      {
+        const result = validateVariableTypedValue({
+          value: item.value,
+          variableType,
+          path: `${itemPath}.value`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
@@ -1042,104 +1443,139 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "textStyle") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'textStyle'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'textStyle'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : [
-              "id",
-              "type",
-              "name",
-              "fontId",
-              "colorId",
-              "fontSize",
-              "lineHeight",
-              "fontWeight",
-              "previewText",
-              "fontStyle",
-              "breakWords",
-              "align",
-              "wordWrap",
-              "wordWrapWidth",
-              "strokeColorId",
-              "strokeAlpha",
-              "strokeWidth",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : [
+                "id",
+                "type",
+                "name",
+                "fontId",
+                "colorId",
+                "fontSize",
+                "lineHeight",
+                "fontWeight",
+                "previewText",
+                "fontStyle",
+                "breakWords",
+                "align",
+                "wordWrap",
+                "wordWrapWidth",
+                "strokeColorId",
+                "strokeAlpha",
+                "strokeWidth",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "textStyle") {
       if (!isNonEmptyString(item.fontId)) {
-        throw errorFactory(`${itemPath}.fontId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontId must be a non-empty string`);
       }
 
       if (!isNonEmptyString(item.colorId)) {
-        throw errorFactory(`${itemPath}.colorId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.colorId must be a non-empty string`);
       }
 
       if (!isFiniteNumber(item.fontSize)) {
-        throw errorFactory(`${itemPath}.fontSize must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontSize must be a finite number`);
       }
 
       if (!isFiniteNumber(item.lineHeight)) {
-        throw errorFactory(`${itemPath}.lineHeight must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.lineHeight must be a finite number`);
       }
 
       if (!isNonEmptyString(item.fontWeight)) {
-        throw errorFactory(`${itemPath}.fontWeight must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontWeight must be a non-empty string`);
       }
 
       if (item.previewText !== undefined && !isString(item.previewText)) {
-        throw errorFactory(`${itemPath}.previewText must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.previewText must be a string when provided`,
+        );
       }
 
       if (item.fontStyle !== undefined && !isString(item.fontStyle)) {
-        throw errorFactory(`${itemPath}.fontStyle must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fontStyle must be a string when provided`,
+        );
       }
 
-      if (item.breakWords !== undefined && typeof item.breakWords !== "boolean") {
-        throw errorFactory(`${itemPath}.breakWords must be a boolean when provided`);
+      if (
+        item.breakWords !== undefined &&
+        typeof item.breakWords !== "boolean"
+      ) {
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.breakWords must be a boolean when provided`,
+        );
       }
 
-      if (item.align !== undefined && !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(item.align)) {
-        throw errorFactory(`${itemPath}.align must be 'left', 'center', or 'right' when provided`);
+      if (
+        item.align !== undefined &&
+        !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(item.align)
+      ) {
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.align must be 'left', 'center', or 'right' when provided`,
+        );
       }
 
       if (item.wordWrap !== undefined && typeof item.wordWrap !== "boolean") {
-        throw errorFactory(`${itemPath}.wordWrap must be a boolean when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.wordWrap must be a boolean when provided`,
+        );
       }
 
-      if (item.wordWrapWidth !== undefined && !isFiniteNumber(item.wordWrapWidth)) {
-        throw errorFactory(`${itemPath}.wordWrapWidth must be a finite number when provided`);
+      if (
+        item.wordWrapWidth !== undefined &&
+        !isFiniteNumber(item.wordWrapWidth)
+      ) {
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.wordWrapWidth must be a finite number when provided`,
+        );
       }
 
-      if (item.strokeColorId !== undefined && !isNonEmptyString(item.strokeColorId)) {
-        throw errorFactory(`${itemPath}.strokeColorId must be a non-empty string when provided`);
+      if (
+        item.strokeColorId !== undefined &&
+        !isNonEmptyString(item.strokeColorId)
+      ) {
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.strokeColorId must be a non-empty string when provided`,
+        );
       }
 
       if (item.strokeAlpha !== undefined && !isFiniteNumber(item.strokeAlpha)) {
-        throw errorFactory(`${itemPath}.strokeAlpha must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.strokeAlpha must be a finite number when provided`,
+        );
       }
 
       if (item.strokeWidth !== undefined && !isFiniteNumber(item.strokeWidth)) {
-        throw errorFactory(`${itemPath}.strokeWidth must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.strokeWidth must be a finite number when provided`,
+        );
       }
     }
   }
@@ -1150,78 +1586,106 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "image") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'image'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'image'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : [
-              "id",
-              "type",
-              "name",
-              "fileId",
-              "fileType",
-              "fileSize",
-              "width",
-              "height",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : [
+                "id",
+                "type",
+                "name",
+                "fileId",
+                "fileType",
+                "fileSize",
+                "width",
+                "height",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "image") {
       if (!isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileSize must be a finite number when provided`,
+        );
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        throw errorFactory(`${itemPath}.width must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.width must be a finite number when provided`,
+        );
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        throw errorFactory(`${itemPath}.height must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.height must be a finite number when provided`,
+        );
       }
     }
   }
 };
 
 const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
-  validateAllowedKeys({
-    value: style,
-    allowedKeys: ["align", "wordWrapWidth"],
-    path,
-    errorFactory,
-  });
-
-  if (style.align !== undefined && !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(style.align)) {
-    throw errorFactory(`${path}.align must be 'left', 'center', or 'right' when provided`);
+  {
+    const result = validateAllowedKeys({
+      value: style,
+      allowedKeys: ["align", "wordWrapWidth"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
-  if (style.wordWrapWidth !== undefined && !isFiniteNumber(style.wordWrapWidth)) {
-    throw errorFactory(`${path}.wordWrapWidth must be a finite number when provided`);
+  if (
+    style.align !== undefined &&
+    !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(style.align)
+  ) {
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.align must be 'left', 'center', or 'right' when provided`,
+    );
+  }
+
+  if (
+    style.wordWrapWidth !== undefined &&
+    !isFiniteNumber(style.wordWrapWidth)
+  ) {
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.wordWrapWidth must be a finite number when provided`,
+    );
   }
 };
 
@@ -1232,7 +1696,7 @@ const validateLayoutElementData = ({
   allowPartial = false,
 }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory(`${path} must be an object`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
   const allowedKeys = [
@@ -1276,16 +1740,21 @@ const validateLayoutElementData = ({
     "change",
   ];
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys,
-    path,
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys,
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!allowPartial || data.type !== undefined) {
     if (!LAYOUT_ELEMENT_BASE_TYPES.includes(data.type)) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         `${path}.type must be a supported layout element type`,
       );
     }
@@ -1293,7 +1762,7 @@ const validateLayoutElementData = ({
 
   if (!allowPartial || data.name !== undefined) {
     if (!isNonEmptyString(data.name)) {
-      throw errorFactory(`${path}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${path}.name must be a non-empty string`);
     }
   }
 
@@ -1315,7 +1784,9 @@ const validateLayoutElementData = ({
     "opacity",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      throw errorFactory(`${path}.${key} must be a finite number when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `${path}.${key} must be a finite number when provided`,
+      );
     }
   }
 
@@ -1324,7 +1795,7 @@ const validateLayoutElementData = ({
     !isFiniteNumber(data.initialValue) &&
     !isString(data.initialValue)
   ) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       `${path}.initialValue must be a finite number or string when provided`,
     );
   }
@@ -1333,7 +1804,9 @@ const validateLayoutElementData = ({
     data.opacity !== undefined &&
     (!isFiniteNumber(data.opacity) || data.opacity < 0 || data.opacity > 1)
   ) {
-    throw errorFactory(`${path}.opacity must be a finite number between 0 and 1 when provided`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.opacity must be a finite number between 0 and 1 when provided`,
+    );
   }
 
   for (const key of [
@@ -1353,7 +1826,7 @@ const validateLayoutElementData = ({
     "$when",
   ]) {
     if (data[key] !== undefined && !isString(data[key])) {
-      throw errorFactory(`${path}.${key} must be a string when provided`);
+      return invalidFromErrorFactory(errorFactory, `${path}.${key} must be a string when provided`);
     }
   }
 
@@ -1362,34 +1835,43 @@ const validateLayoutElementData = ({
     data.direction !== "horizontal" &&
     data.direction !== "vertical"
   ) {
-    throw errorFactory(`${path}.direction must be 'horizontal' or 'vertical' when provided`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.direction must be 'horizontal' or 'vertical' when provided`,
+    );
   }
 
   if (data.scroll !== undefined && typeof data.scroll !== "boolean") {
-    throw errorFactory(`${path}.scroll must be a boolean when provided`);
+    return invalidFromErrorFactory(errorFactory, `${path}.scroll must be a boolean when provided`);
   }
 
   if (
     data.anchorToBottom !== undefined &&
     typeof data.anchorToBottom !== "boolean"
   ) {
-    throw errorFactory(`${path}.anchorToBottom must be a boolean when provided`);
+    return invalidFromErrorFactory(errorFactory, 
+      `${path}.anchorToBottom must be a boolean when provided`,
+    );
   }
 
   if (data.style !== undefined) {
-    validateLayoutElementStyle({
-      style: data.style,
-      path: `${path}.style`,
-      errorFactory,
-    });
+    {
+      const result = validateLayoutElementStyle({
+        style: data.style,
+        path: `${path}.style`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (data.click !== undefined && !isPlainObject(data.click)) {
-    throw errorFactory(`${path}.click must be an object when provided`);
+    return invalidFromErrorFactory(errorFactory, `${path}.click must be an object when provided`);
   }
 
   if (data.change !== undefined && !isPlainObject(data.change)) {
-    throw errorFactory(`${path}.change must be an object when provided`);
+    return invalidFromErrorFactory(errorFactory, `${path}.change must be an object when provided`);
   }
 };
 
@@ -1397,68 +1879,78 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys: [
-        "id",
-        "type",
-        "name",
-        "x",
-        "y",
-        "width",
-        "height",
-        "anchorX",
-        "anchorY",
-        "scaleX",
-        "scaleY",
-        "rotation",
-        "opacity",
-        "text",
-        "style",
-        "displaySpeed",
-        "imageId",
-        "hoverImageId",
-        "clickImageId",
-        "textStyleId",
-        "hoverTextStyleId",
-        "clickTextStyleId",
-        "direction",
-        "gap",
-        "containerType",
-        "scroll",
-        "anchorToBottom",
-        "thumbImageId",
-        "barImageId",
-        "hoverThumbImageId",
-        "hoverBarImageId",
-        "min",
-        "max",
-        "step",
-        "initialValue",
-        "variableId",
-        "$when",
-        "click",
-        "change",
-      ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: [
+          "id",
+          "type",
+          "name",
+          "x",
+          "y",
+          "width",
+          "height",
+          "anchorX",
+          "anchorY",
+          "scaleX",
+          "scaleY",
+          "rotation",
+          "opacity",
+          "text",
+          "style",
+          "displaySpeed",
+          "imageId",
+          "hoverImageId",
+          "clickImageId",
+          "textStyleId",
+          "hoverTextStyleId",
+          "clickTextStyleId",
+          "direction",
+          "gap",
+          "containerType",
+          "scroll",
+          "anchorToBottom",
+          "thumbImageId",
+          "barImageId",
+          "hoverThumbImageId",
+          "hoverBarImageId",
+          "min",
+          "max",
+          "step",
+          "initialValue",
+          "variableId",
+          "$when",
+          "click",
+          "change",
+        ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
-    validateLayoutElementData({
-      data: Object.fromEntries(
-        Object.entries(item).filter(([key]) => key !== "id"),
-      ),
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateLayoutElementData({
+        data: Object.fromEntries(
+          Object.entries(item).filter(([key]) => key !== "id"),
+        ),
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1467,70 +1959,90 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "character") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'character'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'character'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : [
-              "id",
-              "type",
-              "name",
-              "description",
-              "shortcut",
-              "fileId",
-              "fileType",
-              "fileSize",
-              "sprites",
-            ],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "shortcut",
+                "fileId",
+                "fileType",
+                "fileSize",
+                "sprites",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "character") {
       if (item.description !== undefined && !isString(item.description)) {
-        throw errorFactory(`${itemPath}.description must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.description must be a string when provided`,
+        );
       }
 
       if (item.shortcut !== undefined && !isString(item.shortcut)) {
-        throw errorFactory(`${itemPath}.shortcut must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.shortcut must be a string when provided`,
+        );
       }
 
       if (item.fileId !== undefined && !isNonEmptyString(item.fileId)) {
-        throw errorFactory(`${itemPath}.fileId must be a non-empty string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileId must be a non-empty string when provided`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        throw errorFactory(`${itemPath}.fileType must be a string when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileType must be a string when provided`,
+        );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        throw errorFactory(`${itemPath}.fileSize must be a finite number when provided`);
+        return invalidFromErrorFactory(errorFactory, 
+          `${itemPath}.fileSize must be a finite number when provided`,
+        );
       }
 
-      validateNestedCollection({
-        collection: item.sprites,
-        path: `${itemPath}.sprites`,
-        itemValidator: validateCharacterSpriteItems,
-        treeValidator: validateGenericFolderOwnership,
-        treeNodeLabel: "sprite",
-        folderLabel: "folder sprite item",
-      });
+      {
+        const result = validateNestedCollection({
+          collection: item.sprites,
+          path: `${itemPath}.sprites`,
+          itemValidator: validateCharacterSpriteItems,
+          treeValidator: validateGenericFolderOwnership,
+          treeNodeLabel: "sprite",
+          folderLabel: "folder sprite item",
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
@@ -1540,45 +2052,55 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "layout") {
-      throw errorFactory(`${itemPath}.type must be 'folder' or 'layout'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'layout'`);
     }
 
-    validateAllowedKeys({
-      value: item,
-      allowedKeys:
-        item.type === "folder"
-          ? ["id", "type", "name"]
-          : ["id", "type", "name", "layoutType", "elements"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "layoutType", "elements"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.id)) {
-      throw errorFactory(`${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
     }
 
     if (item.id !== itemId) {
-      throw errorFactory(`${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
     }
 
     if (!isNonEmptyString(item.name)) {
-      throw errorFactory(`${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
     }
 
     if (item.type === "layout") {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
-        throw errorFactory(
+        return invalidFromErrorFactory(errorFactory, 
           `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'`,
         );
       }
 
-      validateNestedCollection({
-        collection: item.elements,
-        path: `${itemPath}.elements`,
-        itemValidator: validateLayoutElementItems,
-        treeValidator: validateLayoutElementTreeOwnership,
-        treeNodeLabel: "layout element",
-      });
+      {
+        const result = validateNestedCollection({
+          collection: item.elements,
+          path: `${itemPath}.elements`,
+          itemValidator: validateLayoutElementItems,
+          treeValidator: validateLayoutElementTreeOwnership,
+          treeNodeLabel: "layout element",
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
@@ -1590,16 +2112,21 @@ const validateSceneTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder scene`,
       );
     }
 
-    validateSceneTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateSceneTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1611,17 +2138,46 @@ const validateSectionTreeSceneOwnership = ({ nodes, items, path }) => {
 
     for (const childNode of children) {
       if (items[childNode.id]?.sceneId !== items[node.id]?.sceneId) {
-        throw createStateValidationError(
+        return invalidState(
           `${nodePath}.children must stay within the same scene as '${node.id}'`,
         );
       }
     }
 
-    validateSectionTreeSceneOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateSectionTreeSceneOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateSectionTreeShape = ({ nodes, items, path, errorFactory }) => {
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index];
+    const nodePath = `${path}[${index}]`;
+    const children = Array.isArray(node.children) ? node.children : [];
+
+    if (!Object.hasOwn(items, node.id)) {
+      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must reference an existing section`);
+    }
+
+    {
+      const result = validateSectionTreeShape({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1632,7 +2188,9 @@ const validateLineTreeFlatShape = ({ nodes, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0) {
-      throw createStateValidationError(`${nodePath}.children is not supported for lines`);
+      return invalidState(
+        `${nodePath}.children is not supported for lines`,
+      );
     }
   }
 };
@@ -1644,16 +2202,21 @@ const validateImageTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder image item`,
       );
     }
 
-    validateImageTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateImageTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1664,16 +2227,21 @@ const validateSoundTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder sound item`,
       );
     }
 
-    validateSoundTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateSoundTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1684,16 +2252,21 @@ const validateVideoTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder video item`,
       );
     }
 
-    validateVideoTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateVideoTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1704,16 +2277,21 @@ const validateAnimationTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder animation item`,
       );
     }
 
-    validateAnimationTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateAnimationTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1724,16 +2302,21 @@ const validateFontTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder font item`,
       );
     }
 
-    validateFontTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateFontTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1744,16 +2327,21 @@ const validateColorTreeFolderOwnership = ({ nodes, items, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw createStateValidationError(
+      return invalidState(
         `${nodePath}.children requires '${node.id}' to be a folder color item`,
       );
     }
 
-    validateColorTreeFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-    });
+    {
+      const result = validateColorTreeFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1770,18 +2358,23 @@ const validateGenericFolderOwnership = ({
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         `${nodePath}.children requires '${node.id}' to be a ${folderLabel}`,
       );
     }
 
-    validateGenericFolderOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-      folderLabel,
-      errorFactory,
-    });
+    {
+      const result = validateGenericFolderOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+        folderLabel,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1800,17 +2393,22 @@ const validateLayoutElementTreeOwnership = ({
       children.length > 0 &&
       !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(items[node.id]?.type)
     ) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         `${nodePath}.children requires '${node.id}' to be a folder or container layout element`,
       );
     }
 
-    validateLayoutElementTreeOwnership({
-      nodes: children,
-      items,
-      path: `${nodePath}.children`,
-      errorFactory,
-    });
+    {
+      const result = validateLayoutElementTreeOwnership({
+        nodes: children,
+        items,
+        path: `${nodePath}.children`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -1822,41 +2420,51 @@ const validateTreeNodes = ({
   errorFactory = createStateValidationError,
 }) => {
   if (!Array.isArray(nodes)) {
-    throw errorFactory(`${path} must be an array`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be an array`);
   }
 
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index];
     const nodePath = `${path}[${index}]`;
 
-    validateAllowedKeys({
-      value: node,
-      allowedKeys: ["id", "children"],
-      path: nodePath,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: node,
+        allowedKeys: ["id", "children"],
+        path: nodePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(node.id)) {
-      throw errorFactory(`${nodePath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must be a non-empty string`);
     }
 
     if (!Object.hasOwn(items, node.id)) {
-      throw errorFactory(`${nodePath}.id must reference an existing item`);
+      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must reference an existing item`);
     }
 
     if (seenIds.has(node.id)) {
-      throw errorFactory(`${nodePath}.id is duplicated in tree`);
+      return invalidFromErrorFactory(errorFactory, `${nodePath}.id is duplicated in tree`);
     }
     seenIds.add(node.id);
 
     if (Object.hasOwn(node, "children")) {
-      validateTreeNodes({
-        nodes: node.children,
-        items,
-        path: `${nodePath}.children`,
-        seenIds,
-        errorFactory,
-      });
+      {
+        const result = validateTreeNodes({
+          nodes: node.children,
+          items,
+          path: `${nodePath}.children`,
+          seenIds,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
@@ -1869,210 +2477,312 @@ const validateNestedCollection = ({
   folderLabel,
   errorFactory = createStateValidationError,
 }) => {
-  validateExactKeys({
-    value: collection,
-    expectedKeys: ["items", "tree"],
-    path,
-    errorFactory,
-  });
-
-  if (!isPlainObject(collection.items)) {
-    throw errorFactory(`${path}.items must be an object`);
+  {
+    const result = validateExactKeys({
+      value: collection,
+      expectedKeys: ["items", "tree"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
-  itemValidator({
-    items: collection.items,
-    path: `${path}.items`,
-    errorFactory,
-  });
+  if (!isPlainObject(collection.items)) {
+    return invalidFromErrorFactory(errorFactory, `${path}.items must be an object`);
+  }
+
+  {
+    const result = itemValidator({
+      items: collection.items,
+      path: `${path}.items`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   const seenIds = new Set();
-  validateTreeNodes({
-    nodes: collection.tree,
-    items: collection.items,
-    path: `${path}.tree`,
-    seenIds,
-    errorFactory,
-  });
+  {
+    const result = validateTreeNodes({
+      nodes: collection.tree,
+      items: collection.items,
+      path: `${path}.tree`,
+      seenIds,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
-  treeValidator({
-    nodes: collection.tree,
-    items: collection.items,
-    path: `${path}.tree`,
-    folderLabel,
-    errorFactory,
-  });
+  {
+    const result = treeValidator({
+      nodes: collection.tree,
+      items: collection.items,
+      path: `${path}.tree`,
+      folderLabel,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   for (const itemId of Object.keys(collection.items)) {
     if (!seenIds.has(itemId)) {
-      throw errorFactory(`${path}.tree is missing item '${itemId}'`);
+      return invalidFromErrorFactory(errorFactory, `${path}.tree is missing item '${itemId}'`);
     }
   }
 };
 
 const validateCollection = ({ collection, path }) => {
-  validateExactKeys({
-    value: collection,
-    expectedKeys: ["items", "tree"],
-    path,
-    errorFactory: createStateValidationError,
-  });
+  {
+    const result = validateExactKeys({
+      value: collection,
+      expectedKeys: ["items", "tree"],
+      path,
+      errorFactory: createStateValidationError,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isPlainObject(collection.items)) {
-    throw createStateValidationError(`${path}.items must be an object`);
+    return invalidState(`${path}.items must be an object`);
   }
 
   if (path === "state.scenes") {
-    validateSceneItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
-  } else if (path === "state.sections") {
-    validateSectionItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
-  } else if (path === "state.lines") {
-    validateLineItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateSceneItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.images") {
-    validateImageItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateImageItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.sounds") {
-    validateSoundItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateSoundItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.videos") {
-    validateVideoItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateVideoItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.animations") {
-    validateAnimationItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateAnimationItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.fonts") {
-    validateFontItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateFontItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.colors") {
-    validateColorItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateColorItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.transforms") {
-    validateTransformItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateTransformItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.variables") {
-    validateVariableItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateVariableItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.textStyles") {
-    validateTextStyleItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateTextStyleItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.characters") {
-    validateCharacterItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateCharacterItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.layouts") {
-    validateLayoutItems({
-      items: collection.items,
-      path: `${path}.items`,
-      errorFactory: createStateValidationError,
-    });
+    {
+      const result = validateLayoutItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (!Array.isArray(collection.tree)) {
-    throw createStateValidationError(`${path}.tree must be an array`);
+    return invalidState(`${path}.tree must be an array`);
   }
 
   const seenIds = new Set();
-  validateTreeNodes({
-    nodes: collection.tree,
-    items: collection.items,
-    path: `${path}.tree`,
-    seenIds,
-  });
+  {
+    const result = validateTreeNodes({
+      nodes: collection.tree,
+      items: collection.items,
+      path: `${path}.tree`,
+      seenIds,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (path === "state.scenes") {
-    validateSceneTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
-  } else if (path === "state.sections") {
-    validateSectionTreeSceneOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
-  } else if (path === "state.lines") {
-    validateLineTreeFlatShape({
-      nodes: collection.tree,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateSceneTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.images") {
-    validateImageTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateImageTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.sounds") {
-    validateSoundTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateSoundTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.videos") {
-    validateVideoTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateVideoTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.animations") {
-    validateAnimationTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateAnimationTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.fonts") {
-    validateFontTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateFontTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.colors") {
-    validateColorTreeFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-    });
+    {
+      const result = validateColorTreeFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (
     path === "state.transforms" ||
     path === "state.variables" ||
@@ -2080,94 +2790,107 @@ const validateCollection = ({ collection, path }) => {
     path === "state.characters" ||
     path === "state.layouts"
   ) {
-    validateGenericFolderOwnership({
-      nodes: collection.tree,
-      items: collection.items,
-      path: `${path}.tree`,
-      folderLabel: path === "state.layouts" ? "folder layout item" : "folder item",
-    });
+    {
+      const result = validateGenericFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+        folderLabel:
+          path === "state.layouts" ? "folder layout item" : "folder item",
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   for (const itemId of Object.keys(collection.items)) {
     if (!seenIds.has(itemId)) {
-      throw createStateValidationError(`${path}.tree is missing item '${itemId}'`);
+      return invalidState(
+        `${path}.tree is missing item '${itemId}'`,
+      );
     }
   }
 };
 
 export const assertInvariants = ({ state }) => {
   if (!isPlainObject(state)) {
-    throw createInvariantValidationError("state must be an object");
+    return invalidInvariant("state must be an object");
   }
 
   const initialSceneId = state.story?.initialSceneId;
   const sceneItems = state?.scenes?.items;
 
   if (initialSceneId !== null && !isNonEmptyString(initialSceneId)) {
-    throw createInvariantValidationError(
+    return invalidInvariant(
       "story.initialSceneId must be a non-empty string or null",
     );
   }
 
   if (initialSceneId !== null) {
-    if (!isPlainObject(sceneItems) || !isPlainObject(sceneItems[initialSceneId])) {
-      throw createInvariantValidationError(
+    if (
+      !isPlainObject(sceneItems) ||
+      !isPlainObject(sceneItems[initialSceneId])
+    ) {
+      return invalidInvariant(
         "story.initialSceneId must reference an existing scene",
         { initialSceneId },
       );
     }
 
     if (sceneItems[initialSceneId].type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         "story.initialSceneId must reference a non-folder scene",
         { initialSceneId },
       );
     }
   }
 
-  for (const [sectionId, section] of Object.entries(state.sections.items)) {
-    const scene = sceneItems[section.sceneId];
-    if (!isPlainObject(scene)) {
-      throw createInvariantValidationError(
-        "section.sceneId must reference an existing scene",
-        {
-          sectionId,
-          sceneId: section.sceneId,
-        },
-      );
-    }
-
+  for (const [sceneId, scene] of Object.entries(sceneItems)) {
     if (scene.type === "folder") {
-      throw createInvariantValidationError(
-        "section.sceneId must reference a non-folder scene",
-        {
-          sectionId,
-          sceneId: section.sceneId,
-        },
-      );
+      continue;
+    }
+
+    const sections = scene.sections ?? createEmptyNestedCollection();
+
+    for (const [sectionId, section] of Object.entries(sections.items)) {
+      if (!isNonEmptyString(section.id) || section.id !== sectionId) {
+        return invalidInvariant(
+          "section.id must match the section key",
+          { sceneId, sectionId },
+        );
+      }
+
+      const lines = section.lines ?? createEmptyNestedCollection();
+
+      for (const [lineId, line] of Object.entries(lines.items)) {
+        if (!isNonEmptyString(line.id) || line.id !== lineId) {
+          return invalidInvariant(
+            "line.id must match the line key",
+            { sceneId, sectionId, lineId },
+          );
+        }
+
+        if (!isPlainObject(line.actions)) {
+          return invalidInvariant(
+            "line.actions must be an object",
+            { sceneId, sectionId, lineId },
+          );
+        }
+      }
     }
   }
 
-  for (const [lineId, line] of Object.entries(state.lines.items)) {
-    if (!isPlainObject(state.sections.items[line.sectionId])) {
-      throw createInvariantValidationError(
-        "line.sectionId must reference an existing section",
-        {
-          lineId,
-          sectionId: line.sectionId,
-        },
-      );
-    }
-  }
-
-  for (const [textStyleId, textStyle] of Object.entries(state.textStyles.items)) {
+  for (const [textStyleId, textStyle] of Object.entries(
+    state.textStyles.items,
+  )) {
     if (textStyle.type === "folder") {
       continue;
     }
 
     const font = state.fonts.items[textStyle.fontId];
     if (!isPlainObject(font) || font.type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         "textStyle.fontId must reference an existing non-folder font",
         {
           textStyleId,
@@ -2178,7 +2901,7 @@ export const assertInvariants = ({ state }) => {
 
     const color = state.colors.items[textStyle.colorId];
     if (!isPlainObject(color) || color.type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         "textStyle.colorId must reference an existing non-folder color",
         {
           textStyleId,
@@ -2190,7 +2913,7 @@ export const assertInvariants = ({ state }) => {
     if (textStyle.strokeColorId !== undefined) {
       const strokeColor = state.colors.items[textStyle.strokeColorId];
       if (!isPlainObject(strokeColor) || strokeColor.type === "folder") {
-        throw createInvariantValidationError(
+        return invalidInvariant(
           "textStyle.strokeColorId must reference an existing non-folder color",
           {
             textStyleId,
@@ -2204,7 +2927,7 @@ export const assertInvariants = ({ state }) => {
   const assertImageReference = ({ layoutId, elementId, field, targetId }) => {
     const image = state.images.items[targetId];
     if (!isPlainObject(image) || image.type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         `layout element ${field} must reference an existing non-folder image`,
         {
           layoutId,
@@ -2214,12 +2937,19 @@ export const assertInvariants = ({ state }) => {
         },
       );
     }
+
+    return VALID_RESULT;
   };
 
-  const assertTextStyleReference = ({ layoutId, elementId, field, targetId }) => {
+  const assertTextStyleReference = ({
+    layoutId,
+    elementId,
+    field,
+    targetId,
+  }) => {
     const textStyle = state.textStyles.items[targetId];
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         `layout element ${field} must reference an existing non-folder text style`,
         {
           layoutId,
@@ -2229,12 +2959,14 @@ export const assertInvariants = ({ state }) => {
         },
       );
     }
+
+    return VALID_RESULT;
   };
 
   const assertVariableReference = ({ layoutId, elementId, targetId }) => {
     const variable = state.variables.items[targetId];
     if (!isPlainObject(variable) || variable.type === "folder") {
-      throw createInvariantValidationError(
+      return invalidInvariant(
         "layout element variableId must reference an existing non-folder variable",
         {
           layoutId,
@@ -2243,6 +2975,8 @@ export const assertInvariants = ({ state }) => {
         },
       );
     }
+
+    return VALID_RESULT;
   };
 
   for (const [layoutId, layout] of Object.entries(state.layouts.items)) {
@@ -2261,12 +2995,15 @@ export const assertInvariants = ({ state }) => {
         "hoverBarImageId",
       ]) {
         if (element[field] !== undefined) {
-          assertImageReference({
+          const result = assertImageReference({
             layoutId,
             elementId,
             field,
             targetId: element[field],
           });
+          if (!result.valid) {
+            return result;
+          }
         }
       }
 
@@ -2276,106 +3013,152 @@ export const assertInvariants = ({ state }) => {
         "clickTextStyleId",
       ]) {
         if (element[field] !== undefined) {
-          assertTextStyleReference({
+          const result = assertTextStyleReference({
             layoutId,
             elementId,
             field,
             targetId: element[field],
           });
+          if (!result.valid) {
+            return result;
+          }
         }
       }
 
       if (element.variableId !== undefined) {
-        assertVariableReference({
+        const result = assertVariableReference({
           layoutId,
           elementId,
           targetId: element.variableId,
         });
+        if (!result.valid) {
+          return result;
+        }
       }
     }
   }
+
+  return VALID_RESULT;
 };
 
-export const validateState = ({ state }) => {
-  validateExactKeys({
-    value: state,
-    expectedKeys: ROOT_KEYS,
-    path: "state",
-    errorFactory: createStateValidationError,
-  });
+const runValidateState = ({ state }) => {
+  return captureValidation(() => {
+    {
+      const result = validateExactKeys({
+        value: state,
+        expectedKeys: ROOT_KEYS,
+        path: "state",
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
-  validateAllowedKeys({
-    value: state.project,
-    allowedKeys: ["resolution"],
-    path: "state.project",
-    errorFactory: createStateValidationError,
-  });
+    {
+      const result = validateAllowedKeys({
+        value: state.project,
+        allowedKeys: ["resolution"],
+        path: "state.project",
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
-  if (state.project.resolution !== undefined) {
-    validateExactKeys({
-      value: state.project.resolution,
-      expectedKeys: ["width", "height"],
-      path: "state.project.resolution",
-      errorFactory: createStateValidationError,
-    });
+    if (state.project.resolution !== undefined) {
+      {
+        const result = validateExactKeys({
+          value: state.project.resolution,
+          expectedKeys: ["width", "height"],
+          path: "state.project.resolution",
+          errorFactory: createStateValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-    if (!isFiniteNumber(state.project.resolution.width)) {
-      throw createStateValidationError(
-        "state.project.resolution.width must be a finite number",
+      if (!isFiniteNumber(state.project.resolution.width)) {
+        return invalidState(
+          "state.project.resolution.width must be a finite number",
+        );
+      }
+
+      if (!isFiniteNumber(state.project.resolution.height)) {
+        return invalidState(
+          "state.project.resolution.height must be a finite number",
+        );
+      }
+    }
+
+    {
+      const result = validateExactKeys({
+        value: state.story,
+        expectedKeys: ["initialSceneId"],
+        path: "state.story",
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (
+      state.story.initialSceneId !== null &&
+      !isNonEmptyString(state.story.initialSceneId)
+    ) {
+      return invalidState(
+        "state.story.initialSceneId must be a non-empty string or null",
       );
     }
 
-    if (!isFiniteNumber(state.project.resolution.height)) {
-      throw createStateValidationError(
-        "state.project.resolution.height must be a finite number",
-      );
+    for (const collectionKey of COLLECTION_KEYS) {
+      {
+        const result = validateCollection({
+          collection: state[collectionKey],
+          path: `state.${collectionKey}`,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
-  }
 
-  validateExactKeys({
-    value: state.story,
-    expectedKeys: ["initialSceneId"],
-    path: "state.story",
-    errorFactory: createStateValidationError,
+    const invariantResult = assertInvariants({ state });
+    if (!invariantResult.valid) {
+      return invariantResult;
+    }
+
+    return VALID_RESULT;
   });
-
-  if (
-    state.story.initialSceneId !== null &&
-    !isNonEmptyString(state.story.initialSceneId)
-  ) {
-    throw createStateValidationError(
-      "state.story.initialSceneId must be a non-empty string or null",
-    );
-  }
-
-  for (const collectionKey of COLLECTION_KEYS) {
-    validateCollection({
-      collection: state[collectionKey],
-      path: `state.${collectionKey}`,
-    });
-  }
-
-  assertInvariants({ state });
 };
+
+export const validateState = ({ state }) => runValidateState({ state });
 
 const validatePlacementFields = ({ payload, errorFactory }) => {
   if (
     payload.index !== undefined &&
     (!Number.isInteger(payload.index) || payload.index < 0)
   ) {
-    throw errorFactory("payload.index must be an integer greater than or equal to 0");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.index must be an integer greater than or equal to 0",
+    );
   }
 
   const hasPosition = payload.position !== undefined;
   const hasPositionTargetId = payload.positionTargetId !== undefined;
 
   if (payload.index !== undefined && hasPosition) {
-    throw errorFactory("payload.index cannot be combined with payload.position");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.index cannot be combined with payload.position",
+    );
   }
 
   if (!hasPosition) {
     if (hasPositionTargetId) {
-      throw errorFactory("payload.positionTargetId requires payload.position");
+      return invalidFromErrorFactory(errorFactory, "payload.positionTargetId requires payload.position");
     }
     return;
   }
@@ -2386,14 +3169,14 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
     payload.position !== "before" &&
     payload.position !== "after"
   ) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.position must be 'first', 'last', 'before', or 'after'",
     );
   }
 
   if (payload.position === "before" || payload.position === "after") {
     if (!isNonEmptyString(payload.positionTargetId)) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         "payload.positionTargetId must be a non-empty string when payload.position is 'before' or 'after'",
       );
     }
@@ -2401,301 +3184,396 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   }
 
   if (hasPositionTargetId) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.positionTargetId is allowed only when payload.position is 'before' or 'after'",
     );
   }
 };
 
 const validateSceneCreateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "type", "position"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "type", "position"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
-  if (data.type !== undefined && data.type !== "scene" && data.type !== "folder") {
-    throw errorFactory("payload.data.type must be 'scene' or 'folder'");
+  if (
+    data.type !== undefined &&
+    data.type !== "scene" &&
+    data.type !== "folder"
+  ) {
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'scene' or 'folder'");
   }
 
-  validateOptionalPosition({
-    value: data.position,
-    path: "payload.data.position",
-    errorFactory,
-  });
+  {
+    const result = validateOptionalPosition({
+      value: data.position,
+      path: "payload.data.position",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 };
 
 const validateSceneUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "position"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "position"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   const hasName = data.name !== undefined;
   const hasPosition = data.position !== undefined;
 
   if (!hasName && !hasPosition) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (hasName && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (hasPosition) {
-    validateOptionalPosition({
-      value: data.position,
-      path: "payload.data.position",
-      errorFactory,
-    });
+    {
+      const result = validateOptionalPosition({
+        value: data.position,
+        path: "payload.data.position",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateRequiredUniqueIdArray = ({ value, path, errorFactory }) => {
   if (!Array.isArray(value) || value.length === 0) {
-    throw errorFactory(`${path} must be a non-empty array`);
+    return invalidFromErrorFactory(errorFactory, `${path} must be a non-empty array`);
   }
 
   const seen = new Set();
 
-  value.forEach((entry, index) => {
+  for (const [index, entry] of value.entries()) {
     if (!isNonEmptyString(entry)) {
-      throw errorFactory(`${path}[${index}] must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${path}[${index}] must be a non-empty string`);
     }
 
     if (seen.has(entry)) {
-      throw errorFactory(`${path}[${index}] must be unique`);
+      return invalidFromErrorFactory(errorFactory, `${path}[${index}] must be unique`);
     }
 
     seen.add(entry);
-  });
+  }
 };
 
 const validateSectionCreateData = ({ data, errorFactory }) => {
-  validateExactKeys({
-    value: data,
-    expectedKeys: ["name"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateExactKeys({
+      value: data,
+      expectedKeys: ["name"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 };
 
 const validateSectionUpdateData = ({ data, errorFactory }) => {
-  validateExactKeys({
-    value: data,
-    expectedKeys: ["name"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateExactKeys({
+      value: data,
+      expectedKeys: ["name"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 };
 
 const validateLineCreatePayload = ({ payload, errorFactory }) => {
   if (!Array.isArray(payload.lines) || payload.lines.length === 0) {
-    throw errorFactory("payload.lines must be a non-empty array");
+    return invalidFromErrorFactory(errorFactory, "payload.lines must be a non-empty array");
   }
 
   const seenLineIds = new Set();
 
-  payload.lines.forEach((item, index) => {
+  for (const [index, item] of payload.lines.entries()) {
     const itemPath = `payload.lines[${index}]`;
 
-    validateExactKeys({
-      value: item,
-      expectedKeys: ["lineId", "data"],
-      path: itemPath,
-      errorFactory,
-    });
+    {
+      const result = validateExactKeys({
+        value: item,
+        expectedKeys: ["lineId", "data"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (!isNonEmptyString(item.lineId)) {
-      throw errorFactory(`${itemPath}.lineId must be a non-empty string`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.lineId must be a non-empty string`);
     }
 
     if (seenLineIds.has(item.lineId)) {
-      throw errorFactory(`${itemPath}.lineId must be unique`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.lineId must be unique`);
     }
     seenLineIds.add(item.lineId);
 
-    validateAllowedKeys({
-      value: item.data,
-      allowedKeys: ["actions"],
-      path: `${itemPath}.data`,
-      errorFactory,
-    });
+    {
+      const result = validateAllowedKeys({
+        value: item.data,
+        allowedKeys: ["actions"],
+        path: `${itemPath}.data`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
 
     if (item.data.actions !== undefined && !isPlainObject(item.data.actions)) {
-      throw errorFactory(`${itemPath}.data.actions must be an object`);
+      return invalidFromErrorFactory(errorFactory, `${itemPath}.data.actions must be an object`);
     }
-  });
+  }
 };
 
 const validateLineUpdateActionsData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 };
 
 const validateImageCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "image") {
-    throw errorFactory("payload.data.type must be 'folder' or 'image'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'image'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name", "description"]
-        : [
-            "type",
-            "name",
-            "description",
-            "fileId",
-            "fileType",
-            "fileSize",
-            "width",
-            "height",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "fileId",
+              "fileType",
+              "fileSize",
+              "width",
+              "height",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.type === "image") {
     if (!isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      throw errorFactory("payload.data.width must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      throw errorFactory("payload.data.height must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
     }
   }
 };
 
 const validateImageUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "description", "fileId", "fileType", "fileSize", "width", "height"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "thumbnailFileId",
+        "fileId",
+        "fileType",
+        "fileSize",
+        "width",
+        "height",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    throw errorFactory("payload.data.width must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    throw errorFactory("payload.data.height must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
   }
 };
 
 const validateSoundCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "sound") {
-    throw errorFactory("payload.data.type must be 'folder' or 'sound'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'sound'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name", "description"]
-        : [
-            "type",
-            "name",
-            "description",
-            "fileId",
-            "fileType",
-            "fileSize",
-            "waveformDataFileId",
-            "duration",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "fileId",
+              "fileType",
+              "fileSize",
+              "waveformDataFileId",
+              "duration",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.type === "sound") {
     if (!isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
     }
 
     if (
@@ -2703,55 +3581,68 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
       data.waveformDataFileId !== null &&
       !isNonEmptyString(data.waveformDataFileId)
     ) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         "payload.data.waveformDataFileId must be a non-empty string or null when provided",
       );
     }
 
     if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
-      throw errorFactory("payload.data.duration must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.duration must be a finite number");
     }
   }
 };
 
 const validateSoundUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: [
-      "name",
-      "description",
-      "fileId",
-      "fileType",
-      "fileSize",
-      "waveformDataFileId",
-      "duration",
-    ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "fileId",
+        "fileType",
+        "fileSize",
+        "waveformDataFileId",
+        "duration",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
   }
 
   if (
@@ -2759,347 +3650,436 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
     data.waveformDataFileId !== null &&
     !isNonEmptyString(data.waveformDataFileId)
   ) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.waveformDataFileId must be a non-empty string or null when provided",
     );
   }
 
   if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
-    throw errorFactory("payload.data.duration must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.duration must be a finite number");
   }
 };
 
 const validateVideoCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "video") {
-    throw errorFactory("payload.data.type must be 'folder' or 'video'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'video'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name", "description"]
-        : [
-            "type",
-            "name",
-            "description",
-            "fileId",
-            "thumbnailFileId",
-            "fileType",
-            "fileSize",
-            "width",
-            "height",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "fileId",
+              "thumbnailFileId",
+              "fileType",
+              "fileSize",
+              "width",
+              "height",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.type === "video") {
     if (!isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
 
     if (!isNonEmptyString(data.thumbnailFileId)) {
-      throw errorFactory("payload.data.thumbnailFileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.thumbnailFileId must be a non-empty string",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      throw errorFactory("payload.data.width must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      throw errorFactory("payload.data.height must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
     }
   }
 };
 
 const validateVideoUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: [
-      "name",
-      "description",
-      "fileId",
-      "thumbnailFileId",
-      "fileType",
-      "fileSize",
-      "width",
-      "height",
-    ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "fileId",
+        "thumbnailFileId",
+        "fileType",
+        "fileSize",
+        "width",
+        "height",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
   }
 
   if (
     data.thumbnailFileId !== undefined &&
     !isNonEmptyString(data.thumbnailFileId)
   ) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    throw errorFactory("payload.data.width must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    throw errorFactory("payload.data.height must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
   }
 };
 
 const validateFontCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "font") {
-    throw errorFactory("payload.data.type must be 'folder' or 'font'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'font'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : ["type", "name", "fileId", "fontFamily", "fileType", "fileSize"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "fileId", "fontFamily", "fileType", "fileSize"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "font") {
     if (!isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
 
     if (!isNonEmptyString(data.fontFamily)) {
-      throw errorFactory("payload.data.fontFamily must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fontFamily must be a non-empty string");
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
     }
   }
 };
 
 const validateFontUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "fileId", "fontFamily", "fileType", "fileSize"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "fileId", "fontFamily", "fileType", "fileSize"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
   }
 
   if (data.fontFamily !== undefined && !isNonEmptyString(data.fontFamily)) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.fontFamily must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
   }
 };
 
 const validateColorCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "color") {
-    throw errorFactory("payload.data.type must be 'folder' or 'color'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'color'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: data.type === "folder" ? ["type", "name"] : ["type", "name", "hex"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder" ? ["type", "name"] : ["type", "name", "hex"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "color" && !isHexColor(data.hex)) {
-    throw errorFactory("payload.data.hex must be a #RRGGBB string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.hex must be a #RRGGBB string");
   }
 };
 
 const validateColorUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "hex"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "hex"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.hex !== undefined && !isHexColor(data.hex)) {
-    throw errorFactory("payload.data.hex must be a #RRGGBB string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.hex must be a #RRGGBB string when provided",
+    );
   }
 };
 
 const validateAnimationCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "animation") {
-    throw errorFactory("payload.data.type must be 'folder' or 'animation'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'animation'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: data.type === "folder" ? ["type", "name"] : ["type", "name", "animation"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder" ? ["type", "name"] : ["type", "name", "animation"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "animation") {
-    validateAnimationDefinition({
-      animation: data.animation,
-      path: "payload.data.animation",
-      errorFactory,
-    });
+    {
+      const result = validateAnimationDefinition({
+        animation: data.animation,
+        path: "payload.data.animation",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateAnimationUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "animation"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "animation"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.animation !== undefined) {
-    validateAnimationDefinition({
-      animation: data.animation,
-      path: "payload.data.animation",
-      errorFactory,
-    });
+    {
+      const result = validateAnimationDefinition({
+        animation: data.animation,
+        path: "payload.data.animation",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateTransformCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "transform") {
-    throw errorFactory("payload.data.type must be 'folder' or 'transform'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'transform'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : [
-            "type",
-            "name",
-            "x",
-            "y",
-            "scaleX",
-            "scaleY",
-            "anchorX",
-            "anchorY",
-            "rotation",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : [
+              "type",
+              "name",
+              "x",
+              "y",
+              "scaleX",
+              "scaleY",
+              "anchorX",
+              "anchorY",
+              "rotation",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "transform") {
@@ -3113,26 +4093,44 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
       "rotation",
     ]) {
       if (!isFiniteNumber(data[key])) {
-        throw errorFactory(`payload.data.${key} must be a finite number`);
+        return invalidFromErrorFactory(errorFactory, `payload.data.${key} must be a finite number`);
       }
     }
   }
 };
 
 const validateTransformUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "x", "y", "scaleX", "scaleY", "anchorX", "anchorY", "rotation"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "x",
+        "y",
+        "scaleX",
+        "scaleY",
+        "anchorX",
+        "anchorY",
+        "rotation",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   for (const key of [
@@ -3145,76 +4143,102 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     "rotation",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      throw errorFactory(`payload.data.${key} must be a finite number when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `payload.data.${key} must be a finite number when provided`,
+      );
     }
   }
 };
 
 const validateVariableCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && !VARIABLE_TYPE_KEYS.includes(data.type)) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.type must be 'folder', 'string', 'number', or 'boolean'",
     );
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : ["type", "name", "scope", "default", "value"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "scope", "default", "value"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type !== "folder") {
     if (!VARIABLE_SCOPE_KEYS.includes(data.scope)) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         "payload.data.scope must be 'context', 'global-device', or 'global-account'",
       );
     }
 
-    validateVariableTypedValue({
-      value: data.default,
-      variableType: data.type,
-      path: "payload.data.default",
-      errorFactory,
-    });
-    validateVariableTypedValue({
-      value: data.value,
-      variableType: data.type,
-      path: "payload.data.value",
-      errorFactory,
-    });
+    {
+      const result = validateVariableTypedValue({
+        value: data.default,
+        variableType: data.type,
+        path: "payload.data.default",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+    {
+      const result = validateVariableTypedValue({
+        value: data.value,
+        variableType: data.type,
+        path: "payload.data.value",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateVariableUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "scope", "default", "value"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "scope", "default", "value"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.scope !== undefined && !VARIABLE_SCOPE_KEYS.includes(data.scope)) {
-    throw errorFactory(
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.scope must be 'context', 'global-device', or 'global-account' when provided",
     );
   }
@@ -3222,395 +4246,722 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
 
 const validateTextStyleCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "textStyle") {
-    throw errorFactory("payload.data.type must be 'folder' or 'textStyle'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'textStyle'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : [
-            "type",
-            "name",
-            "fontId",
-            "colorId",
-            "fontSize",
-            "lineHeight",
-            "fontWeight",
-            "previewText",
-            "fontStyle",
-            "breakWords",
-            "align",
-            "wordWrap",
-            "wordWrapWidth",
-            "strokeColorId",
-            "strokeAlpha",
-            "strokeWidth",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
-
-  if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
-  }
-
-  if (data.type === "textStyle") {
-    validateTextStyleItems({
-      items: {
-        draft: {
-          id: "draft",
-          ...structuredClone(data),
-        },
-      },
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : [
+              "type",
+              "name",
+              "fontId",
+              "colorId",
+              "fontSize",
+              "lineHeight",
+              "fontWeight",
+              "previewText",
+              "fontStyle",
+              "breakWords",
+              "align",
+              "wordWrap",
+              "wordWrapWidth",
+              "strokeColorId",
+              "strokeAlpha",
+              "strokeWidth",
+            ],
       path: "payload.data",
       errorFactory,
     });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+  }
+
+  if (data.type === "textStyle") {
+    {
+      const result = validateTextStyleItems({
+        items: {
+          draft: {
+            id: "draft",
+            ...structuredClone(data),
+          },
+        },
+        path: "payload.data",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateTextStyleUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: [
-      "name",
-      "fontId",
-      "colorId",
-      "fontSize",
-      "lineHeight",
-      "fontWeight",
-      "previewText",
-      "fontStyle",
-      "breakWords",
-      "align",
-      "wordWrap",
-      "wordWrapWidth",
-      "strokeColorId",
-      "strokeAlpha",
-      "strokeWidth",
-    ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "fontId",
+        "colorId",
+        "fontSize",
+        "lineHeight",
+        "fontWeight",
+        "previewText",
+        "fontStyle",
+        "breakWords",
+        "align",
+        "wordWrap",
+        "wordWrapWidth",
+        "strokeColorId",
+        "strokeAlpha",
+        "strokeWidth",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   for (const key of ["fontId", "colorId", "strokeColorId"]) {
     if (data[key] !== undefined && !isNonEmptyString(data[key])) {
-      throw errorFactory(`payload.data.${key} must be a non-empty string when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `payload.data.${key} must be a non-empty string when provided`,
+      );
     }
   }
 
   for (const key of ["fontSize", "lineHeight", "strokeAlpha", "strokeWidth"]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      throw errorFactory(`payload.data.${key} must be a finite number when provided`);
+      return invalidFromErrorFactory(errorFactory, 
+        `payload.data.${key} must be a finite number when provided`,
+      );
     }
   }
 
   for (const key of ["fontWeight", "previewText", "fontStyle"]) {
     if (data[key] !== undefined && !isString(data[key])) {
-      throw errorFactory(`payload.data.${key} must be a string when provided`);
+      return invalidFromErrorFactory(errorFactory, `payload.data.${key} must be a string when provided`);
     }
   }
 
   if (data.breakWords !== undefined && typeof data.breakWords !== "boolean") {
-    throw errorFactory("payload.data.breakWords must be a boolean when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.breakWords must be a boolean when provided",
+    );
   }
 
   if (data.wordWrap !== undefined && typeof data.wordWrap !== "boolean") {
-    throw errorFactory("payload.data.wordWrap must be a boolean when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.wordWrap must be a boolean when provided");
   }
 
   if (data.wordWrapWidth !== undefined && !isFiniteNumber(data.wordWrapWidth)) {
-    throw errorFactory("payload.data.wordWrapWidth must be a finite number when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.wordWrapWidth must be a finite number when provided",
+    );
   }
 
   if (
     data.align !== undefined &&
     !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(data.align)
   ) {
-    throw errorFactory("payload.data.align must be 'left', 'center', or 'right' when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.align must be 'left', 'center', or 'right' when provided",
+    );
   }
 };
 
 const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "image") {
-    throw errorFactory("payload.data.type must be 'folder' or 'image'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'image'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : ["type", "name", "fileId", "fileType", "fileSize", "width", "height"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : ["type", "name", "fileId", "fileType", "fileSize", "width", "height"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "image") {
     if (!isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileSize must be a finite number when provided",
+      );
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      throw errorFactory("payload.data.width must be a finite number when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.width must be a finite number when provided",
+      );
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      throw errorFactory("payload.data.height must be a finite number when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.height must be a finite number when provided",
+      );
+    }
+
+    if (data.description !== undefined && !isString(data.description)) {
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.description must be a string when provided",
+      );
     }
   }
 };
 
 const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "fileId", "fileType", "fileSize", "width", "height"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "fileId",
+        "fileType",
+        "fileSize",
+        "width",
+        "height",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileSize must be a finite number when provided",
+    );
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    throw errorFactory("payload.data.width must be a finite number when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.width must be a finite number when provided",
+    );
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    throw errorFactory("payload.data.height must be a finite number when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.height must be a finite number when provided",
+    );
   }
 };
 
 const validateCharacterCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "character") {
-    throw errorFactory("payload.data.type must be 'folder' or 'character'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'character'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : [
-            "type",
-            "name",
-            "description",
-            "shortcut",
-            "fileId",
-            "fileType",
-            "fileSize",
-            "sprites",
-          ],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : [
+              "type",
+              "name",
+              "description",
+              "shortcut",
+              "fileId",
+              "fileType",
+              "fileSize",
+              "sprites",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "character") {
     if (data.description !== undefined && !isString(data.description)) {
-      throw errorFactory("payload.data.description must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.description must be a string when provided",
+      );
     }
 
     if (data.shortcut !== undefined && !isString(data.shortcut)) {
-      throw errorFactory("payload.data.shortcut must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.shortcut must be a string when provided",
+      );
     }
 
     if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-      throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileId must be a non-empty string when provided",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      throw errorFactory("payload.data.fileType must be a string when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileType must be a string when provided",
+      );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      throw errorFactory("payload.data.fileSize must be a finite number when provided");
+      return invalidFromErrorFactory(errorFactory, 
+        "payload.data.fileSize must be a finite number when provided",
+      );
     }
 
     if (data.sprites !== undefined) {
-      validateNestedCollection({
-        collection: data.sprites,
-        path: "payload.data.sprites",
-        itemValidator: validateCharacterSpriteItems,
-        treeValidator: validateGenericFolderOwnership,
-        folderLabel: "folder sprite item",
-        errorFactory,
-      });
+      {
+        const result = validateNestedCollection({
+          collection: data.sprites,
+          path: "payload.data.sprites",
+          itemValidator: validateCharacterSpriteItems,
+          treeValidator: validateGenericFolderOwnership,
+          folderLabel: "folder sprite item",
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     }
   }
 };
 
 const validateCharacterUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "description", "shortcut", "fileId", "fileType", "fileSize"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "shortcut",
+        "fileId",
+        "fileType",
+        "fileSize",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    throw errorFactory("payload.data.description must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.description must be a string when provided",
+    );
   }
 
   if (data.shortcut !== undefined && !isString(data.shortcut)) {
-    throw errorFactory("payload.data.shortcut must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.shortcut must be a string when provided");
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    throw errorFactory("payload.data.fileId must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileId must be a non-empty string when provided",
+    );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    throw errorFactory("payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    throw errorFactory("payload.data.fileSize must be a finite number when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.fileSize must be a finite number when provided",
+    );
   }
 };
 
 const validateLayoutCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    throw errorFactory("payload.data must be an object");
+    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
   }
 
   if (data.type !== "folder" && data.type !== "layout") {
-    throw errorFactory("payload.data.type must be 'folder' or 'layout'");
+    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'layout'");
   }
 
-  validateAllowedKeys({
-    value: data,
-    allowedKeys:
-      data.type === "folder"
-        ? ["type", "name"]
-        : ["type", "name", "layoutType", "elements"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "layoutType", "elements"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (!isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
   }
 
   if (data.type === "layout") {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
-      throw errorFactory(
+      return invalidFromErrorFactory(errorFactory, 
         "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'",
       );
     }
 
-    validateNestedCollection({
-      collection: data.elements,
-      path: "payload.data.elements",
-      itemValidator: validateLayoutElementItems,
-      treeValidator: validateLayoutElementTreeOwnership,
-      errorFactory,
-    });
+    {
+      const result = validateNestedCollection({
+        collection: data.elements,
+        path: "payload.data.elements",
+        itemValidator: validateLayoutElementItems,
+        treeValidator: validateLayoutElementTreeOwnership,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
 const validateLayoutUpdateData = ({ data, errorFactory }) => {
-  validateAllowedKeys({
-    value: data,
-    allowedKeys: ["name", "layoutType"],
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "layoutType"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    throw errorFactory("payload.data.name must be a non-empty string when provided");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data.name must be a non-empty string when provided",
+    );
   }
 
-  if (data.layoutType !== undefined && !LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
-    throw errorFactory(
+  if (
+    data.layoutType !== undefined &&
+    !LAYOUT_TYPE_KEYS.includes(data.layoutType)
+  ) {
+    return invalidFromErrorFactory(errorFactory, 
       "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base' when provided",
     );
   }
 };
 
 const validateLayoutElementCreateData = ({ data, errorFactory }) => {
-  validateLayoutElementData({
-    data,
-    path: "payload.data",
-    errorFactory,
-  });
+  {
+    const result = validateLayoutElementData({
+      data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 };
 
 const validateLayoutElementUpdateData = ({ data, errorFactory, replace }) => {
-  validateLayoutElementData({
-    data,
-    path: "payload.data",
-    errorFactory,
-    allowPartial: replace !== true,
-  });
+  {
+    const result = validateLayoutElementData({
+      data,
+      path: "payload.data",
+      errorFactory,
+      allowPartial: replace !== true,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 
   if (replace !== true && Object.keys(data).length === 0) {
-    throw errorFactory("payload.data must include at least one updatable field");
+    return invalidFromErrorFactory(errorFactory, 
+      "payload.data must include at least one updatable field",
+    );
+  }
+};
+
+const validateLayoutElementReferenceTargets = ({
+  layoutId,
+  elementId,
+  data,
+  state,
+  errorFactory,
+}) => {
+  if (data.imageId !== undefined) {
+    const image = state.images.items[data.imageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element imageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "imageId",
+          targetId: data.imageId,
+        },
+      );
+    }
+  }
+
+  if (data.hoverImageId !== undefined) {
+    const image = state.images.items[data.hoverImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element hoverImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "hoverImageId",
+          targetId: data.hoverImageId,
+        },
+      );
+    }
+  }
+
+  if (data.clickImageId !== undefined) {
+    const image = state.images.items[data.clickImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element clickImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "clickImageId",
+          targetId: data.clickImageId,
+        },
+      );
+    }
+  }
+
+  if (data.thumbImageId !== undefined) {
+    const image = state.images.items[data.thumbImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element thumbImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "thumbImageId",
+          targetId: data.thumbImageId,
+        },
+      );
+    }
+  }
+
+  if (data.hoverThumbImageId !== undefined) {
+    const image = state.images.items[data.hoverThumbImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element hoverThumbImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "hoverThumbImageId",
+          targetId: data.hoverThumbImageId,
+        },
+      );
+    }
+  }
+
+  if (data.barImageId !== undefined) {
+    const image = state.images.items[data.barImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element barImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "barImageId",
+          targetId: data.barImageId,
+        },
+      );
+    }
+  }
+
+  if (data.hoverBarImageId !== undefined) {
+    const image = state.images.items[data.hoverBarImageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element hoverBarImageId must reference an existing non-folder image",
+        {
+          layoutId,
+          elementId,
+          field: "hoverBarImageId",
+          targetId: data.hoverBarImageId,
+        },
+      );
+    }
+  }
+
+  if (data.textStyleId !== undefined) {
+    const textStyle = state.textStyles.items[data.textStyleId];
+    if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element textStyleId must reference an existing non-folder text style",
+        {
+          layoutId,
+          elementId,
+          field: "textStyleId",
+          targetId: data.textStyleId,
+        },
+      );
+    }
+  }
+
+  if (data.hoverTextStyleId !== undefined) {
+    const textStyle = state.textStyles.items[data.hoverTextStyleId];
+    if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element hoverTextStyleId must reference an existing non-folder text style",
+        {
+          layoutId,
+          elementId,
+          field: "hoverTextStyleId",
+          targetId: data.hoverTextStyleId,
+        },
+      );
+    }
+  }
+
+  if (data.clickTextStyleId !== undefined) {
+    const textStyle = state.textStyles.items[data.clickTextStyleId];
+    if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element clickTextStyleId must reference an existing non-folder text style",
+        {
+          layoutId,
+          elementId,
+          field: "clickTextStyleId",
+          targetId: data.clickTextStyleId,
+        },
+      );
+    }
+  }
+
+  if (data.variableId !== undefined) {
+    const variable = state.variables.items[data.variableId];
+    if (!isPlainObject(variable) || variable.type === "folder") {
+      return invalidFromErrorFactory(errorFactory, 
+        "layout element variableId must reference an existing non-folder variable",
+        {
+          layoutId,
+          elementId,
+          variableId: data.variableId,
+        },
+      );
+    }
   }
 };
 
@@ -3656,19 +5007,75 @@ const getNodeParentId = ({ tree, nodeId }) =>
     nodeId,
   }) ?? null;
 
-const removeNodeOrThrow = ({ tree, nodeId, errorMessage }) => {
+const removeNodeOrResult = ({ tree, nodeId, errorMessage }) => {
   const node = removeTreeNode({
     nodes: tree,
     nodeId,
   });
 
   if (!node) {
-    throw createInvariantValidationError(errorMessage, {
+    return invalidInvariant(errorMessage, {
       nodeId,
     });
   }
 
-  return node;
+  return {
+    valid: true,
+    node,
+  };
+};
+
+const createEmptyNestedCollection = () => ({
+  items: {},
+  tree: [],
+});
+
+const findSectionLocation = ({ state, sectionId }) => {
+  for (const [sceneId, scene] of Object.entries(state.scenes.items)) {
+    if (scene?.type !== "scene") {
+      continue;
+    }
+
+    const sections = scene.sections ?? createEmptyNestedCollection();
+    if (isPlainObject(sections?.items?.[sectionId])) {
+      const section = sections.items[sectionId];
+      return {
+        sceneId,
+        scene,
+        sections,
+        section,
+        lines: section.lines ?? createEmptyNestedCollection(),
+      };
+    }
+  }
+
+  return undefined;
+};
+
+const findLineLocation = ({ state, lineId }) => {
+  for (const [sceneId, scene] of Object.entries(state.scenes.items)) {
+    if (scene?.type !== "scene") {
+      continue;
+    }
+
+    const sections = scene.sections ?? createEmptyNestedCollection();
+
+    for (const [sectionId, section] of Object.entries(sections.items)) {
+      const lines = section.lines ?? createEmptyNestedCollection();
+      if (isPlainObject(lines.items?.[lineId])) {
+        return {
+          sceneId,
+          scene,
+          sectionId,
+          section,
+          lines,
+          line: lines.items[lineId],
+        };
+      }
+    }
+  }
+
+  return undefined;
 };
 
 const createFolderedCollectionCommandDefinitions = ({
@@ -3692,25 +5099,37 @@ const createFolderedCollectionCommandDefinitions = ({
   const targetMessage = `payload.positionTargetId must reference an existing ${itemLabel}`;
   const siblingMessage =
     "payload.positionTargetId must reference a sibling under payload.parentId";
-  const moveTargetMessage =
-    `payload.positionTargetId must not reference the moved ${itemLabel}`;
-  const moveParentMessage =
-    `payload.parentId must not target the moved ${itemLabel} or its descendants`;
+  const moveTargetMessage = `payload.positionTargetId must not reference the moved ${itemLabel}`;
+  const moveParentMessage = `payload.parentId must not target the moved ${itemLabel} or its descendants`;
   const deleteArrayField = `${idField}s`;
 
   return [
     {
       type: `${familyName}.create`,
       validatePayload: ({ payload }) => {
-        validateAllowedKeys({
-          value: payload,
-          allowedKeys: [idField, "parentId", "data", "index", "position", "positionTargetId"],
-          path: "payload",
-          errorFactory: createPayloadValidationError,
-        });
+        let result = captureValidation(() =>
+          validateAllowedKeys({
+            value: payload,
+            allowedKeys: [
+              idField,
+              "parentId",
+              "data",
+              "index",
+              "position",
+              "positionTargetId",
+            ],
+            path: "payload",
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
 
         if (!isNonEmptyString(payload[idField])) {
-          throw createPayloadValidationError(`payload.${idField} must be a non-empty string`);
+          return invalidPayload(
+            `payload.${idField} must be a non-empty string`,
+          );
         }
 
         if (
@@ -3718,38 +5137,50 @@ const createFolderedCollectionCommandDefinitions = ({
           payload.parentId !== null &&
           !isNonEmptyString(payload.parentId)
         ) {
-          throw createPayloadValidationError(
+          return invalidPayload(
             "payload.parentId must be a non-empty string when provided",
           );
         }
 
-        createDataValidator({
-          data: payload.data,
-          errorFactory: createPayloadValidationError,
-        });
+        result = captureValidation(() =>
+          createDataValidator({
+            data: payload.data,
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
 
-        validatePlacementFields({
-          payload,
-          errorFactory: createPayloadValidationError,
-        });
+        result = captureValidation(() =>
+          validatePlacementFields({
+            payload,
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       validateAgainstState: ({ state, payload }) => {
         const collection = state[collectionKey];
         if (isPlainObject(collection.items[payload[idField]])) {
-          throw createPreconditionValidationError(duplicateMessage);
+          return invalidPrecondition(duplicateMessage);
         }
 
         const parentId = payload.parentId ?? null;
         if (parentId !== null) {
           const parentItem = collection.items[parentId];
           if (!isPlainObject(parentItem) || parentItem.type !== "folder") {
-            throw createPreconditionValidationError(parentMessage);
+            return invalidPrecondition(parentMessage);
           }
         }
 
         if (payload.positionTargetId !== undefined) {
           if (!isPlainObject(collection.items[payload.positionTargetId])) {
-            throw createPreconditionValidationError(targetMessage);
+            return invalidPrecondition(targetMessage);
           }
 
           const targetParentId = getNodeParentId({
@@ -3758,11 +5189,18 @@ const createFolderedCollectionCommandDefinitions = ({
           });
 
           if (targetParentId !== parentId) {
-            throw createPreconditionValidationError(siblingMessage);
+            return invalidPrecondition(siblingMessage);
           }
         }
 
-        validateCreateState({ state, payload });
+        const result = captureValidation(() =>
+          validateCreateState({ state, payload }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       reduce: ({ state, payload }) => {
         state[collectionKey].items[payload[idField]] = createItem({ payload });
@@ -3785,33 +5223,54 @@ const createFolderedCollectionCommandDefinitions = ({
     {
       type: `${familyName}.update`,
       validatePayload: ({ payload }) => {
-        validateExactKeys({
-          value: payload,
-          expectedKeys: [idField, "data"],
-          path: "payload",
-          errorFactory: createPayloadValidationError,
-        });
-
-        if (!isNonEmptyString(payload[idField])) {
-          throw createPayloadValidationError(`payload.${idField} must be a non-empty string`);
+        let result = captureValidation(() =>
+          validateExactKeys({
+            value: payload,
+            expectedKeys: [idField, "data"],
+            path: "payload",
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
         }
 
-        updateDataValidator({
-          data: payload.data,
-          errorFactory: createPayloadValidationError,
-        });
+        if (!isNonEmptyString(payload[idField])) {
+          return invalidPayload(
+            `payload.${idField} must be a non-empty string`,
+          );
+        }
+
+        result = captureValidation(() =>
+          updateDataValidator({
+            data: payload.data,
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       validateAgainstState: ({ state, payload }) => {
         const currentItem = state[collectionKey].items[payload[idField]];
         if (!isPlainObject(currentItem)) {
-          throw createPreconditionValidationError(existingMessage);
+          return invalidPrecondition(existingMessage);
         }
 
-        validateUpdateState({
-          state,
-          payload,
-          currentItem,
-        });
+        const result = captureValidation(() =>
+          validateUpdateState({
+            state,
+            payload,
+            currentItem,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       reduce: ({ state, payload }) => {
         const currentItem = state[collectionKey].items[payload[idField]];
@@ -3826,28 +5285,42 @@ const createFolderedCollectionCommandDefinitions = ({
     {
       type: `${familyName}.delete`,
       validatePayload: ({ payload }) => {
-        validateExactKeys({
-          value: payload,
-          expectedKeys: [deleteArrayField],
-          path: "payload",
-          errorFactory: createPayloadValidationError,
-        });
+        let result = captureValidation(() =>
+          validateExactKeys({
+            value: payload,
+            expectedKeys: [deleteArrayField],
+            path: "payload",
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
 
-        validateRequiredUniqueIdArray({
-          value: payload[deleteArrayField],
-          path: `payload.${deleteArrayField}`,
-          errorFactory: createPayloadValidationError,
-        });
+        result = captureValidation(() =>
+          validateRequiredUniqueIdArray({
+            value: payload[deleteArrayField],
+            path: `payload.${deleteArrayField}`,
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       validateAgainstState: ({ state, payload }) => {
         for (const itemId of payload[deleteArrayField]) {
           if (!isPlainObject(state[collectionKey].items[itemId])) {
-            throw createPreconditionValidationError(
+            return invalidPrecondition(
               `payload.${deleteArrayField} must reference existing ${itemLabel}s`,
               { itemId },
             );
           }
         }
+
+        return VALID_RESULT;
       },
       reduce: ({ state, payload }) => {
         const deletedIds = new Set();
@@ -3862,7 +5335,9 @@ const createFolderedCollectionCommandDefinitions = ({
             continue;
           }
 
-          for (const descendantId of collectTreeDescendantIds({ node: removedNode })) {
+          for (const descendantId of collectTreeDescendantIds({
+            node: removedNode,
+          })) {
             deletedIds.add(descendantId);
           }
         }
@@ -3877,15 +5352,28 @@ const createFolderedCollectionCommandDefinitions = ({
     {
       type: `${familyName}.move`,
       validatePayload: ({ payload }) => {
-        validateAllowedKeys({
-          value: payload,
-          allowedKeys: [idField, "parentId", "index", "position", "positionTargetId"],
-          path: "payload",
-          errorFactory: createPayloadValidationError,
-        });
+        let result = captureValidation(() =>
+          validateAllowedKeys({
+            value: payload,
+            allowedKeys: [
+              idField,
+              "parentId",
+              "index",
+              "position",
+              "positionTargetId",
+            ],
+            path: "payload",
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
 
         if (!isNonEmptyString(payload[idField])) {
-          throw createPayloadValidationError(`payload.${idField} must be a non-empty string`);
+          return invalidPayload(
+            `payload.${idField} must be a non-empty string`,
+          );
         }
 
         if (
@@ -3893,21 +5381,28 @@ const createFolderedCollectionCommandDefinitions = ({
           payload.parentId !== null &&
           !isNonEmptyString(payload.parentId)
         ) {
-          throw createPayloadValidationError(
+          return invalidPayload(
             "payload.parentId must be a non-empty string when provided",
           );
         }
 
-        validatePlacementFields({
-          payload,
-          errorFactory: createPayloadValidationError,
-        });
+        result = captureValidation(() =>
+          validatePlacementFields({
+            payload,
+            errorFactory: createPayloadValidationError,
+          }),
+        );
+        if (!result.valid) {
+          return result;
+        }
+
+        return VALID_RESULT;
       },
       validateAgainstState: ({ state, payload }) => {
         const collection = state[collectionKey];
         const currentItem = collection.items[payload[idField]];
         if (!isPlainObject(currentItem)) {
-          throw createPreconditionValidationError(existingMessage);
+          return invalidPrecondition(existingMessage);
         }
 
         const currentNode = findTreeNode({
@@ -3918,7 +5413,7 @@ const createFolderedCollectionCommandDefinitions = ({
         if (payload.parentId !== undefined && payload.parentId !== null) {
           const parentItem = collection.items[payload.parentId];
           if (!isPlainObject(parentItem) || parentItem.type !== "folder") {
-            throw createPreconditionValidationError(parentMessage);
+            return invalidPrecondition(parentMessage);
           }
 
           const descendantIds = new Set(
@@ -3928,17 +5423,17 @@ const createFolderedCollectionCommandDefinitions = ({
           );
 
           if (descendantIds.has(payload.parentId)) {
-            throw createPreconditionValidationError(moveParentMessage);
+            return invalidPrecondition(moveParentMessage);
           }
         }
 
         if (payload.positionTargetId !== undefined) {
           if (payload.positionTargetId === payload[idField]) {
-            throw createPreconditionValidationError(moveTargetMessage);
+            return invalidPrecondition(moveTargetMessage);
           }
 
           if (!isPlainObject(collection.items[payload.positionTargetId])) {
-            throw createPreconditionValidationError(targetMessage);
+            return invalidPrecondition(targetMessage);
           }
 
           const targetParentId = getNodeParentId({
@@ -3947,20 +5442,25 @@ const createFolderedCollectionCommandDefinitions = ({
           });
 
           if (targetParentId !== (payload.parentId ?? null)) {
-            throw createPreconditionValidationError(siblingMessage);
+            return invalidPrecondition(siblingMessage);
           }
         }
+
+        return VALID_RESULT;
       },
       reduce: ({ state, payload }) => {
-        const node = removeNodeOrThrow({
+        const nodeResult = removeNodeOrResult({
           tree: state[collectionKey].tree,
           nodeId: payload[idField],
           errorMessage: `${familyName} move target missing from tree`,
         });
+        if (!nodeResult.valid) {
+          return nodeResult;
+        }
 
         insertTreeNode({
           tree: state[collectionKey].tree,
-          node,
+          node: nodeResult.node,
           parentId: payload.parentId ?? null,
           index: payload.index,
           position: payload.position,
@@ -3983,14 +5483,22 @@ const COMMAND_DEFINITIONS = [
   {
     type: "project.create",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["state"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["state"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateState({ state: payload.state });
+      const stateResult = runValidateState({ state: payload.state });
+      if (!stateResult.valid) {
+        return stateResult;
+      }
     },
     validateAgainstState: () => {},
     reduce: ({ payload }) => structuredClone(payload.state),
@@ -3998,25 +5506,35 @@ const COMMAND_DEFINITIONS = [
   {
     type: "story.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateExactKeys({
-        value: payload.data,
-        expectedKeys: ["initialSceneId"],
-        path: "payload.data",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload.data,
+          expectedKeys: ["initialSceneId"],
+          path: "payload.data",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (
         payload.data.initialSceneId !== null &&
         !isNonEmptyString(payload.data.initialSceneId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.data.initialSceneId must be a non-empty string or null",
         );
       }
@@ -4030,13 +5548,13 @@ const COMMAND_DEFINITIONS = [
 
       const scene = state.scenes.items[initialSceneId];
       if (!isPlainObject(scene)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.data.initialSceneId must reference an existing scene",
         );
       }
 
       if (scene.type === "folder") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.data.initialSceneId must reference a non-folder scene",
         );
       }
@@ -4049,22 +5567,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "scene.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "sceneId",
-          "parentId",
-          "data",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "sceneId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        throw createPayloadValidationError("payload.sceneId must be a non-empty string");
+        return invalidPayload(
+          "payload.sceneId must be a non-empty string",
+        );
       }
 
       if (
@@ -4072,24 +5597,34 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateSceneCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateSceneCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (Object.hasOwn(state.scenes.items, payload.sceneId)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.sceneId must not already exist",
         );
       }
@@ -4099,13 +5634,13 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentScene = state.scenes.items[parentId];
         if (!isPlainObject(parentScene)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing scene",
           );
         }
 
         if (parentScene.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder scene",
           );
         }
@@ -4113,7 +5648,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.scenes.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing scene",
           );
         }
@@ -4125,7 +5660,7 @@ const COMMAND_DEFINITIONS = [
           }) ?? null;
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -4137,6 +5672,10 @@ const COMMAND_DEFINITIONS = [
         type: payload.data.type ?? "scene",
         name: payload.data.name,
       };
+
+      if (nextScene.type === "scene") {
+        nextScene.sections = createEmptyNestedCollection();
+      }
 
       if (payload.data.position !== undefined) {
         nextScene.position = structuredClone(payload.data.position);
@@ -4162,25 +5701,37 @@ const COMMAND_DEFINITIONS = [
   {
     type: "scene.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["sceneId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.sceneId)) {
-        throw createPayloadValidationError("payload.sceneId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["sceneId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateSceneUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.sceneId)) {
+        return invalidPayload(
+          "payload.sceneId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateSceneUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (!isPlainObject(state.scenes.items[payload.sceneId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.sceneId must reference an existing scene",
         );
       }
@@ -4207,23 +5758,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "scene.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["sceneIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["sceneIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.sceneIds,
-        path: "payload.sceneIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.sceneIds,
+          path: "payload.sceneIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const sceneId of payload.sceneIds) {
         if (!isPlainObject(state.scenes.items[sceneId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.sceneIds must reference existing scenes",
             { sceneId },
           );
@@ -4248,36 +5809,6 @@ const COMMAND_DEFINITIONS = [
         }
       }
 
-      const deletedSectionIds = [];
-      for (const [sectionId, section] of Object.entries(state.sections.items)) {
-        if (deletedSceneIds.has(section.sceneId)) {
-          deletedSectionIds.push(sectionId);
-        }
-      }
-
-      const deletedLineIds = [];
-      for (const [lineId, line] of Object.entries(state.lines.items)) {
-        if (deletedSectionIds.includes(line.sectionId)) {
-          deletedLineIds.push(lineId);
-        }
-      }
-
-      for (const lineId of deletedLineIds) {
-        delete state.lines.items[lineId];
-        removeTreeNode({
-          nodes: state.lines.tree,
-          nodeId: lineId,
-        });
-      }
-
-      for (const sectionId of deletedSectionIds) {
-        delete state.sections.items[sectionId];
-        removeTreeNode({
-          nodes: state.sections.tree,
-          nodeId: sectionId,
-        });
-      }
-
       for (const sceneId of deletedSceneIds) {
         delete state.scenes.items[sceneId];
       }
@@ -4295,15 +5826,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "scene.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["sceneId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "sceneId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        throw createPayloadValidationError("payload.sceneId must be a non-empty string");
+        return invalidPayload(
+          "payload.sceneId must be a non-empty string",
+        );
       }
 
       if (
@@ -4311,20 +5855,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const scene = state.scenes.items[payload.sceneId];
       if (!isPlainObject(scene)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.sceneId must reference an existing scene",
         );
       }
@@ -4337,13 +5886,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentScene = state.scenes.items[payload.parentId];
         if (!isPlainObject(parentScene)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing scene",
           );
         }
 
         if (parentScene.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder scene",
           );
         }
@@ -4355,7 +5904,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved scene or its descendants",
           );
         }
@@ -4363,13 +5912,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.sceneId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved scene",
           );
         }
 
         if (!isPlainObject(state.scenes.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing scene",
           );
         }
@@ -4380,22 +5929,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const sceneNode = removeNodeOrThrow({
+      const sceneNodeResult = removeNodeOrResult({
         tree: state.scenes.tree,
         nodeId: payload.sceneId,
         errorMessage: "scene move target missing from tree",
       });
+      if (!sceneNodeResult.valid) {
+        return sceneNodeResult;
+      }
 
       insertTreeNode({
         tree: state.scenes.tree,
-        node: sceneNode,
+        node: sceneNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -4408,27 +5960,36 @@ const COMMAND_DEFINITIONS = [
   {
     type: "section.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "sectionId",
-          "sceneId",
-          "parentId",
-          "data",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "sectionId",
+            "sceneId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        throw createPayloadValidationError("payload.sectionId must be a non-empty string");
+        return invalidPayload(
+          "payload.sectionId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        throw createPayloadValidationError("payload.sceneId must be a non-empty string");
+        return invalidPayload(
+          "payload.sceneId must be a non-empty string",
+        );
       }
 
       if (
@@ -4436,91 +5997,111 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateSectionCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateSectionCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const scene = state.scenes.items[payload.sceneId];
       if (!isPlainObject(scene)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.sceneId must reference an existing scene",
         );
       }
 
       if (scene.type === "folder") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.sceneId must reference a non-folder scene",
         );
       }
 
-      if (isPlainObject(state.sections.items[payload.sectionId])) {
-        throw createPreconditionValidationError(
+      if (findSectionLocation({ state, sectionId: payload.sectionId })) {
+        return invalidPrecondition(
           "payload.sectionId must not already exist",
         );
       }
 
       if (payload.parentId !== undefined && payload.parentId !== null) {
-        const parentSection = state.sections.items[payload.parentId];
-        if (!isPlainObject(parentSection)) {
-          throw createPreconditionValidationError(
+        const parentLocation = findSectionLocation({
+          state,
+          sectionId: payload.parentId,
+        });
+        if (!parentLocation) {
+          return invalidPrecondition(
             "payload.parentId must reference an existing section",
           );
         }
 
-        if (parentSection.sceneId !== payload.sceneId) {
-          throw createPreconditionValidationError(
+        if (parentLocation.sceneId !== payload.sceneId) {
+          return invalidPrecondition(
             "payload.parentId must reference a section in the same scene",
           );
         }
       }
 
       if (payload.positionTargetId !== undefined) {
-        const targetSection = state.sections.items[payload.positionTargetId];
-        if (!isPlainObject(targetSection)) {
-          throw createPreconditionValidationError(
+        const targetLocation = findSectionLocation({
+          state,
+          sectionId: payload.positionTargetId,
+        });
+        if (!targetLocation) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing section",
           );
         }
 
-        if (targetSection.sceneId !== payload.sceneId) {
-          throw createPreconditionValidationError(
+        if (targetLocation.sceneId !== payload.sceneId) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference a section in the same scene",
           );
         }
 
+        const sections = scene.sections ?? createEmptyNestedCollection();
         const targetParentId = getNodeParentId({
-          tree: state.sections.tree,
+          tree: sections.tree,
           nodeId: payload.positionTargetId,
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      state.sections.items[payload.sectionId] = {
+      const scene = state.scenes.items[payload.sceneId];
+      scene.sections ??= createEmptyNestedCollection();
+      const sections = scene.sections;
+      sections.items[payload.sectionId] = {
         id: payload.sectionId,
-        sceneId: payload.sceneId,
         name: payload.data.name,
+        lines: createEmptyNestedCollection(),
       };
 
-      insertScopedTreeNode({
-        tree: state.sections.tree,
+      insertTreeNode({
+        tree: sections.tree,
         node: {
           id: payload.sectionId,
           children: [],
@@ -4529,8 +6110,6 @@ const COMMAND_DEFINITIONS = [
         index: payload.index,
         position: payload.position,
         positionTargetId: payload.positionTargetId,
-        isSibling: (entry) =>
-          state.sections.items[entry.id]?.sceneId === payload.sceneId,
       });
 
       return state;
@@ -4539,32 +6118,48 @@ const COMMAND_DEFINITIONS = [
   {
     type: "section.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["sectionId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.sectionId)) {
-        throw createPayloadValidationError("payload.sectionId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["sectionId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateSectionUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.sectionId)) {
+        return invalidPayload(
+          "payload.sectionId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateSectionUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
-      if (!isPlainObject(state.sections.items[payload.sectionId])) {
-        throw createPreconditionValidationError(
+      if (!findSectionLocation({ state, sectionId: payload.sectionId })) {
+        return invalidPrecondition(
           "payload.sectionId must reference an existing section",
         );
       }
     },
     reduce: ({ state, payload }) => {
-      const section = state.sections.items[payload.sectionId];
-      state.sections.items[payload.sectionId] = {
+      const location = findSectionLocation({
+        state,
+        sectionId: payload.sectionId,
+      });
+      const section = location.section;
+      location.sections.items[payload.sectionId] = {
         ...section,
         name: payload.data.name,
       };
@@ -4574,23 +6169,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "section.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["sectionIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["sectionIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.sectionIds,
-        path: "payload.sectionIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.sectionIds,
+          path: "payload.sectionIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const sectionId of payload.sectionIds) {
-        if (!isPlainObject(state.sections.items[sectionId])) {
-          throw createPreconditionValidationError(
+        if (!findSectionLocation({ state, sectionId })) {
+          return invalidPrecondition(
             "payload.sectionIds must reference existing sections",
             { sectionId },
           );
@@ -4598,11 +6203,16 @@ const COMMAND_DEFINITIONS = [
       }
     },
     reduce: ({ state, payload }) => {
-      const deletedSectionIds = new Set();
+      const deletedSectionIdsByScene = new Map();
 
       for (const sectionId of payload.sectionIds) {
+        const location = findSectionLocation({ state, sectionId });
+        if (!location) {
+          continue;
+        }
+
         const removedNode = removeTreeNode({
-          nodes: state.sections.tree,
+          nodes: location.sections.tree,
           nodeId: sectionId,
         });
 
@@ -4610,28 +6220,26 @@ const COMMAND_DEFINITIONS = [
           continue;
         }
 
+        let deletedSectionIds = deletedSectionIdsByScene.get(location.sceneId);
+        if (!deletedSectionIds) {
+          deletedSectionIds = new Set();
+          deletedSectionIdsByScene.set(location.sceneId, deletedSectionIds);
+        }
+
         for (const id of collectTreeDescendantIds({ node: removedNode })) {
           deletedSectionIds.add(id);
         }
       }
 
-      const deletedLineIds = [];
-      for (const [lineId, line] of Object.entries(state.lines.items)) {
-        if (deletedSectionIds.has(line.sectionId)) {
-          deletedLineIds.push(lineId);
+      for (const [sceneId, deletedSectionIds] of deletedSectionIdsByScene) {
+        const sections = state.scenes.items[sceneId]?.sections;
+        if (!sections) {
+          continue;
         }
-      }
 
-      for (const lineId of deletedLineIds) {
-        delete state.lines.items[lineId];
-        removeTreeNode({
-          nodes: state.lines.tree,
-          nodeId: lineId,
-        });
-      }
-
-      for (const sectionId of deletedSectionIds) {
-        delete state.sections.items[sectionId];
+        for (const sectionId of deletedSectionIds) {
+          delete sections.items[sectionId];
+        }
       }
 
       return state;
@@ -4640,15 +6248,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "section.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["sectionId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "sectionId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        throw createPayloadValidationError("payload.sectionId must be a non-empty string");
+        return invalidPayload(
+          "payload.sectionId must be a non-empty string",
+        );
       }
 
       if (
@@ -4656,39 +6277,50 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
-      const section = state.sections.items[payload.sectionId];
-      if (!isPlainObject(section)) {
-        throw createPreconditionValidationError(
+      const location = findSectionLocation({
+        state,
+        sectionId: payload.sectionId,
+      });
+      if (!location) {
+        return invalidPrecondition(
           "payload.sectionId must reference an existing section",
         );
       }
 
       const sectionNode = findTreeNode({
-        nodes: state.sections.tree,
+        nodes: location.sections.tree,
         nodeId: payload.sectionId,
       });
 
       if (payload.parentId !== undefined && payload.parentId !== null) {
-        const parentSection = state.sections.items[payload.parentId];
-        if (!isPlainObject(parentSection)) {
-          throw createPreconditionValidationError(
+        const parentLocation = findSectionLocation({
+          state,
+          sectionId: payload.parentId,
+        });
+        if (!parentLocation) {
+          return invalidPrecondition(
             "payload.parentId must reference an existing section",
           );
         }
 
-        if (parentSection.sceneId !== section.sceneId) {
-          throw createPreconditionValidationError(
+        if (parentLocation.sceneId !== location.sceneId) {
+          return invalidPrecondition(
             "payload.parentId must reference a section in the same scene",
           );
         }
@@ -4700,7 +6332,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved section or its descendants",
           );
         }
@@ -4708,53 +6340,60 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.sectionId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved section",
           );
         }
 
-        const targetSection = state.sections.items[payload.positionTargetId];
-        if (!isPlainObject(targetSection)) {
-          throw createPreconditionValidationError(
+        const targetLocation = findSectionLocation({
+          state,
+          sectionId: payload.positionTargetId,
+        });
+        if (!targetLocation) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing section",
           );
         }
 
-        if (targetSection.sceneId !== section.sceneId) {
-          throw createPreconditionValidationError(
+        if (targetLocation.sceneId !== location.sceneId) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference a section in the same scene",
           );
         }
 
         const targetParentId = getNodeParentId({
-          tree: state.sections.tree,
+          tree: location.sections.tree,
           nodeId: payload.positionTargetId,
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const section = state.sections.items[payload.sectionId];
-      const sectionNode = removeNodeOrThrow({
-        tree: state.sections.tree,
+      const location = findSectionLocation({
+        state,
+        sectionId: payload.sectionId,
+      });
+      const sectionNodeResult = removeNodeOrResult({
+        tree: location.sections.tree,
         nodeId: payload.sectionId,
         errorMessage: "section move target missing from tree",
       });
+      if (!sectionNodeResult.valid) {
+        return sectionNodeResult;
+      }
 
-      insertScopedTreeNode({
-        tree: state.sections.tree,
-        node: sectionNode,
+      insertTreeNode({
+        tree: location.sections.tree,
+        node: sectionNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
         positionTargetId: payload.positionTargetId,
-        isSibling: (entry) =>
-          state.sections.items[entry.id]?.sceneId === section.sceneId,
       });
 
       return state;
@@ -4763,37 +6402,64 @@ const COMMAND_DEFINITIONS = [
   {
     type: "line.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["sectionId", "lines", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.sectionId)) {
-        throw createPayloadValidationError("payload.sectionId must be a non-empty string");
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "sectionId",
+            "lines",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateLineCreatePayload({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.sectionId)) {
+        return invalidPayload(
+          "payload.sectionId must be a non-empty string",
+        );
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateLineCreatePayload({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
-      if (!isPlainObject(state.sections.items[payload.sectionId])) {
-        throw createPreconditionValidationError(
+      const sectionLocation = findSectionLocation({
+        state,
+        sectionId: payload.sectionId,
+      });
+      if (!sectionLocation) {
+        return invalidPrecondition(
           "payload.sectionId must reference an existing section",
         );
       }
 
       for (const item of payload.lines) {
-        if (isPlainObject(state.lines.items[item.lineId])) {
-          throw createPreconditionValidationError(
+        if (findLineLocation({ state, lineId: item.lineId })) {
+          return invalidPrecondition(
             "payload.lines.lineId must not already exist",
             { lineId: item.lineId },
           );
@@ -4801,41 +6467,47 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (payload.positionTargetId !== undefined) {
-        const targetLine = state.lines.items[payload.positionTargetId];
-        if (!isPlainObject(targetLine)) {
-          throw createPreconditionValidationError(
+        const targetLocation = findLineLocation({
+          state,
+          lineId: payload.positionTargetId,
+        });
+        if (!targetLocation) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing line",
           );
         }
 
-        if (targetLine.sectionId !== payload.sectionId) {
-          throw createPreconditionValidationError(
+        if (targetLocation.sectionId !== payload.sectionId) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference a line in the target section",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
+      const sectionLocation = findSectionLocation({
+        state,
+        sectionId: payload.sectionId,
+      });
+      sectionLocation.section.lines ??= createEmptyNestedCollection();
+      const lines = sectionLocation.section.lines;
       let previousLineId = payload.positionTargetId;
 
       payload.lines.forEach((item, index) => {
-        state.lines.items[item.lineId] = {
+        lines.items[item.lineId] = {
           id: item.lineId,
-          sectionId: payload.sectionId,
           actions: structuredClone(item.data.actions || {}),
         };
 
-        insertScopedTreeNode({
-          tree: state.lines.tree,
-          node: {
-            id: item.lineId,
-          },
-          index:
-            Number.isInteger(payload.index) ? payload.index + index : undefined,
+        insertTreeNode({
+          tree: lines.tree,
+          node: { id: item.lineId },
+          index: Number.isInteger(payload.index)
+            ? payload.index + index
+            : undefined,
           position: index === 0 ? payload.position : "after",
-          positionTargetId: index === 0 ? payload.positionTargetId : previousLineId,
-          isSibling: (entry) =>
-            state.lines.items[entry.id]?.sectionId === payload.sectionId,
+          positionTargetId:
+            index === 0 ? payload.positionTargetId : previousLineId,
         });
 
         previousLineId = item.lineId;
@@ -4847,40 +6519,53 @@ const COMMAND_DEFINITIONS = [
   {
     type: "line.update_actions",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["lineId", "data", "replace"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.lineId)) {
-        throw createPayloadValidationError("payload.lineId must be a non-empty string");
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: ["lineId", "data", "replace"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateLineUpdateActionsData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.lineId)) {
+        return invalidPayload(
+          "payload.lineId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateLineUpdateActionsData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (
         payload.replace !== undefined &&
         typeof payload.replace !== "boolean"
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.replace must be a boolean when provided",
         );
       }
     },
     validateAgainstState: ({ state, payload }) => {
-      if (!isPlainObject(state.lines.items[payload.lineId])) {
-        throw createPreconditionValidationError(
+      if (!findLineLocation({ state, lineId: payload.lineId })) {
+        return invalidPrecondition(
           "payload.lineId must reference an existing line",
         );
       }
     },
     reduce: ({ state, payload }) => {
-      const line = state.lines.items[payload.lineId];
+      const location = findLineLocation({ state, lineId: payload.lineId });
+      const line = location.line;
       line.actions =
         payload.replace === true
           ? structuredClone(payload.data)
@@ -4894,23 +6579,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "line.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["lineIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["lineIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.lineIds,
-        path: "payload.lineIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.lineIds,
+          path: "payload.lineIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const lineId of payload.lineIds) {
-        if (!isPlainObject(state.lines.items[lineId])) {
-          throw createPreconditionValidationError(
+        if (!findLineLocation({ state, lineId })) {
+          return invalidPrecondition(
             "payload.lineIds must reference existing lines",
             { lineId },
           );
@@ -4919,9 +6614,11 @@ const COMMAND_DEFINITIONS = [
     },
     reduce: ({ state, payload }) => {
       for (const lineId of payload.lineIds) {
-        delete state.lines.items[lineId];
+        const location = findLineLocation({ state, lineId });
+        location.section.lines ??= createEmptyNestedCollection();
+        delete location.section.lines.items[lineId];
         removeTreeNode({
-          nodes: state.lines.tree,
+          nodes: location.section.lines.tree,
           nodeId: lineId,
         });
       }
@@ -4932,80 +6629,122 @@ const COMMAND_DEFINITIONS = [
   {
     type: "line.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["lineId", "toSectionId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "lineId",
+            "toSectionId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.lineId)) {
-        throw createPayloadValidationError("payload.lineId must be a non-empty string");
+        return invalidPayload(
+          "payload.lineId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.toSectionId)) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.toSectionId must be a non-empty string",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
-      const line = state.lines.items[payload.lineId];
-      if (!isPlainObject(line)) {
-        throw createPreconditionValidationError(
+      const lineLocation = findLineLocation({
+        state,
+        lineId: payload.lineId,
+      });
+      if (!lineLocation) {
+        return invalidPrecondition(
           "payload.lineId must reference an existing line",
         );
       }
 
-      if (!isPlainObject(state.sections.items[payload.toSectionId])) {
-        throw createPreconditionValidationError(
+      const targetSectionLocation = findSectionLocation({
+        state,
+        sectionId: payload.toSectionId,
+      });
+      if (!targetSectionLocation) {
+        return invalidPrecondition(
           "payload.toSectionId must reference an existing section",
         );
       }
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.lineId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved line",
           );
         }
 
-        const targetLine = state.lines.items[payload.positionTargetId];
-        if (!isPlainObject(targetLine)) {
-          throw createPreconditionValidationError(
+        const targetLocation = findLineLocation({
+          state,
+          lineId: payload.positionTargetId,
+        });
+        if (!targetLocation) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing line",
           );
         }
 
-        if (targetLine.sectionId !== payload.toSectionId) {
-          throw createPreconditionValidationError(
+        if (targetLocation.sectionId !== payload.toSectionId) {
+          return invalidPrecondition(
             "payload.positionTargetId must reference a line in the target section",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const lineNode = removeNodeOrThrow({
-        tree: state.lines.tree,
+      const lineLocation = findLineLocation({
+        state,
+        lineId: payload.lineId,
+      });
+      lineLocation.section.lines ??= createEmptyNestedCollection();
+      const lineNodeResult = removeNodeOrResult({
+        tree: lineLocation.section.lines.tree,
         nodeId: payload.lineId,
         errorMessage: "line move target missing from tree",
       });
+      if (!lineNodeResult.valid) {
+        return lineNodeResult;
+      }
+      const lineValue = lineLocation.line;
 
-      state.lines.items[payload.lineId].sectionId = payload.toSectionId;
+      delete lineLocation.section.lines.items[payload.lineId];
 
-      insertScopedTreeNode({
-        tree: state.lines.tree,
-        node: lineNode,
+      const targetSectionLocation = findSectionLocation({
+        state,
+        sectionId: payload.toSectionId,
+      });
+      targetSectionLocation.section.lines ??= createEmptyNestedCollection();
+      targetSectionLocation.section.lines.items[payload.lineId] = lineValue;
+
+      insertTreeNode({
+        tree: targetSectionLocation.section.lines.tree,
+        node: lineNodeResult.node,
         index: payload.index,
         position: payload.position,
         positionTargetId: payload.positionTargetId,
-        isSibling: (entry) =>
-          state.lines.items[entry.id]?.sectionId === payload.toSectionId,
       });
 
       return state;
@@ -5014,15 +6753,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "image.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["imageId", "parentId", "data", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "imageId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.imageId)) {
-        throw createPayloadValidationError("payload.imageId must be a non-empty string");
+        return invalidPayload(
+          "payload.imageId must be a non-empty string",
+        );
       }
 
       if (
@@ -5030,24 +6783,34 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateImageCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateImageCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.images.items[payload.imageId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.imageId must not already exist",
         );
       }
@@ -5056,13 +6819,13 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentImage = state.images.items[parentId];
         if (!isPlainObject(parentImage)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing image item",
           );
         }
 
         if (parentImage.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder image item",
           );
         }
@@ -5070,7 +6833,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.images.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing image item",
           );
         }
@@ -5081,7 +6844,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -5134,26 +6897,38 @@ const COMMAND_DEFINITIONS = [
   {
     type: "image.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["imageId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.imageId)) {
-        throw createPayloadValidationError("payload.imageId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["imageId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateImageUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.imageId)) {
+        return invalidPayload(
+          "payload.imageId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateImageUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentImage = state.images.items[payload.imageId];
       if (!isPlainObject(currentImage)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.imageId must reference an existing image item",
         );
       }
@@ -5166,7 +6941,7 @@ const COMMAND_DEFINITIONS = [
           payload.data.width !== undefined ||
           payload.data.height !== undefined)
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder image items cannot update file fields",
         );
       }
@@ -5183,23 +6958,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "image.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["imageIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["imageIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.imageIds,
-        path: "payload.imageIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.imageIds,
+          path: "payload.imageIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const imageId of payload.imageIds) {
         if (!isPlainObject(state.images.items[imageId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.imageIds must reference existing image items",
             { imageId },
           );
@@ -5234,15 +7019,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "image.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["imageId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "imageId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.imageId)) {
-        throw createPayloadValidationError("payload.imageId must be a non-empty string");
+        return invalidPayload(
+          "payload.imageId must be a non-empty string",
+        );
       }
 
       if (
@@ -5250,20 +7048,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const image = state.images.items[payload.imageId];
       if (!isPlainObject(image)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.imageId must reference an existing image item",
         );
       }
@@ -5276,13 +7079,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentImage = state.images.items[payload.parentId];
         if (!isPlainObject(parentImage)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing image item",
           );
         }
 
         if (parentImage.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder image item",
           );
         }
@@ -5294,7 +7097,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved image item or its descendants",
           );
         }
@@ -5302,13 +7105,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.imageId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved image item",
           );
         }
 
         if (!isPlainObject(state.images.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing image item",
           );
         }
@@ -5319,22 +7122,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const imageNode = removeNodeOrThrow({
+      const imageNodeResult = removeNodeOrResult({
         tree: state.images.tree,
         nodeId: payload.imageId,
         errorMessage: "image move target missing from tree",
       });
+      if (!imageNodeResult.valid) {
+        return imageNodeResult;
+      }
 
       insertTreeNode({
         tree: state.images.tree,
-        node: imageNode,
+        node: imageNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -5347,15 +7153,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "sound.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["soundId", "parentId", "data", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "soundId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.soundId)) {
-        throw createPayloadValidationError("payload.soundId must be a non-empty string");
+        return invalidPayload(
+          "payload.soundId must be a non-empty string",
+        );
       }
 
       if (
@@ -5363,24 +7183,34 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateSoundCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateSoundCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.sounds.items[payload.soundId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.soundId must not already exist",
         );
       }
@@ -5389,13 +7219,13 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentSound = state.sounds.items[parentId];
         if (!isPlainObject(parentSound)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing sound item",
           );
         }
 
         if (parentSound.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder sound item",
           );
         }
@@ -5403,7 +7233,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.sounds.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing sound item",
           );
         }
@@ -5414,7 +7244,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -5467,26 +7297,38 @@ const COMMAND_DEFINITIONS = [
   {
     type: "sound.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["soundId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.soundId)) {
-        throw createPayloadValidationError("payload.soundId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["soundId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateSoundUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.soundId)) {
+        return invalidPayload(
+          "payload.soundId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateSoundUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentSound = state.sounds.items[payload.soundId];
       if (!isPlainObject(currentSound)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.soundId must reference an existing sound item",
         );
       }
@@ -5499,7 +7341,7 @@ const COMMAND_DEFINITIONS = [
           payload.data.waveformDataFileId !== undefined ||
           payload.data.duration !== undefined)
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder sound items cannot update file fields",
         );
       }
@@ -5516,23 +7358,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "sound.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["soundIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["soundIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.soundIds,
-        path: "payload.soundIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.soundIds,
+          path: "payload.soundIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const soundId of payload.soundIds) {
         if (!isPlainObject(state.sounds.items[soundId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.soundIds must reference existing sound items",
             { soundId },
           );
@@ -5567,15 +7419,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "sound.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["soundId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "soundId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.soundId)) {
-        throw createPayloadValidationError("payload.soundId must be a non-empty string");
+        return invalidPayload(
+          "payload.soundId must be a non-empty string",
+        );
       }
 
       if (
@@ -5583,20 +7448,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const sound = state.sounds.items[payload.soundId];
       if (!isPlainObject(sound)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.soundId must reference an existing sound item",
         );
       }
@@ -5609,13 +7479,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentSound = state.sounds.items[payload.parentId];
         if (!isPlainObject(parentSound)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing sound item",
           );
         }
 
         if (parentSound.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder sound item",
           );
         }
@@ -5627,7 +7497,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved sound item or its descendants",
           );
         }
@@ -5635,13 +7505,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.soundId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved sound item",
           );
         }
 
         if (!isPlainObject(state.sounds.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing sound item",
           );
         }
@@ -5652,22 +7522,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const soundNode = removeNodeOrThrow({
+      const soundNodeResult = removeNodeOrResult({
         tree: state.sounds.tree,
         nodeId: payload.soundId,
         errorMessage: "sound move target missing from tree",
       });
+      if (!soundNodeResult.valid) {
+        return soundNodeResult;
+      }
 
       insertTreeNode({
         tree: state.sounds.tree,
-        node: soundNode,
+        node: soundNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -5680,15 +7553,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "video.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["videoId", "parentId", "data", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "videoId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.videoId)) {
-        throw createPayloadValidationError("payload.videoId must be a non-empty string");
+        return invalidPayload(
+          "payload.videoId must be a non-empty string",
+        );
       }
 
       if (
@@ -5696,24 +7583,34 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateVideoCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateVideoCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.videos.items[payload.videoId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.videoId must not already exist",
         );
       }
@@ -5722,13 +7619,13 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentVideo = state.videos.items[parentId];
         if (!isPlainObject(parentVideo)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing video item",
           );
         }
 
         if (parentVideo.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder video item",
           );
         }
@@ -5736,7 +7633,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.videos.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing video item",
           );
         }
@@ -5747,7 +7644,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -5801,26 +7698,38 @@ const COMMAND_DEFINITIONS = [
   {
     type: "video.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["videoId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.videoId)) {
-        throw createPayloadValidationError("payload.videoId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["videoId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateVideoUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.videoId)) {
+        return invalidPayload(
+          "payload.videoId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateVideoUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentVideo = state.videos.items[payload.videoId];
       if (!isPlainObject(currentVideo)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.videoId must reference an existing video item",
         );
       }
@@ -5834,7 +7743,7 @@ const COMMAND_DEFINITIONS = [
           payload.data.width !== undefined ||
           payload.data.height !== undefined)
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder video items cannot update file fields",
         );
       }
@@ -5851,23 +7760,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "video.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["videoIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["videoIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.videoIds,
-        path: "payload.videoIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.videoIds,
+          path: "payload.videoIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const videoId of payload.videoIds) {
         if (!isPlainObject(state.videos.items[videoId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.videoIds must reference existing video items",
             { videoId },
           );
@@ -5902,15 +7821,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "video.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["videoId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "videoId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.videoId)) {
-        throw createPayloadValidationError("payload.videoId must be a non-empty string");
+        return invalidPayload(
+          "payload.videoId must be a non-empty string",
+        );
       }
 
       if (
@@ -5918,20 +7850,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const video = state.videos.items[payload.videoId];
       if (!isPlainObject(video)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.videoId must reference an existing video item",
         );
       }
@@ -5944,13 +7881,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentVideo = state.videos.items[payload.parentId];
         if (!isPlainObject(parentVideo)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing video item",
           );
         }
 
         if (parentVideo.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder video item",
           );
         }
@@ -5962,7 +7899,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved video item or its descendants",
           );
         }
@@ -5970,13 +7907,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.videoId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved video item",
           );
         }
 
         if (!isPlainObject(state.videos.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing video item",
           );
         }
@@ -5987,22 +7924,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const videoNode = removeNodeOrThrow({
+      const videoNodeResult = removeNodeOrResult({
         tree: state.videos.tree,
         nodeId: payload.videoId,
         errorMessage: "video move target missing from tree",
       });
+      if (!videoNodeResult.valid) {
+        return videoNodeResult;
+      }
 
       insertTreeNode({
         tree: state.videos.tree,
-        node: videoNode,
+        node: videoNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -6015,22 +7955,27 @@ const COMMAND_DEFINITIONS = [
   {
     type: "animation.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "animationId",
-          "parentId",
-          "data",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "animationId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.animationId)) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.animationId must be a non-empty string",
         );
       }
@@ -6040,24 +7985,34 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateAnimationCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAnimationCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.animations.items[payload.animationId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.animationId must not already exist",
         );
       }
@@ -6066,13 +8021,13 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentAnimation = state.animations.items[parentId];
         if (!isPlainObject(parentAnimation)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing animation item",
           );
         }
 
         if (parentAnimation.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder animation item",
           );
         }
@@ -6080,7 +8035,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.animations.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing animation item",
           );
         }
@@ -6091,7 +8046,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -6128,34 +8083,47 @@ const COMMAND_DEFINITIONS = [
   {
     type: "animation.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["animationId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["animationId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.animationId)) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.animationId must be a non-empty string",
         );
       }
 
-      validateAnimationUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAnimationUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentAnimation = state.animations.items[payload.animationId];
       if (!isPlainObject(currentAnimation)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.animationId must reference an existing animation item",
         );
       }
 
-      if (currentAnimation.type === "folder" && payload.data.animation !== undefined) {
-        throw createPreconditionValidationError(
+      if (
+        currentAnimation.type === "folder" &&
+        payload.data.animation !== undefined
+      ) {
+        return invalidPrecondition(
           "folder animation items cannot update animation fields",
         );
       }
@@ -6172,23 +8140,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "animation.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["animationIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["animationIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.animationIds,
-        path: "payload.animationIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.animationIds,
+          path: "payload.animationIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const animationId of payload.animationIds) {
         if (!isPlainObject(state.animations.items[animationId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.animationIds must reference existing animation items",
             { animationId },
           );
@@ -6223,21 +8201,26 @@ const COMMAND_DEFINITIONS = [
   {
     type: "animation.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "animationId",
-          "parentId",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "animationId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.animationId)) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.animationId must be a non-empty string",
         );
       }
@@ -6247,20 +8230,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const animation = state.animations.items[payload.animationId];
       if (!isPlainObject(animation)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.animationId must reference an existing animation item",
         );
       }
@@ -6273,13 +8261,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentAnimation = state.animations.items[payload.parentId];
         if (!isPlainObject(parentAnimation)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing animation item",
           );
         }
 
         if (parentAnimation.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder animation item",
           );
         }
@@ -6291,7 +8279,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved animation item or its descendants",
           );
         }
@@ -6299,13 +8287,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.animationId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved animation item",
           );
         }
 
         if (!isPlainObject(state.animations.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing animation item",
           );
         }
@@ -6316,22 +8304,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const animationNode = removeNodeOrThrow({
+      const animationNodeResult = removeNodeOrResult({
         tree: state.animations.tree,
         nodeId: payload.animationId,
         errorMessage: "animation move target missing from tree",
       });
+      if (!animationNodeResult.valid) {
+        return animationNodeResult;
+      }
 
       insertTreeNode({
         tree: state.animations.tree,
-        node: animationNode,
+        node: animationNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -6344,15 +8335,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "font.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["fontId", "parentId", "data", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "fontId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.fontId)) {
-        throw createPayloadValidationError("payload.fontId must be a non-empty string");
+        return invalidPayload(
+          "payload.fontId must be a non-empty string",
+        );
       }
 
       if (
@@ -6360,37 +8365,49 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateFontCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateFontCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.fonts.items[payload.fontId])) {
-        throw createPreconditionValidationError("payload.fontId must not already exist");
+        return invalidPrecondition(
+          "payload.fontId must not already exist",
+        );
       }
 
       const parentId = payload.parentId ?? null;
       if (parentId !== null) {
         const parentFont = state.fonts.items[parentId];
         if (!isPlainObject(parentFont)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing font item",
           );
         }
 
         if (parentFont.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder font item",
           );
         }
@@ -6398,7 +8415,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.fonts.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing font item",
           );
         }
@@ -6409,7 +8426,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -6453,26 +8470,38 @@ const COMMAND_DEFINITIONS = [
   {
     type: "font.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["fontId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.fontId)) {
-        throw createPayloadValidationError("payload.fontId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["fontId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateFontUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.fontId)) {
+        return invalidPayload(
+          "payload.fontId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateFontUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentFont = state.fonts.items[payload.fontId];
       if (!isPlainObject(currentFont)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.fontId must reference an existing font item",
         );
       }
@@ -6484,7 +8513,7 @@ const COMMAND_DEFINITIONS = [
           payload.data.fileType !== undefined ||
           payload.data.fileSize !== undefined)
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder font items cannot update font fields",
         );
       }
@@ -6501,23 +8530,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "font.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["fontIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["fontIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.fontIds,
-        path: "payload.fontIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.fontIds,
+          path: "payload.fontIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const fontId of payload.fontIds) {
         if (!isPlainObject(state.fonts.items[fontId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.fontIds must reference existing font items",
             { fontId },
           );
@@ -6552,15 +8591,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "font.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["fontId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "fontId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.fontId)) {
-        throw createPayloadValidationError("payload.fontId must be a non-empty string");
+        return invalidPayload(
+          "payload.fontId must be a non-empty string",
+        );
       }
 
       if (
@@ -6568,20 +8620,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const font = state.fonts.items[payload.fontId];
       if (!isPlainObject(font)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.fontId must reference an existing font item",
         );
       }
@@ -6594,13 +8651,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentFont = state.fonts.items[payload.parentId];
         if (!isPlainObject(parentFont)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing font item",
           );
         }
 
         if (parentFont.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder font item",
           );
         }
@@ -6612,7 +8669,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved font item or its descendants",
           );
         }
@@ -6620,13 +8677,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.fontId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved font item",
           );
         }
 
         if (!isPlainObject(state.fonts.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing font item",
           );
         }
@@ -6637,22 +8694,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const fontNode = removeNodeOrThrow({
+      const fontNodeResult = removeNodeOrResult({
         tree: state.fonts.tree,
         nodeId: payload.fontId,
         errorMessage: "font move target missing from tree",
       });
+      if (!fontNodeResult.valid) {
+        return fontNodeResult;
+      }
 
       insertTreeNode({
         tree: state.fonts.tree,
-        node: fontNode,
+        node: fontNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -6665,15 +8725,29 @@ const COMMAND_DEFINITIONS = [
   {
     type: "color.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["colorId", "parentId", "data", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "colorId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.colorId)) {
-        throw createPayloadValidationError("payload.colorId must be a non-empty string");
+        return invalidPayload(
+          "payload.colorId must be a non-empty string",
+        );
       }
 
       if (
@@ -6681,37 +8755,49 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateColorCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateColorCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.colors.items[payload.colorId])) {
-        throw createPreconditionValidationError("payload.colorId must not already exist");
+        return invalidPrecondition(
+          "payload.colorId must not already exist",
+        );
       }
 
       const parentId = payload.parentId ?? null;
       if (parentId !== null) {
         const parentColor = state.colors.items[parentId];
         if (!isPlainObject(parentColor)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing color item",
           );
         }
 
         if (parentColor.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder color item",
           );
         }
@@ -6719,7 +8805,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(state.colors.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing color item",
           );
         }
@@ -6730,7 +8816,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -6767,32 +8853,44 @@ const COMMAND_DEFINITIONS = [
   {
     type: "color.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["colorId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.colorId)) {
-        throw createPayloadValidationError("payload.colorId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["colorId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateColorUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.colorId)) {
+        return invalidPayload(
+          "payload.colorId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateColorUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const currentColor = state.colors.items[payload.colorId];
       if (!isPlainObject(currentColor)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.colorId must reference an existing color item",
         );
       }
 
       if (currentColor.type === "folder" && payload.data.hex !== undefined) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder color items cannot update color fields",
         );
       }
@@ -6809,23 +8907,33 @@ const COMMAND_DEFINITIONS = [
   {
     type: "color.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["colorIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["colorIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validateRequiredUniqueIdArray({
-        value: payload.colorIds,
-        path: "payload.colorIds",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.colorIds,
+          path: "payload.colorIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       for (const colorId of payload.colorIds) {
         if (!isPlainObject(state.colors.items[colorId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.colorIds must reference existing color items",
             { colorId },
           );
@@ -6860,15 +8968,28 @@ const COMMAND_DEFINITIONS = [
   {
     type: "color.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["colorId", "parentId", "index", "position", "positionTargetId"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "colorId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.colorId)) {
-        throw createPayloadValidationError("payload.colorId must be a non-empty string");
+        return invalidPayload(
+          "payload.colorId must be a non-empty string",
+        );
       }
 
       if (
@@ -6876,20 +8997,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const color = state.colors.items[payload.colorId];
       if (!isPlainObject(color)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.colorId must reference an existing color item",
         );
       }
@@ -6902,13 +9028,13 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentColor = state.colors.items[payload.parentId];
         if (!isPlainObject(parentColor)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference an existing color item",
           );
         }
 
         if (parentColor.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder color item",
           );
         }
@@ -6920,7 +9046,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved color item or its descendants",
           );
         }
@@ -6928,13 +9054,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.colorId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved color item",
           );
         }
 
         if (!isPlainObject(state.colors.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing color item",
           );
         }
@@ -6945,22 +9071,25 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
       }
     },
     reduce: ({ state, payload }) => {
-      const colorNode = removeNodeOrThrow({
+      const colorNodeResult = removeNodeOrResult({
         tree: state.colors.tree,
         nodeId: payload.colorId,
         errorMessage: "color move target missing from tree",
       });
+      if (!colorNodeResult.valid) {
+        return colorNodeResult;
+      }
 
       insertTreeNode({
         tree: state.colors.tree,
-        node: colorNode,
+        node: colorNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -6998,7 +9127,7 @@ const COMMAND_DEFINITIONS = [
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder transform items cannot update transform fields",
         );
       }
@@ -7028,28 +9157,38 @@ const COMMAND_DEFINITIONS = [
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder variable items cannot update variable fields",
         );
       }
 
       if (currentItem.type !== "folder") {
         if (payload.data.default !== undefined) {
-          validateVariableTypedValue({
-            value: payload.data.default,
-            variableType: currentItem.type,
-            path: "payload.data.default",
-            errorFactory: createPreconditionValidationError,
-          });
+          {
+            const result = validateVariableTypedValue({
+              value: payload.data.default,
+              variableType: currentItem.type,
+              path: "payload.data.default",
+              errorFactory: createPreconditionValidationError,
+            });
+            if (result?.valid === false) {
+              return result;
+            }
+          }
         }
 
         if (payload.data.value !== undefined) {
-          validateVariableTypedValue({
-            value: payload.data.value,
-            variableType: currentItem.type,
-            path: "payload.data.value",
-            errorFactory: createPreconditionValidationError,
-          });
+          {
+            const result = validateVariableTypedValue({
+              value: payload.data.value,
+              variableType: currentItem.type,
+              path: "payload.data.value",
+              errorFactory: createPreconditionValidationError,
+            });
+            if (result?.valid === false) {
+              return result;
+            }
+          }
         }
       }
     },
@@ -7079,7 +9218,7 @@ const COMMAND_DEFINITIONS = [
         const collectionKey = field === "fontId" ? "fonts" : "colors";
         const item = state[collectionKey].items[data[field]];
         if (!isPlainObject(item) || item.type === "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
           );
         }
@@ -7090,7 +9229,7 @@ const COMMAND_DEFINITIONS = [
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder text style items cannot update text style fields",
         );
       }
@@ -7103,7 +9242,7 @@ const COMMAND_DEFINITIONS = [
         const collectionKey = field === "fontId" ? "fonts" : "colors";
         const item = state[collectionKey].items[payload.data[field]];
         if (!isPlainObject(item) || item.type === "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
           );
         }
@@ -7117,38 +9256,50 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "character item",
     createDataValidator: validateCharacterCreateData,
     updateDataValidator: validateCharacterUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.characterId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.type === "character"
-        ? {
-            ...(payload.data.description !== undefined
-              ? { description: payload.data.description }
-              : {}),
-            ...(payload.data.shortcut !== undefined
-              ? { shortcut: payload.data.shortcut }
-              : {}),
-            ...(payload.data.fileId !== undefined ? { fileId: payload.data.fileId } : {}),
-            ...(payload.data.fileType !== undefined
-              ? { fileType: payload.data.fileType }
-              : {}),
-            ...(payload.data.fileSize !== undefined
-              ? { fileSize: payload.data.fileSize }
-              : {}),
-            sprites:
-              payload.data.sprites === undefined
-                ? { items: {}, tree: [] }
-                : structuredClone(payload.data.sprites),
-          }
-        : {}),
-    }),
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.characterId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (item.type !== "character") {
+        return item;
+      }
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      if (payload.data.shortcut !== undefined) {
+        item.shortcut = payload.data.shortcut;
+      }
+
+      if (payload.data.fileId !== undefined) {
+        item.fileId = payload.data.fileId;
+      }
+
+      if (payload.data.fileType !== undefined) {
+        item.fileType = payload.data.fileType;
+      }
+
+      if (payload.data.fileSize !== undefined) {
+        item.fileSize = payload.data.fileSize;
+      }
+
+      item.sprites =
+        payload.data.sprites === undefined
+          ? { items: {}, tree: [] }
+          : structuredClone(payload.data.sprites);
+
+      return item;
+    },
     validateUpdateState: ({ payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder character items cannot update character fields",
         );
       }
@@ -7177,7 +9328,7 @@ const COMMAND_DEFINITIONS = [
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder layout items cannot update layout fields",
         );
       }
@@ -7186,27 +9337,36 @@ const COMMAND_DEFINITIONS = [
   {
     type: "character.sprite.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "characterId",
-          "spriteId",
-          "parentId",
-          "data",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "characterId",
+            "spriteId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.characterId)) {
-        throw createPayloadValidationError("payload.characterId must be a non-empty string");
+        return invalidPayload(
+          "payload.characterId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        throw createPayloadValidationError("payload.spriteId must be a non-empty string");
+        return invalidPayload(
+          "payload.spriteId must be a non-empty string",
+        );
       }
 
       if (
@@ -7214,25 +9374,35 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateCharacterSpriteCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateCharacterSpriteCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const character = state.characters.items[payload.characterId];
       if (!isPlainObject(character) || character.type !== "character") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.characterId must reference an existing character",
         );
       }
@@ -7243,7 +9413,7 @@ const COMMAND_DEFINITIONS = [
       });
 
       if (isPlainObject(collection.items[payload.spriteId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.spriteId must not already exist",
         );
       }
@@ -7252,7 +9422,7 @@ const COMMAND_DEFINITIONS = [
       if (parentId !== null) {
         const parentItem = collection.items[parentId];
         if (!isPlainObject(parentItem) || parentItem.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder sprite item",
           );
         }
@@ -7260,7 +9430,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing sprite item",
           );
         }
@@ -7271,7 +9441,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -7306,30 +9476,44 @@ const COMMAND_DEFINITIONS = [
   {
     type: "character.sprite.update",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["characterId", "spriteId", "data"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["characterId", "spriteId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.characterId)) {
-        throw createPayloadValidationError("payload.characterId must be a non-empty string");
+        return invalidPayload(
+          "payload.characterId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        throw createPayloadValidationError("payload.spriteId must be a non-empty string");
+        return invalidPayload(
+          "payload.spriteId must be a non-empty string",
+        );
       }
 
-      validateCharacterSpriteUpdateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateCharacterSpriteUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const character = state.characters.items[payload.characterId];
       if (!isPlainObject(character) || character.type !== "character") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.characterId must reference an existing character",
         );
       }
@@ -7341,7 +9525,7 @@ const COMMAND_DEFINITIONS = [
       const currentItem = collection.items[payload.spriteId];
 
       if (!isPlainObject(currentItem)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.spriteId must reference an existing sprite item",
         );
       }
@@ -7350,7 +9534,7 @@ const COMMAND_DEFINITIONS = [
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder sprite items cannot update image fields",
         );
       }
@@ -7373,27 +9557,39 @@ const COMMAND_DEFINITIONS = [
   {
     type: "character.sprite.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["characterId", "spriteIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.characterId)) {
-        throw createPayloadValidationError("payload.characterId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["characterId", "spriteIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateRequiredUniqueIdArray({
-        value: payload.spriteIds,
-        path: "payload.spriteIds",
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.characterId)) {
+        return invalidPayload(
+          "payload.characterId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.spriteIds,
+          path: "payload.spriteIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const character = state.characters.items[payload.characterId];
       if (!isPlainObject(character) || character.type !== "character") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.characterId must reference an existing character",
         );
       }
@@ -7404,7 +9600,7 @@ const COMMAND_DEFINITIONS = [
       });
       for (const spriteId of payload.spriteIds) {
         if (!isPlainObject(collection.items[spriteId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.spriteIds must reference existing sprite items",
             { spriteId },
           );
@@ -7443,26 +9639,35 @@ const COMMAND_DEFINITIONS = [
   {
     type: "character.sprite.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "characterId",
-          "spriteId",
-          "parentId",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "characterId",
+            "spriteId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.characterId)) {
-        throw createPayloadValidationError("payload.characterId must be a non-empty string");
+        return invalidPayload(
+          "payload.characterId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        throw createPayloadValidationError("payload.spriteId must be a non-empty string");
+        return invalidPayload(
+          "payload.spriteId must be a non-empty string",
+        );
       }
 
       if (
@@ -7470,20 +9675,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const character = state.characters.items[payload.characterId];
       if (!isPlainObject(character) || character.type !== "character") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.characterId must reference an existing character",
         );
       }
@@ -7495,7 +9705,7 @@ const COMMAND_DEFINITIONS = [
       const currentItem = collection.items[payload.spriteId];
 
       if (!isPlainObject(currentItem)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.spriteId must reference an existing sprite item",
         );
       }
@@ -7508,7 +9718,7 @@ const COMMAND_DEFINITIONS = [
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentItem = collection.items[payload.parentId];
         if (!isPlainObject(parentItem) || parentItem.type !== "folder") {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder sprite item",
           );
         }
@@ -7520,7 +9730,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved sprite item or its descendants",
           );
         }
@@ -7528,13 +9738,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.spriteId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved sprite item",
           );
         }
 
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing sprite item",
           );
         }
@@ -7545,7 +9755,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -7556,15 +9766,18 @@ const COMMAND_DEFINITIONS = [
         state,
         characterId: payload.characterId,
       });
-      const node = removeNodeOrThrow({
+      const nodeResult = removeNodeOrResult({
         tree: collection.tree,
         nodeId: payload.spriteId,
         errorMessage: "character sprite move target missing from tree",
       });
+      if (!nodeResult.valid) {
+        return nodeResult;
+      }
 
       insertTreeNode({
         tree: collection.tree,
-        node,
+        node: nodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -7577,27 +9790,36 @@ const COMMAND_DEFINITIONS = [
   {
     type: "layout.element.create",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "layoutId",
-          "elementId",
-          "parentId",
-          "data",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "layoutId",
+            "elementId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        throw createPayloadValidationError("payload.layoutId must be a non-empty string");
+        return invalidPayload(
+          "payload.layoutId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.elementId)) {
-        throw createPayloadValidationError("payload.elementId must be a non-empty string");
+        return invalidPayload(
+          "payload.elementId must be a non-empty string",
+        );
       }
 
       if (
@@ -7605,25 +9827,35 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validateLayoutElementCreateData({
-        data: payload.data,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateLayoutElementCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const layout = state.layouts.items[payload.layoutId];
       if (!isPlainObject(layout) || layout.type !== "layout") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.layoutId must reference an existing layout",
         );
       }
@@ -7634,7 +9866,7 @@ const COMMAND_DEFINITIONS = [
       });
 
       if (isPlainObject(collection.items[payload.elementId])) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.elementId must not already exist",
         );
       }
@@ -7646,7 +9878,7 @@ const COMMAND_DEFINITIONS = [
           !isPlainObject(parentItem) ||
           !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(parentItem.type)
         ) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder or container layout element",
           );
         }
@@ -7654,7 +9886,7 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing layout element",
           );
         }
@@ -7665,9 +9897,22 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== parentId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
+        }
+      }
+
+      {
+        const result = validateLayoutElementReferenceTargets({
+          layoutId: payload.layoutId,
+          elementId: payload.elementId,
+          data: payload.data,
+          state,
+          errorFactory: createPreconditionValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
         }
       }
     },
@@ -7700,35 +9945,52 @@ const COMMAND_DEFINITIONS = [
   {
     type: "layout.element.update",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: ["layoutId", "elementId", "data", "replace"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      let result = captureValidation(() =>
+        validateAllowedKeys({
+          value: payload,
+          allowedKeys: ["layoutId", "elementId", "data", "replace"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        }),
+      );
+      if (!result.valid) {
+        return result;
+      }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        throw createPayloadValidationError("payload.layoutId must be a non-empty string");
+        return invalidPayload("payload.layoutId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.elementId)) {
-        throw createPayloadValidationError("payload.elementId must be a non-empty string");
+        return invalidPayload("payload.elementId must be a non-empty string");
       }
 
-      if (payload.replace !== undefined && typeof payload.replace !== "boolean") {
-        throw createPayloadValidationError("payload.replace must be a boolean when provided");
+      if (
+        payload.replace !== undefined &&
+        typeof payload.replace !== "boolean"
+      ) {
+        return invalidPayload(
+          "payload.replace must be a boolean when provided",
+        );
       }
 
-      validateLayoutElementUpdateData({
-        data: payload.data,
-        replace: payload.replace,
-        errorFactory: createPayloadValidationError,
-      });
+      result = captureValidation(() =>
+        validateLayoutElementUpdateData({
+          data: payload.data,
+          replace: payload.replace,
+          errorFactory: createPayloadValidationError,
+        }),
+      );
+      if (!result.valid) {
+        return result;
+      }
+
+      return VALID_RESULT;
     },
     validateAgainstState: ({ state, payload }) => {
       const layout = state.layouts.items[payload.layoutId];
       if (!isPlainObject(layout) || layout.type !== "layout") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.layoutId must reference an existing layout",
         );
       }
@@ -7739,7 +10001,7 @@ const COMMAND_DEFINITIONS = [
       });
       const currentItem = collection.items[payload.elementId];
       if (!isPlainObject(currentItem)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.elementId must reference an existing layout element",
         );
       }
@@ -7748,19 +10010,41 @@ const COMMAND_DEFINITIONS = [
         payload.data.type !== undefined &&
         payload.data.type !== currentItem.type
       ) {
-        throw createPreconditionValidationError(
-          "layout element type cannot be changed",
-        );
+        return invalidPrecondition("layout element type cannot be changed");
+      }
+
+      if (currentItem.type !== "folder") {
+        const mergedData = payload.replace
+          ? { ...structuredClone(payload.data) }
+          : {
+              ...structuredClone(currentItem),
+              ...structuredClone(payload.data),
+            };
+
+        {
+          const result = validateLayoutElementReferenceTargets({
+            layoutId: payload.layoutId,
+            elementId: payload.elementId,
+            data: mergedData,
+            state,
+            errorFactory: createPreconditionValidationError,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
       }
 
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "folder layout elements cannot update non-name fields",
         );
       }
+
+      return VALID_RESULT;
     },
     reduce: ({ state, payload }) => {
       const collection = getLayoutElementCollection({
@@ -7786,27 +10070,39 @@ const COMMAND_DEFINITIONS = [
   {
     type: "layout.element.delete",
     validatePayload: ({ payload }) => {
-      validateExactKeys({
-        value: payload,
-        expectedKeys: ["layoutId", "elementIds"],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
-
-      if (!isNonEmptyString(payload.layoutId)) {
-        throw createPayloadValidationError("payload.layoutId must be a non-empty string");
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["layoutId", "elementIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
-      validateRequiredUniqueIdArray({
-        value: payload.elementIds,
-        path: "payload.elementIds",
-        errorFactory: createPayloadValidationError,
-      });
+      if (!isNonEmptyString(payload.layoutId)) {
+        return invalidPayload(
+          "payload.layoutId must be a non-empty string",
+        );
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.elementIds,
+          path: "payload.elementIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const layout = state.layouts.items[payload.layoutId];
       if (!isPlainObject(layout) || layout.type !== "layout") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.layoutId must reference an existing layout",
         );
       }
@@ -7818,7 +10114,7 @@ const COMMAND_DEFINITIONS = [
 
       for (const elementId of payload.elementIds) {
         if (!isPlainObject(collection.items[elementId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.elementIds must reference existing layout elements",
             { elementId },
           );
@@ -7857,26 +10153,35 @@ const COMMAND_DEFINITIONS = [
   {
     type: "layout.element.move",
     validatePayload: ({ payload }) => {
-      validateAllowedKeys({
-        value: payload,
-        allowedKeys: [
-          "layoutId",
-          "elementId",
-          "parentId",
-          "index",
-          "position",
-          "positionTargetId",
-        ],
-        path: "payload",
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "layoutId",
+            "elementId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        throw createPayloadValidationError("payload.layoutId must be a non-empty string");
+        return invalidPayload(
+          "payload.layoutId must be a non-empty string",
+        );
       }
 
       if (!isNonEmptyString(payload.elementId)) {
-        throw createPayloadValidationError("payload.elementId must be a non-empty string");
+        return invalidPayload(
+          "payload.elementId must be a non-empty string",
+        );
       }
 
       if (
@@ -7884,20 +10189,25 @@ const COMMAND_DEFINITIONS = [
         payload.parentId !== null &&
         !isNonEmptyString(payload.parentId)
       ) {
-        throw createPayloadValidationError(
+        return invalidPayload(
           "payload.parentId must be a non-empty string when provided",
         );
       }
 
-      validatePlacementFields({
-        payload,
-        errorFactory: createPayloadValidationError,
-      });
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       const layout = state.layouts.items[payload.layoutId];
       if (!isPlainObject(layout) || layout.type !== "layout") {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.layoutId must reference an existing layout",
         );
       }
@@ -7909,7 +10219,7 @@ const COMMAND_DEFINITIONS = [
       const currentItem = collection.items[payload.elementId];
 
       if (!isPlainObject(currentItem)) {
-        throw createPreconditionValidationError(
+        return invalidPrecondition(
           "payload.elementId must reference an existing layout element",
         );
       }
@@ -7925,7 +10235,7 @@ const COMMAND_DEFINITIONS = [
           !isPlainObject(parentItem) ||
           !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(parentItem.type)
         ) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must reference a folder or container layout element",
           );
         }
@@ -7937,7 +10247,7 @@ const COMMAND_DEFINITIONS = [
         );
 
         if (descendantIds.has(payload.parentId)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.parentId must not target the moved layout element or its descendants",
           );
         }
@@ -7945,13 +10255,13 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.positionTargetId !== undefined) {
         if (payload.positionTargetId === payload.elementId) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must not reference the moved layout element",
           );
         }
 
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference an existing layout element",
           );
         }
@@ -7962,7 +10272,7 @@ const COMMAND_DEFINITIONS = [
         });
 
         if (targetParentId !== (payload.parentId ?? null)) {
-          throw createPreconditionValidationError(
+          return invalidPrecondition(
             "payload.positionTargetId must reference a sibling under payload.parentId",
           );
         }
@@ -7973,15 +10283,18 @@ const COMMAND_DEFINITIONS = [
         state,
         layoutId: payload.layoutId,
       });
-      const node = removeNodeOrThrow({
+      const nodeResult = removeNodeOrResult({
         tree: collection.tree,
         nodeId: payload.elementId,
         errorMessage: "layout element move target missing from tree",
       });
+      if (!nodeResult.valid) {
+        return nodeResult;
+      }
 
       insertTreeNode({
         tree: collection.tree,
-        node,
+        node: nodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,
@@ -8005,62 +10318,111 @@ export const listCommandTypes = () =>
   COMMAND_DEFINITIONS.map((definition) => definition.type);
 
 export const validatePayload = ({ type, payload }) => {
-  if (typeof type !== "string" || type.length === 0) {
-    throw createPayloadValidationError("type must be a non-empty string");
-  }
+  return captureValidation(() => {
+    if (typeof type !== "string" || type.length === 0) {
+      return invalidPayload("type must be a non-empty string");
+    }
 
-  if (!isPlainObject(payload)) {
-    throw createPayloadValidationError("payload must be an object", {
-      type,
-    });
-  }
+    if (!isPlainObject(payload)) {
+      return invalidPayload("payload must be an object", { type });
+    }
 
-  const definition = getCommandDefinition({ type });
-  if (!definition) {
-    throw createPayloadValidationError(`unknown command type '${type}'`);
-  }
+    const definition = getCommandDefinition({ type });
+    if (!definition) {
+      return invalidPayload(`unknown command type '${type}'`);
+    }
 
-  definition.validatePayload({ payload });
+    const validationResult = captureValidation(() =>
+      definition.validatePayload({ payload }),
+    );
+
+    return normalizePayloadResult(validationResult);
+  });
 };
 
 export const validateAgainstState = ({ state, command }) => {
-  if (!isPlainObject(command)) {
-    throw createPreconditionValidationError("command must be an object");
-  }
+  return captureValidation(() => {
+    if (!isPlainObject(command)) {
+      return invalidPrecondition("command must be an object");
+    }
 
-  validatePayload(command);
-  validateState({ state });
+    const payloadResult = validatePayload(command);
+    if (!payloadResult.valid) {
+      return invalidPayload(
+        payloadResult.error.message,
+        toDomainErrorDetails(payloadResult.error),
+      );
+    }
 
-  const definition = getCommandDefinition({ type: command.type });
-  definition.validateAgainstState({
-    state,
-    payload: command.payload,
+    const stateResult = validateState({ state });
+    if (!stateResult.valid) {
+      if (stateResult.error.kind === "invariant") {
+        return invalidInvariant(
+          stateResult.error.message,
+          toDomainErrorDetails(stateResult.error),
+        );
+      }
+
+      return invalidState(
+        stateResult.error.message,
+        toDomainErrorDetails(stateResult.error),
+      );
+    }
+
+    const definition = getCommandDefinition({ type: command.type });
+    if (!definition) {
+      return invalidPrecondition(`unknown command type '${command.type}'`);
+    }
+
+    const validationResult = captureValidation(() =>
+      definition.validateAgainstState({
+        state,
+        payload: command.payload,
+      }),
+    );
+
+    return normalizeStateResult(validationResult);
   });
 };
 
 export const processCommand = ({ state, command }) => {
-  if (!isPlainObject(command)) {
-    throw createPreconditionValidationError("command must be an object");
-  }
+  return captureValidation(() => {
+    if (!isPlainObject(command)) {
+      return invalidPrecondition("command must be an object");
+    }
 
-  validatePayload(command);
-  validateState({ state });
+    const preconditionResult = validateAgainstState({
+      state,
+      command,
+    });
+    if (!preconditionResult.valid) {
+      return preconditionResult;
+    }
 
-  const definition = getCommandDefinition({ type: command.type });
-  definition.validateAgainstState({
-    state,
-    payload: command.payload,
+    const definition = getCommandDefinition({ type: command.type });
+    if (!definition) {
+      return invalidPrecondition(`unknown command type '${command.type}'`);
+    }
+
+    const nextState = definition.reduce({
+      state: structuredClone(state),
+      payload: command.payload,
+    });
+    if (nextState?.valid === false) {
+      return nextState;
+    }
+
+    const finalState = nextState === undefined ? state : nextState;
+    const stateResult = validateState({
+      state: finalState,
+    });
+    if (!stateResult.valid) {
+      return stateResult;
+    }
+
+    return {
+      valid: true,
+      state: finalState,
+    };
   });
-  const nextState = definition.reduce({
-    state: structuredClone(state),
-    payload: command.payload,
-  });
-
-  validateState({
-    state: nextState === undefined ? state : nextState,
-  });
-
-  return {
-    state: nextState === undefined ? state : nextState,
-  };
 };

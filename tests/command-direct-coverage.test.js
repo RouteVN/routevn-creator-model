@@ -7,6 +7,7 @@ import {
 } from "../src/index.js";
 import { listCommandTypes } from "../src/model.js";
 import { createEmptyTestState } from "./support/createEmptyTestState.js";
+import { expectValidation } from "./support/expectValidation.js";
 
 const clone = (value) => structuredClone(value);
 
@@ -15,7 +16,20 @@ const createTreeNode = (id, children = []) => ({
   children,
 });
 
-const createCollectionState = ({ collectionKey, items, tree, decorateState }) => {
+const createEmptyNestedCollection = () => ({
+  items: {},
+  tree: [],
+});
+
+const getSceneSection = (state, sceneId, sectionId) =>
+  state.scenes.items[sceneId].sections.items[sectionId];
+
+const createCollectionState = ({
+  collectionKey,
+  items,
+  tree,
+  decorateState,
+}) => {
   const state = createEmptyTestState();
   state[collectionKey] = {
     items,
@@ -70,6 +84,7 @@ const createSceneBaseState = () => {
       id: "scene-a",
       type: "scene",
       name: "Intro",
+      sections: createEmptyNestedCollection(),
     },
     "folder-scenes": {
       id: "folder-scenes",
@@ -80,6 +95,7 @@ const createSceneBaseState = () => {
       id: "scene-b",
       type: "scene",
       name: "Middle",
+      sections: createEmptyNestedCollection(),
     },
   };
   state.scenes.tree = [
@@ -90,31 +106,65 @@ const createSceneBaseState = () => {
   return state;
 };
 
+const findSectionInState = (state, sectionId) => {
+  for (const scene of Object.values(state.scenes.items)) {
+    const section = scene?.sections?.items?.[sectionId];
+    if (section) {
+      return section;
+    }
+  }
+  return undefined;
+};
+
+const findSectionCollectionInState = (state, sectionId) => {
+  for (const scene of Object.values(state.scenes.items)) {
+    if (scene?.sections?.items?.[sectionId]) {
+      return scene.sections;
+    }
+  }
+  return undefined;
+};
+
+const findLineInState = (state, lineId) => {
+  for (const scene of Object.values(state.scenes.items)) {
+    for (const section of Object.values(scene?.sections?.items || {})) {
+      const line = section?.lines?.items?.[lineId];
+      if (line) {
+        return line;
+      }
+    }
+  }
+  return undefined;
+};
+
 const createSectionBaseState = () => {
   const state = createSceneBaseState();
 
-  state.sections.items = {
-    "section-a": {
-      id: "section-a",
-      sceneId: "scene-a",
-      name: "Section A",
+  state.scenes.items["scene-a"].sections = {
+    items: {
+      "section-a": {
+        id: "section-a",
+        name: "Section A",
+        lines: createEmptyNestedCollection(),
+      },
+      "section-b": {
+        id: "section-b",
+        name: "Section B",
+        lines: createEmptyNestedCollection(),
+      },
     },
-    "section-b": {
-      id: "section-b",
-      sceneId: "scene-a",
-      name: "Section B",
-    },
-    "section-other": {
-      id: "section-other",
-      sceneId: "scene-b",
-      name: "Other",
-    },
+    tree: [createTreeNode("section-a"), createTreeNode("section-b")],
   };
-  state.sections.tree = [
-    createTreeNode("section-a"),
-    createTreeNode("section-b"),
-    createTreeNode("section-other"),
-  ];
+  state.scenes.items["scene-b"].sections = {
+    items: {
+      "section-other": {
+        id: "section-other",
+        name: "Other",
+        lines: createEmptyNestedCollection(),
+      },
+    },
+    tree: [createTreeNode("section-other")],
+  };
 
   return state;
 };
@@ -122,30 +172,34 @@ const createSectionBaseState = () => {
 const createLineBaseState = () => {
   const state = createSectionBaseState();
 
-  state.lines.items = {
-    "line-a": {
-      id: "line-a",
-      sectionId: "section-a",
-      actions: {
-        say: "hello",
+  state.scenes.items["scene-a"].sections.items["section-a"].lines = {
+    items: {
+      "line-a": {
+        id: "line-a",
+        actions: {
+          say: "hello",
+        },
+      },
+      "line-b": {
+        id: "line-b",
+        actions: {
+          say: "bye",
+        },
       },
     },
-    "line-b": {
-      id: "line-b",
-      sectionId: "section-a",
-      actions: {
-        say: "bye",
-      },
-    },
-    "line-other": {
-      id: "line-other",
-      sectionId: "section-b",
-      actions: {
-        say: "other",
-      },
-    },
+    tree: [createTreeNode("line-a"), createTreeNode("line-b")],
   };
-  state.lines.tree = [{ id: "line-a" }, { id: "line-b" }, { id: "line-other" }];
+  state.scenes.items["scene-a"].sections.items["section-b"].lines = {
+    items: {
+      "line-other": {
+        id: "line-other",
+        actions: {
+          say: "other",
+        },
+      },
+    },
+    tree: [createTreeNode("line-other")],
+  };
 
   return state;
 };
@@ -275,7 +329,9 @@ const createFolderedCommandCases = ({
     {
       type: createType,
       runPositive: () => {
-        const state = decorateState ? decorateState(createEmptyTestState()) : createEmptyTestState();
+        const state = decorateState
+          ? decorateState(createEmptyTestState())
+          : createEmptyTestState();
         const result = processCommand({
           state,
           command: {
@@ -292,7 +348,7 @@ const createFolderedCommandCases = ({
         );
       },
       runNegative: () => {
-        expect(() =>
+        expectValidation(() =>
           validatePayload({
             type: createType,
             payload: {
@@ -300,7 +356,9 @@ const createFolderedCommandCases = ({
               data: createData,
             },
           }),
-        ).toThrow(new RegExp(`payload\\.${idField} must be a non-empty string`));
+        ).toThrow(
+          new RegExp(`payload\\.${idField} must be a non-empty string`),
+        );
       },
     },
     {
@@ -332,9 +390,11 @@ const createFolderedCommandCases = ({
         });
       },
       runNegative: () => {
-        const state = decorateState ? decorateState(createEmptyTestState()) : createEmptyTestState();
+        const state = decorateState
+          ? decorateState(createEmptyTestState())
+          : createEmptyTestState();
 
-        expect(() =>
+        expectValidation(() =>
           validateAgainstState({
             state,
             command: {
@@ -374,14 +434,16 @@ const createFolderedCommandCases = ({
         expect(result.state[collectionKey].tree).toEqual([]);
       },
       runNegative: () => {
-        expect(() =>
+        expectValidation(() =>
           validatePayload({
             type: deleteType,
             payload: {
               [idsField]: [],
             },
           }),
-        ).toThrow(new RegExp(`payload\\.${idsField} must be a non-empty array`));
+        ).toThrow(
+          new RegExp(`payload\\.${idsField} must be a non-empty array`),
+        );
       },
     },
     {
@@ -428,7 +490,7 @@ const createFolderedCommandCases = ({
           decorateState,
         });
 
-        expect(() =>
+        expectValidation(() =>
           validateAgainstState({
             state,
             command: {
@@ -475,7 +537,7 @@ const directCases = [
       const snapshot = createEmptyTestState();
       snapshot.metadata = {};
 
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "project.create",
           payload: {
@@ -506,7 +568,7 @@ const directCases = [
     runNegative: () => {
       const state = createSceneBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -518,7 +580,9 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.data.initialSceneId must reference a non-folder scene");
+      ).toThrow(
+        "payload.data.initialSceneId must reference a non-folder scene",
+      );
     },
   },
   {
@@ -543,12 +607,13 @@ const directCases = [
         id: "scene-c",
         type: "scene",
         name: "New Scene",
+        sections: createEmptyNestedCollection(),
       });
     },
     runNegative: () => {
       const state = createSceneBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -587,7 +652,7 @@ const directCases = [
     runNegative: () => {
       const state = createSceneBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -620,7 +685,7 @@ const directCases = [
       expect(result.state.scenes.items["scene-b"]).toBeUndefined();
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "scene.delete",
           payload: {
@@ -651,7 +716,7 @@ const directCases = [
     runNegative: () => {
       const state = createSceneBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -684,16 +749,16 @@ const directCases = [
         },
       });
 
-      expect(result.state.sections.items["section-c"]).toEqual({
+      expect(getSceneSection(result.state, "scene-a", "section-c")).toEqual({
         id: "section-c",
-        sceneId: "scene-a",
         name: "Section C",
+        lines: createEmptyNestedCollection(),
       });
     },
     runNegative: () => {
       const state = createSectionBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -727,14 +792,14 @@ const directCases = [
         },
       });
 
-      expect(result.state.sections.items["section-a"].name).toBe(
+      expect(getSceneSection(result.state, "scene-a", "section-a").name).toBe(
         "Section A Updated",
       );
     },
     runNegative: () => {
       const state = createSectionBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -764,10 +829,12 @@ const directCases = [
         },
       });
 
-      expect(result.state.sections.items["section-b"]).toBeUndefined();
+      expect(
+        result.state.scenes.items["scene-a"].sections.items["section-b"],
+      ).toBeUndefined();
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "section.delete",
           payload: {
@@ -793,18 +860,22 @@ const directCases = [
         },
       });
 
-      expect(result.state.sections.tree[0].id).toBe("section-b");
+      expect(result.state.scenes.items["scene-a"].sections.tree[0].id).toBe(
+        "section-b",
+      );
     },
     runNegative: () => {
       const state = createSectionBaseState();
-      state.sections.items["folder-section"] = {
+      state.scenes.items["scene-b"].sections.items["folder-section"] = {
         id: "folder-section",
-        sceneId: "scene-b",
         name: "Folder Section",
+        lines: createEmptyNestedCollection(),
       };
-      state.sections.tree.push(createTreeNode("folder-section"));
+      state.scenes.items["scene-b"].sections.tree.push(
+        createTreeNode("folder-section"),
+      );
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -843,16 +914,24 @@ const directCases = [
         },
       });
 
-      expect(result.state.lines.items["line-c"]).toEqual({
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.items[
+          "line-c"
+        ],
+      ).toEqual({
         id: "line-c",
-        sectionId: "section-a",
         actions: {
           say: "new",
         },
       });
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.tree.map(
+          (node) => node.id,
+        ),
+      ).toEqual(["line-a", "line-b", "line-c"]);
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "line.create",
           payload: {
@@ -880,7 +959,11 @@ const directCases = [
         },
       });
 
-      expect(result.state.lines.items["line-a"].actions).toEqual({
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.items[
+          "line-a"
+        ].actions,
+      ).toEqual({
         say: "hello",
         mood: "tense",
       });
@@ -888,7 +971,7 @@ const directCases = [
     runNegative: () => {
       const state = createLineBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -918,10 +1001,14 @@ const directCases = [
         },
       });
 
-      expect(result.state.lines.items["line-b"]).toBeUndefined();
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.items[
+          "line-b"
+        ],
+      ).toBeUndefined();
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "line.delete",
           payload: {
@@ -947,12 +1034,21 @@ const directCases = [
         },
       });
 
-      expect(result.state.lines.items["line-b"].sectionId).toBe("section-b");
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.tree.map(
+          (node) => node.id,
+        ),
+      ).toEqual(["line-a"]);
+      expect(
+        getSceneSection(result.state, "scene-a", "section-b").lines.tree.map(
+          (node) => node.id,
+        ),
+      ).toEqual(["line-other", "line-b"]);
     },
     runNegative: () => {
       const state = createLineBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -965,7 +1061,9 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.positionTargetId must reference a line in the target section");
+      ).toThrow(
+        "payload.positionTargetId must reference a line in the target section",
+      );
     },
   },
   ...createFolderedCommandCases({
@@ -1174,7 +1272,9 @@ const directCases = [
       });
 
       expect(
-        result.state.characters.items["character-hero"].sprites.items["sprite-c"],
+        result.state.characters.items["character-hero"].sprites.items[
+          "sprite-c"
+        ],
       ).toEqual({
         id: "sprite-c",
         type: "image",
@@ -1183,7 +1283,7 @@ const directCases = [
       });
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "character.sprite.create",
           payload: {
@@ -1218,13 +1318,15 @@ const directCases = [
       });
 
       expect(
-        result.state.characters.items["character-hero"].sprites.items["sprite-a"].name,
+        result.state.characters.items["character-hero"].sprites.items[
+          "sprite-a"
+        ].name,
       ).toBe("Smile Updated");
     },
     runNegative: () => {
       const state = createCharacterBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -1257,11 +1359,13 @@ const directCases = [
       });
 
       expect(
-        result.state.characters.items["character-hero"].sprites.items["sprite-b"],
+        result.state.characters.items["character-hero"].sprites.items[
+          "sprite-b"
+        ],
       ).toBeUndefined();
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "character.sprite.delete",
           payload: {
@@ -1301,7 +1405,7 @@ const directCases = [
     runNegative: () => {
       const state = createCharacterBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -1366,7 +1470,7 @@ const directCases = [
     runNegative: () => {
       const state = createLayoutBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -1391,7 +1495,9 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.parentId must reference a folder or container layout element");
+      ).toThrow(
+        "payload.parentId must reference a folder or container layout element",
+      );
     },
   },
   {
@@ -1413,11 +1519,12 @@ const directCases = [
       });
 
       expect(
-        result.state.layouts.items["layout-dialogue"].elements.items["text-a"].opacity,
+        result.state.layouts.items["layout-dialogue"].elements.items["text-a"]
+          .opacity,
       ).toBe(0.5);
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "layout.element.update",
           payload: {
@@ -1428,7 +1535,9 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.data.opacity must be a finite number between 0 and 1 when provided");
+      ).toThrow(
+        "payload.data.opacity must be a finite number between 0 and 1 when provided",
+      );
     },
   },
   {
@@ -1451,7 +1560,7 @@ const directCases = [
       ).toBeUndefined();
     },
     runNegative: () => {
-      expect(() =>
+      expectValidation(() =>
         validatePayload({
           type: "layout.element.delete",
           payload: {
@@ -1481,15 +1590,15 @@ const directCases = [
       });
 
       expect(
-        result.state.layouts.items["layout-dialogue"].elements.tree[0].children.map(
-          (entry) => entry.id,
-        ),
+        result.state.layouts.items[
+          "layout-dialogue"
+        ].elements.tree[0].children.map((entry) => entry.id),
       ).toEqual(["text-b", "text-a"]);
     },
     runNegative: () => {
       const state = createLayoutBaseState();
 
-      expect(() =>
+      expectValidation(() =>
         validateAgainstState({
           state,
           command: {
@@ -1502,7 +1611,9 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.parentId must reference a folder or container layout element");
+      ).toThrow(
+        "payload.parentId must reference a folder or container layout element",
+      );
     },
   },
 ];
@@ -1513,6 +1624,12 @@ test("direct command coverage stays aligned with the public command registry", (
 });
 
 for (const directCase of directCases) {
-  test(`${directCase.type} accepts a direct valid call`, directCase.runPositive);
-  test(`${directCase.type} rejects a direct invalid call`, directCase.runNegative);
+  test(
+    `${directCase.type} accepts a direct valid call`,
+    directCase.runPositive,
+  );
+  test(
+    `${directCase.type} rejects a direct invalid call`,
+    directCase.runNegative,
+  );
 }

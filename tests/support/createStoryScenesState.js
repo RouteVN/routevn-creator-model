@@ -1,5 +1,10 @@
 import { createEmptyTestState } from "./createEmptyTestState.js";
 
+const createEmptyNestedCollection = () => ({
+  items: {},
+  tree: [],
+});
+
 export const createStoryScenesState = () => {
   const state = createEmptyTestState();
 
@@ -9,6 +14,7 @@ export const createStoryScenesState = () => {
       id: "scene-a",
       type: "scene",
       name: "Intro",
+      sections: createEmptyNestedCollection(),
     },
     "folder-prologue": {
       id: "folder-prologue",
@@ -23,6 +29,7 @@ export const createStoryScenesState = () => {
         x: 100,
         y: 200,
       },
+      sections: createEmptyNestedCollection(),
     },
   };
   state.scenes.tree = [
