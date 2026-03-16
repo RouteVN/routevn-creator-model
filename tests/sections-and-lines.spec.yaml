@@ -1,0 +1,1556 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: section.create inserts a section before a root sibling in the same scene scope
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Outro
+        tree:
+          - id: scene-a
+            children: []
+          - id: scene-b
+            children: []
+      sections:
+        items:
+          section-a1:
+            id: section-a1
+            sceneId: scene-a
+            name: Setup
+          section-b1:
+            id: section-b1
+            sceneId: scene-b
+            name: Ending
+        tree:
+          - id: section-a1
+            children: []
+          - id: section-b1
+            children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.create
+      payload:
+        sectionId: section-a0
+        sceneId: scene-a
+        position: before
+        positionTargetId: section-a1
+        data:
+          name: Opening
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Outro
+      tree:
+        - id: scene-a
+          children: []
+        - id: scene-b
+          children: []
+    sections:
+      items:
+        section-a1:
+          id: section-a1
+          sceneId: scene-a
+          name: Setup
+        section-a0:
+          id: section-a0
+          sceneId: scene-a
+          name: Opening
+        section-b1:
+          id: section-b1
+          sceneId: scene-b
+          name: Ending
+      tree:
+        - id: section-a0
+          children: []
+        - id: section-a1
+          children: []
+        - id: section-b1
+          children: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: section.update renames an existing section
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a1:
+            id: section-a1
+            sceneId: scene-a
+            name: Setup
+        tree:
+          - id: section-a1
+            children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.update
+      payload:
+        sectionId: section-a1
+        data:
+          name: New Setup
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items:
+        section-a1:
+          id: section-a1
+          sceneId: scene-a
+          name: New Setup
+      tree:
+        - id: section-a1
+          children: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: section.move lifts a nested section into root ordering within the same scene
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Outro
+        tree:
+          - id: scene-a
+            children: []
+          - id: scene-b
+            children: []
+      sections:
+        items:
+          section-a1:
+            id: section-a1
+            sceneId: scene-a
+            name: Setup
+          section-a-child:
+            id: section-a-child
+            sceneId: scene-a
+            name: Beat
+          section-a2:
+            id: section-a2
+            sceneId: scene-a
+            name: Reveal
+          section-b1:
+            id: section-b1
+            sceneId: scene-b
+            name: Ending
+        tree:
+          - id: section-a1
+            children:
+              - id: section-a-child
+                children: []
+          - id: section-b1
+            children: []
+          - id: section-a2
+            children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.move
+      payload:
+        sectionId: section-a-child
+        position: before
+        positionTargetId: section-a2
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Outro
+      tree:
+        - id: scene-a
+          children: []
+        - id: scene-b
+          children: []
+    sections:
+      items:
+        section-a1:
+          id: section-a1
+          sceneId: scene-a
+          name: Setup
+        section-a-child:
+          id: section-a-child
+          sceneId: scene-a
+          name: Beat
+        section-a2:
+          id: section-a2
+          sceneId: scene-a
+          name: Reveal
+        section-b1:
+          id: section-b1
+          sceneId: scene-b
+          name: Ending
+      tree:
+        - id: section-a1
+          children: []
+        - id: section-b1
+          children: []
+        - id: section-a-child
+          children: []
+        - id: section-a2
+          children: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: section.delete cascades descendant sections and their lines
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a1:
+            id: section-a1
+            sceneId: scene-a
+            name: Setup
+          section-a-child:
+            id: section-a-child
+            sceneId: scene-a
+            name: Beat
+        tree:
+          - id: section-a1
+            children:
+              - id: section-a-child
+                children: []
+      lines:
+        items:
+          line-1:
+            id: line-1
+            sectionId: section-a1
+            actions:
+              say: hello
+          line-2:
+            id: line-2
+            sectionId: section-a-child
+            actions:
+              say: remember
+        tree:
+          - id: line-1
+            children: []
+          - id: line-2
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.delete
+      payload:
+        sectionIds:
+          - section-a1
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: line.create inserts multiple lines into the requested section scope
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+          section-b:
+            id: section-b
+            sceneId: scene-a
+            name: Reveal
+        tree:
+          - id: section-a
+            children: []
+          - id: section-b
+            children: []
+      lines:
+        items:
+          line-a1:
+            id: line-a1
+            sectionId: section-a
+            actions:
+              say: one
+          line-b1:
+            id: line-b1
+            sectionId: section-b
+            actions:
+              say: other
+          line-a2:
+            id: line-a2
+            sectionId: section-a
+            actions:
+              say: two
+        tree:
+          - id: line-a1
+            children: []
+          - id: line-b1
+            children: []
+          - id: line-a2
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.create
+      payload:
+        sectionId: section-a
+        position: after
+        positionTargetId: line-a1
+        lines:
+          - lineId: line-a15
+            data:
+              actions:
+                say: between-1
+          - lineId: line-a16
+            data:
+              actions:
+                say: between-2
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items:
+        section-a:
+          id: section-a
+          sceneId: scene-a
+          name: Setup
+        section-b:
+          id: section-b
+          sceneId: scene-a
+          name: Reveal
+      tree:
+        - id: section-a
+          children: []
+        - id: section-b
+          children: []
+    lines:
+      items:
+        line-a1:
+          id: line-a1
+          sectionId: section-a
+          actions:
+            say: one
+        line-a15:
+          id: line-a15
+          sectionId: section-a
+          actions:
+            say: between-1
+        line-a16:
+          id: line-a16
+          sectionId: section-a
+          actions:
+            say: between-2
+        line-b1:
+          id: line-b1
+          sectionId: section-b
+          actions:
+            say: other
+        line-a2:
+          id: line-a2
+          sectionId: section-a
+          actions:
+            say: two
+      tree:
+        - id: line-a1
+          children: []
+        - id: line-a15
+        - id: line-a16
+        - id: line-b1
+          children: []
+        - id: line-a2
+          children: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: line.update_actions merges action patches by default
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+        tree:
+          - id: section-a
+            children: []
+      lines:
+        items:
+          line-1:
+            id: line-1
+            sectionId: section-a
+            actions:
+              say: hello
+              mood: calm
+        tree:
+          - id: line-1
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.update_actions
+      payload:
+        lineId: line-1
+        data:
+          mood: angry
+          pose: crossed
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items:
+        section-a:
+          id: section-a
+          sceneId: scene-a
+          name: Setup
+      tree:
+        - id: section-a
+          children: []
+    lines:
+      items:
+        line-1:
+          id: line-1
+          sectionId: section-a
+          actions:
+            say: hello
+            mood: angry
+            pose: crossed
+      tree:
+        - id: line-1
+          children: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: line.move changes section ownership and target ordering
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+          section-b:
+            id: section-b
+            sceneId: scene-a
+            name: Reveal
+        tree:
+          - id: section-a
+            children: []
+          - id: section-b
+            children: []
+      lines:
+        items:
+          line-a1:
+            id: line-a1
+            sectionId: section-a
+            actions:
+              say: one
+          line-b1:
+            id: line-b1
+            sectionId: section-b
+            actions:
+              say: other
+          line-a2:
+            id: line-a2
+            sectionId: section-a
+            actions:
+              say: two
+        tree:
+          - id: line-a1
+            children: []
+          - id: line-b1
+            children: []
+          - id: line-a2
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.move
+      payload:
+        lineId: line-a2
+        toSectionId: section-b
+        position: first
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items:
+        section-a:
+          id: section-a
+          sceneId: scene-a
+          name: Setup
+        section-b:
+          id: section-b
+          sceneId: scene-a
+          name: Reveal
+      tree:
+        - id: section-a
+          children: []
+        - id: section-b
+          children: []
+    lines:
+      items:
+        line-a1:
+          id: line-a1
+          sectionId: section-a
+          actions:
+            say: one
+        line-b1:
+          id: line-b1
+          sectionId: section-b
+          actions:
+            say: other
+        line-a2:
+          id: line-a2
+          sectionId: section-b
+          actions:
+            say: two
+      tree:
+        - id: line-a1
+          children: []
+        - id: line-a2
+          children: []
+        - id: line-b1
+          children: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: line.delete removes multiple lines
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+        tree:
+          - id: section-a
+            children: []
+      lines:
+        items:
+          line-1:
+            id: line-1
+            sectionId: section-a
+            actions:
+              say: one
+          line-2:
+            id: line-2
+            sectionId: section-a
+            actions:
+              say: two
+          line-3:
+            id: line-3
+            sectionId: section-a
+            actions:
+              say: three
+        tree:
+          - id: line-1
+            children: []
+          - id: line-2
+            children: []
+          - id: line-3
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.delete
+      payload:
+        lineIds:
+          - line-1
+          - line-3
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-a
+          children: []
+    sections:
+      items:
+        section-a:
+          id: section-a
+          sceneId: scene-a
+          name: Setup
+      tree:
+        - id: section-a
+          children: []
+    lines:
+      items:
+        line-2:
+          id: line-2
+          sectionId: section-a
+          actions:
+            say: two
+      tree:
+        - id: line-2
+          children: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: section.create rejects unsupported fields in data
+in:
+  - type: section.create
+    payload:
+      sectionId: section-a
+      sceneId: scene-a
+      data:
+        name: Setup
+        notes: invalid
+throws: "payload.data.notes is not allowed"
+---
+case: line.create rejects duplicate line ids in a batch
+in:
+  - type: line.create
+    payload:
+      sectionId: section-a
+      lines:
+        - lineId: line-1
+          data:
+            actions: {}
+        - lineId: line-1
+          data:
+            actions: {}
+throws: "payload.lines[1].lineId must be unique"
+---
+case: line.delete rejects an empty batch
+in:
+  - type: line.delete
+    payload:
+      lineIds: []
+throws: "payload.lineIds must be a non-empty array"
+---
+case: line.move rejects parentId because line trees are flat
+in:
+  - type: line.move
+    payload:
+      lineId: line-1
+      toSectionId: section-a
+      parentId: line-parent
+throws: "payload.parentId is not allowed"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: section.create rejects folder scenes
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: folder
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.create
+      payload:
+        sectionId: section-a
+        sceneId: scene-a
+        data:
+          name: Setup
+throws: "payload.sceneId must reference a non-folder scene"
+---
+case: section.move rejects parents from another scene
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Outro
+        tree:
+          - id: scene-a
+            children: []
+          - id: scene-b
+            children: []
+      sections:
+        items:
+          section-a1:
+            id: section-a1
+            sceneId: scene-a
+            name: Setup
+          section-b1:
+            id: section-b1
+            sceneId: scene-b
+            name: Ending
+        tree:
+          - id: section-a1
+            children: []
+          - id: section-b1
+            children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: section.move
+      payload:
+        sectionId: section-a1
+        parentId: section-b1
+throws: "payload.parentId must reference a section in the same scene"
+---
+case: line.create rejects position targets from another section
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+          section-b:
+            id: section-b
+            sceneId: scene-a
+            name: Reveal
+        tree:
+          - id: section-a
+            children: []
+          - id: section-b
+            children: []
+      lines:
+        items:
+          line-b1:
+            id: line-b1
+            sectionId: section-b
+            actions: {}
+        tree:
+          - id: line-b1
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.create
+      payload:
+        sectionId: section-a
+        position: after
+        positionTargetId: line-b1
+        lines:
+          - lineId: line-a1
+            data:
+              actions: {}
+throws: "payload.positionTargetId must reference a line in the target section"

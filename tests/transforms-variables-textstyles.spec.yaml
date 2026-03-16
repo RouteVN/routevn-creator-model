@@ -1,0 +1,532 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: transform.create inserts a transform item
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: transform.create
+      payload:
+        transformId: transform-camera
+        data:
+          type: transform
+          name: Camera
+          x: 100
+          y: 200
+          scaleX: 1
+          scaleY: 1
+          anchorX: 0
+          anchorY: 0
+          rotation: 0
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items:
+        transform-camera:
+          id: transform-camera
+          type: transform
+          name: Camera
+          x: 100
+          y: 200
+          scaleX: 1
+          scaleY: 1
+          anchorX: 0
+          anchorY: 0
+          rotation: 0
+      tree:
+        - id: transform-camera
+          children: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: variable.create inserts a typed variable item
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: variable.create
+      payload:
+        variableId: hasSeenIntro
+        data:
+          type: boolean
+          name: Has Seen Intro
+          scope: context
+          default: false
+          value: false
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items:
+        hasSeenIntro:
+          id: hasSeenIntro
+          type: boolean
+          name: Has Seen Intro
+          scope: context
+          default: false
+          value: false
+      tree:
+        - id: hasSeenIntro
+          children: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: textStyle.create inserts a text style referencing a font and color
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-ui:
+            id: font-ui
+            type: font
+            name: UI Font
+            fileId: file-font
+            fontFamily: Suit
+        tree:
+          - id: font-ui
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-ui:
+            id: color-ui
+            type: color
+            name: White
+            hex: "#ffffff"
+        tree:
+          - id: color-ui
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: textStyle.create
+      payload:
+        textStyleId: style-ui
+        data:
+          type: textStyle
+          name: Dialogue
+          fontId: font-ui
+          colorId: color-ui
+          fontSize: 32
+          lineHeight: 1.4
+          fontWeight: "700"
+          previewText: Hello
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items:
+        font-ui:
+          id: font-ui
+          type: font
+          name: UI Font
+          fileId: file-font
+          fontFamily: Suit
+      tree:
+        - id: font-ui
+          children: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items:
+        color-ui:
+          id: color-ui
+          type: color
+          name: White
+          hex: "#ffffff"
+      tree:
+        - id: color-ui
+          children: []
+    textStyles:
+      items:
+        style-ui:
+          id: style-ui
+          type: textStyle
+          name: Dialogue
+          fontId: font-ui
+          colorId: color-ui
+          fontSize: 32
+          lineHeight: 1.4
+          fontWeight: "700"
+          previewText: Hello
+      tree:
+        - id: style-ui
+          children: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: variable.update rejects a default value of the wrong runtime type
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items:
+          score:
+            id: score
+            type: number
+            name: Score
+            scope: context
+            default: 0
+            value: 0
+        tree:
+          - id: score
+            children: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: variable.update
+      payload:
+        variableId: score
+        data:
+          default: wrong
+throws: "payload.data.default must be a finite number"
+---
+case: textStyle.create rejects a missing font reference
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-ui:
+            id: color-ui
+            type: color
+            name: White
+            hex: "#ffffff"
+        tree:
+          - id: color-ui
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: textStyle.create
+      payload:
+        textStyleId: style-ui
+        data:
+          type: textStyle
+          name: Dialogue
+          fontId: font-missing
+          colorId: color-ui
+          fontSize: 32
+          lineHeight: 1.4
+          fontWeight: "700"
+throws: "payload.data.fontId must reference an existing non-folder font"

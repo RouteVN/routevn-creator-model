@@ -1,0 +1,1378 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: sound.create inserts a sound before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          folder-audio:
+            id: folder-audio
+            type: folder
+            name: Audio
+          sound-b:
+            id: sound-b
+            type: sound
+            name: Theme
+            fileId: file-b
+        tree:
+          - id: folder-audio
+            children:
+              - id: sound-b
+                children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.create
+      payload:
+        soundId: sound-a
+        parentId: folder-audio
+        position: before
+        positionTargetId: sound-b
+        data:
+          type: sound
+          name: Ambience
+          fileId: file-a
+          fileType: audio/mp3
+          fileSize: 1024
+          waveformDataFileId: waveform-a
+          duration: 42.5
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items:
+        folder-audio:
+          id: folder-audio
+          type: folder
+          name: Audio
+        sound-b:
+          id: sound-b
+          type: sound
+          name: Theme
+          fileId: file-b
+        sound-a:
+          id: sound-a
+          type: sound
+          name: Ambience
+          fileId: file-a
+          fileType: audio/mp3
+          fileSize: 1024
+          waveformDataFileId: waveform-a
+          duration: 42.5
+      tree:
+        - id: folder-audio
+          children:
+            - id: sound-a
+              children: []
+            - id: sound-b
+              children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: sound.update updates metadata for an existing sound
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          sound-a:
+            id: sound-a
+            type: sound
+            name: Ambience
+            fileId: file-a
+            waveformDataFileId: waveform-a
+        tree:
+          - id: sound-a
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.update
+      payload:
+        soundId: sound-a
+        data:
+          description: Night ambience
+          waveformDataFileId: null
+          duration: 45
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items:
+        sound-a:
+          id: sound-a
+          type: sound
+          name: Ambience
+          fileId: file-a
+          waveformDataFileId: null
+          description: Night ambience
+          duration: 45
+      tree:
+        - id: sound-a
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: sound.move lifts a sound to the root before a target folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          folder-audio:
+            id: folder-audio
+            type: folder
+            name: Audio
+          sound-a:
+            id: sound-a
+            type: sound
+            name: Ambience
+            fileId: file-a
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-audio
+            children:
+              - id: sound-a
+                children: []
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.move
+      payload:
+        soundId: sound-a
+        position: before
+        positionTargetId: folder-bgm
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items:
+        folder-audio:
+          id: folder-audio
+          type: folder
+          name: Audio
+        sound-a:
+          id: sound-a
+          type: sound
+          name: Ambience
+          fileId: file-a
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-audio
+          children: []
+        - id: sound-a
+          children: []
+        - id: folder-bgm
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: sound.delete cascades descendant items under a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          folder-audio:
+            id: folder-audio
+            type: folder
+            name: Audio
+          sound-a:
+            id: sound-a
+            type: sound
+            name: Ambience
+            fileId: file-a
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-audio
+            children:
+              - id: sound-a
+                children: []
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.delete
+      payload:
+        soundIds:
+          - folder-audio
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: video.create inserts a video before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          folder-cuts:
+            id: folder-cuts
+            type: folder
+            name: Cuts
+          video-b:
+            id: video-b
+            type: video
+            name: Trailer
+            fileId: file-b
+            thumbnailFileId: thumb-b
+        tree:
+          - id: folder-cuts
+            children:
+              - id: video-b
+                children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.create
+      payload:
+        videoId: video-a
+        parentId: folder-cuts
+        position: before
+        positionTargetId: video-b
+        data:
+          type: video
+          name: Intro Cut
+          fileId: file-a
+          thumbnailFileId: thumb-a
+          fileType: video/mp4
+          fileSize: 2048
+          width: 1920
+          height: 1080
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items:
+        folder-cuts:
+          id: folder-cuts
+          type: folder
+          name: Cuts
+        video-b:
+          id: video-b
+          type: video
+          name: Trailer
+          fileId: file-b
+          thumbnailFileId: thumb-b
+        video-a:
+          id: video-a
+          type: video
+          name: Intro Cut
+          fileId: file-a
+          thumbnailFileId: thumb-a
+          fileType: video/mp4
+          fileSize: 2048
+          width: 1920
+          height: 1080
+      tree:
+        - id: folder-cuts
+          children:
+            - id: video-a
+              children: []
+            - id: video-b
+              children: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: video.update updates metadata for an existing video
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          video-a:
+            id: video-a
+            type: video
+            name: Intro Cut
+            fileId: file-a
+            thumbnailFileId: thumb-a
+        tree:
+          - id: video-a
+            children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.update
+      payload:
+        videoId: video-a
+        data:
+          description: Opening cinematic
+          width: 1280
+          height: 720
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items:
+        video-a:
+          id: video-a
+          type: video
+          name: Intro Cut
+          fileId: file-a
+          thumbnailFileId: thumb-a
+          description: Opening cinematic
+          width: 1280
+          height: 720
+      tree:
+        - id: video-a
+          children: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: video.move lifts a video to the root before a target folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          folder-cuts:
+            id: folder-cuts
+            type: folder
+            name: Cuts
+          video-a:
+            id: video-a
+            type: video
+            name: Intro Cut
+            fileId: file-a
+            thumbnailFileId: thumb-a
+          folder-bonus:
+            id: folder-bonus
+            type: folder
+            name: Bonus
+        tree:
+          - id: folder-cuts
+            children:
+              - id: video-a
+                children: []
+          - id: folder-bonus
+            children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.move
+      payload:
+        videoId: video-a
+        position: before
+        positionTargetId: folder-bonus
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items:
+        folder-cuts:
+          id: folder-cuts
+          type: folder
+          name: Cuts
+        video-a:
+          id: video-a
+          type: video
+          name: Intro Cut
+          fileId: file-a
+          thumbnailFileId: thumb-a
+        folder-bonus:
+          id: folder-bonus
+          type: folder
+          name: Bonus
+      tree:
+        - id: folder-cuts
+          children: []
+        - id: video-a
+          children: []
+        - id: folder-bonus
+          children: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: video.delete cascades descendant items under a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          folder-cuts:
+            id: folder-cuts
+            type: folder
+            name: Cuts
+          video-a:
+            id: video-a
+            type: video
+            name: Intro Cut
+            fileId: file-a
+            thumbnailFileId: thumb-a
+          folder-bonus:
+            id: folder-bonus
+            type: folder
+            name: Bonus
+        tree:
+          - id: folder-cuts
+            children:
+              - id: video-a
+                children: []
+          - id: folder-bonus
+            children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.delete
+      payload:
+        videoIds:
+          - folder-cuts
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items:
+        folder-bonus:
+          id: folder-bonus
+          type: folder
+          name: Bonus
+      tree:
+        - id: folder-bonus
+          children: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: sound.create rejects invalid waveform data id type
+in:
+  - type: sound.create
+    payload:
+      soundId: sound-a
+      data:
+        type: sound
+        name: Ambience
+        fileId: file-a
+        waveformDataFileId: 123
+throws: "payload.data.waveformDataFileId must be a non-empty string or null when provided"
+---
+case: video.create rejects missing thumbnail file id
+in:
+  - type: video.create
+    payload:
+      videoId: video-a
+      data:
+        type: video
+        name: Intro Cut
+        fileId: file-a
+throws: "payload.data.thumbnailFileId must be a non-empty string"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: sound.create rejects non-folder parents
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          sound-b:
+            id: sound-b
+            type: sound
+            name: Theme
+            fileId: file-b
+        tree:
+          - id: sound-b
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.create
+      payload:
+        soundId: sound-a
+        parentId: sound-b
+        data:
+          type: sound
+          name: Ambience
+          fileId: file-a
+throws: "payload.parentId must reference a folder sound item"
+---
+case: sound.update rejects file field updates on folders
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          folder-audio:
+            id: folder-audio
+            type: folder
+            name: Audio
+        tree:
+          - id: folder-audio
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: sound.update
+      payload:
+        soundId: folder-audio
+        data:
+          fileId: file-a
+throws: "folder sound items cannot update file fields"
+---
+case: video.create rejects non-folder parents
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          video-b:
+            id: video-b
+            type: video
+            name: Trailer
+            fileId: file-b
+            thumbnailFileId: thumb-b
+        tree:
+          - id: video-b
+            children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.create
+      payload:
+        videoId: video-a
+        parentId: video-b
+        data:
+          type: video
+          name: Intro Cut
+          fileId: file-a
+          thumbnailFileId: thumb-a
+throws: "payload.parentId must reference a folder video item"
+---
+case: video.move rejects moving a folder under its own descendant
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          folder-cuts:
+            id: folder-cuts
+            type: folder
+            name: Cuts
+          folder-bonus:
+            id: folder-bonus
+            type: folder
+            name: Bonus
+        tree:
+          - id: folder-cuts
+            children:
+              - id: folder-bonus
+                children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: video.move
+      payload:
+        videoId: folder-cuts
+        parentId: folder-bonus
+throws: "payload.parentId must not target the moved video item or its descendants"

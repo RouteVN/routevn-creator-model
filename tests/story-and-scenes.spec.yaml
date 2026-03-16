@@ -1,0 +1,786 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: story.update sets the initial scene
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+            position:
+              x: 100
+              y: 200
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: story.update
+      payload:
+        data:
+          initialSceneId: scene-b
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-b
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        folder-prologue:
+          id: folder-prologue
+          type: folder
+          name: Prologue
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Wake Up
+          position:
+            x: 100
+            y: 200
+      tree:
+        - id: scene-a
+          children: []
+        - id: folder-prologue
+          children:
+            - id: scene-b
+              children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: scene.create inserts a scene before a sibling under the requested folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.create
+      payload:
+        sceneId: scene-c
+        parentId: folder-prologue
+        position: before
+        positionTargetId: scene-b
+        data:
+          name: Flashback
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        folder-prologue:
+          id: folder-prologue
+          type: folder
+          name: Prologue
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Wake Up
+        scene-c:
+          id: scene-c
+          type: scene
+          name: Flashback
+      tree:
+        - id: scene-a
+          children: []
+        - id: folder-prologue
+          children:
+            - id: scene-c
+              children: []
+            - id: scene-b
+              children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: scene.update renames a scene and merges partial position updates
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+            position:
+              x: 100
+              y: 200
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.update
+      payload:
+        sceneId: scene-b
+        data:
+          name: Train Station
+          position:
+            x: 320
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        folder-prologue:
+          id: folder-prologue
+          type: folder
+          name: Prologue
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Train Station
+          position:
+            x: 320
+            y: 200
+      tree:
+        - id: scene-a
+          children: []
+        - id: folder-prologue
+          children:
+            - id: scene-b
+              children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: story.update rejects extra fields in data
+in:
+  - type: story.update
+    payload:
+      data:
+        initialSceneId: scene-b
+        title: invalid
+throws: "payload.data.title is not allowed"
+---
+case: scene.create rejects index and position together
+in:
+  - type: scene.create
+    payload:
+      sceneId: scene-c
+      index: 0
+      position: last
+      data:
+        name: Flashback
+throws: "payload.index cannot be combined with payload.position"
+---
+case: scene.update rejects unsupported fields
+in:
+  - type: scene.update
+    payload:
+      sceneId: scene-b
+      data:
+        type: folder
+throws: "payload.data.type is not allowed"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: story.update rejects targeting a folder scene
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: story.update
+      payload:
+        data:
+          initialSceneId: folder-prologue
+throws: "payload.data.initialSceneId must reference a non-folder scene"
+---
+case: scene.create rejects non-folder parents
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.create
+      payload:
+        sceneId: scene-c
+        parentId: scene-a
+        data:
+          name: Flashback
+throws: "payload.parentId must reference a folder scene"
+---
+case: scene.create rejects position targets outside the requested sibling group
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.create
+      payload:
+        sceneId: scene-c
+        parentId: folder-prologue
+        position: after
+        positionTargetId: scene-a
+        data:
+          name: Flashback
+throws: "payload.positionTargetId must reference a sibling under payload.parentId"
+---
+case: scene.update rejects unknown scene ids
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.update
+      payload:
+        sceneId: scene-missing
+        data:
+          name: Missing
+throws: "payload.sceneId must reference an existing scene"
+---
+case: validateAgainstState rejects malformed state snapshots before command preconditions
+in:
+  - state: {}
+    command:
+      type: story.update
+      payload:
+        data:
+          initialSceneId: scene-a
+throws: "state.project is required"

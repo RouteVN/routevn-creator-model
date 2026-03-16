@@ -1,0 +1,952 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: font.create inserts a font before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          folder-fonts:
+            id: folder-fonts
+            type: folder
+            name: Fonts
+          font-b:
+            id: font-b
+            type: font
+            name: Body
+            fileId: file-b
+            fontFamily: Inter
+        tree:
+          - id: folder-fonts
+            children:
+              - id: font-b
+                children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: font.create
+      payload:
+        fontId: font-a
+        parentId: folder-fonts
+        position: before
+        positionTargetId: font-b
+        data:
+          type: font
+          name: Display
+          fileId: file-a
+          fontFamily: Fraunces
+          fileType: font/otf
+          fileSize: 2048
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items:
+        folder-fonts:
+          id: folder-fonts
+          type: folder
+          name: Fonts
+        font-b:
+          id: font-b
+          type: font
+          name: Body
+          fileId: file-b
+          fontFamily: Inter
+        font-a:
+          id: font-a
+          type: font
+          name: Display
+          fileId: file-a
+          fontFamily: Fraunces
+          fileType: font/otf
+          fileSize: 2048
+      tree:
+        - id: folder-fonts
+          children:
+            - id: font-a
+              children: []
+            - id: font-b
+              children: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: font.update updates metadata for an existing font
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-a:
+            id: font-a
+            type: font
+            name: Display
+            fileId: file-a
+            fontFamily: Fraunces
+        tree:
+          - id: font-a
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: font.update
+      payload:
+        fontId: font-a
+        data:
+          name: Display Serif
+          fileSize: 4096
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items:
+        font-a:
+          id: font-a
+          type: font
+          name: Display Serif
+          fileId: file-a
+          fontFamily: Fraunces
+          fileSize: 4096
+      tree:
+        - id: font-a
+          children: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: font.move lifts a font to the root before a target folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          folder-fonts:
+            id: folder-fonts
+            type: folder
+            name: Fonts
+          font-a:
+            id: font-a
+            type: font
+            name: Display
+            fileId: file-a
+            fontFamily: Fraunces
+          folder-archive:
+            id: folder-archive
+            type: folder
+            name: Archive
+        tree:
+          - id: folder-fonts
+            children:
+              - id: font-a
+                children: []
+          - id: folder-archive
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: font.move
+      payload:
+        fontId: font-a
+        position: before
+        positionTargetId: folder-archive
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items:
+        folder-fonts:
+          id: folder-fonts
+          type: folder
+          name: Fonts
+        font-a:
+          id: font-a
+          type: font
+          name: Display
+          fileId: file-a
+          fontFamily: Fraunces
+        folder-archive:
+          id: folder-archive
+          type: folder
+          name: Archive
+      tree:
+        - id: folder-fonts
+          children: []
+        - id: font-a
+          children: []
+        - id: folder-archive
+          children: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: color.create inserts a color before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          folder-brand:
+            id: folder-brand
+            type: folder
+            name: Brand
+          color-b:
+            id: color-b
+            type: color
+            name: Accent
+            hex: "#00ffaa"
+        tree:
+          - id: folder-brand
+            children:
+              - id: color-b
+                children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: color.create
+      payload:
+        colorId: color-a
+        parentId: folder-brand
+        position: before
+        positionTargetId: color-b
+        data:
+          type: color
+          name: Primary
+          hex: "#112233"
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items:
+        folder-brand:
+          id: folder-brand
+          type: folder
+          name: Brand
+        color-b:
+          id: color-b
+          type: color
+          name: Accent
+          hex: "#00ffaa"
+        color-a:
+          id: color-a
+          type: color
+          name: Primary
+          hex: "#112233"
+      tree:
+        - id: folder-brand
+          children:
+            - id: color-a
+              children: []
+            - id: color-b
+              children: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: color.update updates hex metadata for an existing color
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-a:
+            id: color-a
+            type: color
+            name: Primary
+            hex: "#112233"
+        tree:
+          - id: color-a
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: color.update
+      payload:
+        colorId: color-a
+        data:
+          name: Primary Dark
+          hex: "#223344"
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items:
+        color-a:
+          id: color-a
+          type: color
+          name: Primary Dark
+          hex: "#223344"
+      tree:
+        - id: color-a
+          children: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: color.delete removes a folder and its nested colors
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          folder-brand:
+            id: folder-brand
+            type: folder
+            name: Brand
+          color-a:
+            id: color-a
+            type: color
+            name: Primary
+            hex: "#112233"
+          color-b:
+            id: color-b
+            type: color
+            name: Accent
+            hex: "#445566"
+        tree:
+          - id: folder-brand
+            children:
+              - id: color-a
+                children: []
+              - id: color-b
+                children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: color.delete
+      payload:
+        colorIds: [folder-brand]
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: font.create rejects missing fontFamily
+in:
+  - type: font.create
+    payload:
+      fontId: font-a
+      data:
+        type: font
+        name: Display
+        fileId: file-a
+throws: "payload.data.fontFamily must be a non-empty string"
+---
+case: color.create rejects an invalid hex string
+in:
+  - type: color.create
+    payload:
+      colorId: color-a
+      data:
+        type: color
+        name: Primary
+        hex: red
+throws: "payload.data.hex must be a #RRGGBB string"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: font.update rejects file field changes on a folder item
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          folder-fonts:
+            id: folder-fonts
+            type: folder
+            name: Fonts
+        tree:
+          - id: folder-fonts
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: font.update
+      payload:
+        fontId: folder-fonts
+        data:
+          fileId: file-a
+throws: "folder font items cannot update font fields"
+---
+case: color.move rejects a non-folder parent target
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-a:
+            id: color-a
+            type: color
+            name: Primary
+            hex: "#112233"
+          color-b:
+            id: color-b
+            type: color
+            name: Accent
+            hex: "#445566"
+        tree:
+          - id: color-a
+            children: []
+          - id: color-b
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: color.move
+      payload:
+        colorId: color-a
+        parentId: color-b
+throws: "payload.parentId must reference a folder color item"

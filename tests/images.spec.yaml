@@ -1,0 +1,830 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: image.create inserts an image before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+          image-b:
+            id: image-b
+            type: image
+            name: Character
+            fileId: file-b
+            fileType: image/png
+            width: 512
+            height: 512
+        tree:
+          - id: folder-art
+            children:
+              - id: image-b
+                children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.create
+      payload:
+        imageId: image-a
+        parentId: folder-art
+        position: before
+        positionTargetId: image-b
+        data:
+          type: image
+          name: Background
+          fileId: file-a
+          fileType: image/jpeg
+          fileSize: 2000
+          width: 1920
+          height: 1080
+          description: ""
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-art:
+          id: folder-art
+          type: folder
+          name: Art
+        image-b:
+          id: image-b
+          type: image
+          name: Character
+          fileId: file-b
+          fileType: image/png
+          width: 512
+          height: 512
+        image-a:
+          id: image-a
+          type: image
+          name: Background
+          fileId: file-a
+          fileType: image/jpeg
+          fileSize: 2000
+          width: 1920
+          height: 1080
+          description: ""
+      tree:
+        - id: folder-art
+          children:
+            - id: image-a
+              children: []
+            - id: image-b
+              children: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: image.update updates metadata for an existing image
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          image-a:
+            id: image-a
+            type: image
+            name: Background
+            description: ""
+            fileId: file-a
+            fileType: image/jpeg
+            width: 1920
+            height: 1080
+        tree:
+          - id: image-a
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.update
+      payload:
+        imageId: image-a
+        data:
+          name: Background Wide
+          description: Establishing shot
+          fileSize: 4096
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items:
+        image-a:
+          id: image-a
+          type: image
+          name: Background Wide
+          description: Establishing shot
+          fileId: file-a
+          fileType: image/jpeg
+          fileSize: 4096
+          width: 1920
+          height: 1080
+      tree:
+        - id: image-a
+          children: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: image.move lifts an image to the root before a target folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+          image-a:
+            id: image-a
+            type: image
+            name: Background
+            fileId: file-a
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-art
+            children:
+              - id: image-a
+                children: []
+          - id: folder-ui
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.move
+      payload:
+        imageId: image-a
+        position: before
+        positionTargetId: folder-ui
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-art:
+          id: folder-art
+          type: folder
+          name: Art
+        image-a:
+          id: image-a
+          type: image
+          name: Background
+          fileId: file-a
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-art
+          children: []
+        - id: image-a
+          children: []
+        - id: folder-ui
+          children: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: image.delete cascades descendant items under a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+          image-a:
+            id: image-a
+            type: image
+            name: Background
+            fileId: file-a
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-art
+            children:
+              - id: image-a
+                children: []
+          - id: folder-ui
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.delete
+      payload:
+        imageIds:
+          - folder-art
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: image.create rejects missing fileId for image items
+in:
+  - type: image.create
+    payload:
+      imageId: image-a
+      data:
+        type: image
+        name: Background
+throws: "payload.data.fileId must be a non-empty string"
+---
+case: image.update rejects unsupported fields
+in:
+  - type: image.update
+    payload:
+      imageId: image-a
+      data:
+        type: image
+throws: "payload.data.type is not allowed"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: image.create rejects non-folder parents
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          image-b:
+            id: image-b
+            type: image
+            name: Character
+            fileId: file-b
+        tree:
+          - id: image-b
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.create
+      payload:
+        imageId: image-a
+        parentId: image-b
+        data:
+          type: image
+          name: Background
+          fileId: file-a
+throws: "payload.parentId must reference a folder image item"
+---
+case: image.update rejects file field updates on folders
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+        tree:
+          - id: folder-art
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.update
+      payload:
+        imageId: folder-art
+        data:
+          fileId: file-a
+throws: "folder image items cannot update file fields"
+---
+case: image.move rejects moving a folder under its own descendant
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-art
+            children:
+              - id: folder-ui
+                children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.move
+      payload:
+        imageId: folder-art
+        parentId: folder-ui
+throws: "payload.parentId must not target the moved image item or its descendants"
+---
+case: image.delete rejects unknown ids
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: image.delete
+      payload:
+        imageIds:
+          - image-missing
+throws: "payload.imageIds must reference existing image items"

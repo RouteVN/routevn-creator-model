@@ -1,0 +1,296 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: project.create replaces the whole state with the provided snapshot
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: project.create
+      payload:
+        state:
+          project:
+            resolution:
+              width: 1920
+              height: 1080
+          story:
+            initialSceneId: scene-intro
+          scenes:
+            items:
+              scene-intro:
+                id: scene-intro
+                type: scene
+                name: Intro
+            tree:
+              - id: scene-intro
+                children: []
+          sections:
+            items: {}
+            tree: []
+          lines:
+            items: {}
+            tree: []
+          images:
+            items:
+              bg-1:
+                id: bg-1
+                type: image
+                name: Background
+                fileId: bg-file-1
+                width: 1920
+                height: 1080
+            tree:
+              - id: bg-1
+                children: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+out:
+  state:
+    project:
+      resolution:
+        width: 1920
+        height: 1080
+    story:
+      initialSceneId: scene-intro
+    scenes:
+      items:
+        scene-intro:
+          id: scene-intro
+          type: scene
+          name: Intro
+      tree:
+        - id: scene-intro
+          children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items:
+        bg-1:
+          id: bg-1
+          type: image
+          name: Background
+          fileId: bg-file-1
+          width: 1920
+          height: 1080
+      tree:
+        - id: bg-1
+          children: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: project.create rejects invalid top-level bootstrap properties
+in:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        scenes:
+          items: {}
+          tree: []
+        sections:
+          items: {}
+          tree: []
+        lines:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        metadata: {}
+throws: "state.metadata is not allowed"
+---
+case: project.create rejects invalid nested project properties
+in:
+  - type: project.create
+    payload:
+      state:
+        project:
+          name: Invalid
+        story:
+          initialSceneId: null
+        scenes:
+          items: {}
+          tree: []
+        sections:
+          items: {}
+          tree: []
+        lines:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+throws: "state.project.name is not allowed"

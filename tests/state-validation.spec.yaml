@@ -1,0 +1,1446 @@
+file: "../src/index.js"
+group: model
+suites: [validateState]
+---
+suite: validateState
+exportName: validateState
+---
+case: validateState rejects duplicated ids in a collection tree
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.scenes.tree[1].id is duplicated in tree"
+---
+case: validateState rejects invalid scene item shape
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-x
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.scenes.items.scene-a.id must match item key 'scene-a'"
+---
+case: validateState rejects items missing from a collection tree
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.scenes.tree is missing item 'scene-b'"
+---
+case: validateState rejects initialSceneId pointing at a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: folder-prologue
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "story.initialSceneId must reference a non-folder scene"
+---
+case: validateState rejects scene trees where a non-folder scene has children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.scenes.tree[0].children requires 'scene-a' to be a folder scene"
+---
+case: validateState rejects section trees where child sections cross scene ownership
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Wake Up
+        tree:
+          - id: scene-a
+            children: []
+          - id: scene-b
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+          section-b:
+            id: section-b
+            sceneId: scene-b
+            name: Conflict
+        tree:
+          - id: section-a
+            children:
+              - id: section-b
+                children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.sections.tree[0].children must stay within the same scene as 'section-a'"
+---
+case: validateState rejects nested line trees
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Setup
+        tree:
+          - id: section-a
+            children: []
+      lines:
+        items:
+          line-1:
+            id: line-1
+            sectionId: section-a
+            actions: {}
+          line-2:
+            id: line-2
+            sectionId: section-a
+            actions: {}
+        tree:
+          - id: line-1
+            children:
+              - id: line-2
+                children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.lines.tree[0].children is not supported for lines"
+---
+case: validateState rejects lines pointing at missing sections
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items:
+          line-1:
+            id: line-1
+            sectionId: section-a
+            actions: {}
+        tree:
+          - id: line-1
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "line.sectionId must reference an existing section"
+---
+case: validateState rejects sections pointing at missing scenes even when initialSceneId is null
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-missing
+            name: Setup
+        tree:
+          - id: section-a
+            children: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "section.sceneId must reference an existing scene"
+---
+case: validateState rejects invalid image item shape
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          image-a:
+            id: image-a
+            type: image
+            name: Background
+        tree:
+          - id: image-a
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.images.items.image-a.fileId must be a non-empty string"
+---
+case: validateState rejects image trees where a non-folder image has children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items:
+          image-a:
+            id: image-a
+            type: image
+            name: Background
+            fileId: file-a
+          image-b:
+            id: image-b
+            type: image
+            name: Character
+            fileId: file-b
+        tree:
+          - id: image-a
+            children:
+              - id: image-b
+                children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.images.tree[0].children requires 'image-a' to be a folder image item"
+---
+case: validateState rejects invalid sound waveform field shape
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          sound-a:
+            id: sound-a
+            type: sound
+            name: Ambience
+            fileId: file-a
+            waveformDataFileId: 123
+        tree:
+          - id: sound-a
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.sounds.items.sound-a.waveformDataFileId must be a non-empty string or null when provided"
+---
+case: validateState rejects sound trees where a non-folder sound has children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items:
+          sound-a:
+            id: sound-a
+            type: sound
+            name: Ambience
+            fileId: file-a
+          sound-b:
+            id: sound-b
+            type: sound
+            name: Stinger
+            fileId: file-b
+        tree:
+          - id: sound-a
+            children:
+              - id: sound-b
+                children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.sounds.tree[0].children requires 'sound-a' to be a folder sound item"
+---
+case: validateState rejects invalid video item shape
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items:
+          video-a:
+            id: video-a
+            type: video
+            name: Trailer
+            fileId: file-a
+        tree:
+          - id: video-a
+            children: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.videos.items.video-a.thumbnailFileId must be a non-empty string"
+---
+case: validateState rejects invalid animation property names
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          animation-a:
+            id: animation-a
+            type: animation
+            name: Shake
+            animation:
+              type: live
+              tween:
+                skewX:
+                  keyframes:
+                    - duration: 200
+                      value: 10
+        tree:
+          - id: animation-a
+            children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.animations.items.animation-a.animation.tween.skewX is not a supported live tween property"
+---
+case: validateState rejects animation trees where a non-folder animation has children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          animation-a:
+            id: animation-a
+            type: animation
+            name: Slide In
+            animation:
+              type: live
+              tween:
+                x:
+                  keyframes:
+                    - duration: 300
+                      value: -120
+          animation-b:
+            id: animation-b
+            type: animation
+            name: Fade Out
+            animation:
+              type: live
+              tween:
+                alpha:
+                  keyframes:
+                    - duration: 500
+                      value: 0
+        tree:
+          - id: animation-a
+            children:
+              - id: animation-b
+                children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.animations.tree[0].children requires 'animation-a' to be a folder animation item"
+---
+case: validateState rejects invalid font item shape
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-a:
+            id: font-a
+            type: font
+            name: Display
+            fileId: file-a
+        tree:
+          - id: font-a
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.fonts.items.font-a.fontFamily must be a non-empty string"
+---
+case: validateState rejects font trees where a non-folder font has children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-a:
+            id: font-a
+            type: font
+            name: Display
+            fileId: file-a
+            fontFamily: Fraunces
+          font-b:
+            id: font-b
+            type: font
+            name: Body
+            fileId: file-b
+            fontFamily: Inter
+        tree:
+          - id: font-a
+            children:
+              - id: font-b
+                children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.fonts.tree[0].children requires 'font-a' to be a folder font item"
+---
+case: validateState rejects invalid color hex values
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-a:
+            id: color-a
+            type: color
+            name: Primary
+            hex: blue
+        tree:
+          - id: color-a
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.colors.items.color-a.hex must be a #RRGGBB string"
+---
+case: validateState rejects variable defaults that do not match the variable type
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items:
+          score:
+            id: score
+            type: number
+            name: Score
+            scope: context
+            default: wrong
+            value: 0
+        tree:
+          - id: score
+            children: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.variables.items.score.default must be a finite number"
+---
+case: validateState rejects text styles pointing at missing fonts
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-ui:
+            id: color-ui
+            type: color
+            name: White
+            hex: "#ffffff"
+        tree:
+          - id: color-ui
+            children: []
+      textStyles:
+        items:
+          style-ui:
+            id: style-ui
+            type: textStyle
+            name: Dialogue
+            fontId: font-missing
+            colorId: color-ui
+            fontSize: 32
+            lineHeight: 1.4
+            fontWeight: "700"
+        tree:
+          - id: style-ui
+            children: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "textStyle.fontId must reference an existing non-folder font"
+---
+case: validateState rejects characters without a nested sprite collection
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items:
+          character-hero:
+            id: character-hero
+            type: character
+            name: Hero
+        tree:
+          - id: character-hero
+            children: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: "state.characters.items.character-hero.sprites must be an object"
+---
+case: validateState rejects layout elements with opacity above 1
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          layout-dialogue:
+            id: layout-dialogue
+            type: layout
+            name: Dialogue
+            layoutType: dialogue
+            elements:
+              items:
+                text-title:
+                  id: text-title
+                  type: text
+                  name: Title
+                  x: 0
+                  y: 0
+                  anchorX: 0
+                  anchorY: 0
+                  scaleX: 1
+                  scaleY: 1
+                  rotation: 0
+                  text: Hello
+                  opacity: 2
+              tree:
+                - id: text-title
+                  children: []
+        tree:
+          - id: layout-dialogue
+            children: []
+throws: "state.layouts.items.layout-dialogue.elements.items.text-title.opacity must be a finite number between 0 and 1 when provided"

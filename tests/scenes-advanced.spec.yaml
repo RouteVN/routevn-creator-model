@@ -1,0 +1,457 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload, validateAgainstState]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: scene.move reorders a scene at the root level
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Flashback
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.move
+      payload:
+        sceneId: scene-b
+        position: before
+        positionTargetId: scene-a
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+        folder-prologue:
+          id: folder-prologue
+          type: folder
+          name: Prologue
+        scene-b:
+          id: scene-b
+          type: scene
+          name: Flashback
+      tree:
+        - id: scene-b
+          children: []
+        - id: scene-a
+          children: []
+        - id: folder-prologue
+          children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: scene.delete cascades descendant scenes sections and lines
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Flashback
+          scene-c:
+            id: scene-c
+            type: scene
+            name: Outro
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: scene-b
+                children: []
+          - id: scene-c
+            children: []
+      sections:
+        items:
+          section-a:
+            id: section-a
+            sceneId: scene-a
+            name: Opening
+          section-b:
+            id: section-b
+            sceneId: scene-b
+            name: Flashback
+        tree:
+          - id: section-a
+            children: []
+          - id: section-b
+            children: []
+      lines:
+        items:
+          line-a:
+            id: line-a
+            sectionId: section-a
+            actions:
+              say: hello
+          line-b:
+            id: line-b
+            sectionId: section-b
+            actions:
+              say: remember
+        tree:
+          - id: line-a
+            children: []
+          - id: line-b
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.delete
+      payload:
+        sceneIds:
+          - scene-a
+          - folder-prologue
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-c
+    scenes:
+      items:
+        scene-c:
+          id: scene-c
+          type: scene
+          name: Outro
+      tree:
+        - id: scene-c
+          children: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: scene.delete rejects duplicate scene ids
+in:
+  - type: scene.delete
+    payload:
+      sceneIds:
+        - scene-a
+        - scene-a
+throws: "payload.sceneIds[1] must be unique"
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: scene.move rejects moving a scene under its own descendant
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+          folder-prologue:
+            id: folder-prologue
+            type: folder
+            name: Prologue
+          folder-nested:
+            id: folder-nested
+            type: folder
+            name: Nested
+          scene-b:
+            id: scene-b
+            type: scene
+            name: Flashback
+        tree:
+          - id: scene-a
+            children: []
+          - id: folder-prologue
+            children:
+              - id: folder-nested
+                children:
+                  - id: scene-b
+                    children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.move
+      payload:
+        sceneId: folder-prologue
+        parentId: folder-nested
+throws: "payload.parentId must not target the moved scene or its descendants"
+---
+case: scene.delete rejects unknown scene ids
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+        tree:
+          - id: scene-a
+            children: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: scene.delete
+      payload:
+        sceneIds:
+          - scene-missing
+throws: "payload.sceneIds must reference existing scenes"

@@ -1,0 +1,630 @@
+file: "../src/index.js"
+group: model
+suites: [processCommand, validatePayload]
+---
+suite: processCommand
+exportName: processCommand
+---
+case: character.create inserts a character with an empty sprite collection by default
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: character.create
+      payload:
+        characterId: character-hero
+        data:
+          type: character
+          name: Hero
+          description: Main actor
+          shortcut: "1"
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items:
+        character-hero:
+          id: character-hero
+          type: character
+          name: Hero
+          description: Main actor
+          shortcut: "1"
+          sprites:
+            items: {}
+            tree: []
+      tree:
+        - id: character-hero
+          children: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: character.sprite.create inserts an image sprite inside a character
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items:
+          character-hero:
+            id: character-hero
+            type: character
+            name: Hero
+            sprites:
+              items:
+                folder-default:
+                  id: folder-default
+                  type: folder
+                  name: Default
+              tree:
+                - id: folder-default
+                  children: []
+        tree:
+          - id: character-hero
+            children: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: character.sprite.create
+      payload:
+        characterId: character-hero
+        spriteId: sprite-happy
+        parentId: folder-default
+        data:
+          type: image
+          name: Happy
+          fileId: file-happy
+          width: 512
+          height: 512
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items:
+        character-hero:
+          id: character-hero
+          type: character
+          name: Hero
+          sprites:
+            items:
+              folder-default:
+                id: folder-default
+                type: folder
+                name: Default
+              sprite-happy:
+                id: sprite-happy
+                type: image
+                name: Happy
+                fileId: file-happy
+                width: 512
+                height: 512
+            tree:
+              - id: folder-default
+                children:
+                  - id: sprite-happy
+                    children: []
+      tree:
+        - id: character-hero
+          children: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: layout.create inserts a layout with an empty nested element collection
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: layout.create
+      payload:
+        layoutId: layout-dialogue
+        data:
+          type: layout
+          name: Dialogue
+          layoutType: dialogue
+          elements:
+            items: {}
+            tree: []
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items:
+        layout-dialogue:
+          id: layout-dialogue
+          type: layout
+          name: Dialogue
+          layoutType: dialogue
+          elements:
+            items: {}
+            tree: []
+      tree:
+        - id: layout-dialogue
+          children: []
+---
+case: layout.element.create inserts a text element under a container
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      sections:
+        items: {}
+        tree: []
+      lines:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-ui:
+            id: font-ui
+            type: font
+            name: UI Font
+            fileId: file-font
+            fontFamily: Suit
+        tree:
+          - id: font-ui
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-ui:
+            id: color-ui
+            type: color
+            name: White
+            hex: "#ffffff"
+        tree:
+          - id: color-ui
+            children: []
+      textStyles:
+        items:
+          style-ui:
+            id: style-ui
+            type: textStyle
+            name: Dialogue
+            fontId: font-ui
+            colorId: color-ui
+            fontSize: 32
+            lineHeight: 1.4
+            fontWeight: "700"
+        tree:
+          - id: style-ui
+            children: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          layout-dialogue:
+            id: layout-dialogue
+            type: layout
+            name: Dialogue
+            layoutType: dialogue
+            elements:
+              items:
+                container-root:
+                  id: container-root
+                  type: container
+                  name: Root
+                  x: 0
+                  y: 0
+                  width: 100
+                  height: 100
+                  anchorX: 0
+                  anchorY: 0
+                  scaleX: 1
+                  scaleY: 1
+                  rotation: 0
+              tree:
+                - id: container-root
+                  children: []
+        tree:
+          - id: layout-dialogue
+            children: []
+    command:
+      type: layout.element.create
+      payload:
+        layoutId: layout-dialogue
+        elementId: text-title
+        parentId: container-root
+        data:
+          type: text
+          name: Title
+          x: 10
+          y: 12
+          anchorX: 0
+          anchorY: 0
+          scaleX: 1
+          scaleY: 1
+          rotation: 0
+          text: Hello
+          textStyleId: style-ui
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    sections:
+      items: {}
+      tree: []
+    lines:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items:
+        font-ui:
+          id: font-ui
+          type: font
+          name: UI Font
+          fileId: file-font
+          fontFamily: Suit
+      tree:
+        - id: font-ui
+          children: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items:
+        color-ui:
+          id: color-ui
+          type: color
+          name: White
+          hex: "#ffffff"
+      tree:
+        - id: color-ui
+          children: []
+    textStyles:
+      items:
+        style-ui:
+          id: style-ui
+          type: textStyle
+          name: Dialogue
+          fontId: font-ui
+          colorId: color-ui
+          fontSize: 32
+          lineHeight: 1.4
+          fontWeight: "700"
+      tree:
+        - id: style-ui
+          children: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items:
+        layout-dialogue:
+          id: layout-dialogue
+          type: layout
+          name: Dialogue
+          layoutType: dialogue
+          elements:
+            items:
+              container-root:
+                id: container-root
+                type: container
+                name: Root
+                x: 0
+                y: 0
+                width: 100
+                height: 100
+                anchorX: 0
+                anchorY: 0
+                scaleX: 1
+                scaleY: 1
+                rotation: 0
+              text-title:
+                id: text-title
+                type: text
+                name: Title
+                x: 10
+                y: 12
+                anchorX: 0
+                anchorY: 0
+                scaleX: 1
+                scaleY: 1
+                rotation: 0
+                text: Hello
+                textStyleId: style-ui
+            tree:
+              - id: container-root
+                children:
+                  - id: text-title
+                    children: []
+      tree:
+        - id: layout-dialogue
+          children: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: layout.element.update rejects opacity above 1
+in:
+  - type: layout.element.update
+    payload:
+      layoutId: layout-dialogue
+      elementId: text-title
+      data:
+        opacity: 2
+throws: "payload.data.opacity must be a finite number between 0 and 1 when provided"
