@@ -107,6 +107,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-dialogue-line",
   "group",
 ];
+export const SCHEMA_VERSION = 1;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -8038,10 +8039,18 @@ export const validateAgainstState = ({ state, command }) => {
 };
 
 export const processCommand = ({ state, command }) => {
+  if (!isPlainObject(command)) {
+    throw createPreconditionValidationError("command must be an object");
+  }
+
+  validatePayload(command);
   validateState({ state });
-  validateAgainstState({ state, command });
 
   const definition = getCommandDefinition({ type: command.type });
+  definition.validateAgainstState({
+    state,
+    payload: command.payload,
+  });
   const nextState = definition.reduce({
     state: structuredClone(state),
     payload: command.payload,

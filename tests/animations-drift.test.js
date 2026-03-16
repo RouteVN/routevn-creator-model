@@ -3,48 +3,13 @@ import { expect, test } from "vitest";
 
 import { validatePayload } from "../src/index.js";
 
-const animationSchemaPath =
-  new URL(
-    "../../route-graphics/src/schemas/animations/animation.yaml",
-    import.meta.url,
-  );
+const animationSchemaPath = new URL(
+  "./fixtures/route-graphics-animation-contract.json",
+  import.meta.url,
+);
 
-const schemaText = await readFile(animationSchemaPath, "utf8");
-
-const extractEnumEntries = ({ startMarker, endMarker }) => {
-  const block = schemaText.split(startMarker)[1]?.split(endMarker)[0] ?? "";
-
-  return block
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("- "))
-    .map((line) => line.slice(2).trim());
-};
-
-const extractPropertyNames = ({ sectionName }) => {
-  const block =
-    schemaText
-      .split(`  ${sectionName}:\n`)[1]
-      ?.split("    additionalProperties: false")[0] ?? "";
-
-  return block
-    .split("\n")
-    .map((line) => line.match(/^      ([A-Za-z0-9]+):$/)?.[1])
-    .filter(Boolean);
-};
-
-const easingKeys = extractEnumEntries({
-  startMarker: "      easing:\n        type: string\n        description: Easing function to use.\n        enum:\n",
-  endMarker: "      relative:",
-});
-
-const liveTweenProperties = extractPropertyNames({
-  sectionName: "liveTween",
-});
-
-const replaceTweenProperties = extractPropertyNames({
-  sectionName: "replaceTween",
-});
+const contract = JSON.parse(await readFile(animationSchemaPath, "utf8"));
+const { easingKeys, liveTweenProperties, replaceTweenProperties } = contract;
 
 test("animation easing support stays in sync with Route Graphics", () => {
   expect(easingKeys.length).toBeGreaterThan(0);

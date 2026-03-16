@@ -24,6 +24,8 @@ Those stay in the client and server repos.
 ## Public API
 
 ```js
+SCHEMA_VERSION
+
 validateState({ state })
 
 validatePayload({ type, payload })
@@ -45,6 +47,7 @@ Design rules:
 - pure functions whenever possible
 - current model version is internal to the package
 - command payload shape is validated separately from state-aware preconditions
+- `SCHEMA_VERSION` is the source of truth for persisted command schema versioning
 - `processCommand()` is the authoritative state transition
 - model state should contain project-owned runtime data only
 - app-owned metadata like project id, name, and description should stay out of
@@ -62,6 +65,7 @@ src/
   model.js
 tests/
   model-api.test.js
+  command-direct-coverage.test.js
   project.create.spec.yaml
   story-and-scenes.spec.yaml
   scenes-advanced.spec.yaml
@@ -124,6 +128,7 @@ This repo uses Bun + Vitest + Puty.
 
 - runner: `bunx vitest run`
 - package script: `bun run test`
+- benchmark script: `bun run bench`
 - YAML specs live in `tests/**/*.spec.yaml`
 - JS sequence tests live in `tests/**/*.test.js`
 
@@ -133,7 +138,9 @@ There are 2 test styles:
    - treat commands as pure functions
    - validate one call at a time
    - assert exact input/output or expected throw
+   - include a direct command coverage matrix for the full public registry
    - examples:
+     - [tests/command-direct-coverage.test.js](./tests/command-direct-coverage.test.js)
      - [tests/project.create.spec.yaml](./tests/project.create.spec.yaml)
      - [tests/story-and-scenes.spec.yaml](./tests/story-and-scenes.spec.yaml)
      - [tests/state-validation.spec.yaml](./tests/state-validation.spec.yaml)

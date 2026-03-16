@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import {
+  SCHEMA_VERSION,
   createInvariantValidationError,
   createPayloadValidationError,
   createPreconditionValidationError,
@@ -13,6 +14,7 @@ import {
 import { listCommandTypes } from "../src/model.js";
 
 test("public api exports functions only", () => {
+  expect(SCHEMA_VERSION).toBe(1);
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");

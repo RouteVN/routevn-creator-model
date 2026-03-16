@@ -5,6 +5,7 @@ export {
   createStateValidationError,
 } from "./errors.js";
 export {
+  SCHEMA_VERSION,
   processCommand,
   validateAgainstState,
   validatePayload,

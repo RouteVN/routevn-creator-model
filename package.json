@@ -1,22 +1,29 @@
 {
   "name": "@routevn/creator-model",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "type": "module",
   "description": "Shared RouteVN domain model, validators, and reducer",
   "repository": {
     "type": "git",
     "url": "git@github.com:RouteVN/routevn-creator-model.git"
   },
+  "files": [
+    "src",
+    "README.md",
+    "GUIDELINES.md"
+  ],
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.js"
   },
   "scripts": {
     "test": "bunx vitest run",
-    "test:watch": "bunx vitest"
+    "test:watch": "bunx vitest",
+    "bench": "bun scripts/benchmark-process-command.js"
   },
   "devDependencies": {
-    "puty": "file:../puty",
+    "puty": "0.1.2",
     "vitest": "^3.2.1"
   }
 }
