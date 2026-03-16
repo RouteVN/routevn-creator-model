@@ -7,14 +7,6 @@ export const createEmptyTestState = () => ({
     items: {},
     tree: [],
   },
-  sections: {
-    items: {},
-    tree: [],
-  },
-  lines: {
-    items: {},
-    tree: [],
-  },
   images: {
     items: {},
     tree: [],

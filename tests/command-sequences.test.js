@@ -8,6 +8,11 @@ import { runCommandSequence } from "./support/runCommandSequence.js";
 
 const cloneState = (state) => structuredClone(state);
 
+const createEmptyNestedCollection = () => ({
+  items: {},
+  tree: [],
+});
+
 const createBootstrapState = () => {
   const state = createEmptyTestState();
 
@@ -17,6 +22,7 @@ const createBootstrapState = () => {
       id: "scene-intro",
       type: "scene",
       name: "Intro",
+      sections: createEmptyNestedCollection(),
     },
     "folder-prologue": {
       id: "folder-prologue",
@@ -47,6 +53,7 @@ const createSceneSectionLineBootstrapState = () => {
       id: "scene-intro",
       type: "scene",
       name: "Intro",
+      sections: createEmptyNestedCollection(),
     },
     "folder-prologue": {
       id: "folder-prologue",
@@ -57,6 +64,7 @@ const createSceneSectionLineBootstrapState = () => {
       id: "scene-outro",
       type: "scene",
       name: "Outro",
+      sections: createEmptyNestedCollection(),
     },
   };
   state.scenes.tree = [
@@ -144,6 +152,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
             x: 120,
             y: 80,
           },
+          sections: createEmptyNestedCollection(),
         },
       },
       tree: [
@@ -177,6 +186,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
             x: 320,
             y: 80,
           },
+          sections: createEmptyNestedCollection(),
         },
       },
       tree: [
@@ -213,6 +223,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
             x: 320,
             y: 80,
           },
+          sections: createEmptyNestedCollection(),
         },
       },
       tree: [
@@ -239,7 +250,7 @@ test("processCommand does not mutate input state when a command fails preconditi
   const originalSnapshot = structuredClone(state);
   deepFreeze(state);
 
-  expect(() =>
+  expect(
     processCommand({
       state,
       command: {
@@ -251,7 +262,14 @@ test("processCommand does not mutate input state when a command fails preconditi
         },
       },
     }),
-  ).toThrow("payload.data.initialSceneId must reference a non-folder scene");
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message: "payload.data.initialSceneId must reference a non-folder scene",
+    },
+  });
 
   expect(state).toEqual(originalSnapshot);
 });
@@ -349,27 +367,29 @@ test("applies a scenes sections and lines command tape with intermediate state s
   const expected0 = createSceneSectionLineBootstrapState();
 
   const expected1 = cloneState(expected0);
-  expected1.sections.items = {
-    "section-intro-a": {
-      id: "section-intro-a",
-      sceneId: "scene-intro",
-      name: "Setup",
+  expected1.scenes.items["scene-intro"].sections = {
+    items: {
+      "section-intro-a": {
+        id: "section-intro-a",
+        name: "Setup",
+        lines: createEmptyNestedCollection(),
+      },
     },
+    tree: [
+      {
+        id: "section-intro-a",
+        children: [],
+      },
+    ],
   };
-  expected1.sections.tree = [
-    {
-      id: "section-intro-a",
-      children: [],
-    },
-  ];
 
   const expected2 = cloneState(expected1);
-  expected2.sections.items["section-intro-b"] = {
+  expected2.scenes.items["scene-intro"].sections.items["section-intro-b"] = {
     id: "section-intro-b",
-    sceneId: "scene-intro",
     name: "Payoff",
+    lines: createEmptyNestedCollection(),
   };
-  expected2.sections.tree = [
+  expected2.scenes.items["scene-intro"].sections.tree = [
     {
       id: "section-intro-a",
       children: [],
@@ -381,39 +401,73 @@ test("applies a scenes sections and lines command tape with intermediate state s
   ];
 
   const expected3 = cloneState(expected2);
-  expected3.lines.items = {
-    "line-1": {
-      id: "line-1",
-      sectionId: "section-intro-a",
-      actions: {
-        say: "hello",
+  expected3.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ].lines = {
+    items: {
+      "line-1": {
+        id: "line-1",
+        actions: {
+          say: "hello",
+        },
+      },
+      "line-2": {
+        id: "line-2",
+        actions: {
+          say: "bye",
+        },
       },
     },
-    "line-2": {
-      id: "line-2",
-      sectionId: "section-intro-a",
-      actions: {
-        say: "bye",
+    tree: [
+      {
+        id: "line-1",
       },
-    },
+      {
+        id: "line-2",
+      },
+    ],
   };
-  expected3.lines.tree = [
-    {
-      id: "line-1",
-    },
-    {
-      id: "line-2",
-    },
-  ];
 
   const expected4 = cloneState(expected3);
-  expected4.lines.items["line-1"].actions = {
+  expected4.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ].lines.items["line-1"].actions = {
     say: "hello",
     mood: "tense",
   };
 
   const expected5 = cloneState(expected4);
-  expected5.lines.items["line-2"].sectionId = "section-intro-b";
+  expected5.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ].lines.tree = [
+    {
+      id: "line-1",
+    },
+  ];
+  expected5.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ].lines.items = {
+    "line-1":
+      expected5.scenes.items["scene-intro"].sections.items["section-intro-a"]
+        .lines.items["line-1"],
+  };
+  expected5.scenes.items["scene-intro"].sections.items[
+    "section-intro-b"
+  ].lines = {
+    items: {
+      "line-2": {
+        id: "line-2",
+        actions: {
+          say: "bye",
+        },
+      },
+    },
+    tree: [
+      {
+        id: "line-2",
+      },
+    ],
+  };
 
   const expected6 = cloneState(expected5);
   expected6.scenes.tree = [
@@ -443,6 +497,7 @@ test("applies a scenes sections and lines command tape with intermediate state s
       id: "scene-outro",
       type: "scene",
       name: "Outro",
+      sections: createEmptyNestedCollection(),
     },
   };
   expected7.scenes.tree = [
@@ -455,10 +510,7 @@ test("applies a scenes sections and lines command tape with intermediate state s
       children: [],
     },
   ];
-  expected7.sections.items = {};
-  expected7.sections.tree = [];
-  expected7.lines.items = {};
-  expected7.lines.tree = [];
+  delete expected7.scenes.items["scene-intro"];
 
   expect(steps).toHaveLength(8);
   expect(steps[0].state).toEqual(expected0);
@@ -1525,10 +1577,12 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected10.characters.items["character-hero"].shortcut = "1";
 
   const expected11 = cloneState(expected10);
-  expected11.characters.items["character-hero"].sprites.items["sprite-happy"].name =
-    "Happy Smile";
-  expected11.characters.items["character-hero"].sprites.items["sprite-happy"].width =
-    640;
+  expected11.characters.items["character-hero"].sprites.items[
+    "sprite-happy"
+  ].name = "Happy Smile";
+  expected11.characters.items["character-hero"].sprites.items[
+    "sprite-happy"
+  ].width = 640;
 
   const expected12 = cloneState(expected11);
   expected12.characters.items["character-hero"].sprites.tree = [
@@ -1584,20 +1638,21 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected17.layouts.items["layout-dialogue"].name = "Dialogue Main";
 
   const expected18 = cloneState(expected17);
-  expected18.layouts.items["layout-dialogue"].elements.items["text-subtitle"] = {
-    id: "text-subtitle",
-    type: "text",
-    name: "Subtitle",
-    x: 20,
-    y: 52,
-    anchorX: 0,
-    anchorY: 0,
-    scaleX: 1,
-    scaleY: 1,
-    rotation: 0,
-    text: "Sub",
-    textStyleId: "style-ui",
-  };
+  expected18.layouts.items["layout-dialogue"].elements.items["text-subtitle"] =
+    {
+      id: "text-subtitle",
+      type: "text",
+      name: "Subtitle",
+      x: 20,
+      y: 52,
+      anchorX: 0,
+      anchorY: 0,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+      text: "Sub",
+      textStyleId: "style-ui",
+    };
   expected18.layouts.items["layout-dialogue"].elements.tree = [
     {
       id: "container-root",
@@ -1609,10 +1664,12 @@ test("applies a ui resources and layout command tape with intermediate state sna
   ];
 
   const expected19 = cloneState(expected18);
-  expected19.layouts.items["layout-dialogue"].elements.items["text-title"].opacity =
-    0.5;
-  expected19.layouts.items["layout-dialogue"].elements.items["text-title"].text =
-    "Welcome";
+  expected19.layouts.items["layout-dialogue"].elements.items[
+    "text-title"
+  ].opacity = 0.5;
+  expected19.layouts.items["layout-dialogue"].elements.items[
+    "text-title"
+  ].text = "Welcome";
 
   const expected20 = cloneState(expected19);
   expected20.layouts.items["layout-dialogue"].elements.tree = [
@@ -1626,7 +1683,9 @@ test("applies a ui resources and layout command tape with intermediate state sna
   ];
 
   const expected21 = cloneState(expected20);
-  delete expected21.layouts.items["layout-dialogue"].elements.items["text-subtitle"];
+  delete expected21.layouts.items["layout-dialogue"].elements.items[
+    "text-subtitle"
+  ];
   expected21.layouts.items["layout-dialogue"].elements.tree = [
     {
       id: "container-root",

@@ -1,4 +1,4 @@
-file: "../src/index.js"
+file: "./support/putyApi.js"
 group: model
 suites: [processCommand, validatePayload, validateAgainstState]
 ---
@@ -17,66 +17,48 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a1:
+                  id: section-a1
+                  name: Setup
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-a1
+                  children: []
           scene-b:
             id: scene-b
             type: scene
             name: Outro
+            sections:
+              items:
+                section-b1:
+                  id: section-b1
+                  name: Ending
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-b1
+                  children: []
         tree:
           - id: scene-a
             children: []
           - id: scene-b
             children: []
-      sections:
-        items:
-          section-a1:
-            id: section-a1
-            sceneId: scene-a
-            name: Setup
-          section-b1:
-            id: section-b1
-            sceneId: scene-b
-            name: Ending
-        tree:
-          - id: section-a1
-            children: []
-          - id: section-b1
-            children: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.create
       payload:
@@ -97,72 +79,56 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a1:
+                id: section-a1
+                name: Setup
+                lines:
+                  items: {}
+                  tree: []
+              section-a0:
+                id: section-a0
+                name: Opening
+                lines:
+                  items: {}
+                  tree: []
+            tree:
+              - id: section-a0
+                children: []
+              - id: section-a1
+                children: []
         scene-b:
           id: scene-b
           type: scene
           name: Outro
+          sections:
+            items:
+              section-b1:
+                id: section-b1
+                name: Ending
+                lines:
+                  items: {}
+                  tree: []
+            tree:
+              - id: section-b1
+                children: []
       tree:
         - id: scene-a
           children: []
         - id: scene-b
           children: []
-    sections:
-      items:
-        section-a1:
-          id: section-a1
-          sceneId: scene-a
-          name: Setup
-        section-a0:
-          id: section-a0
-          sceneId: scene-a
-          name: Opening
-        section-b1:
-          id: section-b1
-          sceneId: scene-b
-          name: Ending
-      tree:
-        - id: section-a0
-          children: []
-        - id: section-a1
-          children: []
-        - id: section-b1
-          children: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: section.update renames an existing section
 in:
@@ -176,54 +142,31 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a1:
+                  id: section-a1
+                  name: Setup
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-a1
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a1:
-            id: section-a1
-            sceneId: scene-a
-            name: Setup
-        tree:
-          - id: section-a1
-            children: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.update
       payload:
@@ -241,54 +184,31 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a1:
+                id: section-a1
+                name: New Setup
+                lines:
+                  items: {}
+                  tree: []
+            tree:
+              - id: section-a1
+                children: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items:
-        section-a1:
-          id: section-a1
-          sceneId: scene-a
-          name: New Setup
-      tree:
-        - id: section-a1
-          children: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: section.move lifts a nested section into root ordering within the same scene
 in:
@@ -302,83 +222,52 @@ in:
             id: scene-a
             type: scene
             name: Intro
-          scene-b:
-            id: scene-b
-            type: scene
-            name: Outro
+            sections:
+              items:
+                section-a1:
+                  id: section-a1
+                  name: Setup
+                  lines:
+                    items: {}
+                    tree: []
+                section-a-child:
+                  id: section-a-child
+                  name: Child
+                  lines:
+                    items: {}
+                    tree: []
+                section-a2:
+                  id: section-a2
+                  name: Payoff
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-a1
+                  children:
+                    - id: section-a-child
+                      children: []
+                - id: section-a2
+                  children: []
         tree:
           - id: scene-a
             children: []
-          - id: scene-b
-            children: []
-      sections:
-        items:
-          section-a1:
-            id: section-a1
-            sceneId: scene-a
-            name: Setup
-          section-a-child:
-            id: section-a-child
-            sceneId: scene-a
-            name: Beat
-          section-a2:
-            id: section-a2
-            sceneId: scene-a
-            name: Reveal
-          section-b1:
-            id: section-b1
-            sceneId: scene-b
-            name: Ending
-        tree:
-          - id: section-a1
-            children:
-              - id: section-a-child
-                children: []
-          - id: section-b1
-            children: []
-          - id: section-a2
-            children: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.move
       payload:
         sectionId: section-a-child
-        position: before
+        position: after
         positionTargetId: section-a2
 out:
   state:
@@ -391,78 +280,47 @@ out:
           id: scene-a
           type: scene
           name: Intro
-        scene-b:
-          id: scene-b
-          type: scene
-          name: Outro
+          sections:
+            items:
+              section-a1:
+                id: section-a1
+                name: Setup
+                lines:
+                  items: {}
+                  tree: []
+              section-a-child:
+                id: section-a-child
+                name: Child
+                lines:
+                  items: {}
+                  tree: []
+              section-a2:
+                id: section-a2
+                name: Payoff
+                lines:
+                  items: {}
+                  tree: []
+            tree:
+              - id: section-a1
+                children: []
+              - id: section-a2
+                children: []
+              - id: section-a-child
+                children: []
       tree:
         - id: scene-a
           children: []
-        - id: scene-b
-          children: []
-    sections:
-      items:
-        section-a1:
-          id: section-a1
-          sceneId: scene-a
-          name: Setup
-        section-a-child:
-          id: section-a-child
-          sceneId: scene-a
-          name: Beat
-        section-a2:
-          id: section-a2
-          sceneId: scene-a
-          name: Reveal
-        section-b1:
-          id: section-b1
-          sceneId: scene-b
-          name: Ending
-      tree:
-        - id: section-a1
-          children: []
-        - id: section-b1
-          children: []
-        - id: section-a-child
-          children: []
-        - id: section-a2
-          children: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: section.delete cascades descendant sections and their lines
 in:
@@ -476,74 +334,49 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a1:
+                  id: section-a1
+                  name: Setup
+                  lines:
+                    items:
+                      line-a1:
+                        id: line-a1
+                        actions:
+                          say: hello
+                    tree:
+                      - id: line-a1
+                section-a-child:
+                  id: section-a-child
+                  name: Child
+                  lines:
+                    items:
+                      line-a-child:
+                        id: line-a-child
+                        actions:
+                          say: nested
+                    tree:
+                      - id: line-a-child
+              tree:
+                - id: section-a1
+                  children:
+                    - id: section-a-child
+                      children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a1:
-            id: section-a1
-            sceneId: scene-a
-            name: Setup
-          section-a-child:
-            id: section-a-child
-            sceneId: scene-a
-            name: Beat
-        tree:
-          - id: section-a1
-            children:
-              - id: section-a-child
-                children: []
-      lines:
-        items:
-          line-1:
-            id: line-1
-            sectionId: section-a1
-            actions:
-              say: hello
-          line-2:
-            id: line-2
-            sectionId: section-a-child
-            actions:
-              say: remember
-        tree:
-          - id: line-1
-            children: []
-          - id: line-2
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.delete
       payload:
@@ -560,48 +393,23 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items: {}
+            tree: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: line.create inserts multiple lines into the requested section scope
 in:
@@ -615,96 +423,64 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-existing:
+                        id: line-existing
+                        actions:
+                          say: existing
+                    tree:
+                      - id: line-existing
+                section-b:
+                  id: section-b
+                  name: Payoff
+                  lines:
+                    items:
+                      line-other:
+                        id: line-other
+                        actions:
+                          say: other
+                    tree:
+                      - id: line-other
+              tree:
+                - id: section-a
+                  children: []
+                - id: section-b
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Setup
-          section-b:
-            id: section-b
-            sceneId: scene-a
-            name: Reveal
-        tree:
-          - id: section-a
-            children: []
-          - id: section-b
-            children: []
-      lines:
-        items:
-          line-a1:
-            id: line-a1
-            sectionId: section-a
-            actions:
-              say: one
-          line-b1:
-            id: line-b1
-            sectionId: section-b
-            actions:
-              say: other
-          line-a2:
-            id: line-a2
-            sectionId: section-a
-            actions:
-              say: two
-        tree:
-          - id: line-a1
-            children: []
-          - id: line-b1
-            children: []
-          - id: line-a2
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: line.create
       payload:
         sectionId: section-a
         position: after
-        positionTargetId: line-a1
+        positionTargetId: line-existing
         lines:
-          - lineId: line-a15
+          - lineId: line-1
             data:
               actions:
-                say: between-1
-          - lineId: line-a16
+                say: hello
+          - lineId: line-2
             data:
               actions:
-                say: between-2
+                say: bye
 out:
   state:
     project: {}
@@ -716,93 +492,59 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a:
+                id: section-a
+                name: Setup
+                lines:
+                  items:
+                    line-existing:
+                      id: line-existing
+                      actions:
+                        say: existing
+                    line-1:
+                      id: line-1
+                      actions:
+                        say: hello
+                    line-2:
+                      id: line-2
+                      actions:
+                        say: bye
+                  tree:
+                    - id: line-existing
+                    - id: line-1
+                    - id: line-2
+              section-b:
+                id: section-b
+                name: Payoff
+                lines:
+                  items:
+                    line-other:
+                      id: line-other
+                      actions:
+                        say: other
+                  tree:
+                    - id: line-other
+            tree:
+              - id: section-a
+                children: []
+              - id: section-b
+                children: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items:
-        section-a:
-          id: section-a
-          sceneId: scene-a
-          name: Setup
-        section-b:
-          id: section-b
-          sceneId: scene-a
-          name: Reveal
-      tree:
-        - id: section-a
-          children: []
-        - id: section-b
-          children: []
-    lines:
-      items:
-        line-a1:
-          id: line-a1
-          sectionId: section-a
-          actions:
-            say: one
-        line-a15:
-          id: line-a15
-          sectionId: section-a
-          actions:
-            say: between-1
-        line-a16:
-          id: line-a16
-          sectionId: section-a
-          actions:
-            say: between-2
-        line-b1:
-          id: line-b1
-          sectionId: section-b
-          actions:
-            say: other
-        line-a2:
-          id: line-a2
-          sectionId: section-a
-          actions:
-            say: two
-      tree:
-        - id: line-a1
-          children: []
-        - id: line-a15
-        - id: line-a16
-        - id: line-b1
-          children: []
-        - id: line-a2
-          children: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: line.update_actions merges action patches by default
 in:
@@ -816,69 +558,42 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-1:
+                        id: line-1
+                        actions:
+                          say: hello
+                    tree:
+                      - id: line-1
+              tree:
+                - id: section-a
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Setup
-        tree:
-          - id: section-a
-            children: []
-      lines:
-        items:
-          line-1:
-            id: line-1
-            sectionId: section-a
-            actions:
-              say: hello
-              mood: calm
-        tree:
-          - id: line-1
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: line.update_actions
       payload:
         lineId: line-1
         data:
-          mood: angry
-          pose: crossed
+          mood: tense
 out:
   state:
     project: {}
@@ -890,63 +605,37 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a:
+                id: section-a
+                name: Setup
+                lines:
+                  items:
+                    line-1:
+                      id: line-1
+                      actions:
+                        say: hello
+                        mood: tense
+                  tree:
+                    - id: line-1
+            tree:
+              - id: section-a
+                children: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items:
-        section-a:
-          id: section-a
-          sceneId: scene-a
-          name: Setup
-      tree:
-        - id: section-a
-          children: []
-    lines:
-      items:
-        line-1:
-          id: line-1
-          sectionId: section-a
-          actions:
-            say: hello
-            mood: angry
-            pose: crossed
-      tree:
-        - id: line-1
-          children: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: line.move changes section ownership and target ordering
 in:
@@ -960,87 +649,61 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-1:
+                        id: line-1
+                        actions:
+                          say: hello
+                      line-2:
+                        id: line-2
+                        actions:
+                          say: bye
+                    tree:
+                      - id: line-1
+                      - id: line-2
+                section-b:
+                  id: section-b
+                  name: Payoff
+                  lines:
+                    items:
+                      line-other:
+                        id: line-other
+                        actions:
+                          say: other
+                    tree:
+                      - id: line-other
+              tree:
+                - id: section-a
+                  children: []
+                - id: section-b
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Setup
-          section-b:
-            id: section-b
-            sceneId: scene-a
-            name: Reveal
-        tree:
-          - id: section-a
-            children: []
-          - id: section-b
-            children: []
-      lines:
-        items:
-          line-a1:
-            id: line-a1
-            sectionId: section-a
-            actions:
-              say: one
-          line-b1:
-            id: line-b1
-            sectionId: section-b
-            actions:
-              say: other
-          line-a2:
-            id: line-a2
-            sectionId: section-a
-            actions:
-              say: two
-        tree:
-          - id: line-a1
-            children: []
-          - id: line-b1
-            children: []
-          - id: line-a2
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: line.move
       payload:
-        lineId: line-a2
+        lineId: line-2
         toSectionId: section-b
-        position: first
+        position: after
+        positionTargetId: line-other
 out:
   state:
     project: {}
@@ -1052,81 +715,54 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a:
+                id: section-a
+                name: Setup
+                lines:
+                  items:
+                    line-1:
+                      id: line-1
+                      actions:
+                        say: hello
+                  tree:
+                    - id: line-1
+              section-b:
+                id: section-b
+                name: Payoff
+                lines:
+                  items:
+                    line-other:
+                      id: line-other
+                      actions:
+                        say: other
+                    line-2:
+                      id: line-2
+                      actions:
+                        say: bye
+                  tree:
+                    - id: line-other
+                    - id: line-2
+            tree:
+              - id: section-a
+                children: []
+              - id: section-b
+                children: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items:
-        section-a:
-          id: section-a
-          sceneId: scene-a
-          name: Setup
-        section-b:
-          id: section-b
-          sceneId: scene-a
-          name: Reveal
-      tree:
-        - id: section-a
-          children: []
-        - id: section-b
-          children: []
-    lines:
-      items:
-        line-a1:
-          id: line-a1
-          sectionId: section-a
-          actions:
-            say: one
-        line-b1:
-          id: line-b1
-          sectionId: section-b
-          actions:
-            say: other
-        line-a2:
-          id: line-a2
-          sectionId: section-b
-          actions:
-            say: two
-      tree:
-        - id: line-a1
-          children: []
-        - id: line-a2
-          children: []
-        - id: line-b1
-          children: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 case: line.delete removes multiple lines
 in:
@@ -1140,75 +776,46 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-1:
+                        id: line-1
+                        actions:
+                          say: hello
+                      line-2:
+                        id: line-2
+                        actions:
+                          say: bye
+                      line-3:
+                        id: line-3
+                        actions:
+                          say: later
+                    tree:
+                      - id: line-1
+                      - id: line-2
+                      - id: line-3
+              tree:
+                - id: section-a
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Setup
-        tree:
-          - id: section-a
-            children: []
-      lines:
-        items:
-          line-1:
-            id: line-1
-            sectionId: section-a
-            actions:
-              say: one
-          line-2:
-            id: line-2
-            sectionId: section-a
-            actions:
-              say: two
-          line-3:
-            id: line-3
-            sectionId: section-a
-            actions:
-              say: three
-        tree:
-          - id: line-1
-            children: []
-          - id: line-2
-            children: []
-          - id: line-3
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: line.delete
       payload:
@@ -1226,61 +833,36 @@ out:
           id: scene-a
           type: scene
           name: Intro
+          sections:
+            items:
+              section-a:
+                id: section-a
+                name: Setup
+                lines:
+                  items:
+                    line-2:
+                      id: line-2
+                      actions:
+                        say: bye
+                  tree:
+                    - id: line-2
+            tree:
+              - id: section-a
+                children: []
       tree:
         - id: scene-a
           children: []
-    sections:
-      items:
-        section-a:
-          id: section-a
-          sceneId: scene-a
-          name: Setup
-      tree:
-        - id: section-a
-          children: []
-    lines:
-      items:
-        line-2:
-          id: line-2
-          sectionId: section-a
-          actions:
-            say: two
-      tree:
-        - id: line-2
-          children: []
-    images:
-      items: {}
-      tree: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    images: { items: {}, tree: [] }
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -1292,8 +874,8 @@ in:
       sectionId: section-a
       sceneId: scene-a
       data:
-        name: Setup
-        notes: invalid
+        name: Intro
+        notes: nope
 throws: "payload.data.notes is not allowed"
 ---
 case: line.create rejects duplicate line ids in a batch
@@ -1321,9 +903,9 @@ case: line.move rejects parentId because line trees are flat
 in:
   - type: line.move
     payload:
-      lineId: line-1
-      toSectionId: section-a
-      parentId: line-parent
+      lineId: line-a
+      toSectionId: section-b
+      parentId: section-parent
 throws: "payload.parentId is not allowed"
 ---
 suite: validateAgainstState
@@ -1337,59 +919,31 @@ in:
         initialSceneId: null
       scenes:
         items:
-          scene-a:
-            id: scene-a
+          folder-scenes:
+            id: folder-scenes
             type: folder
-            name: Intro
+            name: Folder
         tree:
-          - id: scene-a
+          - id: folder-scenes
             children: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.create
       payload:
         sectionId: section-a
-        sceneId: scene-a
+        sceneId: folder-scenes
         data:
-          name: Setup
+          name: Intro
 throws: "payload.sceneId must reference a non-folder scene"
 ---
 case: section.move rejects parents from another scene
@@ -1397,78 +951,61 @@ in:
   - state:
       project: {}
       story:
-        initialSceneId: scene-a
+        initialSceneId: null
       scenes:
         items:
           scene-a:
             id: scene-a
             type: scene
-            name: Intro
+            name: Scene A
+            sections:
+              items:
+                section-a1:
+                  id: section-a1
+                  name: A1
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-a1
+                  children: []
           scene-b:
             id: scene-b
             type: scene
-            name: Outro
+            name: Scene B
+            sections:
+              items:
+                section-b1:
+                  id: section-b1
+                  name: B1
+                  lines:
+                    items: {}
+                    tree: []
+              tree:
+                - id: section-b1
+                  children: []
         tree:
           - id: scene-a
             children: []
           - id: scene-b
             children: []
-      sections:
-        items:
-          section-a1:
-            id: section-a1
-            sceneId: scene-a
-            name: Setup
-          section-b1:
-            id: section-b1
-            sceneId: scene-b
-            name: Ending
-        tree:
-          - id: section-a1
-            children: []
-          - id: section-b1
-            children: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: section.move
       payload:
         sectionId: section-a1
         parentId: section-b1
+        position: last
 throws: "payload.parentId must reference a section in the same scene"
 ---
 case: line.create rejects position targets from another section
@@ -1476,81 +1013,62 @@ in:
   - state:
       project: {}
       story:
-        initialSceneId: scene-a
+        initialSceneId: null
       scenes:
         items:
           scene-a:
             id: scene-a
             type: scene
-            name: Intro
+            name: Scene A
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-a:
+                        id: line-a
+                        actions: {}
+                    tree:
+                      - id: line-a
+                section-b:
+                  id: section-b
+                  name: Payoff
+                  lines:
+                    items:
+                      line-b:
+                        id: line-b
+                        actions: {}
+                    tree:
+                      - id: line-b
+              tree:
+                - id: section-a
+                  children: []
+                - id: section-b
+                  children: []
         tree:
           - id: scene-a
             children: []
-      sections:
-        items:
-          section-a:
-            id: section-a
-            sceneId: scene-a
-            name: Setup
-          section-b:
-            id: section-b
-            sceneId: scene-a
-            name: Reveal
-        tree:
-          - id: section-a
-            children: []
-          - id: section-b
-            children: []
-      lines:
-        items:
-          line-b1:
-            id: line-b1
-            sectionId: section-b
-            actions: {}
-        tree:
-          - id: line-b1
-            children: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: line.create
       payload:
         sectionId: section-a
-        position: after
-        positionTargetId: line-b1
+        position: before
+        positionTargetId: line-b
         lines:
-          - lineId: line-a1
+          - lineId: line-c
             data:
               actions: {}
 throws: "payload.positionTargetId must reference a line in the target section"

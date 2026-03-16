@@ -7,7 +7,9 @@ export const runCommandSequence = ({ initialState, commands }) => {
   const immutableInitialState = structuredClone(initialState);
   deepFreeze(immutableInitialState);
 
-  validateState({ state: immutableInitialState });
+  expect(validateState({ state: immutableInitialState })).toEqual({
+    valid: true,
+  });
 
   let currentState = immutableInitialState;
 
@@ -19,10 +21,13 @@ export const runCommandSequence = ({ initialState, commands }) => {
       command,
     });
 
+    expect(result.valid).toBe(true);
     expect(currentState).toEqual(previousSnapshot);
     expect(result.state).not.toBe(currentState);
 
-    validateState({ state: result.state });
+    expect(validateState({ state: result.state })).toEqual({
+      valid: true,
+    });
 
     const step = {
       index,

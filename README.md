@@ -24,28 +24,59 @@ Those stay in the client and server repos.
 ## Public API
 
 ```js
-SCHEMA_VERSION
+SCHEMA_VERSION;
 
-validateState({ state })
+validateState({ state });
 
-validatePayload({ type, payload })
+validatePayload({ type, payload });
 
 validateAgainstState({
   state,
   command: { type, payload },
-})
+});
 
 processCommand({
   state,
   command: { type, payload },
-})
+});
+```
+
+`SCHEMA_VERSION` is the exported schema version constant for persisted command
+compatibility.
+
+Validation functions return:
+
+```js
+{
+  valid: true;
+}
+```
+
+or:
+
+```js
+{
+  valid: false,
+  error: {
+    kind: "state" | "payload" | "precondition" | "invariant",
+    code: "payload_validation_failed",
+    message: "payload.data.foo is not allowed",
+    path: "payload.data.foo", // only when available
+    details: {}, // only when available
+  },
+}
+```
+
+`processCommand()` returns:
+
+```js
+{ valid: true, state: nextState }
 ```
 
 Design rules:
 
 - no classes
 - pure functions whenever possible
-- current model version is internal to the package
 - command payload shape is validated separately from state-aware preconditions
 - `SCHEMA_VERSION` is the source of truth for persisted command schema versioning
 - `processCommand()` is the authoritative state transition
@@ -91,7 +122,7 @@ Current RouteVN files:
 should map into this package like this:
 
 - `src/errors.js`
-  - exported domain errors only
+  - internal domain error factories
 - `src/helpers.js`
   - tiny pure shared helpers
 - `src/model.js`
@@ -137,7 +168,7 @@ There are 2 test styles:
 1. Command contract specs
    - treat commands as pure functions
    - validate one call at a time
-   - assert exact input/output or expected throw
+   - assert exact input/output or expected invalid result
    - include a direct command coverage matrix for the full public registry
    - examples:
      - [tests/command-direct-coverage.test.js](./tests/command-direct-coverage.test.js)
@@ -152,6 +183,10 @@ There are 2 test styles:
    - use these for reducer flows that are easier to reason about as a tape
    - example:
      - [tests/command-sequences.test.js](./tests/command-sequences.test.js)
+
+YAML Puty specs use [tests/support/putyApi.js](./tests/support/putyApi.js) as a
+small adapter so the declarative `throws:` assertions can stay concise while the
+real public API returns `{ valid: ... }` result objects.
 
 ## Current Scope
 

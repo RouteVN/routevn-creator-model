@@ -1,4 +1,4 @@
-file: "../src/index.js"
+file: "./support/putyApi.js"
 group: model
 suites: [processCommand, validatePayload]
 ---
@@ -14,45 +14,17 @@ in:
       scenes:
         items: {}
         tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
-      images:
-        items: {}
-        tree: []
-      sounds:
-        items: {}
-        tree: []
-      videos:
-        items: {}
-        tree: []
-      animations:
-        items: {}
-        tree: []
-      characters:
-        items: {}
-        tree: []
-      fonts:
-        items: {}
-        tree: []
-      transforms:
-        items: {}
-        tree: []
-      colors:
-        items: {}
-        tree: []
-      textStyles:
-        items: {}
-        tree: []
-      variables:
-        items: {}
-        tree: []
-      layouts:
-        items: {}
-        tree: []
+      images: { items: {}, tree: [] }
+      sounds: { items: {}, tree: [] }
+      videos: { items: {}, tree: [] }
+      animations: { items: {}, tree: [] }
+      characters: { items: {}, tree: [] }
+      fonts: { items: {}, tree: [] }
+      transforms: { items: {}, tree: [] }
+      colors: { items: {}, tree: [] }
+      textStyles: { items: {}, tree: [] }
+      variables: { items: {}, tree: [] }
+      layouts: { items: {}, tree: [] }
     command:
       type: project.create
       payload:
@@ -69,15 +41,12 @@ in:
                 id: scene-intro
                 type: scene
                 name: Intro
+                sections:
+                  items: {}
+                  tree: []
             tree:
               - id: scene-intro
                 children: []
-          sections:
-            items: {}
-            tree: []
-          lines:
-            items: {}
-            tree: []
           images:
             items:
               bg-1:
@@ -90,36 +59,16 @@ in:
             tree:
               - id: bg-1
                 children: []
-          sounds:
-            items: {}
-            tree: []
-          videos:
-            items: {}
-            tree: []
-          animations:
-            items: {}
-            tree: []
-          characters:
-            items: {}
-            tree: []
-          fonts:
-            items: {}
-            tree: []
-          transforms:
-            items: {}
-            tree: []
-          colors:
-            items: {}
-            tree: []
-          textStyles:
-            items: {}
-            tree: []
-          variables:
-            items: {}
-            tree: []
-          layouts:
-            items: {}
-            tree: []
+          sounds: { items: {}, tree: [] }
+          videos: { items: {}, tree: [] }
+          animations: { items: {}, tree: [] }
+          characters: { items: {}, tree: [] }
+          fonts: { items: {}, tree: [] }
+          transforms: { items: {}, tree: [] }
+          colors: { items: {}, tree: [] }
+          textStyles: { items: {}, tree: [] }
+          variables: { items: {}, tree: [] }
+          layouts: { items: {}, tree: [] }
 out:
   state:
     project:
@@ -134,15 +83,12 @@ out:
           id: scene-intro
           type: scene
           name: Intro
+          sections:
+            items: {}
+            tree: []
       tree:
         - id: scene-intro
           children: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items:
         bg-1:
@@ -155,36 +101,16 @@ out:
       tree:
         - id: bg-1
           children: []
-    sounds:
-      items: {}
-      tree: []
-    videos:
-      items: {}
-      tree: []
-    animations:
-      items: {}
-      tree: []
-    characters:
-      items: {}
-      tree: []
-    fonts:
-      items: {}
-      tree: []
-    transforms:
-      items: {}
-      tree: []
-    colors:
-      items: {}
-      tree: []
-    textStyles:
-      items: {}
-      tree: []
-    variables:
-      items: {}
-      tree: []
-    layouts:
-      items: {}
-      tree: []
+    sounds: { items: {}, tree: [] }
+    videos: { items: {}, tree: [] }
+    animations: { items: {}, tree: [] }
+    characters: { items: {}, tree: [] }
+    fonts: { items: {}, tree: [] }
+    transforms: { items: {}, tree: [] }
+    colors: { items: {}, tree: [] }
+    textStyles: { items: {}, tree: [] }
+    variables: { items: {}, tree: [] }
+    layouts: { items: {}, tree: [] }
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -200,45 +126,17 @@ in:
         scenes:
           items: {}
           tree: []
-        sections:
-          items: {}
-          tree: []
-        lines:
-          items: {}
-          tree: []
-        images:
-          items: {}
-          tree: []
-        sounds:
-          items: {}
-          tree: []
-        videos:
-          items: {}
-          tree: []
-        animations:
-          items: {}
-          tree: []
-        characters:
-          items: {}
-          tree: []
-        fonts:
-          items: {}
-          tree: []
-        transforms:
-          items: {}
-          tree: []
-        colors:
-          items: {}
-          tree: []
-        textStyles:
-          items: {}
-          tree: []
-        variables:
-          items: {}
-          tree: []
-        layouts:
-          items: {}
-          tree: []
+        images: { items: {}, tree: [] }
+        sounds: { items: {}, tree: [] }
+        videos: { items: {}, tree: [] }
+        animations: { items: {}, tree: [] }
+        characters: { items: {}, tree: [] }
+        fonts: { items: {}, tree: [] }
+        transforms: { items: {}, tree: [] }
+        colors: { items: {}, tree: [] }
+        textStyles: { items: {}, tree: [] }
+        variables: { items: {}, tree: [] }
+        layouts: { items: {}, tree: [] }
         metadata: {}
 throws: "state.metadata is not allowed"
 ---
@@ -254,43 +152,15 @@ in:
         scenes:
           items: {}
           tree: []
-        sections:
-          items: {}
-          tree: []
-        lines:
-          items: {}
-          tree: []
-        images:
-          items: {}
-          tree: []
-        sounds:
-          items: {}
-          tree: []
-        videos:
-          items: {}
-          tree: []
-        animations:
-          items: {}
-          tree: []
-        characters:
-          items: {}
-          tree: []
-        fonts:
-          items: {}
-          tree: []
-        transforms:
-          items: {}
-          tree: []
-        colors:
-          items: {}
-          tree: []
-        textStyles:
-          items: {}
-          tree: []
-        variables:
-          items: {}
-          tree: []
-        layouts:
-          items: {}
-          tree: []
+        images: { items: {}, tree: [] }
+        sounds: { items: {}, tree: [] }
+        videos: { items: {}, tree: [] }
+        animations: { items: {}, tree: [] }
+        characters: { items: {}, tree: [] }
+        fonts: { items: {}, tree: [] }
+        transforms: { items: {}, tree: [] }
+        colors: { items: {}, tree: [] }
+        textStyles: { items: {}, tree: [] }
+        variables: { items: {}, tree: [] }
+        layouts: { items: {}, tree: [] }
 throws: "state.project.name is not allowed"

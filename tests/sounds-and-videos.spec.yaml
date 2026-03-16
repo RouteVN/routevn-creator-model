@@ -1,4 +1,4 @@
-file: "../src/index.js"
+file: "./support/putyApi.js"
 group: model
 suites: [processCommand, validatePayload, validateAgainstState]
 ---
@@ -12,12 +12,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -89,12 +83,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -162,12 +150,6 @@ in:
       scenes:
         items: {}
         tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
       images:
         items: {}
         tree: []
@@ -225,12 +207,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -282,12 +258,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -356,12 +326,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -422,12 +386,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -495,12 +453,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -548,12 +500,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -627,12 +573,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -702,12 +642,6 @@ in:
       scenes:
         items: {}
         tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
       images:
         items: {}
         tree: []
@@ -765,12 +699,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -823,12 +751,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -898,12 +820,6 @@ out:
     scenes:
       items: {}
       tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
-      items: {}
-      tree: []
     images:
       items: {}
       tree: []
@@ -965,12 +881,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -1037,12 +947,6 @@ out:
     story:
       initialSceneId: null
     scenes:
-      items: {}
-      tree: []
-    sections:
-      items: {}
-      tree: []
-    lines:
       items: {}
       tree: []
     images:
@@ -1123,12 +1027,6 @@ in:
       scenes:
         items: {}
         tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
       images:
         items: {}
         tree: []
@@ -1189,12 +1087,6 @@ in:
       scenes:
         items: {}
         tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
-        items: {}
-        tree: []
       images:
         items: {}
         tree: []
@@ -1249,12 +1141,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
@@ -1317,12 +1203,6 @@ in:
       story:
         initialSceneId: null
       scenes:
-        items: {}
-        tree: []
-      sections:
-        items: {}
-        tree: []
-      lines:
         items: {}
         tree: []
       images:
