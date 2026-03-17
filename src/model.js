@@ -501,6 +501,7 @@ const validateImageItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "thumbnailFileId",
                 "fileId",
                 "fileType",
                 "fileSize",
@@ -534,6 +535,16 @@ const validateImageItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "image") {
+      if (
+        item.thumbnailFileId !== undefined &&
+        !isNonEmptyString(item.thumbnailFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
+        );
+      }
+
       if (!isNonEmptyString(item.fileId)) {
         return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
       }
@@ -3397,6 +3408,7 @@ const validateImageCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "thumbnailFileId",
               "fileId",
               "fileType",
               "fileSize",
@@ -3422,6 +3434,16 @@ const validateImageCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "image") {
+    if (
+      data.thumbnailFileId !== undefined &&
+      !isNonEmptyString(data.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.thumbnailFileId must be a non-empty string when provided",
+      );
+    }
+
     if (!isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
     }
@@ -6863,6 +6885,9 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.data.type === "image") {
         nextImage.fileId = payload.data.fileId;
+        if (payload.data.thumbnailFileId !== undefined) {
+          nextImage.thumbnailFileId = payload.data.thumbnailFileId;
+        }
         if (payload.data.fileType !== undefined) {
           nextImage.fileType = payload.data.fileType;
         }

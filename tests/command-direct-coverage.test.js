@@ -1074,6 +1074,7 @@ const directCases = [
     createData: {
       type: "image",
       name: "Image",
+      thumbnailFileId: "thumb-image",
       fileId: "file-image",
     },
     updateData: {
