@@ -551,6 +551,7 @@ test("applies an image command tape with intermediate state snapshots", () => {
           data: {
             type: "image",
             name: "Background",
+            thumbnailFileId: "thumb-bg",
             fileId: "file-bg",
             fileType: "image/png",
             width: 1920,
@@ -607,6 +608,7 @@ test("applies an image command tape with intermediate state snapshots", () => {
     id: "image-bg",
     type: "image",
     name: "Background",
+    thumbnailFileId: "thumb-bg",
     fileId: "file-bg",
     fileType: "image/png",
     width: 1920,
@@ -646,6 +648,7 @@ test("applies an image command tape with intermediate state snapshots", () => {
       id: "image-bg",
       type: "image",
       name: "Background",
+      thumbnailFileId: "thumb-bg",
       fileId: "file-bg",
       fileType: "image/png",
       width: 1920,
