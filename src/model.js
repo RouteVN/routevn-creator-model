@@ -312,13 +312,19 @@ const validateExactKeys = ({ value, expectedKeys, path, errorFactory }) => {
 
   for (const key of Object.keys(value)) {
     if (!expectedKeys.includes(key)) {
-      return invalidFromErrorFactory(errorFactory, `${path}.${key} is not allowed`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} is not allowed`,
+      );
     }
   }
 
   for (const key of expectedKeys) {
     if (!Object.hasOwn(value, key)) {
-      return invalidFromErrorFactory(errorFactory, `${path}.${key} is required`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} is required`,
+      );
     }
   }
 };
@@ -330,7 +336,10 @@ const validateAllowedKeys = ({ value, allowedKeys, path, errorFactory }) => {
 
   for (const key of Object.keys(value)) {
     if (!allowedKeys.includes(key)) {
-      return invalidFromErrorFactory(errorFactory, `${path}.${key} is not allowed`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} is not allowed`,
+      );
     }
   }
 };
@@ -356,15 +365,24 @@ const validateOptionalPosition = ({ value, path, errorFactory }) => {
   const hasY = value.y !== undefined;
 
   if (!hasX && !hasY) {
-    return invalidFromErrorFactory(errorFactory, `${path} must contain at least one of 'x' or 'y'`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain at least one of 'x' or 'y'`,
+    );
   }
 
   if (hasX && !isFiniteNumber(value.x)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.x must be a finite number`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.x must be a finite number`,
+    );
   }
 
   if (hasY && !isFiniteNumber(value.y)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.y must be a finite number`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.y must be a finite number`,
+    );
   }
 };
 
@@ -388,19 +406,31 @@ const validateSceneItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (item.type !== "scene" && item.type !== "folder") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'scene' or 'folder'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'scene' or 'folder'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     {
@@ -449,15 +479,24 @@ const validateSectionItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.lines !== undefined) {
@@ -497,15 +536,24 @@ const validateLineItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isPlainObject(item.actions)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.actions must be an object`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.actions must be an object`,
+      );
     }
   }
 };
@@ -588,7 +636,10 @@ const validateImageItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "image") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'image'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'image'`,
+      );
     }
 
     {
@@ -618,19 +669,29 @@ const validateImageItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${itemPath}.description must be a string when provided`,
       );
     }
@@ -647,25 +708,38 @@ const validateImageItems = ({ items, path, errorFactory }) => {
       }
 
       if (!isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileSize must be a finite number`,
+        );
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.width must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.width must be a finite number`,
+        );
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.height must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.height must be a finite number`,
+        );
       }
     }
   }
@@ -676,7 +750,10 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "sound") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'sound'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'sound'`,
+      );
     }
 
     {
@@ -705,36 +782,53 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${itemPath}.description must be a string when provided`,
       );
     }
 
     if (item.type === "sound") {
       if (!isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileSize must be a finite number`,
+        );
       }
 
       if (
@@ -742,13 +836,17 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
         item.waveformDataFileId !== null &&
         !isNonEmptyString(item.waveformDataFileId)
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.waveformDataFileId must be a non-empty string or null when provided`,
         );
       }
 
       if (item.duration !== undefined && !isFiniteNumber(item.duration)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.duration must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.duration must be a finite number`,
+        );
       }
     }
   }
@@ -759,7 +857,10 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "video") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'video'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'video'`,
+      );
     }
 
     {
@@ -789,50 +890,74 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.description !== undefined && !isString(item.description)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${itemPath}.description must be a string when provided`,
       );
     }
 
     if (item.type === "video") {
       if (!isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
       }
 
       if (!isNonEmptyString(item.thumbnailFileId)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.thumbnailFileId must be a non-empty string`,
         );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileSize must be a finite number`,
+        );
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.width must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.width must be a finite number`,
+        );
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.height must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.height must be a finite number`,
+        );
       }
     }
   }
@@ -840,7 +965,10 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
 
 const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
   if (!Array.isArray(keyframes) || keyframes.length === 0) {
-    return invalidFromErrorFactory(errorFactory, `${path} must be a non-empty array`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty array`,
+    );
   }
 
   for (const [index, keyframe] of keyframes.entries()) {
@@ -859,19 +987,29 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
     }
 
     if (!("value" in keyframe)) {
-      return invalidFromErrorFactory(errorFactory, `${keyframePath}.value is required`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.value is required`,
+      );
     }
 
     if (!("duration" in keyframe)) {
-      return invalidFromErrorFactory(errorFactory, `${keyframePath}.duration is required`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.duration is required`,
+      );
     }
 
     if (!isFiniteNumber(keyframe.value)) {
-      return invalidFromErrorFactory(errorFactory, `${keyframePath}.value must be a finite number`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.value must be a finite number`,
+      );
     }
 
     if (!isFiniteNumber(keyframe.duration) || keyframe.duration < 1) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${keyframePath}.duration must be a finite number >= 1`,
       );
     }
@@ -880,7 +1018,8 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
       keyframe.easing !== undefined &&
       !ANIMATION_EASING_KEYS.includes(keyframe.easing)
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${keyframePath}.easing must be a supported Route Graphics easing`,
       );
     }
@@ -889,7 +1028,8 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
       keyframe.relative !== undefined &&
       typeof keyframe.relative !== "boolean"
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${keyframePath}.relative must be a boolean when provided`,
       );
     }
@@ -910,14 +1050,20 @@ const validateTweenProperty = ({ config, path, errorFactory }) => {
   }
 
   if (!("keyframes" in config)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.keyframes is required`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes is required`,
+    );
   }
 
   if (
     config.initialValue !== undefined &&
     !isFiniteNumber(config.initialValue)
   ) {
-    return invalidFromErrorFactory(errorFactory, `${path}.initialValue must be a finite number`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.initialValue must be a finite number`,
+    );
   }
 
   {
@@ -944,14 +1090,20 @@ const validateTweenDefinition = ({
   }
 
   if (Object.keys(tween).length === 0) {
-    return invalidFromErrorFactory(errorFactory, `${path} must include at least one tween property`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must include at least one tween property`,
+    );
   }
 
   for (const [propertyName, config] of Object.entries(tween)) {
     const propertyPath = `${path}.${propertyName}`;
 
     if (!allowedProperties.includes(propertyName)) {
-      return invalidFromErrorFactory(errorFactory, `${propertyPath} ${unsupportedMessage}`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${propertyPath} ${unsupportedMessage}`,
+      );
     }
 
     {
@@ -992,7 +1144,10 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
   }
 
   if (!isNonEmptyString(mask.kind)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.kind must be a non-empty string`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.kind must be a non-empty string`,
+    );
   }
 
   if (
@@ -1000,27 +1155,31 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
     mask.kind !== "sequence" &&
     mask.kind !== "composite"
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.kind must be 'single', 'sequence', or 'composite'`,
     );
   }
 
   if (mask.texture !== undefined && !isNonEmptyString(mask.texture)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.texture must be a non-empty string when provided`,
     );
   }
 
   if (mask.textures !== undefined) {
     if (!Array.isArray(mask.textures) || mask.textures.length === 0) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.textures must be a non-empty array when provided`,
       );
     }
 
     for (const [index, texture] of mask.textures.entries()) {
       if (!isNonEmptyString(texture)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${path}.textures[${index}] must be a non-empty string`,
         );
       }
@@ -1029,7 +1188,8 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
 
   if (mask.items !== undefined) {
     if (!Array.isArray(mask.items) || mask.items.length === 0) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.items must be a non-empty array when provided`,
       );
     }
@@ -1050,20 +1210,25 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
       }
 
       if (!isNonEmptyString(item.texture)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.texture must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.texture must be a non-empty string`,
+        );
       }
 
       if (
         item.channel !== undefined &&
         !MASK_CHANNEL_KEYS.includes(item.channel)
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.channel must be a supported mask channel`,
         );
       }
 
       if (item.invert !== undefined && typeof item.invert !== "boolean") {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.invert must be a boolean when provided`,
         );
       }
@@ -1071,25 +1236,38 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
   }
 
   if (mask.combine !== undefined && !MASK_COMBINE_KEYS.includes(mask.combine)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.combine must be a supported mask combine mode`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.combine must be a supported mask combine mode`,
+    );
   }
 
   if (mask.channel !== undefined && !MASK_CHANNEL_KEYS.includes(mask.channel)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.channel must be a supported mask channel`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.channel must be a supported mask channel`,
+    );
   }
 
   if (mask.softness !== undefined && !isFiniteNumber(mask.softness)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.softness must be a finite number when provided`,
     );
   }
 
   if (mask.invert !== undefined && typeof mask.invert !== "boolean") {
-    return invalidFromErrorFactory(errorFactory, `${path}.invert must be a boolean when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.invert must be a boolean when provided`,
+    );
   }
 
   if (mask.sample !== undefined && !isString(mask.sample)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.sample must be a string when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.sample must be a string when provided`,
+    );
   }
 
   if (mask.progress !== undefined) {
@@ -1106,19 +1284,22 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
   }
 
   if (mask.kind === "single" && !isNonEmptyString(mask.texture)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.texture is required when ${path}.kind is 'single'`,
     );
   }
 
   if (mask.kind === "sequence" && mask.textures === undefined) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.textures is required when ${path}.kind is 'sequence'`,
     );
   }
 
   if (mask.kind === "composite" && mask.items === undefined) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.items is required when ${path}.kind is 'composite'`,
     );
   }
@@ -1138,11 +1319,17 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
   }
 
   if (!isNonEmptyString(animation.type)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.type must be a non-empty string`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.type must be a non-empty string`,
+    );
   }
 
   if (animation.type !== "live" && animation.type !== "replace") {
-    return invalidFromErrorFactory(errorFactory, `${path}.type must be 'live' or 'replace'`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.type must be 'live' or 'replace'`,
+    );
   }
 
   if (animation.type === "live") {
@@ -1151,13 +1338,15 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
       animation.next !== undefined ||
       animation.mask !== undefined
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.live animations cannot define prev, next, or mask`,
       );
     }
 
     if (animation.tween === undefined) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.tween is required when ${path}.type is 'live'`,
       );
     }
@@ -1179,7 +1368,10 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
   }
 
   if (animation.tween !== undefined) {
-    return invalidFromErrorFactory(errorFactory, `${path}.replace animations cannot define tween`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.replace animations cannot define tween`,
+    );
   }
 
   if (
@@ -1187,7 +1379,8 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     animation.next === undefined &&
     animation.mask === undefined
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path} must define at least one of prev, next, or mask when ${path}.type is 'replace'`,
     );
   }
@@ -1242,7 +1435,10 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "animation") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'animation'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'animation'`,
+      );
     }
 
     {
@@ -1261,15 +1457,24 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "animation") {
@@ -1292,7 +1497,10 @@ const validateFontItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "font") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'font'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'font'`,
+      );
     }
 
     {
@@ -1319,34 +1527,53 @@ const validateFontItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "font") {
       if (!isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
       }
 
       if (!isNonEmptyString(item.fontFamily)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontFamily must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fontFamily must be a non-empty string`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileSize must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileSize must be a finite number`,
+        );
       }
     }
   }
@@ -1357,7 +1584,10 @@ const validateColorItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "color") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'color'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'color'`,
+      );
     }
 
     {
@@ -1376,19 +1606,31 @@ const validateColorItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "color" && !isHexColor(item.hex)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.hex must be a #RRGGBB string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.hex must be a #RRGGBB string`,
+      );
     }
   }
 };
@@ -1398,7 +1640,10 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "transform") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'transform'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'transform'`,
+      );
     }
 
     {
@@ -1428,15 +1673,24 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "transform") {
@@ -1450,7 +1704,10 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
         "rotation",
       ]) {
         if (!isFiniteNumber(item[key])) {
-          return invalidFromErrorFactory(errorFactory, `${itemPath}.${key} must be a finite number`);
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${itemPath}.${key} must be a finite number`,
+          );
         }
       }
     }
@@ -1468,7 +1725,10 @@ const validateVariableTypedValue = ({
   }
 
   if (variableType === "number" && !isFiniteNumber(value)) {
-    return invalidFromErrorFactory(errorFactory, `${path} must be a finite number`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a finite number`,
+    );
   }
 
   if (variableType === "boolean" && typeof value !== "boolean") {
@@ -1485,7 +1745,8 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       variableType !== "folder" &&
       !VARIABLE_TYPE_KEYS.includes(variableType)
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${itemPath}.type must be 'folder', 'string', 'number', or 'boolean'`,
       );
     }
@@ -1506,20 +1767,30 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (variableType !== "folder") {
       if (!VARIABLE_SCOPE_KEYS.includes(item.scope)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.scope must be 'context', 'global-device', or 'global-account'`,
         );
       }
@@ -1555,7 +1826,10 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "textStyle") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'textStyle'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'textStyle'`,
+      );
     }
 
     {
@@ -1592,46 +1866,72 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "textStyle") {
       if (!isNonEmptyString(item.fontId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fontId must be a non-empty string`,
+        );
       }
 
       if (!isNonEmptyString(item.colorId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.colorId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.colorId must be a non-empty string`,
+        );
       }
 
       if (!isFiniteNumber(item.fontSize)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontSize must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fontSize must be a finite number`,
+        );
       }
 
       if (!isFiniteNumber(item.lineHeight)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.lineHeight must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.lineHeight must be a finite number`,
+        );
       }
 
       if (!isNonEmptyString(item.fontWeight)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fontWeight must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fontWeight must be a non-empty string`,
+        );
       }
 
       if (item.previewText !== undefined && !isString(item.previewText)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.previewText must be a string when provided`,
         );
       }
 
       if (item.fontStyle !== undefined && !isString(item.fontStyle)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fontStyle must be a string when provided`,
         );
       }
@@ -1640,7 +1940,8 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         item.breakWords !== undefined &&
         typeof item.breakWords !== "boolean"
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.breakWords must be a boolean when provided`,
         );
       }
@@ -1649,13 +1950,15 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         item.align !== undefined &&
         !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(item.align)
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.align must be 'left', 'center', or 'right' when provided`,
         );
       }
 
       if (item.wordWrap !== undefined && typeof item.wordWrap !== "boolean") {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.wordWrap must be a boolean when provided`,
         );
       }
@@ -1664,7 +1967,8 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         item.wordWrapWidth !== undefined &&
         !isFiniteNumber(item.wordWrapWidth)
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.wordWrapWidth must be a finite number when provided`,
         );
       }
@@ -1673,19 +1977,22 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         item.strokeColorId !== undefined &&
         !isNonEmptyString(item.strokeColorId)
       ) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.strokeColorId must be a non-empty string when provided`,
         );
       }
 
       if (item.strokeAlpha !== undefined && !isFiniteNumber(item.strokeAlpha)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.strokeAlpha must be a finite number when provided`,
         );
       }
 
       if (item.strokeWidth !== undefined && !isFiniteNumber(item.strokeWidth)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.strokeWidth must be a finite number when provided`,
         );
       }
@@ -1698,7 +2005,10 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "image") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'image'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'image'`,
+      );
     }
 
     {
@@ -1726,42 +2036,58 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "image") {
       if (!isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, `${itemPath}.fileId must be a non-empty string`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileSize must be a finite number when provided`,
         );
       }
 
       if (item.width !== undefined && !isFiniteNumber(item.width)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.width must be a finite number when provided`,
         );
       }
 
       if (item.height !== undefined && !isFiniteNumber(item.height)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.height must be a finite number when provided`,
         );
       }
@@ -1786,7 +2112,8 @@ const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
     style.align !== undefined &&
     !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(style.align)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.align must be 'left', 'center', or 'right' when provided`,
     );
   }
@@ -1795,7 +2122,8 @@ const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
     style.wordWrapWidth !== undefined &&
     !isFiniteNumber(style.wordWrapWidth)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.wordWrapWidth must be a finite number when provided`,
     );
   }
@@ -1867,7 +2195,8 @@ const validateLayoutElementData = ({
 
   if (!allowPartial || data.type !== undefined) {
     if (!LAYOUT_ELEMENT_BASE_TYPES.includes(data.type)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.type must be a supported layout element type`,
       );
     }
@@ -1875,7 +2204,10 @@ const validateLayoutElementData = ({
 
   if (!allowPartial || data.name !== undefined) {
     if (!isNonEmptyString(data.name)) {
-      return invalidFromErrorFactory(errorFactory, `${path}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.name must be a non-empty string`,
+      );
     }
   }
 
@@ -1897,7 +2229,8 @@ const validateLayoutElementData = ({
     "opacity",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${path}.${key} must be a finite number when provided`,
       );
     }
@@ -1908,7 +2241,8 @@ const validateLayoutElementData = ({
     !isFiniteNumber(data.initialValue) &&
     !isString(data.initialValue)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.initialValue must be a finite number or string when provided`,
     );
   }
@@ -1917,7 +2251,8 @@ const validateLayoutElementData = ({
     data.opacity !== undefined &&
     (!isFiniteNumber(data.opacity) || data.opacity < 0 || data.opacity > 1)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.opacity must be a finite number between 0 and 1 when provided`,
     );
   }
@@ -1939,7 +2274,10 @@ const validateLayoutElementData = ({
     "$when",
   ]) {
     if (data[key] !== undefined && !isString(data[key])) {
-      return invalidFromErrorFactory(errorFactory, `${path}.${key} must be a string when provided`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a string when provided`,
+      );
     }
   }
 
@@ -1948,20 +2286,25 @@ const validateLayoutElementData = ({
     data.direction !== "horizontal" &&
     data.direction !== "vertical"
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.direction must be 'horizontal' or 'vertical' when provided`,
     );
   }
 
   if (data.scroll !== undefined && typeof data.scroll !== "boolean") {
-    return invalidFromErrorFactory(errorFactory, `${path}.scroll must be a boolean when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.scroll must be a boolean when provided`,
+    );
   }
 
   if (
     data.anchorToBottom !== undefined &&
     typeof data.anchorToBottom !== "boolean"
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       `${path}.anchorToBottom must be a boolean when provided`,
     );
   }
@@ -1980,15 +2323,24 @@ const validateLayoutElementData = ({
   }
 
   if (data.click !== undefined && !isPlainObject(data.click)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.click must be an object when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.click must be an object when provided`,
+    );
   }
 
   if (data.rightClick !== undefined && !isPlainObject(data.rightClick)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.rightClick must be an object when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.rightClick must be an object when provided`,
+    );
   }
 
   if (data.change !== undefined && !isPlainObject(data.change)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.change must be an object when provided`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.change must be an object when provided`,
+    );
   }
 };
 
@@ -2050,11 +2402,17 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     {
@@ -2077,7 +2435,10 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "character") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'character'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'character'`,
+      );
     }
 
     {
@@ -2106,44 +2467,58 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "character") {
       if (item.description !== undefined && !isString(item.description)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.description must be a string when provided`,
         );
       }
 
       if (item.shortcut !== undefined && !isString(item.shortcut)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.shortcut must be a string when provided`,
         );
       }
 
       if (item.fileId !== undefined && !isNonEmptyString(item.fileId)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileId must be a non-empty string when provided`,
         );
       }
 
       if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileType must be a string when provided`,
         );
       }
 
       if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.fileSize must be a finite number when provided`,
         );
       }
@@ -2165,12 +2540,46 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
   }
 };
 
+const validateKeyboardMap = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  for (const [key, interaction] of Object.entries(value)) {
+    if (!isNonEmptyString(key)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} keys must be non-empty strings`,
+      );
+    }
+
+    if (!isPlainObject(interaction)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be an object`,
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 const validateLayoutItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
     if (item?.type !== "folder" && item?.type !== "layout") {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.type must be 'folder' or 'layout'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'layout'`,
+      );
     }
 
     {
@@ -2179,7 +2588,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name"]
-            : ["id", "type", "name", "layoutType", "elements"],
+            : ["id", "type", "name", "layoutType", "elements", "keyboard"],
         path: itemPath,
         errorFactory,
       });
@@ -2189,20 +2598,30 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.id)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
     }
 
     if (item.id !== itemId) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.id must match item key '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
     }
 
     if (!isNonEmptyString(item.name)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.name must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
     }
 
     if (item.type === "layout") {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
-        return invalidFromErrorFactory(errorFactory, 
+        return invalidFromErrorFactory(
+          errorFactory,
           `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'`,
         );
       }
@@ -2214,6 +2633,17 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
           itemValidator: validateLayoutElementItems,
           treeValidator: validateLayoutElementTreeOwnership,
           treeNodeLabel: "layout element",
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateKeyboardMap({
+          value: item.keyboard,
+          path: `${itemPath}.keyboard`,
+          errorFactory,
         });
         if (result?.valid === false) {
           return result;
@@ -2282,7 +2712,10 @@ const validateSectionTreeShape = ({ nodes, items, path, errorFactory }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (!Object.hasOwn(items, node.id)) {
-      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must reference an existing section`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${nodePath}.id must reference an existing section`,
+      );
     }
 
     {
@@ -2306,9 +2739,7 @@ const validateLineTreeFlatShape = ({ nodes, path }) => {
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0) {
-      return invalidState(
-        `${nodePath}.children is not supported for lines`,
-      );
+      return invalidState(`${nodePath}.children is not supported for lines`);
     }
   }
 };
@@ -2476,7 +2907,8 @@ const validateGenericFolderOwnership = ({
     const children = Array.isArray(node.children) ? node.children : [];
 
     if (children.length > 0 && items[node.id]?.type !== "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${nodePath}.children requires '${node.id}' to be a ${folderLabel}`,
       );
     }
@@ -2511,7 +2943,8 @@ const validateLayoutElementTreeOwnership = ({
       children.length > 0 &&
       !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(items[node.id]?.type)
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `${nodePath}.children requires '${node.id}' to be a folder or container layout element`,
       );
     }
@@ -2558,15 +2991,24 @@ const validateTreeNodes = ({
     }
 
     if (!isNonEmptyString(node.id)) {
-      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${nodePath}.id must be a non-empty string`,
+      );
     }
 
     if (!Object.hasOwn(items, node.id)) {
-      return invalidFromErrorFactory(errorFactory, `${nodePath}.id must reference an existing item`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${nodePath}.id must reference an existing item`,
+      );
     }
 
     if (seenIds.has(node.id)) {
-      return invalidFromErrorFactory(errorFactory, `${nodePath}.id is duplicated in tree`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${nodePath}.id is duplicated in tree`,
+      );
     }
     seenIds.add(node.id);
 
@@ -2608,7 +3050,10 @@ const validateNestedCollection = ({
   }
 
   if (!isPlainObject(collection.items)) {
-    return invalidFromErrorFactory(errorFactory, `${path}.items must be an object`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.items must be an object`,
+    );
   }
 
   {
@@ -2651,7 +3096,10 @@ const validateNestedCollection = ({
 
   for (const itemId of Object.keys(collection.items)) {
     if (!seenIds.has(itemId)) {
-      return invalidFromErrorFactory(errorFactory, `${path}.tree is missing item '${itemId}'`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.tree is missing item '${itemId}'`,
+      );
     }
   }
 };
@@ -2936,9 +3384,7 @@ const validateCollection = ({ collection, path }) => {
 
   for (const itemId of Object.keys(collection.items)) {
     if (!seenIds.has(itemId)) {
-      return invalidState(
-        `${path}.tree is missing item '${itemId}'`,
-      );
+      return invalidState(`${path}.tree is missing item '${itemId}'`);
     }
   }
 };
@@ -2975,16 +3421,16 @@ const validateFileReference = ({
     );
   }
 
-  if (Array.isArray(allowedTypes) && allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      expectedTypeMessage,
-      {
-        ...details,
-        expectedFileTypes: [...allowedTypes],
-        actualFileType: file.type,
-      },
-    );
+  if (
+    Array.isArray(allowedTypes) &&
+    allowedTypes.length > 0 &&
+    !allowedTypes.includes(file.type)
+  ) {
+    return invalidFromErrorFactory(errorFactory, expectedTypeMessage, {
+      ...details,
+      expectedFileTypes: [...allowedTypes],
+      actualFileType: file.type,
+    });
   }
 
   return VALID_RESULT;
@@ -3032,27 +3478,29 @@ export const assertInvariants = ({ state }) => {
 
     for (const [sectionId, section] of Object.entries(sections.items)) {
       if (!isNonEmptyString(section.id) || section.id !== sectionId) {
-        return invalidInvariant(
-          "section.id must match the section key",
-          { sceneId, sectionId },
-        );
+        return invalidInvariant("section.id must match the section key", {
+          sceneId,
+          sectionId,
+        });
       }
 
       const lines = section.lines ?? createEmptyNestedCollection();
 
       for (const [lineId, line] of Object.entries(lines.items)) {
         if (!isNonEmptyString(line.id) || line.id !== lineId) {
-          return invalidInvariant(
-            "line.id must match the line key",
-            { sceneId, sectionId, lineId },
-          );
+          return invalidInvariant("line.id must match the line key", {
+            sceneId,
+            sectionId,
+            lineId,
+          });
         }
 
         if (!isPlainObject(line.actions)) {
-          return invalidInvariant(
-            "line.actions must be an object",
-            { sceneId, sectionId, lineId },
-          );
+          return invalidInvariant("line.actions must be an object", {
+            sceneId,
+            sectionId,
+            lineId,
+          });
         }
       }
     }
@@ -3154,7 +3602,10 @@ export const assertInvariants = ({ state }) => {
       }
     }
 
-    if (sound.waveformDataFileId !== undefined && sound.waveformDataFileId !== null) {
+    if (
+      sound.waveformDataFileId !== undefined &&
+      sound.waveformDataFileId !== null
+    ) {
       const result = validateFileReference({
         state,
         fileId: sound.waveformDataFileId,
@@ -3221,7 +3672,9 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
-  for (const [characterId, character] of Object.entries(state.characters.items)) {
+  for (const [characterId, character] of Object.entries(
+    state.characters.items,
+  )) {
     if (character.type !== "character") {
       continue;
     }
@@ -3479,7 +3932,8 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
     payload.index !== undefined &&
     (!Number.isInteger(payload.index) || payload.index < 0)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.index must be an integer greater than or equal to 0",
     );
   }
@@ -3488,14 +3942,18 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   const hasPositionTargetId = payload.positionTargetId !== undefined;
 
   if (payload.index !== undefined && hasPosition) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.index cannot be combined with payload.position",
     );
   }
 
   if (!hasPosition) {
     if (hasPositionTargetId) {
-      return invalidFromErrorFactory(errorFactory, "payload.positionTargetId requires payload.position");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.positionTargetId requires payload.position",
+      );
     }
     return;
   }
@@ -3506,14 +3964,16 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
     payload.position !== "before" &&
     payload.position !== "after"
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.position must be 'first', 'last', 'before', or 'after'",
     );
   }
 
   if (payload.position === "before" || payload.position === "after") {
     if (!isNonEmptyString(payload.positionTargetId)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.positionTargetId must be a non-empty string when payload.position is 'before' or 'after'",
       );
     }
@@ -3521,7 +3981,8 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   }
 
   if (hasPositionTargetId) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.positionTargetId is allowed only when payload.position is 'before' or 'after'",
     );
   }
@@ -3541,7 +4002,10 @@ const validateSceneCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (
@@ -3549,7 +4013,10 @@ const validateSceneCreateData = ({ data, errorFactory }) => {
     data.type !== "scene" &&
     data.type !== "folder"
   ) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'scene' or 'folder'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'scene' or 'folder'",
+    );
   }
 
   {
@@ -3581,13 +4048,17 @@ const validateSceneUpdateData = ({ data, errorFactory }) => {
   const hasPosition = data.position !== undefined;
 
   if (!hasName && !hasPosition) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (hasName && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (hasPosition) {
@@ -3606,18 +4077,27 @@ const validateSceneUpdateData = ({ data, errorFactory }) => {
 
 const validateRequiredUniqueIdArray = ({ value, path, errorFactory }) => {
   if (!Array.isArray(value) || value.length === 0) {
-    return invalidFromErrorFactory(errorFactory, `${path} must be a non-empty array`);
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty array`,
+    );
   }
 
   const seen = new Set();
 
   for (const [index, entry] of value.entries()) {
     if (!isNonEmptyString(entry)) {
-      return invalidFromErrorFactory(errorFactory, `${path}[${index}] must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must be a non-empty string`,
+      );
     }
 
     if (seen.has(entry)) {
-      return invalidFromErrorFactory(errorFactory, `${path}[${index}] must be unique`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must be unique`,
+      );
     }
 
     seen.add(entry);
@@ -3638,7 +4118,10 @@ const validateSectionCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 };
 
@@ -3656,13 +4139,19 @@ const validateSectionUpdateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 };
 
 const validateLineCreatePayload = ({ payload, errorFactory }) => {
   if (!Array.isArray(payload.lines) || payload.lines.length === 0) {
-    return invalidFromErrorFactory(errorFactory, "payload.lines must be a non-empty array");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.lines must be a non-empty array",
+    );
   }
 
   const seenLineIds = new Set();
@@ -3683,11 +4172,17 @@ const validateLineCreatePayload = ({ payload, errorFactory }) => {
     }
 
     if (!isNonEmptyString(item.lineId)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.lineId must be a non-empty string`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.lineId must be a non-empty string`,
+      );
     }
 
     if (seenLineIds.has(item.lineId)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.lineId must be unique`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.lineId must be unique`,
+      );
     }
     seenLineIds.add(item.lineId);
 
@@ -3704,24 +4199,36 @@ const validateLineCreatePayload = ({ payload, errorFactory }) => {
     }
 
     if (item.data.actions !== undefined && !isPlainObject(item.data.actions)) {
-      return invalidFromErrorFactory(errorFactory, `${itemPath}.data.actions must be an object`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.data.actions must be an object`,
+      );
     }
   }
 };
 
 const validateLineUpdateActionsData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 };
 
 const validateImageCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "image") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'image'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'image'",
+    );
   }
 
   {
@@ -3750,11 +4257,15 @@ const validateImageCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
@@ -3771,25 +4282,38 @@ const validateImageCreateData = ({ data, errorFactory }) => {
     }
 
     if (!isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileSize must be a finite number",
+      );
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.width must be a finite number",
+      );
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.height must be a finite number",
+      );
     }
   }
 };
@@ -3817,19 +4341,22 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
@@ -3838,41 +4365,61 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
     data.thumbnailFileId !== undefined &&
     !isNonEmptyString(data.thumbnailFileId)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileSize must be a finite number",
+    );
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.width must be a finite number",
+    );
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.height must be a finite number",
+    );
   }
 };
 
 const validateSoundCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "sound") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'sound'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'sound'",
+    );
   }
 
   {
@@ -3900,28 +4447,39 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.type === "sound") {
     if (!isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileSize must be a finite number",
+      );
     }
 
     if (
@@ -3929,13 +4487,17 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
       data.waveformDataFileId !== null &&
       !isNonEmptyString(data.waveformDataFileId)
     ) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.waveformDataFileId must be a non-empty string or null when provided",
       );
     }
 
     if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.duration must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.duration must be a finite number",
+      );
     }
   }
 };
@@ -3962,35 +4524,45 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileSize must be a finite number",
+    );
   }
 
   if (
@@ -3998,23 +4570,33 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
     data.waveformDataFileId !== null &&
     !isNonEmptyString(data.waveformDataFileId)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.waveformDataFileId must be a non-empty string or null when provided",
     );
   }
 
   if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.duration must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.duration must be a finite number",
+    );
   }
 };
 
 const validateVideoCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "video") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'video'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'video'",
+    );
   }
 
   {
@@ -4043,42 +4625,60 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.type === "video") {
     if (!isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
     }
 
     if (!isNonEmptyString(data.thumbnailFileId)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.thumbnailFileId must be a non-empty string",
       );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileSize must be a finite number",
+      );
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.width must be a finite number",
+      );
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.height must be a finite number",
+      );
     }
   }
 };
@@ -4106,25 +4706,29 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
@@ -4133,35 +4737,54 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
     data.thumbnailFileId !== undefined &&
     !isNonEmptyString(data.thumbnailFileId)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileSize must be a finite number",
+    );
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.width must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.width must be a finite number",
+    );
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.height must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.height must be a finite number",
+    );
   }
 };
 
 const validateFontCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "font") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'font'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'font'",
+    );
   }
 
   {
@@ -4180,26 +4803,39 @@ const validateFontCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "font") {
     if (!isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
     }
 
     if (!isNonEmptyString(data.fontFamily)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fontFamily must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fontFamily must be a non-empty string",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileSize must be a finite number",
+      );
     }
   }
 };
@@ -4218,35 +4854,45 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
 
   if (data.fontFamily !== undefined && !isNonEmptyString(data.fontFamily)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fontFamily must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileSize must be a finite number",
+    );
   }
 };
 
@@ -4354,11 +5000,17 @@ const validateReferencedFilesInData = ({
 
 const validateColorCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "color") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'color'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'color'",
+    );
   }
 
   {
@@ -4375,11 +5027,17 @@ const validateColorCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "color" && !isHexColor(data.hex)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.hex must be a #RRGGBB string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.hex must be a #RRGGBB string",
+    );
   }
 };
 
@@ -4397,19 +5055,22 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.hex !== undefined && !isHexColor(data.hex)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.hex must be a #RRGGBB string when provided",
     );
   }
@@ -4417,18 +5078,26 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
 
 const validateAnimationCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "animation") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'animation'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'animation'",
+    );
   }
 
   {
     const result = validateAllowedKeys({
       value: data,
       allowedKeys:
-        data.type === "folder" ? ["type", "name"] : ["type", "name", "animation"],
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "animation"],
       path: "payload.data",
       errorFactory,
     });
@@ -4438,7 +5107,10 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "animation") {
@@ -4469,13 +5141,15 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
@@ -4496,11 +5170,17 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
 
 const validateTransformCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "transform") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'transform'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'transform'",
+    );
   }
 
   {
@@ -4529,7 +5209,10 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "transform") {
@@ -4543,7 +5226,10 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
       "rotation",
     ]) {
       if (!isFiniteNumber(data[key])) {
-        return invalidFromErrorFactory(errorFactory, `payload.data.${key} must be a finite number`);
+        return invalidFromErrorFactory(
+          errorFactory,
+          `payload.data.${key} must be a finite number`,
+        );
       }
     }
   }
@@ -4572,13 +5258,15 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
@@ -4593,7 +5281,8 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     "rotation",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `payload.data.${key} must be a finite number when provided`,
       );
     }
@@ -4602,11 +5291,15 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
 
 const validateVariableCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && !VARIABLE_TYPE_KEYS.includes(data.type)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.type must be 'folder', 'string', 'number', or 'boolean'",
     );
   }
@@ -4627,12 +5320,16 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type !== "folder") {
     if (!VARIABLE_SCOPE_KEYS.includes(data.scope)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.scope must be 'context', 'global-device', or 'global-account'",
       );
     }
@@ -4676,19 +5373,22 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.scope !== undefined && !VARIABLE_SCOPE_KEYS.includes(data.scope)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.scope must be 'context', 'global-device', or 'global-account' when provided",
     );
   }
@@ -4696,11 +5396,17 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
 
 const validateTextStyleCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "textStyle") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'textStyle'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'textStyle'",
+    );
   }
 
   {
@@ -4736,7 +5442,10 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "textStyle") {
@@ -4788,20 +5497,23 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   for (const key of ["fontId", "colorId", "strokeColorId"]) {
     if (data[key] !== undefined && !isNonEmptyString(data[key])) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `payload.data.${key} must be a non-empty string when provided`,
       );
     }
@@ -4809,7 +5521,8 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
 
   for (const key of ["fontSize", "lineHeight", "strokeAlpha", "strokeWidth"]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         `payload.data.${key} must be a finite number when provided`,
       );
     }
@@ -4817,22 +5530,30 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
 
   for (const key of ["fontWeight", "previewText", "fontStyle"]) {
     if (data[key] !== undefined && !isString(data[key])) {
-      return invalidFromErrorFactory(errorFactory, `payload.data.${key} must be a string when provided`);
+      return invalidFromErrorFactory(
+        errorFactory,
+        `payload.data.${key} must be a string when provided`,
+      );
     }
   }
 
   if (data.breakWords !== undefined && typeof data.breakWords !== "boolean") {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.breakWords must be a boolean when provided",
     );
   }
 
   if (data.wordWrap !== undefined && typeof data.wordWrap !== "boolean") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.wordWrap must be a boolean when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.wordWrap must be a boolean when provided",
+    );
   }
 
   if (data.wordWrapWidth !== undefined && !isFiniteNumber(data.wordWrapWidth)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.wordWrapWidth must be a finite number when provided",
     );
   }
@@ -4841,7 +5562,8 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
     data.align !== undefined &&
     !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(data.align)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.align must be 'left', 'center', or 'right' when provided",
     );
   }
@@ -4849,11 +5571,17 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
 
 const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "image") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'image'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'image'",
+    );
   }
 
   {
@@ -4862,7 +5590,15 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "fileId", "fileType", "fileSize", "width", "height"],
+          : [
+              "type",
+              "name",
+              "fileId",
+              "fileType",
+              "fileSize",
+              "width",
+              "height",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -4872,40 +5608,51 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "image") {
     if (!isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, "payload.data.fileId must be a non-empty string");
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileSize must be a finite number when provided",
       );
     }
 
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.width must be a finite number when provided",
       );
     }
 
     if (data.height !== undefined && !isFiniteNumber(data.height)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.height must be a finite number when provided",
       );
     }
 
     if (data.description !== undefined && !isString(data.description)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.description must be a string when provided",
       );
     }
@@ -4934,47 +5681,57 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileSize must be a finite number when provided",
     );
   }
 
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.width must be a finite number when provided",
     );
   }
 
   if (data.height !== undefined && !isFiniteNumber(data.height)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.height must be a finite number when provided",
     );
   }
@@ -4982,11 +5739,17 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
 
 const validateCharacterCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "character") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'character'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'character'",
+    );
   }
 
   {
@@ -5014,36 +5777,44 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "character") {
     if (data.description !== undefined && !isString(data.description)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.description must be a string when provided",
       );
     }
 
     if (data.shortcut !== undefined && !isString(data.shortcut)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.shortcut must be a string when provided",
       );
     }
 
     if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileId must be a non-empty string when provided",
       );
     }
 
     if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileType must be a string when provided",
       );
     }
 
     if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.fileSize must be a finite number when provided",
       );
     }
@@ -5087,39 +5858,50 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
 
   if (data.description !== undefined && !isString(data.description)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.description must be a string when provided",
     );
   }
 
   if (data.shortcut !== undefined && !isString(data.shortcut)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.shortcut must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.shortcut must be a string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
 
   if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.fileType must be a string when provided");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
   }
 
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.fileSize must be a finite number when provided",
     );
   }
@@ -5127,11 +5909,17 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
 
 const validateLayoutCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data must be an object");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
   }
 
   if (data.type !== "folder" && data.type !== "layout") {
-    return invalidFromErrorFactory(errorFactory, "payload.data.type must be 'folder' or 'layout'");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'layout'",
+    );
   }
 
   {
@@ -5140,7 +5928,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name"]
-          : ["type", "name", "layoutType", "elements"],
+          : ["type", "name", "layoutType", "elements", "keyboard"],
       path: "payload.data",
       errorFactory,
     });
@@ -5150,12 +5938,16 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
   }
 
   if (!isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, "payload.data.name must be a non-empty string");
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
   }
 
   if (data.type === "layout") {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'",
       );
     }
@@ -5172,6 +5964,17 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
         return result;
       }
     }
+
+    {
+      const result = validateKeyboardMap({
+        value: data.keyboard,
+        path: "payload.data.keyboard",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -5179,7 +5982,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "layoutType"],
+      allowedKeys: ["name", "layoutType", "keyboard"],
       path: "payload.data",
       errorFactory,
     });
@@ -5189,13 +5992,15 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   }
 
   if (Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
 
   if (data.name !== undefined && !isNonEmptyString(data.name)) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
   }
@@ -5204,9 +6009,21 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     data.layoutType !== undefined &&
     !LAYOUT_TYPE_KEYS.includes(data.layoutType)
   ) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base' when provided",
     );
+  }
+
+  {
+    const result = validateKeyboardMap({
+      value: data.keyboard,
+      path: "payload.data.keyboard",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 };
 
@@ -5237,7 +6054,8 @@ const validateLayoutElementUpdateData = ({ data, errorFactory, replace }) => {
   }
 
   if (replace !== true && Object.keys(data).length === 0) {
-    return invalidFromErrorFactory(errorFactory, 
+    return invalidFromErrorFactory(
+      errorFactory,
       "payload.data must include at least one updatable field",
     );
   }
@@ -5253,7 +6071,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.imageId !== undefined) {
     const image = state.images.items[data.imageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element imageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5268,7 +6087,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.hoverImageId !== undefined) {
     const image = state.images.items[data.hoverImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element hoverImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5283,7 +6103,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.clickImageId !== undefined) {
     const image = state.images.items[data.clickImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element clickImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5298,7 +6119,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.thumbImageId !== undefined) {
     const image = state.images.items[data.thumbImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element thumbImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5313,7 +6135,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.hoverThumbImageId !== undefined) {
     const image = state.images.items[data.hoverThumbImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element hoverThumbImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5328,7 +6151,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.barImageId !== undefined) {
     const image = state.images.items[data.barImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element barImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5343,7 +6167,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.hoverBarImageId !== undefined) {
     const image = state.images.items[data.hoverBarImageId];
     if (!isPlainObject(image) || image.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element hoverBarImageId must reference an existing non-folder image",
         {
           layoutId,
@@ -5358,7 +6183,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.textStyleId !== undefined) {
     const textStyle = state.textStyles.items[data.textStyleId];
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element textStyleId must reference an existing non-folder text style",
         {
           layoutId,
@@ -5373,7 +6199,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.hoverTextStyleId !== undefined) {
     const textStyle = state.textStyles.items[data.hoverTextStyleId];
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element hoverTextStyleId must reference an existing non-folder text style",
         {
           layoutId,
@@ -5388,7 +6215,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.clickTextStyleId !== undefined) {
     const textStyle = state.textStyles.items[data.clickTextStyleId];
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element clickTextStyleId must reference an existing non-folder text style",
         {
           layoutId,
@@ -5403,7 +6231,8 @@ const validateLayoutElementReferenceTargets = ({
   if (data.variableId !== undefined) {
     const variable = state.variables.items[data.variableId];
     if (!isPlainObject(variable) || variable.type === "folder") {
-      return invalidFromErrorFactory(errorFactory, 
+      return invalidFromErrorFactory(
+        errorFactory,
         "layout element variableId must reference an existing non-folder variable",
         {
           layoutId,
@@ -6026,7 +6855,9 @@ const findReferencedFileUsage = ({ state, fileId }) => {
     }
   }
 
-  for (const [characterId, character] of Object.entries(state.characters.items)) {
+  for (const [characterId, character] of Object.entries(
+    state.characters.items,
+  )) {
     if (character.type !== "character") {
       continue;
     }
@@ -6235,9 +7066,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        return invalidPayload(
-          "payload.sceneId must be a non-empty string",
-        );
+        return invalidPayload("payload.sceneId must be a non-empty string");
       }
 
       if (
@@ -6272,9 +7101,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (Object.hasOwn(state.scenes.items, payload.sceneId)) {
-        return invalidPrecondition(
-          "payload.sceneId must not already exist",
-        );
+        return invalidPrecondition("payload.sceneId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -6362,9 +7189,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        return invalidPayload(
-          "payload.sceneId must be a non-empty string",
-        );
+        return invalidPayload("payload.sceneId must be a non-empty string");
       }
 
       {
@@ -6493,9 +7318,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        return invalidPayload(
-          "payload.sceneId must be a non-empty string",
-        );
+        return invalidPayload("payload.sceneId must be a non-empty string");
       }
 
       if (
@@ -6629,15 +7452,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        return invalidPayload(
-          "payload.sectionId must be a non-empty string",
-        );
+        return invalidPayload("payload.sectionId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.sceneId)) {
-        return invalidPayload(
-          "payload.sceneId must be a non-empty string",
-        );
+        return invalidPayload("payload.sceneId must be a non-empty string");
       }
 
       if (
@@ -6685,9 +7504,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (findSectionLocation({ state, sectionId: payload.sectionId })) {
-        return invalidPrecondition(
-          "payload.sectionId must not already exist",
-        );
+        return invalidPrecondition("payload.sectionId must not already exist");
       }
 
       if (payload.parentId !== undefined && payload.parentId !== null) {
@@ -6779,9 +7596,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        return invalidPayload(
-          "payload.sectionId must be a non-empty string",
-        );
+        return invalidPayload("payload.sectionId must be a non-empty string");
       }
 
       {
@@ -6915,9 +7730,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        return invalidPayload(
-          "payload.sectionId must be a non-empty string",
-        );
+        return invalidPayload("payload.sectionId must be a non-empty string");
       }
 
       if (
@@ -7069,9 +7882,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.sectionId)) {
-        return invalidPayload(
-          "payload.sectionId must be a non-empty string",
-        );
+        return invalidPayload("payload.sectionId must be a non-empty string");
       }
 
       {
@@ -7180,9 +7991,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.lineId)) {
-        return invalidPayload(
-          "payload.lineId must be a non-empty string",
-        );
+        return invalidPayload("payload.lineId must be a non-empty string");
       }
 
       {
@@ -7296,15 +8105,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.lineId)) {
-        return invalidPayload(
-          "payload.lineId must be a non-empty string",
-        );
+        return invalidPayload("payload.lineId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.toSectionId)) {
-        return invalidPayload(
-          "payload.toSectionId must be a non-empty string",
-        );
+        return invalidPayload("payload.toSectionId must be a non-empty string");
       }
 
       {
@@ -7421,9 +8226,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.imageId)) {
-        return invalidPayload(
-          "payload.imageId must be a non-empty string",
-        );
+        return invalidPayload("payload.imageId must be a non-empty string");
       }
 
       if (
@@ -7458,9 +8261,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.images.items[payload.imageId])) {
-        return invalidPrecondition(
-          "payload.imageId must not already exist",
-        );
+        return invalidPrecondition("payload.imageId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -7576,9 +8377,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.imageId)) {
-        return invalidPayload(
-          "payload.imageId must be a non-empty string",
-        );
+        return invalidPayload("payload.imageId must be a non-empty string");
       }
 
       {
@@ -7720,9 +8519,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.imageId)) {
-        return invalidPayload(
-          "payload.imageId must be a non-empty string",
-        );
+        return invalidPayload("payload.imageId must be a non-empty string");
       }
 
       if (
@@ -7855,9 +8652,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.soundId)) {
-        return invalidPayload(
-          "payload.soundId must be a non-empty string",
-        );
+        return invalidPayload("payload.soundId must be a non-empty string");
       }
 
       if (
@@ -7892,9 +8687,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.sounds.items[payload.soundId])) {
-        return invalidPrecondition(
-          "payload.soundId must not already exist",
-        );
+        return invalidPrecondition("payload.soundId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -8008,9 +8801,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.soundId)) {
-        return invalidPayload(
-          "payload.soundId must be a non-empty string",
-        );
+        return invalidPayload("payload.soundId must be a non-empty string");
       }
 
       {
@@ -8152,9 +8943,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.soundId)) {
-        return invalidPayload(
-          "payload.soundId must be a non-empty string",
-        );
+        return invalidPayload("payload.soundId must be a non-empty string");
       }
 
       if (
@@ -8287,9 +9076,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.videoId)) {
-        return invalidPayload(
-          "payload.videoId must be a non-empty string",
-        );
+        return invalidPayload("payload.videoId must be a non-empty string");
       }
 
       if (
@@ -8324,9 +9111,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.videos.items[payload.videoId])) {
-        return invalidPrecondition(
-          "payload.videoId must not already exist",
-        );
+        return invalidPrecondition("payload.videoId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -8440,9 +9225,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.videoId)) {
-        return invalidPayload(
-          "payload.videoId must be a non-empty string",
-        );
+        return invalidPayload("payload.videoId must be a non-empty string");
       }
 
       {
@@ -8584,9 +9367,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.videoId)) {
-        return invalidPayload(
-          "payload.videoId must be a non-empty string",
-        );
+        return invalidPayload("payload.videoId must be a non-empty string");
       }
 
       if (
@@ -8719,9 +9500,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.animationId)) {
-        return invalidPayload(
-          "payload.animationId must be a non-empty string",
-        );
+        return invalidPayload("payload.animationId must be a non-empty string");
       }
 
       if (
@@ -8840,9 +9619,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.animationId)) {
-        return invalidPayload(
-          "payload.animationId must be a non-empty string",
-        );
+        return invalidPayload("payload.animationId must be a non-empty string");
       }
 
       {
@@ -8964,9 +9741,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.animationId)) {
-        return invalidPayload(
-          "payload.animationId must be a non-empty string",
-        );
+        return invalidPayload("payload.animationId must be a non-empty string");
       }
 
       if (
@@ -9099,9 +9874,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.fontId)) {
-        return invalidPayload(
-          "payload.fontId must be a non-empty string",
-        );
+        return invalidPayload("payload.fontId must be a non-empty string");
       }
 
       if (
@@ -9136,9 +9909,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.fonts.items[payload.fontId])) {
-        return invalidPrecondition(
-          "payload.fontId must not already exist",
-        );
+        return invalidPrecondition("payload.fontId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -9242,9 +10013,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.fontId)) {
-        return invalidPayload(
-          "payload.fontId must be a non-empty string",
-        );
+        return invalidPayload("payload.fontId must be a non-empty string");
       }
 
       {
@@ -9384,9 +10153,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.fontId)) {
-        return invalidPayload(
-          "payload.fontId must be a non-empty string",
-        );
+        return invalidPayload("payload.fontId must be a non-empty string");
       }
 
       if (
@@ -9519,9 +10286,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.colorId)) {
-        return invalidPayload(
-          "payload.colorId must be a non-empty string",
-        );
+        return invalidPayload("payload.colorId must be a non-empty string");
       }
 
       if (
@@ -9556,9 +10321,7 @@ const COMMAND_DEFINITIONS = [
     },
     validateAgainstState: ({ state, payload }) => {
       if (isPlainObject(state.colors.items[payload.colorId])) {
-        return invalidPrecondition(
-          "payload.colorId must not already exist",
-        );
+        return invalidPrecondition("payload.colorId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -9640,9 +10403,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.colorId)) {
-        return invalidPayload(
-          "payload.colorId must be a non-empty string",
-        );
+        return invalidPayload("payload.colorId must be a non-empty string");
       }
 
       {
@@ -9761,9 +10522,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.colorId)) {
-        return invalidPayload(
-          "payload.colorId must be a non-empty string",
-        );
+        return invalidPayload("payload.colorId must be a non-empty string");
       }
 
       if (
@@ -10152,6 +10911,11 @@ const COMMAND_DEFINITIONS = [
         ? {
             layoutType: payload.data.layoutType,
             elements: structuredClone(payload.data.elements),
+            ...(payload.data.keyboard !== undefined
+              ? {
+                  keyboard: structuredClone(payload.data.keyboard),
+                }
+              : {}),
           }
         : {}),
     }),
@@ -10190,15 +10954,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.characterId)) {
-        return invalidPayload(
-          "payload.characterId must be a non-empty string",
-        );
+        return invalidPayload("payload.characterId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        return invalidPayload(
-          "payload.spriteId must be a non-empty string",
-        );
+        return invalidPayload("payload.spriteId must be a non-empty string");
       }
 
       if (
@@ -10245,9 +11005,7 @@ const COMMAND_DEFINITIONS = [
       });
 
       if (isPlainObject(collection.items[payload.spriteId])) {
-        return invalidPrecondition(
-          "payload.spriteId must not already exist",
-        );
+        return invalidPrecondition("payload.spriteId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -10337,15 +11095,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.characterId)) {
-        return invalidPayload(
-          "payload.characterId must be a non-empty string",
-        );
+        return invalidPayload("payload.characterId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        return invalidPayload(
-          "payload.spriteId must be a non-empty string",
-        );
+        return invalidPayload("payload.spriteId must be a non-empty string");
       }
 
       {
@@ -10434,9 +11188,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.characterId)) {
-        return invalidPayload(
-          "payload.characterId must be a non-empty string",
-        );
+        return invalidPayload("payload.characterId must be a non-empty string");
       }
 
       {
@@ -10523,15 +11275,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.characterId)) {
-        return invalidPayload(
-          "payload.characterId must be a non-empty string",
-        );
+        return invalidPayload("payload.characterId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.spriteId)) {
-        return invalidPayload(
-          "payload.spriteId must be a non-empty string",
-        );
+        return invalidPayload("payload.spriteId must be a non-empty string");
       }
 
       if (
@@ -10675,15 +11423,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        return invalidPayload(
-          "payload.layoutId must be a non-empty string",
-        );
+        return invalidPayload("payload.layoutId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.elementId)) {
-        return invalidPayload(
-          "payload.elementId must be a non-empty string",
-        );
+        return invalidPayload("payload.elementId must be a non-empty string");
       }
 
       if (
@@ -10730,9 +11474,7 @@ const COMMAND_DEFINITIONS = [
       });
 
       if (isPlainObject(collection.items[payload.elementId])) {
-        return invalidPrecondition(
-          "payload.elementId must not already exist",
-        );
+        return invalidPrecondition("payload.elementId must not already exist");
       }
 
       const parentId = payload.parentId ?? null;
@@ -10947,9 +11689,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        return invalidPayload(
-          "payload.layoutId must be a non-empty string",
-        );
+        return invalidPayload("payload.layoutId must be a non-empty string");
       }
 
       {
@@ -11037,15 +11777,11 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (!isNonEmptyString(payload.layoutId)) {
-        return invalidPayload(
-          "payload.layoutId must be a non-empty string",
-        );
+        return invalidPayload("payload.layoutId must be a non-empty string");
       }
 
       if (!isNonEmptyString(payload.elementId)) {
-        return invalidPayload(
-          "payload.elementId must be a non-empty string",
-        );
+        return invalidPayload("payload.elementId must be a non-empty string");
       }
 
       if (

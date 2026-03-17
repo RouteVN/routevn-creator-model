@@ -118,6 +118,81 @@ test("validatePayload rejects duplicate line ids in line.create", () => {
   ).toThrow("payload.lines[1].lineId must be unique");
 });
 
+test("validatePayload accepts keyboard data in layout.update", () => {
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-base",
+        data: {
+          keyboard: {
+            enter: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand persists keyboard data on layouts", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-base"] = {
+    id: "layout-base",
+    type: "layout",
+    name: "Base Layout",
+    layoutType: "base",
+    elements: {
+      items: {},
+      tree: [],
+    },
+  };
+  state.layouts.tree = [{ id: "layout-base", children: [] }];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-base",
+        data: {
+          keyboard: {
+            enter: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(result.state.layouts.items["layout-base"].keyboard).toEqual({
+    enter: {
+      payload: {
+        actions: {
+          nextLine: {},
+        },
+      },
+    },
+  });
+  expect(validateState({ state: result.state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload rejects unsupported animation easing values", () => {
   expectValidation(() =>
     validatePayload({
