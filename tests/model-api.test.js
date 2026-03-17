@@ -416,24 +416,21 @@ test("processCommand rejects image creation when referenced files are missing", 
     error: {
       kind: "precondition",
       code: "precondition_validation_failed",
-      message:
-        "payload.data.fileId must reference an existing non-folder file with type 'image'",
+      message: "payload.data.fileId must reference an existing non-folder file",
       details: {
         imageId: "image-a",
         field: "fileId",
         fileId: "file-image-a",
-        expectedFileTypes: ["image"],
       },
     },
   });
 });
 
-test("validateState rejects incompatible file kinds in asset references", () => {
+test("validateState accepts file references without semantic file-kind checks", () => {
   const state = createEmptyTestState();
 
   state.files.items["file-audio"] = {
     id: "file-audio",
-    type: "audio",
     mimeType: "audio/mpeg",
     size: 128,
     sha256: "file-audio-sha256",
@@ -458,28 +455,15 @@ test("validateState rejects incompatible file kinds in asset references", () => 
   ];
 
   expect(validateState({ state })).toEqual({
-    valid: false,
-    error: {
-      kind: "invariant",
-      code: "invariant_validation_failed",
-      message:
-        "image.fileId must reference an existing non-folder file with type 'image'",
-      details: {
-        imageId: "image-a",
-        fileId: "file-audio",
-        expectedFileTypes: ["image"],
-        actualFileType: "audio",
-      },
-    },
+    valid: true,
   });
 });
 
-test("validateAgainstState rejects image creation when file kinds are incompatible", () => {
+test("validateAgainstState accepts image creation without semantic file-kind checks", () => {
   const state = createEmptyTestState();
 
   state.files.items["file-audio"] = {
     id: "file-audio",
-    type: "audio",
     mimeType: "audio/mpeg",
     size: 128,
     sha256: "file-audio-sha256",
@@ -507,20 +491,7 @@ test("validateAgainstState rejects image creation when file kinds are incompatib
       },
     }),
   ).toEqual({
-    valid: false,
-    error: {
-      kind: "precondition",
-      code: "precondition_validation_failed",
-      message:
-        "payload.data.fileId must reference an existing non-folder file with type 'image'",
-      details: {
-        imageId: "image-a",
-        field: "fileId",
-        fileId: "file-audio",
-        expectedFileTypes: ["image"],
-        actualFileType: "audio",
-      },
-    },
+    valid: true,
   });
 });
 
@@ -534,7 +505,6 @@ test("validateAgainstState rejects deleting folders that contain referenced file
   };
   state.files.items["file-image"] = {
     id: "file-image",
-    type: "image",
     mimeType: "image/png",
     size: 128,
     sha256: "file-image-sha256",

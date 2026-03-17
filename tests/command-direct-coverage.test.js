@@ -27,13 +27,22 @@ const createFileItem = ({
   mimeType = "application/octet-stream",
   size = 1,
   sha256,
-}) => ({
-  id,
-  type,
-  mimeType,
-  size,
-  sha256: sha256 ?? `${id}-sha256`,
-});
+}) => {
+  if (type === "folder") {
+    return {
+      id,
+      type: "folder",
+      name: id,
+    };
+  }
+
+  return {
+    id,
+    mimeType,
+    size,
+    sha256: sha256 ?? `${id}-sha256`,
+  };
+};
 
 const withFiles = (state, files) => {
   for (const file of files) {
@@ -1196,13 +1205,12 @@ const directCases = [
         state,
         command: {
           type: "file.create",
-          payload: {
-            fileId: "file-a",
-            data: {
-              type: "image",
-              mimeType: "image/png",
-              size: 128,
-              sha256: "file-a-sha256",
+        payload: {
+          fileId: "file-a",
+          data: {
+            mimeType: "image/png",
+            size: 128,
+            sha256: "file-a-sha256",
             },
           },
         },
@@ -1210,7 +1218,6 @@ const directCases = [
 
       expect(result.state.files.items["file-a"]).toEqual({
         id: "file-a",
-        type: "image",
         mimeType: "image/png",
         size: 128,
         sha256: "file-a-sha256",
@@ -1223,7 +1230,6 @@ const directCases = [
           payload: {
             fileId: "file-a",
             data: {
-              type: "image",
               mimeType: "image/png",
               size: 128,
             },
