@@ -42,6 +42,24 @@ const FILE_ITEM_TYPES = [
   "video-thumbnail",
   "font",
 ];
+const IMAGE_FILE_REFERENCE_TYPES = {
+  fileId: ["image"],
+  thumbnailFileId: ["image-thumbnail"],
+};
+const SOUND_FILE_REFERENCE_TYPES = {
+  fileId: ["audio"],
+  waveformDataFileId: ["audio-waveform"],
+};
+const VIDEO_FILE_REFERENCE_TYPES = {
+  fileId: ["video"],
+  thumbnailFileId: ["video-thumbnail"],
+};
+const FONT_FILE_REFERENCE_TYPES = {
+  fileId: ["font"],
+};
+const CHARACTER_FILE_REFERENCE_TYPES = {
+  fileId: ["image"],
+};
 const isHexColor = (value) =>
   typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
 const LIVE_TWEEN_PROPERTY_KEYS = [
@@ -2923,6 +2941,7 @@ const validateFileReference = ({
   state,
   fileId,
   path,
+  allowedTypes,
   details = {},
   errorFactory = createPreconditionValidationError,
 }) => {
@@ -2930,12 +2949,35 @@ const validateFileReference = ({
     return VALID_RESULT;
   }
 
+  const expectedTypeMessage =
+    Array.isArray(allowedTypes) && allowedTypes.length > 0
+      ? `${path} must reference an existing non-folder file with type ${allowedTypes
+          .map((type) => `'${type}'`)
+          .join(" or ")}`
+      : `${path} must reference an existing non-folder file`;
   const file = state.files?.items?.[fileId];
   if (!isPlainObject(file) || file.type === "folder") {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path} must reference an existing non-folder file`,
-      details,
+      expectedTypeMessage,
+      Array.isArray(allowedTypes) && allowedTypes.length > 0
+        ? {
+            ...details,
+            expectedFileTypes: [...allowedTypes],
+          }
+        : details,
+    );
+  }
+
+  if (Array.isArray(allowedTypes) && allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      expectedTypeMessage,
+      {
+        ...details,
+        expectedFileTypes: [...allowedTypes],
+        actualFileType: file.type,
+      },
     );
   }
 
@@ -3063,6 +3105,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: image.fileId,
         path: "image.fileId",
+        allowedTypes: IMAGE_FILE_REFERENCE_TYPES.fileId,
         details: { imageId, fileId: image.fileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3076,6 +3119,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: image.thumbnailFileId,
         path: "image.thumbnailFileId",
+        allowedTypes: IMAGE_FILE_REFERENCE_TYPES.thumbnailFileId,
         details: { imageId, thumbnailFileId: image.thumbnailFileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3095,6 +3139,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: sound.fileId,
         path: "sound.fileId",
+        allowedTypes: SOUND_FILE_REFERENCE_TYPES.fileId,
         details: { soundId, fileId: sound.fileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3108,6 +3153,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: sound.waveformDataFileId,
         path: "sound.waveformDataFileId",
+        allowedTypes: SOUND_FILE_REFERENCE_TYPES.waveformDataFileId,
         details: { soundId, waveformDataFileId: sound.waveformDataFileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3127,6 +3173,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: video.fileId,
         path: "video.fileId",
+        allowedTypes: VIDEO_FILE_REFERENCE_TYPES.fileId,
         details: { videoId, fileId: video.fileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3140,6 +3187,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: video.thumbnailFileId,
         path: "video.thumbnailFileId",
+        allowedTypes: VIDEO_FILE_REFERENCE_TYPES.thumbnailFileId,
         details: { videoId, thumbnailFileId: video.thumbnailFileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3158,6 +3206,7 @@ export const assertInvariants = ({ state }) => {
       state,
       fileId: font.fileId,
       path: "font.fileId",
+      allowedTypes: FONT_FILE_REFERENCE_TYPES.fileId,
       details: { fontId, fileId: font.fileId },
       errorFactory: createInvariantValidationError,
     });
@@ -3176,6 +3225,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: character.fileId,
         path: "character.fileId",
+        allowedTypes: CHARACTER_FILE_REFERENCE_TYPES.fileId,
         details: { characterId, fileId: character.fileId },
         errorFactory: createInvariantValidationError,
       });
@@ -3195,6 +3245,7 @@ export const assertInvariants = ({ state }) => {
         state,
         fileId: sprite.fileId,
         path: "character.sprite.fileId",
+        allowedTypes: CHARACTER_FILE_REFERENCE_TYPES.fileId,
         details: { characterId, spriteId, fileId: sprite.fileId },
         errorFactory: createInvariantValidationError,
       });
@@ -4259,6 +4310,7 @@ const validateReferencedFilesInData = ({
   state,
   data,
   fields,
+  fieldTypes = {},
   nullableFields = [],
   details = {},
   errorFactory = createPreconditionValidationError,
@@ -4278,6 +4330,7 @@ const validateReferencedFilesInData = ({
       state,
       fileId,
       path: `payload.data.${field}`,
+      allowedTypes: fieldTypes[field],
       details: {
         ...details,
         field,
@@ -6001,6 +6054,28 @@ const findReferencedFileUsage = ({ state, fileId }) => {
   return null;
 };
 
+const collectDeletedFileIds = ({ state, fileIds }) => {
+  const deletedIds = new Set();
+
+  for (const fileId of fileIds) {
+    const node = findTreeNode({
+      nodes: state.files.tree,
+      nodeId: fileId,
+    });
+
+    if (!node) {
+      deletedIds.add(fileId);
+      continue;
+    }
+
+    for (const deletedId of collectTreeDescendantIds({ node })) {
+      deletedIds.add(deletedId);
+    }
+  }
+
+  return deletedIds;
+};
+
 const COMMAND_DEFINITIONS = [
   {
     type: "project.create",
@@ -6048,7 +6123,10 @@ const COMMAND_DEFINITIONS = [
             sha256: payload.data.sha256,
           },
     validateDeleteState: ({ state, payload }) => {
-      for (const fileId of payload.fileIds) {
+      for (const fileId of collectDeletedFileIds({
+        state,
+        fileIds: payload.fileIds,
+      })) {
         const usage = findReferencedFileUsage({ state, fileId });
         if (!usage) {
           continue;
@@ -7419,6 +7497,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "thumbnailFileId"],
+          fieldTypes: IMAGE_FILE_REFERENCE_TYPES,
           details: {
             imageId: payload.imageId,
           },
@@ -7533,6 +7612,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "thumbnailFileId"],
+          fieldTypes: IMAGE_FILE_REFERENCE_TYPES,
           details: {
             imageId: payload.imageId,
           },
@@ -7851,6 +7931,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "waveformDataFileId"],
+          fieldTypes: SOUND_FILE_REFERENCE_TYPES,
           nullableFields: ["waveformDataFileId"],
           details: {
             soundId: payload.soundId,
@@ -7962,6 +8043,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "waveformDataFileId"],
+          fieldTypes: SOUND_FILE_REFERENCE_TYPES,
           nullableFields: ["waveformDataFileId"],
           details: {
             soundId: payload.soundId,
@@ -8281,6 +8363,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "thumbnailFileId"],
+          fieldTypes: VIDEO_FILE_REFERENCE_TYPES,
           details: {
             videoId: payload.videoId,
           },
@@ -8393,6 +8476,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId", "thumbnailFileId"],
+          fieldTypes: VIDEO_FILE_REFERENCE_TYPES,
           details: {
             videoId: payload.videoId,
           },
@@ -9091,6 +9175,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: FONT_FILE_REFERENCE_TYPES,
           details: {
             fontId: payload.fontId,
           },
@@ -9191,6 +9276,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: FONT_FILE_REFERENCE_TYPES,
           details: {
             fontId: payload.fontId,
           },
@@ -9986,6 +10072,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: CHARACTER_FILE_REFERENCE_TYPES,
           details: {
             characterId: payload.characterId,
           },
@@ -10006,6 +10093,7 @@ const COMMAND_DEFINITIONS = [
           state,
           fileId: sprite.fileId,
           path: "payload.data.sprites.items.*.fileId",
+          allowedTypes: CHARACTER_FILE_REFERENCE_TYPES.fileId,
           details: {
             characterId: payload.characterId,
             spriteId,
@@ -10032,6 +10120,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: CHARACTER_FILE_REFERENCE_TYPES,
           details: {
             characterId: payload.characterId,
           },
@@ -10189,6 +10278,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: CHARACTER_FILE_REFERENCE_TYPES,
           details: {
             characterId: payload.characterId,
             spriteId: payload.spriteId,
@@ -10296,6 +10386,7 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          fieldTypes: CHARACTER_FILE_REFERENCE_TYPES,
           details: {
             characterId: payload.characterId,
             spriteId: payload.spriteId,
