@@ -15,9 +15,10 @@ import {
 } from "../src/errors.js";
 import { listCommandTypes } from "../src/model.js";
 import { expectValidation } from "./support/expectValidation.js";
+import { createEmptyTestState } from "./support/createEmptyTestState.js";
 
 test("public api exports functions only", () => {
-  expect(SCHEMA_VERSION).toBe(1);
+  expect(SCHEMA_VERSION).toBe(2);
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
@@ -169,9 +170,59 @@ test("validatePayload rejects invalid replace mask textures", () => {
   );
 });
 
+test("validateState requires the files collection", () => {
+  const state = createEmptyTestState();
+  delete state.files;
+
+  expect(validateState({ state })).toEqual({
+    valid: false,
+    error: {
+      kind: "state",
+      code: "state_validation_failed",
+      message: "state.files is required",
+    },
+  });
+});
+
+test("processCommand rejects image creation when referenced files are missing", () => {
+  const state = createEmptyTestState();
+
+  expect(
+    processCommand({
+      state,
+      command: {
+        type: "image.create",
+        payload: {
+          imageId: "image-a",
+          data: {
+            type: "image",
+            name: "Background",
+            fileId: "file-image-a",
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message: "payload.data.fileId must reference an existing non-folder file",
+      details: {
+        imageId: "image-a",
+        field: "fileId",
+        fileId: "file-image-a",
+      },
+    },
+  });
+});
+
 test("registry exposes only fully implemented command types", () => {
   expect(listCommandTypes()).toEqual([
     "project.create",
+    "file.create",
+    "file.delete",
+    "file.move",
     "story.update",
     "scene.create",
     "scene.update",

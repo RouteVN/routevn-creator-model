@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -38,17 +41,42 @@ in:
             children:
               - id: scene-b
                 children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.move
       payload:
@@ -87,17 +115,42 @@ out:
           children: []
         - id: folder-prologue
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: scene.delete cascades descendant scenes sections and lines
 in:
@@ -167,17 +220,42 @@ in:
                 children: []
           - id: scene-c
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.delete
       payload:
@@ -201,17 +279,42 @@ out:
       tree:
         - id: scene-c
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -223,7 +326,7 @@ in:
       sceneIds:
         - scene-a
         - scene-a
-throws: "payload.sceneIds[1] must be unique"
+throws: payload.sceneIds[1] must be unique
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -258,24 +361,49 @@ in:
                 children:
                   - id: scene-a
                     children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.move
       payload:
         sceneId: folder-a
         parentId: folder-b
         position: last
-throws: "payload.parentId must not target the moved scene or its descendants"
+throws: payload.parentId must not target the moved scene or its descendants
 ---
 case: scene.delete rejects unknown scene ids
 in:
@@ -295,21 +423,46 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.delete
       payload:
         sceneIds:
           - scene-a
           - scene-b
-throws: "payload.sceneIds must reference existing scenes"
+throws: payload.sceneIds must reference existing scenes

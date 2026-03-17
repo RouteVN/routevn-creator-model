@@ -1,6 +1,8 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validateAgainstState]
+suites:
+  - processCommand
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -12,6 +14,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -55,7 +60,7 @@ in:
           type: transform
           name: Camera
           x: 100
-          y: 200
+          'y': 200
           scaleX: 1
           scaleY: 1
           anchorX: 0
@@ -67,6 +72,9 @@ out:
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -94,7 +102,7 @@ out:
           type: transform
           name: Camera
           x: 100
-          y: 200
+          'y': 200
           scaleX: 1
           scaleY: 1
           anchorX: 0
@@ -123,6 +131,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -174,6 +185,9 @@ out:
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -228,6 +242,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-font:
+            id: file-font
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-font-sha256
+        tree:
+          - id: file-font
+            children: []
       images:
         items: {}
         tree: []
@@ -263,7 +288,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: "#ffffff"
+            hex: '#ffffff'
         tree:
           - id: color-ui
             children: []
@@ -287,7 +312,7 @@ in:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: "700"
+          fontWeight: '700'
           previewText: Hello
 out:
   state:
@@ -297,6 +322,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-font:
+          id: file-font
+          type: font
+          mimeType: font/ttf
+          size: 1
+          sha256: file-font-sha256
+      tree:
+        - id: file-font
+          children: []
     images:
       items: {}
       tree: []
@@ -332,7 +368,7 @@ out:
           id: color-ui
           type: color
           name: White
-          hex: "#ffffff"
+          hex: '#ffffff'
       tree:
         - id: color-ui
           children: []
@@ -346,7 +382,7 @@ out:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: "700"
+          fontWeight: '700'
           previewText: Hello
       tree:
         - id: style-ui
@@ -368,6 +404,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -418,7 +457,7 @@ in:
         variableId: score
         data:
           default: wrong
-throws: "payload.data.default must be a finite number"
+throws: payload.data.default must be a finite number
 ---
 case: textStyle.create rejects a missing font reference
 in:
@@ -427,6 +466,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -456,7 +498,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: "#ffffff"
+            hex: '#ffffff'
         tree:
           - id: color-ui
             children: []
@@ -480,5 +522,5 @@ in:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: "700"
-throws: "payload.data.fontId must reference an existing non-folder font"
+          fontWeight: '700'
+throws: payload.data.fontId must reference an existing non-folder font

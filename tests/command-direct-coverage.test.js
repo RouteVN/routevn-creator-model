@@ -21,6 +21,30 @@ const createEmptyNestedCollection = () => ({
   tree: [],
 });
 
+const createFileItem = ({
+  id,
+  type = "image",
+  mimeType = "application/octet-stream",
+  size = 1,
+  sha256,
+}) => ({
+  id,
+  type,
+  mimeType,
+  size,
+  sha256: sha256 ?? `${id}-sha256`,
+});
+
+const withFiles = (state, files) => {
+  for (const file of files) {
+    state.files.items[file.id] = createFileItem(file);
+    if (!state.files.tree.find((node) => node.id === file.id)) {
+      state.files.tree.push(createTreeNode(file.id));
+    }
+  }
+  return state;
+};
+
 const getSceneSection = (state, sceneId, sectionId) =>
   state.scenes.items[sceneId].sections.items[sectionId];
 
@@ -39,6 +63,7 @@ const createCollectionState = ({
 };
 
 const withFontAndColorRefs = (state) => {
+  withFiles(state, [{ id: "file-font-ui", type: "font", mimeType: "font/ttf" }]);
   state.fonts.items["font-ui"] = {
     id: "font-ui",
     type: "font",
@@ -74,6 +99,34 @@ const withTextStyleRefs = (state) => {
   state.textStyles.tree = [createTreeNode("text-style-ui")];
   return state;
 };
+
+const withImageFileRefs = (state) =>
+  withFiles(state, [
+    { id: "file-image", type: "image", mimeType: "image/png" },
+    {
+      id: "thumb-image",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+    },
+  ]);
+
+const withSoundFileRefs = (state) =>
+  withFiles(state, [
+    { id: "file-sound", type: "audio", mimeType: "audio/mpeg" },
+  ]);
+
+const withVideoFileRefs = (state) =>
+  withFiles(state, [
+    { id: "file-video", type: "video", mimeType: "video/mp4" },
+    {
+      id: "thumb-video",
+      type: "video-thumbnail",
+      mimeType: "image/jpeg",
+    },
+  ]);
+
+const withFontFileRefs = (state) =>
+  withFiles(state, [{ id: "file-font", type: "font", mimeType: "font/ttf" }]);
 
 const createSceneBaseState = () => {
   const state = createEmptyTestState();
@@ -206,6 +259,10 @@ const createLineBaseState = () => {
 
 const createCharacterBaseState = () => {
   const state = createEmptyTestState();
+  withFiles(state, [
+    { id: "file-smile", type: "image", mimeType: "image/png" },
+    { id: "file-angry", type: "image", mimeType: "image/png" },
+  ]);
   state.characters.items["character-hero"] = {
     id: "character-hero",
     type: "character",
@@ -1066,6 +1123,144 @@ const directCases = [
       );
     },
   },
+  {
+    type: "file.create",
+    runPositive: () => {
+      const state = createEmptyTestState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "file.create",
+          payload: {
+            fileId: "file-a",
+            data: {
+              type: "image",
+              mimeType: "image/png",
+              size: 128,
+              sha256: "file-a-sha256",
+            },
+          },
+        },
+      });
+
+      expect(result.state.files.items["file-a"]).toEqual({
+        id: "file-a",
+        type: "image",
+        mimeType: "image/png",
+        size: 128,
+        sha256: "file-a-sha256",
+      });
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "file.create",
+          payload: {
+            fileId: "file-a",
+            data: {
+              type: "image",
+              mimeType: "image/png",
+              size: 128,
+            },
+          },
+        }),
+      ).toThrow("payload.data.sha256 must be a non-empty string");
+    },
+  },
+  {
+    type: "file.delete",
+    runPositive: () => {
+      const state = withFiles(createEmptyTestState(), [
+        { id: "file-a", type: "image", mimeType: "image/png" },
+      ]);
+      const result = processCommand({
+        state,
+        command: {
+          type: "file.delete",
+          payload: {
+            fileIds: ["file-a"],
+          },
+        },
+      });
+
+      expect(result.state.files.items).toEqual({});
+      expect(result.state.files.tree).toEqual([]);
+    },
+    runNegative: () => {
+      const state = withFiles(createEmptyTestState(), [
+        { id: "file-image", type: "image", mimeType: "image/png" },
+      ]);
+      state.images.items["image-a"] = {
+        id: "image-a",
+        type: "image",
+        name: "Image A",
+        fileId: "file-image",
+      };
+      state.images.tree = [createTreeNode("image-a")];
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "file.delete",
+            payload: {
+              fileIds: ["file-image"],
+            },
+          },
+        }),
+      ).toThrow("payload.fileIds cannot delete a referenced file");
+    },
+  },
+  {
+    type: "file.move",
+    runPositive: () => {
+      const state = withFiles(createEmptyTestState(), [
+        { id: "file-a", type: "image", mimeType: "image/png" },
+      ]);
+      state.files.items["folder-a"] = {
+        id: "folder-a",
+        type: "folder",
+        name: "Folder",
+      };
+      state.files.tree = [createTreeNode("file-a"), createTreeNode("folder-a")];
+
+      const result = processCommand({
+        state,
+        command: {
+          type: "file.move",
+          payload: {
+            fileId: "file-a",
+            parentId: "folder-a",
+            position: "last",
+          },
+        },
+      });
+
+      expect(result.state.files.tree).toEqual([
+        createTreeNode("folder-a", [createTreeNode("file-a")]),
+      ]);
+    },
+    runNegative: () => {
+      const state = withFiles(createEmptyTestState(), [
+        { id: "file-a", type: "image", mimeType: "image/png" },
+        { id: "file-b", type: "image", mimeType: "image/png" },
+      ]);
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "file.move",
+            payload: {
+              fileId: "file-a",
+              parentId: "file-b",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow(/payload\.parentId must reference a folder/);
+    },
+  },
   ...createFolderedCommandCases({
     familyName: "image",
     collectionKey: "images",
@@ -1080,6 +1275,7 @@ const directCases = [
     updateData: {
       name: "Image Updated",
     },
+    decorateState: withImageFileRefs,
   }),
   ...createFolderedCommandCases({
     familyName: "sound",
@@ -1095,6 +1291,7 @@ const directCases = [
     updateData: {
       duration: 42,
     },
+    decorateState: withSoundFileRefs,
   }),
   ...createFolderedCommandCases({
     familyName: "video",
@@ -1110,6 +1307,7 @@ const directCases = [
     updateData: {
       width: 1280,
     },
+    decorateState: withVideoFileRefs,
   }),
   ...createFolderedCommandCases({
     familyName: "animation",
@@ -1146,6 +1344,7 @@ const directCases = [
     updateData: {
       fontFamily: "Suit Alt",
     },
+    decorateState: withFontFileRefs,
   }),
   ...createFolderedCommandCases({
     familyName: "color",
@@ -1255,6 +1454,9 @@ const directCases = [
     type: "character.sprite.create",
     runPositive: () => {
       const state = createCharacterBaseState();
+      withFiles(state, [
+        { id: "file-new-sprite", type: "image", mimeType: "image/png" },
+      ]);
       const result = processCommand({
         state,
         command: {

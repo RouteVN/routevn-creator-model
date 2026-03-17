@@ -13,6 +13,28 @@ const createEmptyNestedCollection = () => ({
   tree: [],
 });
 
+const createFileItem = ({
+  id,
+  type = "image",
+  mimeType = "application/octet-stream",
+  size = 1,
+  sha256,
+}) => ({
+  id,
+  type,
+  mimeType,
+  size,
+  sha256: sha256 ?? `${id}-sha256`,
+});
+
+const withFiles = (state, files) => {
+  for (const file of files) {
+    state.files.items[file.id] = createFileItem(file);
+    state.files.tree.push({ id: file.id, children: [] });
+  }
+  return state;
+};
+
 const createBootstrapState = () => {
   const state = createEmptyTestState();
 
@@ -85,8 +107,25 @@ const createSceneSectionLineBootstrapState = () => {
   return state;
 };
 
-const createImageBootstrapState = () => createEmptyTestState();
-const createMediaBootstrapState = () => createEmptyTestState();
+const createImageBootstrapState = () =>
+  withFiles(createEmptyTestState(), [
+    { id: "file-bg", type: "image", mimeType: "image/png" },
+    { id: "thumb-bg", type: "image-thumbnail", mimeType: "image/webp" },
+  ]);
+
+const createMediaBootstrapState = () =>
+  withFiles(createEmptyTestState(), [
+    { id: "file-a", type: "audio", mimeType: "audio/mpeg" },
+    { id: "file-v", type: "video", mimeType: "video/mp4" },
+    { id: "thumb-v", type: "video-thumbnail", mimeType: "image/jpeg" },
+    { id: "file-font", type: "font", mimeType: "font/ttf" },
+  ]);
+
+const createUiResourcesBootstrapState = () =>
+  withFiles(createEmptyTestState(), [
+    { id: "file-font", type: "font", mimeType: "font/ttf" },
+    { id: "file-happy", type: "image", mimeType: "image/png" },
+  ]);
 
 test("applies a story and scenes command sequence with intermediate state snapshots", () => {
   const steps = runCommandSequence({
@@ -1117,12 +1156,12 @@ test("applies an animation command tape with intermediate state snapshots", () =
 
 test("applies a ui resources and layout command tape with intermediate state snapshots", () => {
   const steps = runCommandSequence({
-    initialState: createEmptyTestState(),
+    initialState: createUiResourcesBootstrapState(),
     commands: [
       {
         type: "project.create",
         payload: {
-          state: createEmptyTestState(),
+          state: createUiResourcesBootstrapState(),
         },
       },
       {
@@ -1410,7 +1449,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
     ],
   });
 
-  const expected0 = createEmptyTestState();
+  const expected0 = createUiResourcesBootstrapState();
 
   const expected1 = cloneState(expected0);
   expected1.fonts.items = {

@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -48,17 +51,42 @@ in:
             children: []
           - id: scene-b
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.create
       payload:
@@ -118,17 +146,42 @@ out:
           children: []
         - id: scene-b
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: section.update renames an existing section
 in:
@@ -156,17 +209,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.update
       payload:
@@ -198,17 +276,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: section.move lifts a nested section into root ordering within the same scene
 in:
@@ -252,17 +355,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.move
       payload:
@@ -310,17 +438,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: section.delete cascades descendant sections and their lines
 in:
@@ -366,17 +519,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.delete
       payload:
@@ -399,17 +577,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: line.create inserts multiple lines into the requested section scope
 in:
@@ -455,17 +658,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: line.create
       payload:
@@ -534,17 +762,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: line.update_actions merges action patches by default
 in:
@@ -577,17 +830,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: line.update_actions
       payload:
@@ -625,17 +903,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: line.move changes section ownership and target ordering
 in:
@@ -686,17 +989,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: line.move
       payload:
@@ -752,17 +1080,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: line.delete removes multiple lines
 in:
@@ -805,17 +1158,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: line.delete
       payload:
@@ -852,17 +1230,42 @@ out:
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -876,7 +1279,7 @@ in:
       data:
         name: Intro
         notes: nope
-throws: "payload.data.notes is not allowed"
+throws: payload.data.notes is not allowed
 ---
 case: line.create rejects duplicate line ids in a batch
 in:
@@ -890,14 +1293,14 @@ in:
         - lineId: line-1
           data:
             actions: {}
-throws: "payload.lines[1].lineId must be unique"
+throws: payload.lines[1].lineId must be unique
 ---
 case: line.delete rejects an empty batch
 in:
   - type: line.delete
     payload:
       lineIds: []
-throws: "payload.lineIds must be a non-empty array"
+throws: payload.lineIds must be a non-empty array
 ---
 case: line.move rejects parentId because line trees are flat
 in:
@@ -906,7 +1309,7 @@ in:
       lineId: line-a
       toSectionId: section-b
       parentId: section-parent
-throws: "payload.parentId is not allowed"
+throws: payload.parentId is not allowed
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -926,17 +1329,42 @@ in:
         tree:
           - id: folder-scenes
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.create
       payload:
@@ -944,7 +1372,7 @@ in:
         sceneId: folder-scenes
         data:
           name: Intro
-throws: "payload.sceneId must reference a non-folder scene"
+throws: payload.sceneId must reference a non-folder scene
 ---
 case: section.move rejects parents from another scene
 in:
@@ -989,24 +1417,49 @@ in:
             children: []
           - id: scene-b
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: section.move
       payload:
         sectionId: section-a1
         parentId: section-b1
         position: last
-throws: "payload.parentId must reference a section in the same scene"
+throws: payload.parentId must reference a section in the same scene
 ---
 case: line.create rejects position targets from another section
 in:
@@ -1050,17 +1503,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: line.create
       payload:
@@ -1071,4 +1549,4 @@ in:
           - lineId: line-c
             data:
               actions: {}
-throws: "payload.positionTargetId must reference a line in the target section"
+throws: payload.positionTargetId must reference a line in the target section

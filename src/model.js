@@ -18,6 +18,7 @@ import {
 
 const COLLECTION_KEYS = [
   "scenes",
+  "files",
   "images",
   "sounds",
   "videos",
@@ -32,6 +33,15 @@ const COLLECTION_KEYS = [
 ];
 const ROOT_KEYS = ["project", "story", ...COLLECTION_KEYS];
 const isString = (value) => typeof value === "string";
+const FILE_ITEM_TYPES = [
+  "image",
+  "image-thumbnail",
+  "audio",
+  "audio-waveform",
+  "video",
+  "video-thumbnail",
+  "font",
+];
 const isHexColor = (value) =>
   typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
 const LIVE_TWEEN_PROPERTY_KEYS = [
@@ -104,7 +114,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-choice-item",
   "container-ref-dialogue-line",
 ];
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -478,6 +488,79 @@ const validateLineItems = ({ items, path, errorFactory }) => {
 
     if (!isPlainObject(item.actions)) {
       return invalidFromErrorFactory(errorFactory, `${itemPath}.actions must be an object`);
+    }
+  }
+};
+
+const validateFileItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && !FILE_ITEM_TYPES.includes(item?.type)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or a supported file type`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "mimeType", "size", "sha256"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (item.type === "folder") {
+      if (!isNonEmptyString(item.name)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.name must be a non-empty string`,
+        );
+      }
+      continue;
+    }
+
+    if (!isNonEmptyString(item.mimeType)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.mimeType must be a non-empty string`,
+      );
+    }
+
+    if (!isFiniteNumber(item.size)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.size must be a finite number`,
+      );
+    }
+
+    if (!isNonEmptyString(item.sha256)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.sha256 must be a non-empty string`,
+      );
     }
   }
 };
@@ -2588,6 +2671,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.files") {
+    {
+      const result = validateFileItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.sounds") {
     {
       const result = validateSoundItems({
@@ -2795,6 +2889,7 @@ const validateCollection = ({ collection, path }) => {
       }
     }
   } else if (
+    path === "state.files" ||
     path === "state.transforms" ||
     path === "state.variables" ||
     path === "state.textStyles" ||
@@ -2822,6 +2917,29 @@ const validateCollection = ({ collection, path }) => {
       );
     }
   }
+};
+
+const validateFileReference = ({
+  state,
+  fileId,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (fileId === undefined || fileId === null) {
+    return VALID_RESULT;
+  }
+
+  const file = state.files?.items?.[fileId];
+  if (!isPlainObject(file) || file.type === "folder") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference an existing non-folder file`,
+      details,
+    );
+  }
+
+  return VALID_RESULT;
 };
 
 export const assertInvariants = ({ state }) => {
@@ -2931,6 +3049,157 @@ export const assertInvariants = ({ state }) => {
             strokeColorId: textStyle.strokeColorId,
           },
         );
+      }
+    }
+  }
+
+  for (const [imageId, image] of Object.entries(state.images.items)) {
+    if (image.type !== "image") {
+      continue;
+    }
+
+    {
+      const result = validateFileReference({
+        state,
+        fileId: image.fileId,
+        path: "image.fileId",
+        details: { imageId, fileId: image.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (image.thumbnailFileId !== undefined) {
+      const result = validateFileReference({
+        state,
+        fileId: image.thumbnailFileId,
+        path: "image.thumbnailFileId",
+        details: { imageId, thumbnailFileId: image.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [soundId, sound] of Object.entries(state.sounds.items)) {
+    if (sound.type !== "sound") {
+      continue;
+    }
+
+    {
+      const result = validateFileReference({
+        state,
+        fileId: sound.fileId,
+        path: "sound.fileId",
+        details: { soundId, fileId: sound.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (sound.waveformDataFileId !== undefined && sound.waveformDataFileId !== null) {
+      const result = validateFileReference({
+        state,
+        fileId: sound.waveformDataFileId,
+        path: "sound.waveformDataFileId",
+        details: { soundId, waveformDataFileId: sound.waveformDataFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [videoId, video] of Object.entries(state.videos.items)) {
+    if (video.type !== "video") {
+      continue;
+    }
+
+    {
+      const result = validateFileReference({
+        state,
+        fileId: video.fileId,
+        path: "video.fileId",
+        details: { videoId, fileId: video.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateFileReference({
+        state,
+        fileId: video.thumbnailFileId,
+        path: "video.thumbnailFileId",
+        details: { videoId, thumbnailFileId: video.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [fontId, font] of Object.entries(state.fonts.items)) {
+    if (font.type !== "font") {
+      continue;
+    }
+
+    const result = validateFileReference({
+      state,
+      fileId: font.fileId,
+      path: "font.fileId",
+      details: { fontId, fileId: font.fileId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  for (const [characterId, character] of Object.entries(state.characters.items)) {
+    if (character.type !== "character") {
+      continue;
+    }
+
+    if (character.fileId !== undefined) {
+      const result = validateFileReference({
+        state,
+        fileId: character.fileId,
+        path: "character.fileId",
+        details: { characterId, fileId: character.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    for (const [spriteId, sprite] of Object.entries(
+      character.sprites?.items || {},
+    )) {
+      if (sprite.type !== "image") {
+        continue;
+      }
+
+      const result = validateFileReference({
+        state,
+        fileId: sprite.fileId,
+        path: "character.sprite.fileId",
+        details: { characterId, spriteId, fileId: sprite.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
       }
     }
   }
@@ -3922,6 +4191,106 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
   if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
     return invalidFromErrorFactory(errorFactory, "payload.data.fileSize must be a finite number");
   }
+};
+
+const validateFileCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && !FILE_ITEM_TYPES.includes(data.type)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or a supported file type",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "mimeType", "size", "sha256"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (data.type === "folder") {
+    if (!isNonEmptyString(data.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.name must be a non-empty string",
+      );
+    }
+    return;
+  }
+
+  if (!isNonEmptyString(data.mimeType)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.mimeType must be a non-empty string",
+    );
+  }
+
+  if (!isFiniteNumber(data.size)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.size must be a finite number",
+    );
+  }
+
+  if (!isNonEmptyString(data.sha256)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.sha256 must be a non-empty string",
+    );
+  }
+};
+
+const validateReferencedFilesInData = ({
+  state,
+  data,
+  fields,
+  nullableFields = [],
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  for (const field of fields) {
+    const fileId = data[field];
+
+    if (fileId === undefined) {
+      continue;
+    }
+
+    if (fileId === null && nullableFields.includes(field)) {
+      continue;
+    }
+
+    const result = validateFileReference({
+      state,
+      fileId,
+      path: `payload.data.${field}`,
+      details: {
+        ...details,
+        field,
+        fileId,
+      },
+      errorFactory,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
 };
 
 const validateColorCreateData = ({ data, errorFactory }) => {
@@ -5114,6 +5483,8 @@ const createFolderedCollectionCommandDefinitions = ({
   }),
   validateCreateState = () => {},
   validateUpdateState = () => {},
+  validateDeleteState = () => {},
+  includeUpdate = true,
 }) => {
   const existingMessage = `payload.${idField} must reference an existing ${itemLabel}`;
   const duplicateMessage = `payload.${idField} must not already exist`;
@@ -5242,68 +5613,72 @@ const createFolderedCollectionCommandDefinitions = ({
         return state;
       },
     },
-    {
-      type: `${familyName}.update`,
-      validatePayload: ({ payload }) => {
-        let result = captureValidation(() =>
-          validateExactKeys({
-            value: payload,
-            expectedKeys: [idField, "data"],
-            path: "payload",
-            errorFactory: createPayloadValidationError,
-          }),
-        );
-        if (!result.valid) {
-          return result;
-        }
+    ...(includeUpdate
+      ? [
+          {
+            type: `${familyName}.update`,
+            validatePayload: ({ payload }) => {
+              let result = captureValidation(() =>
+                validateExactKeys({
+                  value: payload,
+                  expectedKeys: [idField, "data"],
+                  path: "payload",
+                  errorFactory: createPayloadValidationError,
+                }),
+              );
+              if (!result.valid) {
+                return result;
+              }
 
-        if (!isNonEmptyString(payload[idField])) {
-          return invalidPayload(
-            `payload.${idField} must be a non-empty string`,
-          );
-        }
+              if (!isNonEmptyString(payload[idField])) {
+                return invalidPayload(
+                  `payload.${idField} must be a non-empty string`,
+                );
+              }
 
-        result = captureValidation(() =>
-          updateDataValidator({
-            data: payload.data,
-            errorFactory: createPayloadValidationError,
-          }),
-        );
-        if (!result.valid) {
-          return result;
-        }
+              result = captureValidation(() =>
+                updateDataValidator({
+                  data: payload.data,
+                  errorFactory: createPayloadValidationError,
+                }),
+              );
+              if (!result.valid) {
+                return result;
+              }
 
-        return VALID_RESULT;
-      },
-      validateAgainstState: ({ state, payload }) => {
-        const currentItem = state[collectionKey].items[payload[idField]];
-        if (!isPlainObject(currentItem)) {
-          return invalidPrecondition(existingMessage);
-        }
+              return VALID_RESULT;
+            },
+            validateAgainstState: ({ state, payload }) => {
+              const currentItem = state[collectionKey].items[payload[idField]];
+              if (!isPlainObject(currentItem)) {
+                return invalidPrecondition(existingMessage);
+              }
 
-        const result = captureValidation(() =>
-          validateUpdateState({
-            state,
-            payload,
-            currentItem,
-          }),
-        );
-        if (!result.valid) {
-          return result;
-        }
+              const result = captureValidation(() =>
+                validateUpdateState({
+                  state,
+                  payload,
+                  currentItem,
+                }),
+              );
+              if (!result.valid) {
+                return result;
+              }
 
-        return VALID_RESULT;
-      },
-      reduce: ({ state, payload }) => {
-        const currentItem = state[collectionKey].items[payload[idField]];
-        state[collectionKey].items[payload[idField]] = updateItem({
-          state,
-          payload,
-          currentItem,
-        });
-        return state;
-      },
-    },
+              return VALID_RESULT;
+            },
+            reduce: ({ state, payload }) => {
+              const currentItem = state[collectionKey].items[payload[idField]];
+              state[collectionKey].items[payload[idField]] = updateItem({
+                state,
+                payload,
+                currentItem,
+              });
+              return state;
+            },
+          },
+        ]
+      : []),
     {
       type: `${familyName}.delete`,
       validatePayload: ({ payload }) => {
@@ -5340,6 +5715,16 @@ const createFolderedCollectionCommandDefinitions = ({
               { itemId },
             );
           }
+        }
+
+        const result = captureValidation(() =>
+          validateDeleteState({
+            state,
+            payload,
+          }),
+        );
+        if (!result.valid) {
+          return result;
         }
 
         return VALID_RESULT;
@@ -5501,6 +5886,121 @@ const getCharacterSpriteCollection = ({ state, characterId }) =>
 const getLayoutElementCollection = ({ state, layoutId }) =>
   state.layouts.items[layoutId]?.elements;
 
+const findReferencedFileUsage = ({ state, fileId }) => {
+  for (const [imageId, image] of Object.entries(state.images.items)) {
+    if (image.type !== "image") {
+      continue;
+    }
+
+    if (image.fileId === fileId) {
+      return {
+        kind: "image",
+        field: "fileId",
+        ownerId: imageId,
+      };
+    }
+
+    if (image.thumbnailFileId === fileId) {
+      return {
+        kind: "image",
+        field: "thumbnailFileId",
+        ownerId: imageId,
+      };
+    }
+  }
+
+  for (const [soundId, sound] of Object.entries(state.sounds.items)) {
+    if (sound.type !== "sound") {
+      continue;
+    }
+
+    if (sound.fileId === fileId) {
+      return {
+        kind: "sound",
+        field: "fileId",
+        ownerId: soundId,
+      };
+    }
+
+    if (sound.waveformDataFileId === fileId) {
+      return {
+        kind: "sound",
+        field: "waveformDataFileId",
+        ownerId: soundId,
+      };
+    }
+  }
+
+  for (const [videoId, video] of Object.entries(state.videos.items)) {
+    if (video.type !== "video") {
+      continue;
+    }
+
+    if (video.fileId === fileId) {
+      return {
+        kind: "video",
+        field: "fileId",
+        ownerId: videoId,
+      };
+    }
+
+    if (video.thumbnailFileId === fileId) {
+      return {
+        kind: "video",
+        field: "thumbnailFileId",
+        ownerId: videoId,
+      };
+    }
+  }
+
+  for (const [fontId, font] of Object.entries(state.fonts.items)) {
+    if (font.type !== "font") {
+      continue;
+    }
+
+    if (font.fileId === fileId) {
+      return {
+        kind: "font",
+        field: "fileId",
+        ownerId: fontId,
+      };
+    }
+  }
+
+  for (const [characterId, character] of Object.entries(state.characters.items)) {
+    if (character.type !== "character") {
+      continue;
+    }
+
+    if (character.fileId === fileId) {
+      return {
+        kind: "character",
+        field: "fileId",
+        ownerId: characterId,
+      };
+    }
+
+    for (const [spriteId, sprite] of Object.entries(
+      character.sprites?.items || {},
+    )) {
+      if (sprite.type !== "image") {
+        continue;
+      }
+
+      if (sprite.fileId === fileId) {
+        return {
+          kind: "character.sprite",
+          field: "fileId",
+          ownerId: spriteId,
+          characterId,
+        };
+      }
+    }
+  }
+
+  return null;
+};
+
 const COMMAND_DEFINITIONS = [
   {
     type: "project.create",
@@ -5525,6 +6025,48 @@ const COMMAND_DEFINITIONS = [
     validateAgainstState: () => {},
     reduce: ({ payload }) => structuredClone(payload.state),
   },
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "file",
+    collectionKey: "files",
+    idField: "fileId",
+    itemLabel: "file item",
+    createDataValidator: validateFileCreateData,
+    updateDataValidator: () => VALID_RESULT,
+    includeUpdate: false,
+    createItem: ({ payload }) =>
+      payload.data.type === "folder"
+        ? {
+            id: payload.fileId,
+            type: "folder",
+            name: payload.data.name,
+          }
+        : {
+            id: payload.fileId,
+            type: payload.data.type,
+            mimeType: payload.data.mimeType,
+            size: payload.data.size,
+            sha256: payload.data.sha256,
+          },
+    validateDeleteState: ({ state, payload }) => {
+      for (const fileId of payload.fileIds) {
+        const usage = findReferencedFileUsage({ state, fileId });
+        if (!usage) {
+          continue;
+        }
+
+        return invalidPrecondition(
+          `payload.fileIds cannot delete a referenced file`,
+          {
+            fileId,
+            referenceKind: usage.kind,
+            referenceField: usage.field,
+            referenceOwnerId: usage.ownerId,
+            ...(usage.characterId ? { characterId: usage.characterId } : {}),
+          },
+        );
+      }
+    },
+  }),
   {
     type: "story.update",
     validatePayload: ({ payload }) => {
@@ -6871,6 +7413,20 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "image") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "thumbnailFileId"],
+          details: {
+            imageId: payload.imageId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const nextImage = {
@@ -6961,6 +7517,7 @@ const COMMAND_DEFINITIONS = [
       if (
         currentImage.type === "folder" &&
         (payload.data.fileId !== undefined ||
+          payload.data.thumbnailFileId !== undefined ||
           payload.data.fileType !== undefined ||
           payload.data.fileSize !== undefined ||
           payload.data.width !== undefined ||
@@ -6969,6 +7526,20 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder image items cannot update file fields",
         );
+      }
+
+      if (currentImage.type === "image") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "thumbnailFileId"],
+          details: {
+            imageId: payload.imageId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {
@@ -7274,6 +7845,21 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "sound") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "waveformDataFileId"],
+          nullableFields: ["waveformDataFileId"],
+          details: {
+            soundId: payload.soundId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const nextSound = {
@@ -7369,6 +7955,21 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder sound items cannot update file fields",
         );
+      }
+
+      if (currentSound.type === "sound") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "waveformDataFileId"],
+          nullableFields: ["waveformDataFileId"],
+          details: {
+            soundId: payload.soundId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {
@@ -7674,6 +8275,20 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "video") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "thumbnailFileId"],
+          details: {
+            videoId: payload.videoId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const nextVideo = {
@@ -7771,6 +8386,20 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder video items cannot update file fields",
         );
+      }
+
+      if (currentVideo.type === "video") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "thumbnailFileId"],
+          details: {
+            videoId: payload.videoId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {
@@ -8456,6 +9085,20 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "font") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            fontId: payload.fontId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const nextFont = {
@@ -8541,6 +9184,20 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder font items cannot update font fields",
         );
+      }
+
+      if (currentFont.type === "font") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            fontId: payload.fontId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {
@@ -9319,7 +9976,48 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "character") {
+        return;
+      }
+
+      if (payload.data.fileId !== undefined) {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      for (const [spriteId, sprite] of Object.entries(
+        payload.data.sprites?.items || {},
+      )) {
+        if (sprite.type !== "image") {
+          continue;
+        }
+
+        const result = validateFileReference({
+          state,
+          fileId: sprite.fileId,
+          path: "payload.data.sprites.items.*.fileId",
+          details: {
+            characterId: payload.characterId,
+            spriteId,
+            fileId: sprite.fileId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
@@ -9327,6 +10025,20 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder character items cannot update character fields",
         );
+      }
+
+      if (currentItem.type === "character") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
   }),
@@ -9471,6 +10183,21 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "image") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            characterId: payload.characterId,
+            spriteId: payload.spriteId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const collection = getCharacterSpriteCollection({
@@ -9562,6 +10289,21 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder sprite items cannot update image fields",
         );
+      }
+
+      if (currentItem.type === "image") {
+        const result = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId"],
+          details: {
+            characterId: payload.characterId,
+            spriteId: payload.spriteId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {
