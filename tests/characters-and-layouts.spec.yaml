@@ -1,6 +1,8 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload]
+suites:
+  - processCommand
+  - validatePayload
 ---
 suite: processCommand
 exportName: processCommand
@@ -12,6 +14,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -55,13 +60,16 @@ in:
           type: character
           name: Hero
           description: Main actor
-          shortcut: "1"
+          shortcut: '1'
 out:
   state:
     project: {}
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -83,7 +91,7 @@ out:
           type: character
           name: Hero
           description: Main actor
-          shortcut: "1"
+          shortcut: '1'
           sprites:
             items: {}
             tree: []
@@ -118,6 +126,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-happy:
+            id: file-happy
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-happy-sha256
+        tree:
+          - id: file-happy
+            children: []
       images:
         items: {}
         tree: []
@@ -186,6 +205,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-happy:
+          id: file-happy
+          type: image
+          mimeType: image/png
+          size: 1
+          sha256: file-happy-sha256
+      tree:
+        - id: file-happy
+          children: []
     images:
       items: {}
       tree: []
@@ -253,6 +283,9 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items: {}
+        tree: []
       images:
         items: {}
         tree: []
@@ -303,6 +336,9 @@ out:
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -358,6 +394,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-font:
+            id: file-font
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-font-sha256
+        tree:
+          - id: file-font
+            children: []
       images:
         items: {}
         tree: []
@@ -393,7 +440,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: "#ffffff"
+            hex: '#ffffff'
         tree:
           - id: color-ui
             children: []
@@ -407,7 +454,7 @@ in:
             colorId: color-ui
             fontSize: 32
             lineHeight: 1.4
-            fontWeight: "700"
+            fontWeight: '700'
         tree:
           - id: style-ui
             children: []
@@ -428,7 +475,7 @@ in:
                   type: container
                   name: Root
                   x: 0
-                  y: 0
+                  'y': 0
                   width: 100
                   height: 100
                   anchorX: 0
@@ -452,7 +499,7 @@ in:
           type: text
           name: Title
           x: 10
-          y: 12
+          'y': 12
           anchorX: 0
           anchorY: 0
           scaleX: 1
@@ -468,6 +515,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-font:
+          id: file-font
+          type: font
+          mimeType: font/ttf
+          size: 1
+          sha256: file-font-sha256
+      tree:
+        - id: file-font
+          children: []
     images:
       items: {}
       tree: []
@@ -503,7 +561,7 @@ out:
           id: color-ui
           type: color
           name: White
-          hex: "#ffffff"
+          hex: '#ffffff'
       tree:
         - id: color-ui
           children: []
@@ -517,7 +575,7 @@ out:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: "700"
+          fontWeight: '700'
       tree:
         - id: style-ui
           children: []
@@ -538,7 +596,7 @@ out:
                 type: container
                 name: Root
                 x: 0
-                y: 0
+                'y': 0
                 width: 100
                 height: 100
                 anchorX: 0
@@ -551,7 +609,7 @@ out:
                 type: text
                 name: Title
                 x: 10
-                y: 12
+                'y': 12
                 anchorX: 0
                 anchorY: 0
                 scaleX: 1
@@ -579,4 +637,4 @@ in:
       elementId: text-title
       data:
         opacity: 2
-throws: "payload.data.opacity must be a finite number between 0 and 1 when provided"
+throws: payload.data.opacity must be a finite number between 0 and 1 when provided

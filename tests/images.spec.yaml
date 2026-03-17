@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -14,6 +17,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-b-sha256
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/jpeg
+            size: 2000
+            sha256: file-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: file-a
+            children: []
       images:
         items:
           folder-art:
@@ -78,7 +100,7 @@ in:
           fileSize: 2000
           width: 1920
           height: 1080
-          description: ""
+          description: ''
 out:
   state:
     project: {}
@@ -87,6 +109,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-b:
+          id: file-b
+          type: image
+          mimeType: image/png
+          size: 1
+          sha256: file-b-sha256
+        file-a:
+          id: file-a
+          type: image
+          mimeType: image/jpeg
+          size: 2000
+          sha256: file-a-sha256
+      tree:
+        - id: file-b
+          children: []
+        - id: file-a
+          children: []
     images:
       items:
         folder-art:
@@ -110,7 +151,7 @@ out:
           fileSize: 2000
           width: 1920
           height: 1080
-          description: ""
+          description: ''
       tree:
         - id: folder-art
           children:
@@ -158,13 +199,24 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/jpeg
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items:
           image-a:
             id: image-a
             type: image
             name: Background
-            description: ""
+            description: ''
             fileId: file-a
             fileType: image/jpeg
             width: 1920
@@ -218,6 +270,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: image
+          mimeType: image/jpeg
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items:
         image-a:
@@ -273,6 +336,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items:
           folder-art:
@@ -339,6 +413,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: image
+          mimeType: image/png
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items:
         folder-art:
@@ -401,6 +486,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items:
           folder-art:
@@ -466,6 +562,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: image
+          mimeType: image/png
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items:
         folder-ui:
@@ -517,7 +624,7 @@ in:
       data:
         type: image
         name: Background
-throws: "payload.data.fileId must be a non-empty string"
+throws: payload.data.fileId must be a non-empty string
 ---
 case: image.update rejects unsupported fields
 in:
@@ -526,7 +633,7 @@ in:
       imageId: image-a
       data:
         type: image
-throws: "payload.data.type is not allowed"
+throws: payload.data.type is not allowed
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -540,6 +647,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-b-sha256
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: file-a
+            children: []
       images:
         items:
           image-b:
@@ -589,7 +715,7 @@ in:
           type: image
           name: Background
           fileId: file-a
-throws: "payload.parentId must reference a folder image item"
+throws: payload.parentId must reference a folder image item
 ---
 case: image.update rejects file field updates on folders
 in:
@@ -600,6 +726,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items:
           folder-art:
@@ -645,7 +782,7 @@ in:
         imageId: folder-art
         data:
           fileId: file-a
-throws: "folder image items cannot update file fields"
+throws: folder image items cannot update file fields
 ---
 case: image.move rejects moving a folder under its own descendant
 in:
@@ -654,6 +791,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -706,7 +846,7 @@ in:
       payload:
         imageId: folder-art
         parentId: folder-ui
-throws: "payload.parentId must not target the moved image item or its descendants"
+throws: payload.parentId must not target the moved image item or its descendants
 ---
 case: image.delete rejects unknown ids
 in:
@@ -715,6 +855,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -755,4 +898,4 @@ in:
       payload:
         imageIds:
           - image-missing
-throws: "payload.imageIds must reference existing image items"
+throws: payload.imageIds must reference existing image items

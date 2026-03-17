@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -12,6 +15,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -97,6 +103,9 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items: {}
+      tree: []
     images:
       items: {}
       tree: []
@@ -178,6 +187,9 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items: {}
+        tree: []
       images:
         items: {}
         tree: []
@@ -254,6 +266,9 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items: {}
+      tree: []
     images:
       items: {}
       tree: []
@@ -314,6 +329,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -391,6 +409,9 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items: {}
+      tree: []
     images:
       items: {}
       tree: []
@@ -462,6 +483,9 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items: {}
+        tree: []
       images:
         items: {}
         tree: []
@@ -520,13 +544,17 @@ in:
     command:
       type: animation.delete
       payload:
-        animationIds: [folder-motion]
+        animationIds:
+          - folder-motion
 out:
   state:
     project: {}
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -581,7 +609,7 @@ in:
               keyframes:
                 - duration: 200
                   value: 10
-throws: "payload.data.animation.tween.skewX is not a supported live tween property"
+throws: payload.data.animation.tween.skewX is not a supported live tween property
 ---
 case: animation.update rejects unsupported easing values
 in:
@@ -598,7 +626,7 @@ in:
                 - duration: 300
                   value: 50
                   easing: easeInWhatever
-throws: "payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing"
+throws: payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -610,6 +638,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -663,7 +694,7 @@ in:
                 keyframes:
                   - duration: 300
                     value: 20
-throws: "folder animation items cannot update animation fields"
+throws: folder animation items cannot update animation fields
 ---
 case: animation.move rejects a non-folder parent target
 in:
@@ -672,6 +703,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -738,4 +772,4 @@ in:
       payload:
         animationId: animation-a
         parentId: animation-b
-throws: "payload.parentId must reference a folder animation item"
+throws: payload.parentId must reference a folder animation item

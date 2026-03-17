@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -14,6 +17,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-b-sha256
+          file-a:
+            id: file-a
+            type: font
+            mimeType: font/otf
+            size: 2048
+            sha256: file-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -83,6 +105,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-b:
+          id: file-b
+          type: font
+          mimeType: font/ttf
+          size: 1
+          sha256: file-b-sha256
+        file-a:
+          id: file-a
+          type: font
+          mimeType: font/otf
+          size: 2048
+          sha256: file-a-sha256
+      tree:
+        - id: file-b
+          children: []
+        - id: file-a
+          children: []
     images:
       items: {}
       tree: []
@@ -150,6 +191,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -206,6 +258,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: font
+          mimeType: font/ttf
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items: {}
       tree: []
@@ -258,6 +321,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -325,6 +399,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: font
+          mimeType: font/ttf
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items: {}
       tree: []
@@ -388,6 +473,9 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items: {}
+        tree: []
       images:
         items: {}
         tree: []
@@ -419,7 +507,7 @@ in:
             id: color-b
             type: color
             name: Accent
-            hex: "#00ffaa"
+            hex: '#00ffaa'
         tree:
           - id: folder-brand
             children:
@@ -444,13 +532,16 @@ in:
         data:
           type: color
           name: Primary
-          hex: "#112233"
+          hex: '#112233'
 out:
   state:
     project: {}
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -484,12 +575,12 @@ out:
           id: color-b
           type: color
           name: Accent
-          hex: "#00ffaa"
+          hex: '#00ffaa'
         color-a:
           id: color-a
           type: color
           name: Primary
-          hex: "#112233"
+          hex: '#112233'
       tree:
         - id: folder-brand
           children:
@@ -514,6 +605,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -543,7 +637,7 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: "#112233"
+            hex: '#112233'
         tree:
           - id: color-a
             children: []
@@ -562,13 +656,16 @@ in:
         colorId: color-a
         data:
           name: Primary Dark
-          hex: "#223344"
+          hex: '#223344'
 out:
   state:
     project: {}
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -598,7 +695,7 @@ out:
           id: color-a
           type: color
           name: Primary Dark
-          hex: "#223344"
+          hex: '#223344'
       tree:
         - id: color-a
           children: []
@@ -619,6 +716,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -652,12 +752,12 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: "#112233"
+            hex: '#112233'
           color-b:
             id: color-b
             type: color
             name: Accent
-            hex: "#445566"
+            hex: '#445566'
         tree:
           - id: folder-brand
             children:
@@ -677,13 +777,17 @@ in:
     command:
       type: color.delete
       payload:
-        colorIds: [folder-brand]
+        colorIds:
+          - folder-brand
 out:
   state:
     project: {}
     story:
       initialSceneId: null
     scenes:
+      items: {}
+      tree: []
+    files:
       items: {}
       tree: []
     images:
@@ -732,7 +836,7 @@ in:
         type: font
         name: Display
         fileId: file-a
-throws: "payload.data.fontFamily must be a non-empty string"
+throws: payload.data.fontFamily must be a non-empty string
 ---
 case: color.create rejects an invalid hex string
 in:
@@ -743,7 +847,7 @@ in:
         type: color
         name: Primary
         hex: red
-throws: "payload.data.hex must be a #RRGGBB string"
+throws: 'payload.data.hex must be a #RRGGBB string'
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -757,6 +861,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -802,7 +917,7 @@ in:
         fontId: folder-fonts
         data:
           fileId: file-a
-throws: "folder font items cannot update font fields"
+throws: folder font items cannot update font fields
 ---
 case: color.move rejects a non-folder parent target
 in:
@@ -811,6 +926,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -840,12 +958,12 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: "#112233"
+            hex: '#112233'
           color-b:
             id: color-b
             type: color
             name: Accent
-            hex: "#445566"
+            hex: '#445566'
         tree:
           - id: color-a
             children: []
@@ -865,4 +983,4 @@ in:
       payload:
         colorId: color-a
         parentId: color-b
-throws: "payload.parentId must reference a folder color item"
+throws: payload.parentId must reference a folder color item

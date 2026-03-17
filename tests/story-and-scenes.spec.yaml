@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -30,7 +33,7 @@ in:
             name: Wake Up
             position:
               x: 100
-              y: 200
+              'y': 200
             sections:
               items: {}
               tree: []
@@ -41,17 +44,42 @@ in:
             children:
               - id: scene-b
                 children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: story.update
       payload:
@@ -81,7 +109,7 @@ out:
           name: Wake Up
           position:
             x: 100
-            y: 200
+            'y': 200
           sections:
             items: {}
             tree: []
@@ -92,17 +120,42 @@ out:
           children:
             - id: scene-b
               children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: scene.create inserts a scene before a sibling under the requested folder
 in:
@@ -137,17 +190,42 @@ in:
             children:
               - id: scene-b
                 children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.create
       payload:
@@ -198,17 +276,42 @@ out:
               children: []
             - id: scene-b
               children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 case: scene.update renames a scene and merges partial position updates
 in:
@@ -224,24 +327,49 @@ in:
             name: Intro
             position:
               x: 120
-              y: 80
+              'y': 80
             sections:
               items: {}
               tree: []
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.update
       payload:
@@ -263,24 +391,49 @@ out:
           name: Train Station
           position:
             x: 320
-            y: 80
+            'y': 80
           sections:
             items: {}
             tree: []
       tree:
         - id: scene-a
           children: []
-    images: { items: {}, tree: [] }
-    sounds: { items: {}, tree: [] }
-    videos: { items: {}, tree: [] }
-    animations: { items: {}, tree: [] }
-    characters: { items: {}, tree: [] }
-    fonts: { items: {}, tree: [] }
-    transforms: { items: {}, tree: [] }
-    colors: { items: {}, tree: [] }
-    textStyles: { items: {}, tree: [] }
-    variables: { items: {}, tree: [] }
-    layouts: { items: {}, tree: [] }
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
 ---
 suite: validatePayload
 exportName: validatePayload
@@ -292,7 +445,7 @@ in:
       data:
         initialSceneId: scene-a
         title: nope
-throws: "payload.data.title is not allowed"
+throws: payload.data.title is not allowed
 ---
 case: scene.create rejects index and position together
 in:
@@ -303,7 +456,7 @@ in:
       position: first
       data:
         name: Intro
-throws: "payload.index cannot be combined with payload.position"
+throws: payload.index cannot be combined with payload.position
 ---
 case: scene.update rejects unsupported fields
 in:
@@ -312,7 +465,7 @@ in:
       sceneId: scene-a
       data:
         type: folder
-throws: "payload.data.type is not allowed"
+throws: payload.data.type is not allowed
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -341,23 +494,48 @@ in:
             children: []
           - id: folder-prologue
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: story.update
       payload:
         data:
           initialSceneId: folder-prologue
-throws: "payload.data.initialSceneId must reference a non-folder scene"
+throws: payload.data.initialSceneId must reference a non-folder scene
 ---
 case: scene.create rejects non-folder parents
 in:
@@ -377,17 +555,42 @@ in:
         tree:
           - id: scene-a
             children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.create
       payload:
@@ -395,7 +598,7 @@ in:
         parentId: scene-a
         data:
           name: Nope
-throws: "payload.parentId must reference a folder scene"
+throws: payload.parentId must reference a folder scene
 ---
 case: scene.create rejects position targets outside the requested sibling group
 in:
@@ -436,17 +639,42 @@ in:
             children:
               - id: scene-b
                 children: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.create
       payload:
@@ -456,7 +684,7 @@ in:
         positionTargetId: scene-b
         data:
           name: Flashback
-throws: "payload.positionTargetId must reference a sibling under payload.parentId"
+throws: payload.positionTargetId must reference a sibling under payload.parentId
 ---
 case: scene.update rejects unknown scene ids
 in:
@@ -467,24 +695,49 @@ in:
       scenes:
         items: {}
         tree: []
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: scene.update
       payload:
         sceneId: missing-scene
         data:
           name: Nope
-throws: "payload.sceneId must reference an existing scene"
+throws: payload.sceneId must reference an existing scene
 ---
 case: validateAgainstState rejects malformed state snapshots before command preconditions
 in:
@@ -501,21 +754,46 @@ in:
         tree:
           - id: scene-a
             children: []
+      files:
+        items: {}
+        tree: []
       extra: {}
-      images: { items: {}, tree: [] }
-      sounds: { items: {}, tree: [] }
-      videos: { items: {}, tree: [] }
-      animations: { items: {}, tree: [] }
-      characters: { items: {}, tree: [] }
-      fonts: { items: {}, tree: [] }
-      transforms: { items: {}, tree: [] }
-      colors: { items: {}, tree: [] }
-      textStyles: { items: {}, tree: [] }
-      variables: { items: {}, tree: [] }
-      layouts: { items: {}, tree: [] }
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
     command:
       type: story.update
       payload:
         data:
           initialSceneId: scene-a
-throws: "state.extra is not allowed"
+throws: state.extra is not allowed

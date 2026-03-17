@@ -18,7 +18,7 @@ import { expectValidation } from "./support/expectValidation.js";
 import { createEmptyTestState } from "./support/createEmptyTestState.js";
 
 test("public api exports functions only", () => {
-  expect(SCHEMA_VERSION).toBe(1);
+  expect(SCHEMA_VERSION).toBe(2);
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
@@ -274,9 +274,222 @@ test("validateState accepts layout elements with rightClick interactions", () =>
   });
 });
 
+test("validateState requires the files collection", () => {
+  const state = createEmptyTestState();
+  delete state.files;
+
+  expect(validateState({ state })).toEqual({
+    valid: false,
+    error: {
+      kind: "state",
+      code: "state_validation_failed",
+      message: "state.files is required",
+    },
+  });
+});
+
+test("processCommand rejects image creation when referenced files are missing", () => {
+  const state = createEmptyTestState();
+
+  expect(
+    processCommand({
+      state,
+      command: {
+        type: "image.create",
+        payload: {
+          imageId: "image-a",
+          data: {
+            type: "image",
+            name: "Background",
+            fileId: "file-image-a",
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message:
+        "payload.data.fileId must reference an existing non-folder file with type 'image'",
+      details: {
+        imageId: "image-a",
+        field: "fileId",
+        fileId: "file-image-a",
+        expectedFileTypes: ["image"],
+      },
+    },
+  });
+});
+
+test("validateState rejects incompatible file kinds in asset references", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-audio"] = {
+    id: "file-audio",
+    type: "audio",
+    mimeType: "audio/mpeg",
+    size: 128,
+    sha256: "file-audio-sha256",
+  };
+  state.files.tree = [
+    {
+      id: "file-audio",
+      children: [],
+    },
+  ];
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-audio",
+  };
+  state.images.tree = [
+    {
+      id: "image-a",
+      children: [],
+    },
+  ];
+
+  expect(validateState({ state })).toEqual({
+    valid: false,
+    error: {
+      kind: "invariant",
+      code: "invariant_validation_failed",
+      message:
+        "image.fileId must reference an existing non-folder file with type 'image'",
+      details: {
+        imageId: "image-a",
+        fileId: "file-audio",
+        expectedFileTypes: ["image"],
+        actualFileType: "audio",
+      },
+    },
+  });
+});
+
+test("validateAgainstState rejects image creation when file kinds are incompatible", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-audio"] = {
+    id: "file-audio",
+    type: "audio",
+    mimeType: "audio/mpeg",
+    size: 128,
+    sha256: "file-audio-sha256",
+  };
+  state.files.tree = [
+    {
+      id: "file-audio",
+      children: [],
+    },
+  ];
+
+  expect(
+    validateAgainstState({
+      state,
+      command: {
+        type: "image.create",
+        payload: {
+          imageId: "image-a",
+          data: {
+            type: "image",
+            name: "Image A",
+            fileId: "file-audio",
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message:
+        "payload.data.fileId must reference an existing non-folder file with type 'image'",
+      details: {
+        imageId: "image-a",
+        field: "fileId",
+        fileId: "file-audio",
+        expectedFileTypes: ["image"],
+        actualFileType: "audio",
+      },
+    },
+  });
+});
+
+test("validateAgainstState rejects deleting folders that contain referenced files", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["folder-a"] = {
+    id: "folder-a",
+    type: "folder",
+    name: "Folder A",
+  };
+  state.files.items["file-image"] = {
+    id: "file-image",
+    type: "image",
+    mimeType: "image/png",
+    size: 128,
+    sha256: "file-image-sha256",
+  };
+  state.files.tree = [
+    {
+      id: "folder-a",
+      children: [
+        {
+          id: "file-image",
+          children: [],
+        },
+      ],
+    },
+  ];
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-image",
+  };
+  state.images.tree = [
+    {
+      id: "image-a",
+      children: [],
+    },
+  ];
+
+  expect(
+    validateAgainstState({
+      state,
+      command: {
+        type: "file.delete",
+        payload: {
+          fileIds: ["folder-a"],
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message: "payload.fileIds cannot delete a referenced file",
+      details: {
+        fileId: "file-image",
+        referenceKind: "image",
+        referenceField: "fileId",
+        referenceOwnerId: "image-a",
+      },
+    },
+  });
+});
+
 test("registry exposes only fully implemented command types", () => {
   expect(listCommandTypes()).toEqual([
     "project.create",
+    "file.create",
+    "file.delete",
+    "file.move",
     "story.update",
     "scene.create",
     "scene.update",

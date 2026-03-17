@@ -1,6 +1,9 @@
-file: "./support/putyApi.js"
+file: ./support/putyApi.js
 group: model
-suites: [processCommand, validatePayload, validateAgainstState]
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
 ---
 suite: processCommand
 exportName: processCommand
@@ -14,6 +17,33 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-b-sha256
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mp3
+            size: 1024
+            sha256: file-a-sha256
+          waveform-a:
+            id: waveform-a
+            type: audio-waveform
+            mimeType: application/json
+            size: 1
+            sha256: waveform-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: file-a
+            children: []
+          - id: waveform-a
+            children: []
       images:
         items: {}
         tree: []
@@ -83,6 +113,33 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-b:
+          id: file-b
+          type: audio
+          mimeType: audio/mpeg
+          size: 1
+          sha256: file-b-sha256
+        file-a:
+          id: file-a
+          type: audio
+          mimeType: audio/mp3
+          size: 1024
+          sha256: file-a-sha256
+        waveform-a:
+          id: waveform-a
+          type: audio-waveform
+          mimeType: application/json
+          size: 1
+          sha256: waveform-a-sha256
+      tree:
+        - id: file-b
+          children: []
+        - id: file-a
+          children: []
+        - id: waveform-a
+          children: []
     images:
       items: {}
       tree: []
@@ -150,6 +207,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-a-sha256
+          waveform-a:
+            id: waveform-a
+            type: audio-waveform
+            mimeType: application/json
+            size: 1
+            sha256: waveform-a-sha256
+        tree:
+          - id: file-a
+            children: []
+          - id: waveform-a
+            children: []
       images:
         items: {}
         tree: []
@@ -207,6 +283,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: audio
+          mimeType: audio/mpeg
+          size: 1
+          sha256: file-a-sha256
+        waveform-a:
+          id: waveform-a
+          type: audio-waveform
+          mimeType: application/json
+          size: 1
+          sha256: waveform-a-sha256
+      tree:
+        - id: file-a
+          children: []
+        - id: waveform-a
+          children: []
     images:
       items: {}
       tree: []
@@ -260,6 +355,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -326,6 +432,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: audio
+          mimeType: audio/mpeg
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items: {}
       tree: []
@@ -388,6 +505,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -453,6 +581,17 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: audio
+          mimeType: audio/mpeg
+          size: 1
+          sha256: file-a-sha256
+      tree:
+        - id: file-a
+          children: []
     images:
       items: {}
       tree: []
@@ -502,6 +641,41 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-b-sha256
+          thumb-b:
+            id: thumb-b
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-b-sha256
+          file-a:
+            id: file-a
+            type: video
+            mimeType: video/mp4
+            size: 2048
+            sha256: file-a-sha256
+          thumb-a:
+            id: thumb-a
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: thumb-b
+            children: []
+          - id: file-a
+            children: []
+          - id: thumb-a
+            children: []
       images:
         items: {}
         tree: []
@@ -573,6 +747,41 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-b:
+          id: file-b
+          type: video
+          mimeType: video/mp4
+          size: 1
+          sha256: file-b-sha256
+        thumb-b:
+          id: thumb-b
+          type: video-thumbnail
+          mimeType: image/jpeg
+          size: 1
+          sha256: thumb-b-sha256
+        file-a:
+          id: file-a
+          type: video
+          mimeType: video/mp4
+          size: 2048
+          sha256: file-a-sha256
+        thumb-a:
+          id: thumb-a
+          type: video-thumbnail
+          mimeType: image/jpeg
+          size: 1
+          sha256: thumb-a-sha256
+      tree:
+        - id: file-b
+          children: []
+        - id: thumb-b
+          children: []
+        - id: file-a
+          children: []
+        - id: thumb-a
+          children: []
     images:
       items: {}
       tree: []
@@ -642,6 +851,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-a-sha256
+          thumb-a:
+            id: thumb-a
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-a-sha256
+        tree:
+          - id: file-a
+            children: []
+          - id: thumb-a
+            children: []
       images:
         items: {}
         tree: []
@@ -699,6 +927,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: video
+          mimeType: video/mp4
+          size: 1
+          sha256: file-a-sha256
+        thumb-a:
+          id: thumb-a
+          type: video-thumbnail
+          mimeType: image/jpeg
+          size: 1
+          sha256: thumb-a-sha256
+      tree:
+        - id: file-a
+          children: []
+        - id: thumb-a
+          children: []
     images:
       items: {}
       tree: []
@@ -753,6 +1000,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-a-sha256
+          thumb-a:
+            id: thumb-a
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-a-sha256
+        tree:
+          - id: file-a
+            children: []
+          - id: thumb-a
+            children: []
       images:
         items: {}
         tree: []
@@ -820,6 +1086,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: video
+          mimeType: video/mp4
+          size: 1
+          sha256: file-a-sha256
+        thumb-a:
+          id: thumb-a
+          type: video-thumbnail
+          mimeType: image/jpeg
+          size: 1
+          sha256: thumb-a-sha256
+      tree:
+        - id: file-a
+          children: []
+        - id: thumb-a
+          children: []
     images:
       items: {}
       tree: []
@@ -883,6 +1168,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-a-sha256
+          thumb-a:
+            id: thumb-a
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-a-sha256
+        tree:
+          - id: file-a
+            children: []
+          - id: thumb-a
+            children: []
       images:
         items: {}
         tree: []
@@ -949,6 +1253,25 @@ out:
     scenes:
       items: {}
       tree: []
+    files:
+      items:
+        file-a:
+          id: file-a
+          type: video
+          mimeType: video/mp4
+          size: 1
+          sha256: file-a-sha256
+        thumb-a:
+          id: thumb-a
+          type: video-thumbnail
+          mimeType: image/jpeg
+          size: 1
+          sha256: thumb-a-sha256
+      tree:
+        - id: file-a
+          children: []
+        - id: thumb-a
+          children: []
     images:
       items: {}
       tree: []
@@ -1002,7 +1325,7 @@ in:
         name: Ambience
         fileId: file-a
         waveformDataFileId: 123
-throws: "payload.data.waveformDataFileId must be a non-empty string or null when provided"
+throws: payload.data.waveformDataFileId must be a non-empty string or null when provided
 ---
 case: video.create rejects missing thumbnail file id
 in:
@@ -1013,7 +1336,7 @@ in:
         type: video
         name: Intro Cut
         fileId: file-a
-throws: "payload.data.thumbnailFileId must be a non-empty string"
+throws: payload.data.thumbnailFileId must be a non-empty string
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -1027,6 +1350,25 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-b-sha256
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -1076,7 +1418,7 @@ in:
           type: sound
           name: Ambience
           fileId: file-a
-throws: "payload.parentId must reference a folder sound item"
+throws: payload.parentId must reference a folder sound item
 ---
 case: sound.update rejects file field updates on folders
 in:
@@ -1087,6 +1429,17 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-a:
+            id: file-a
+            type: audio
+            mimeType: audio/mpeg
+            size: 1
+            sha256: file-a-sha256
+        tree:
+          - id: file-a
+            children: []
       images:
         items: {}
         tree: []
@@ -1132,7 +1485,7 @@ in:
         soundId: folder-audio
         data:
           fileId: file-a
-throws: "folder sound items cannot update file fields"
+throws: folder sound items cannot update file fields
 ---
 case: video.create rejects non-folder parents
 in:
@@ -1143,6 +1496,41 @@ in:
       scenes:
         items: {}
         tree: []
+      files:
+        items:
+          file-b:
+            id: file-b
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-b-sha256
+          thumb-b:
+            id: thumb-b
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-b-sha256
+          file-a:
+            id: file-a
+            type: video
+            mimeType: video/mp4
+            size: 1
+            sha256: file-a-sha256
+          thumb-a:
+            id: thumb-a
+            type: video-thumbnail
+            mimeType: image/jpeg
+            size: 1
+            sha256: thumb-a-sha256
+        tree:
+          - id: file-b
+            children: []
+          - id: thumb-b
+            children: []
+          - id: file-a
+            children: []
+          - id: thumb-a
+            children: []
       images:
         items: {}
         tree: []
@@ -1194,7 +1582,7 @@ in:
           name: Intro Cut
           fileId: file-a
           thumbnailFileId: thumb-a
-throws: "payload.parentId must reference a folder video item"
+throws: payload.parentId must reference a folder video item
 ---
 case: video.move rejects moving a folder under its own descendant
 in:
@@ -1203,6 +1591,9 @@ in:
       story:
         initialSceneId: null
       scenes:
+        items: {}
+        tree: []
+      files:
         items: {}
         tree: []
       images:
@@ -1255,4 +1646,4 @@ in:
       payload:
         videoId: folder-cuts
         parentId: folder-bonus
-throws: "payload.parentId must not target the moved video item or its descendants"
+throws: payload.parentId must not target the moved video item or its descendants
