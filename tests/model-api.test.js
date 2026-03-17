@@ -170,6 +170,110 @@ test("validatePayload rejects invalid replace mask textures", () => {
   );
 });
 
+test("validatePayload accepts layout element rightClick interactions", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          rightClick: {
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout elements with rightClick interactions", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "button-1": {
+          id: "button-1",
+          type: "container",
+          name: "Button",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          rightClick: {
+            payload: {
+              actions: {
+                sectionTransition: {
+                  sceneId: "scene-b",
+                  sectionId: "section-b",
+                },
+              },
+            },
+          },
+        },
+      },
+      tree: [
+        {
+          id: "button-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+  state.scenes.items["scene-b"] = {
+    id: "scene-b",
+    type: "scene",
+    name: "Scene B",
+    sections: {
+      items: {
+        "section-b": {
+          id: "section-b",
+          name: "Section B",
+          lines: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+      tree: [
+        {
+          id: "section-b",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.scenes.tree.push({
+    id: "scene-b",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState requires the files collection", () => {
   const state = createEmptyTestState();
   delete state.files;
