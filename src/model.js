@@ -30,8 +30,27 @@ const COLLECTION_KEYS = [
   "textStyles",
   "variables",
   "layouts",
+  "controls",
 ];
 const ROOT_KEYS = ["project", "story", ...COLLECTION_KEYS];
+const createEmptyCollectionState = () => ({
+  items: {},
+  tree: [],
+});
+const normalizeStateCollections = (state) => {
+  if (!isPlainObject(state)) {
+    return state;
+  }
+
+  if (state.controls !== undefined) {
+    return state;
+  }
+
+  return {
+    ...state,
+    controls: createEmptyCollectionState(),
+  };
+};
 const isString = (value) => typeof value === "string";
 const FILE_ITEM_TYPES = [
   "image",
@@ -115,7 +134,7 @@ const ANIMATION_EASING_KEYS = [
 ];
 const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
-const LAYOUT_TYPE_KEYS = ["normal", "dialogue", "nvl", "choice", "base"];
+const LAYOUT_TYPE_KEYS = ["normal", "dialogue", "nvl", "choice"];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_ELEMENT_BASE_TYPES = [
   "folder",
@@ -2588,7 +2607,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name"]
-            : ["id", "type", "name", "layoutType", "elements", "keyboard"],
+            : ["id", "type", "name", "layoutType", "elements"],
         path: itemPath,
         errorFactory,
       });
@@ -2622,7 +2641,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'`,
+          `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'`,
         );
       }
 
@@ -2633,6 +2652,71 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
           itemValidator: validateLayoutElementItems,
           treeValidator: validateLayoutElementTreeOwnership,
           treeNodeLabel: "layout element",
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+    }
+  }
+};
+
+const validateControlItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "control") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'control'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "elements", "keyboard"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.type === "control") {
+      {
+        const result = validateNestedCollection({
+          collection: item.elements,
+          path: `${itemPath}.elements`,
+          itemValidator: validateLayoutElementItems,
+          treeValidator: validateLayoutElementTreeOwnership,
+          treeNodeLabel: "control element",
         });
         if (result?.valid === false) {
           return result;
@@ -3264,6 +3348,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.controls") {
+    {
+      const result = validateControlItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (!Array.isArray(collection.tree)) {
@@ -3366,7 +3461,8 @@ const validateCollection = ({ collection, path }) => {
     path === "state.variables" ||
     path === "state.textStyles" ||
     path === "state.characters" ||
-    path === "state.layouts"
+    path === "state.layouts" ||
+    path === "state.controls"
   ) {
     {
       const result = validateGenericFolderOwnership({
@@ -3374,7 +3470,11 @@ const validateCollection = ({ collection, path }) => {
         items: collection.items,
         path: `${path}.tree`,
         folderLabel:
-          path === "state.layouts" ? "folder layout item" : "folder item",
+          path === "state.layouts"
+            ? "folder layout item"
+            : path === "state.controls"
+              ? "folder control item"
+              : "folder item",
       });
       if (result?.valid === false) {
         return result;
@@ -3714,13 +3814,20 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
-  const assertImageReference = ({ layoutId, elementId, field, targetId }) => {
+  const assertImageReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    field,
+    targetId,
+  }) => {
     const image = state.images.items[targetId];
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidInvariant(
-        `layout element ${field} must reference an existing non-folder image`,
+        `${ownerLabel} element ${field} must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field,
           targetId,
@@ -3732,7 +3839,9 @@ export const assertInvariants = ({ state }) => {
   };
 
   const assertTextStyleReference = ({
-    layoutId,
+    ownerIdField,
+    ownerId,
+    ownerLabel,
     elementId,
     field,
     targetId,
@@ -3740,9 +3849,9 @@ export const assertInvariants = ({ state }) => {
     const textStyle = state.textStyles.items[targetId];
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
       return invalidInvariant(
-        `layout element ${field} must reference an existing non-folder text style`,
+        `${ownerLabel} element ${field} must reference an existing non-folder text style`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field,
           targetId,
@@ -3753,13 +3862,19 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
-  const assertVariableReference = ({ layoutId, elementId, targetId }) => {
+  const assertVariableReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+  }) => {
     const variable = state.variables.items[targetId];
     if (!isPlainObject(variable) || variable.type === "folder") {
       return invalidInvariant(
-        "layout element variableId must reference an existing non-folder variable",
+        `${ownerLabel} element variableId must reference an existing non-folder variable`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           variableId: targetId,
         },
@@ -3769,62 +3884,101 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
-  for (const [layoutId, layout] of Object.entries(state.layouts.items)) {
-    if (layout.type === "folder") {
-      continue;
+  const assertElementReferencesForCollection = ({
+    items,
+    ownerIdField,
+    ownerLabel,
+    ownerType,
+  }) => {
+    for (const [ownerId, owner] of Object.entries(items)) {
+      if (owner.type !== ownerType) {
+        continue;
+      }
+
+      for (const [elementId, element] of Object.entries(owner.elements.items)) {
+        for (const field of [
+          "imageId",
+          "hoverImageId",
+          "clickImageId",
+          "thumbImageId",
+          "barImageId",
+          "hoverThumbImageId",
+          "hoverBarImageId",
+        ]) {
+          if (element[field] !== undefined) {
+            const result = assertImageReference({
+              ownerIdField,
+              ownerId,
+              ownerLabel,
+              elementId,
+              field,
+              targetId: element[field],
+            });
+            if (!result.valid) {
+              return result;
+            }
+          }
+        }
+
+        for (const field of [
+          "textStyleId",
+          "hoverTextStyleId",
+          "clickTextStyleId",
+        ]) {
+          if (element[field] !== undefined) {
+            const result = assertTextStyleReference({
+              ownerIdField,
+              ownerId,
+              ownerLabel,
+              elementId,
+              field,
+              targetId: element[field],
+            });
+            if (!result.valid) {
+              return result;
+            }
+          }
+        }
+
+        if (element.variableId !== undefined) {
+          const result = assertVariableReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.variableId,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+      }
     }
 
-    for (const [elementId, element] of Object.entries(layout.elements.items)) {
-      for (const field of [
-        "imageId",
-        "hoverImageId",
-        "clickImageId",
-        "thumbImageId",
-        "barImageId",
-        "hoverThumbImageId",
-        "hoverBarImageId",
-      ]) {
-        if (element[field] !== undefined) {
-          const result = assertImageReference({
-            layoutId,
-            elementId,
-            field,
-            targetId: element[field],
-          });
-          if (!result.valid) {
-            return result;
-          }
-        }
-      }
+    return VALID_RESULT;
+  };
 
-      for (const field of [
-        "textStyleId",
-        "hoverTextStyleId",
-        "clickTextStyleId",
-      ]) {
-        if (element[field] !== undefined) {
-          const result = assertTextStyleReference({
-            layoutId,
-            elementId,
-            field,
-            targetId: element[field],
-          });
-          if (!result.valid) {
-            return result;
-          }
-        }
-      }
+  {
+    const result = assertElementReferencesForCollection({
+      items: state.layouts.items,
+      ownerIdField: "layoutId",
+      ownerLabel: "layout",
+      ownerType: "layout",
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
 
-      if (element.variableId !== undefined) {
-        const result = assertVariableReference({
-          layoutId,
-          elementId,
-          targetId: element.variableId,
-        });
-        if (!result.valid) {
-          return result;
-        }
-      }
+  {
+    const result = assertElementReferencesForCollection({
+      items: state.controls.items,
+      ownerIdField: "controlId",
+      ownerLabel: "control",
+      ownerType: "control",
+    });
+    if (!result.valid) {
+      return result;
     }
   }
 
@@ -3833,9 +3987,11 @@ export const assertInvariants = ({ state }) => {
 
 const runValidateState = ({ state }) => {
   return captureValidation(() => {
+    const normalizedState = normalizeStateCollections(state);
+
     {
       const result = validateExactKeys({
-        value: state,
+        value: normalizedState,
         expectedKeys: ROOT_KEYS,
         path: "state",
         errorFactory: createStateValidationError,
@@ -3847,7 +4003,7 @@ const runValidateState = ({ state }) => {
 
     {
       const result = validateAllowedKeys({
-        value: state.project,
+        value: normalizedState.project,
         allowedKeys: ["resolution"],
         path: "state.project",
         errorFactory: createStateValidationError,
@@ -3857,10 +4013,10 @@ const runValidateState = ({ state }) => {
       }
     }
 
-    if (state.project.resolution !== undefined) {
+    if (normalizedState.project.resolution !== undefined) {
       {
         const result = validateExactKeys({
-          value: state.project.resolution,
+          value: normalizedState.project.resolution,
           expectedKeys: ["width", "height"],
           path: "state.project.resolution",
           errorFactory: createStateValidationError,
@@ -3870,13 +4026,13 @@ const runValidateState = ({ state }) => {
         }
       }
 
-      if (!isFiniteNumber(state.project.resolution.width)) {
+      if (!isFiniteNumber(normalizedState.project.resolution.width)) {
         return invalidState(
           "state.project.resolution.width must be a finite number",
         );
       }
 
-      if (!isFiniteNumber(state.project.resolution.height)) {
+      if (!isFiniteNumber(normalizedState.project.resolution.height)) {
         return invalidState(
           "state.project.resolution.height must be a finite number",
         );
@@ -3885,7 +4041,7 @@ const runValidateState = ({ state }) => {
 
     {
       const result = validateExactKeys({
-        value: state.story,
+        value: normalizedState.story,
         expectedKeys: ["initialSceneId"],
         path: "state.story",
         errorFactory: createStateValidationError,
@@ -3896,8 +4052,8 @@ const runValidateState = ({ state }) => {
     }
 
     if (
-      state.story.initialSceneId !== null &&
-      !isNonEmptyString(state.story.initialSceneId)
+      normalizedState.story.initialSceneId !== null &&
+      !isNonEmptyString(normalizedState.story.initialSceneId)
     ) {
       return invalidState(
         "state.story.initialSceneId must be a non-empty string or null",
@@ -3907,7 +4063,7 @@ const runValidateState = ({ state }) => {
     for (const collectionKey of COLLECTION_KEYS) {
       {
         const result = validateCollection({
-          collection: state[collectionKey],
+          collection: normalizedState[collectionKey],
           path: `state.${collectionKey}`,
         });
         if (result?.valid === false) {
@@ -3916,7 +4072,7 @@ const runValidateState = ({ state }) => {
       }
     }
 
-    const invariantResult = assertInvariants({ state });
+    const invariantResult = assertInvariants({ state: normalizedState });
     if (!invariantResult.valid) {
       return invariantResult;
     }
@@ -5928,7 +6084,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name"]
-          : ["type", "name", "layoutType", "elements", "keyboard"],
+          : ["type", "name", "layoutType", "elements"],
       path: "payload.data",
       errorFactory,
     });
@@ -5948,7 +6104,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base'",
+        "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'",
       );
     }
 
@@ -5965,16 +6121,6 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       }
     }
 
-    {
-      const result = validateKeyboardMap({
-        value: data.keyboard,
-        path: "payload.data.keyboard",
-        errorFactory,
-      });
-      if (result?.valid === false) {
-        return result;
-      }
-    }
   }
 };
 
@@ -5982,7 +6128,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "layoutType", "keyboard"],
+      allowedKeys: ["name", "layoutType"],
       path: "payload.data",
       errorFactory,
     });
@@ -6011,7 +6157,100 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', 'choice', or 'base' when provided",
+      "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice' when provided",
+    );
+  }
+
+};
+
+const validateControlCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "control") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'control'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "elements", "keyboard"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.type === "control") {
+    {
+      const result = validateNestedCollection({
+        collection: data.elements,
+        path: "payload.data.elements",
+        itemValidator: validateLayoutElementItems,
+        treeValidator: validateLayoutElementTreeOwnership,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateKeyboardMap({
+        value: data.keyboard,
+        path: "payload.data.keyboard",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateControlUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "keyboard"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
     );
   }
 
@@ -6061,8 +6300,10 @@ const validateLayoutElementUpdateData = ({ data, errorFactory, replace }) => {
   }
 };
 
-const validateLayoutElementReferenceTargets = ({
-  layoutId,
+const validateVisualElementReferenceTargets = ({
+  ownerIdField,
+  ownerId,
+  ownerLabel,
   elementId,
   data,
   state,
@@ -6073,9 +6314,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element imageId must reference an existing non-folder image",
+        `${ownerLabel} element imageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "imageId",
           targetId: data.imageId,
@@ -6089,9 +6330,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element hoverImageId must reference an existing non-folder image",
+        `${ownerLabel} element hoverImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "hoverImageId",
           targetId: data.hoverImageId,
@@ -6105,9 +6346,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element clickImageId must reference an existing non-folder image",
+        `${ownerLabel} element clickImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "clickImageId",
           targetId: data.clickImageId,
@@ -6121,9 +6362,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element thumbImageId must reference an existing non-folder image",
+        `${ownerLabel} element thumbImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "thumbImageId",
           targetId: data.thumbImageId,
@@ -6137,9 +6378,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element hoverThumbImageId must reference an existing non-folder image",
+        `${ownerLabel} element hoverThumbImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "hoverThumbImageId",
           targetId: data.hoverThumbImageId,
@@ -6153,9 +6394,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element barImageId must reference an existing non-folder image",
+        `${ownerLabel} element barImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "barImageId",
           targetId: data.barImageId,
@@ -6169,9 +6410,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(image) || image.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element hoverBarImageId must reference an existing non-folder image",
+        `${ownerLabel} element hoverBarImageId must reference an existing non-folder image`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "hoverBarImageId",
           targetId: data.hoverBarImageId,
@@ -6185,9 +6426,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element textStyleId must reference an existing non-folder text style",
+        `${ownerLabel} element textStyleId must reference an existing non-folder text style`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "textStyleId",
           targetId: data.textStyleId,
@@ -6201,9 +6442,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element hoverTextStyleId must reference an existing non-folder text style",
+        `${ownerLabel} element hoverTextStyleId must reference an existing non-folder text style`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "hoverTextStyleId",
           targetId: data.hoverTextStyleId,
@@ -6217,9 +6458,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(textStyle) || textStyle.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element clickTextStyleId must reference an existing non-folder text style",
+        `${ownerLabel} element clickTextStyleId must reference an existing non-folder text style`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           field: "clickTextStyleId",
           targetId: data.clickTextStyleId,
@@ -6233,9 +6474,9 @@ const validateLayoutElementReferenceTargets = ({
     if (!isPlainObject(variable) || variable.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
-        "layout element variableId must reference an existing non-folder variable",
+        `${ownerLabel} element variableId must reference an existing non-folder variable`,
         {
-          layoutId,
+          [ownerIdField]: ownerId,
           elementId,
           variableId: data.variableId,
         },
@@ -6773,6 +7014,9 @@ const getCharacterSpriteCollection = ({ state, characterId }) =>
 
 const getLayoutElementCollection = ({ state, layoutId }) =>
   state.layouts.items[layoutId]?.elements;
+
+const getControlElementCollection = ({ state, controlId }) =>
+  state.controls.items[controlId]?.elements;
 
 const findReferencedFileUsage = ({ state, fileId }) => {
   for (const [imageId, image] of Object.entries(state.images.items)) {
@@ -10911,6 +11155,34 @@ const COMMAND_DEFINITIONS = [
         ? {
             layoutType: payload.data.layoutType,
             elements: structuredClone(payload.data.elements),
+          }
+        : {}),
+    }),
+    validateUpdateState: ({ payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some((key) => key !== "name")
+      ) {
+        return invalidPrecondition(
+          "folder layout items cannot update layout fields",
+        );
+      }
+    },
+  }),
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "control",
+    collectionKey: "controls",
+    idField: "controlId",
+    itemLabel: "control item",
+    createDataValidator: validateControlCreateData,
+    updateDataValidator: validateControlUpdateData,
+    createItem: ({ payload }) => ({
+      id: payload.controlId,
+      type: payload.data.type,
+      name: payload.data.name,
+      ...(payload.data.type === "control"
+        ? {
+            elements: structuredClone(payload.data.elements),
             ...(payload.data.keyboard !== undefined
               ? {
                   keyboard: structuredClone(payload.data.keyboard),
@@ -10925,7 +11197,7 @@ const COMMAND_DEFINITIONS = [
         Object.keys(payload.data).some((key) => key !== "name")
       ) {
         return invalidPrecondition(
-          "folder layout items cannot update layout fields",
+          "folder control items cannot update control fields",
         );
       }
     },
@@ -11510,8 +11782,10 @@ const COMMAND_DEFINITIONS = [
       }
 
       {
-        const result = validateLayoutElementReferenceTargets({
-          layoutId: payload.layoutId,
+        const result = validateVisualElementReferenceTargets({
+          ownerIdField: "layoutId",
+          ownerId: payload.layoutId,
+          ownerLabel: "layout",
           elementId: payload.elementId,
           data: payload.data,
           state,
@@ -11628,8 +11902,10 @@ const COMMAND_DEFINITIONS = [
             };
 
         {
-          const result = validateLayoutElementReferenceTargets({
-            layoutId: payload.layoutId,
+          const result = validateVisualElementReferenceTargets({
+            ownerIdField: "layoutId",
+            ownerId: payload.layoutId,
+            ownerLabel: "layout",
             elementId: payload.elementId,
             data: mergedData,
             state,
@@ -11750,6 +12026,515 @@ const COMMAND_DEFINITIONS = [
       for (const elementId of deletedIds) {
         delete collection.items[elementId];
       }
+
+      return state;
+    },
+  },
+  {
+    type: "control.element.create",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "controlId",
+            "elementId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.controlId)) {
+        return invalidPayload("payload.controlId must be a non-empty string");
+      }
+
+      if (!isNonEmptyString(payload.elementId)) {
+        return invalidPayload("payload.elementId must be a non-empty string");
+      }
+
+      if (
+        payload.parentId !== undefined &&
+        payload.parentId !== null &&
+        !isNonEmptyString(payload.parentId)
+      ) {
+        return invalidPayload(
+          "payload.parentId must be a non-empty string when provided",
+        );
+      }
+
+      {
+        const result = validateLayoutElementCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const control = state.controls.items[payload.controlId];
+      if (!isPlainObject(control) || control.type !== "control") {
+        return invalidPrecondition(
+          "payload.controlId must reference an existing control",
+        );
+      }
+
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+
+      if (isPlainObject(collection.items[payload.elementId])) {
+        return invalidPrecondition("payload.elementId must not already exist");
+      }
+
+      const parentId = payload.parentId ?? null;
+      if (parentId !== null) {
+        const parentItem = collection.items[parentId];
+        if (
+          !isPlainObject(parentItem) ||
+          !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(parentItem.type)
+        ) {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder or container control element",
+          );
+        }
+      }
+
+      if (payload.positionTargetId !== undefined) {
+        if (!isPlainObject(collection.items[payload.positionTargetId])) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing control element",
+          );
+        }
+
+        const targetParentId = getNodeParentId({
+          tree: collection.tree,
+          nodeId: payload.positionTargetId,
+        });
+
+        if (targetParentId !== parentId) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference a sibling under payload.parentId",
+          );
+        }
+      }
+
+      {
+        const result = validateVisualElementReferenceTargets({
+          ownerIdField: "controlId",
+          ownerId: payload.controlId,
+          ownerLabel: "control",
+          elementId: payload.elementId,
+          data: payload.data,
+          state,
+          errorFactory: createPreconditionValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+
+      collection.items[payload.elementId] = {
+        id: payload.elementId,
+        ...structuredClone(payload.data),
+      };
+
+      insertTreeNode({
+        tree: collection.tree,
+        node: {
+          id: payload.elementId,
+          children: [],
+        },
+        parentId: payload.parentId ?? null,
+        index: payload.index,
+        position: payload.position,
+        positionTargetId: payload.positionTargetId,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "control.element.update",
+    validatePayload: ({ payload }) => {
+      let result = captureValidation(() =>
+        validateAllowedKeys({
+          value: payload,
+          allowedKeys: ["controlId", "elementId", "data", "replace"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        }),
+      );
+      if (!result.valid) {
+        return result;
+      }
+
+      if (!isNonEmptyString(payload.controlId)) {
+        return invalidPayload("payload.controlId must be a non-empty string");
+      }
+
+      if (!isNonEmptyString(payload.elementId)) {
+        return invalidPayload("payload.elementId must be a non-empty string");
+      }
+
+      if (
+        payload.replace !== undefined &&
+        typeof payload.replace !== "boolean"
+      ) {
+        return invalidPayload(
+          "payload.replace must be a boolean when provided",
+        );
+      }
+
+      result = captureValidation(() =>
+        validateLayoutElementUpdateData({
+          data: payload.data,
+          replace: payload.replace,
+          errorFactory: createPayloadValidationError,
+        }),
+      );
+      if (!result.valid) {
+        return result;
+      }
+
+      return VALID_RESULT;
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const control = state.controls.items[payload.controlId];
+      if (!isPlainObject(control) || control.type !== "control") {
+        return invalidPrecondition(
+          "payload.controlId must reference an existing control",
+        );
+      }
+
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+      const currentItem = collection.items[payload.elementId];
+      if (!isPlainObject(currentItem)) {
+        return invalidPrecondition(
+          "payload.elementId must reference an existing control element",
+        );
+      }
+
+      if (
+        payload.data.type !== undefined &&
+        payload.data.type !== currentItem.type
+      ) {
+        return invalidPrecondition("control element type cannot be changed");
+      }
+
+      if (currentItem.type !== "folder") {
+        const mergedData = payload.replace
+          ? { ...structuredClone(payload.data) }
+          : {
+              ...structuredClone(currentItem),
+              ...structuredClone(payload.data),
+            };
+
+        {
+          const result = validateVisualElementReferenceTargets({
+            ownerIdField: "controlId",
+            ownerId: payload.controlId,
+            ownerLabel: "control",
+            elementId: payload.elementId,
+            data: mergedData,
+            state,
+            errorFactory: createPreconditionValidationError,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
+      }
+
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some((key) => key !== "name")
+      ) {
+        return invalidPrecondition(
+          "folder control elements cannot update non-name fields",
+        );
+      }
+
+      return VALID_RESULT;
+    },
+    reduce: ({ state, payload }) => {
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+      const currentItem = collection.items[payload.elementId];
+
+      collection.items[payload.elementId] =
+        payload.replace === true
+          ? {
+              id: payload.elementId,
+              ...structuredClone(payload.data),
+            }
+          : {
+              ...structuredClone(currentItem),
+              ...structuredClone(payload.data),
+            };
+
+      return state;
+    },
+  },
+  {
+    type: "control.element.delete",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["controlId", "elementIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.controlId)) {
+        return invalidPayload("payload.controlId must be a non-empty string");
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.elementIds,
+          path: "payload.elementIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const control = state.controls.items[payload.controlId];
+      if (!isPlainObject(control) || control.type !== "control") {
+        return invalidPrecondition(
+          "payload.controlId must reference an existing control",
+        );
+      }
+
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+
+      for (const elementId of payload.elementIds) {
+        if (!isPlainObject(collection.items[elementId])) {
+          return invalidPrecondition(
+            "payload.elementIds must reference existing control elements",
+            { elementId },
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+      const deletedIds = new Set();
+
+      for (const elementId of payload.elementIds) {
+        const removedNode = removeTreeNode({
+          nodes: collection.tree,
+          nodeId: elementId,
+        });
+
+        if (!removedNode) {
+          continue;
+        }
+
+        for (const id of collectTreeDescendantIds({ node: removedNode })) {
+          deletedIds.add(id);
+        }
+      }
+
+      for (const elementId of deletedIds) {
+        delete collection.items[elementId];
+      }
+
+      return state;
+    },
+  },
+  {
+    type: "control.element.move",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "controlId",
+            "elementId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.controlId)) {
+        return invalidPayload("payload.controlId must be a non-empty string");
+      }
+
+      if (!isNonEmptyString(payload.elementId)) {
+        return invalidPayload("payload.elementId must be a non-empty string");
+      }
+
+      if (
+        payload.parentId !== undefined &&
+        payload.parentId !== null &&
+        !isNonEmptyString(payload.parentId)
+      ) {
+        return invalidPayload(
+          "payload.parentId must be a non-empty string when provided",
+        );
+      }
+
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const control = state.controls.items[payload.controlId];
+      if (!isPlainObject(control) || control.type !== "control") {
+        return invalidPrecondition(
+          "payload.controlId must reference an existing control",
+        );
+      }
+
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+      const currentItem = collection.items[payload.elementId];
+
+      if (!isPlainObject(currentItem)) {
+        return invalidPrecondition(
+          "payload.elementId must reference an existing control element",
+        );
+      }
+
+      const currentNode = findTreeNode({
+        nodes: collection.tree,
+        nodeId: payload.elementId,
+      });
+
+      if (payload.parentId !== undefined && payload.parentId !== null) {
+        const parentItem = collection.items[payload.parentId];
+        if (
+          !isPlainObject(parentItem) ||
+          !LAYOUT_CONTAINER_ELEMENT_TYPES.includes(parentItem.type)
+        ) {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder or container control element",
+          );
+        }
+
+        const descendantIds = new Set(
+          collectTreeDescendantIds({
+            node: currentNode,
+          }),
+        );
+
+        if (descendantIds.has(payload.parentId)) {
+          return invalidPrecondition(
+            "payload.parentId must not target the moved control element or its descendants",
+          );
+        }
+      }
+
+      if (payload.positionTargetId !== undefined) {
+        if (payload.positionTargetId === payload.elementId) {
+          return invalidPrecondition(
+            "payload.positionTargetId must not reference the moved control element",
+          );
+        }
+
+        if (!isPlainObject(collection.items[payload.positionTargetId])) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing control element",
+          );
+        }
+
+        const targetParentId = getNodeParentId({
+          tree: collection.tree,
+          nodeId: payload.positionTargetId,
+        });
+
+        if (targetParentId !== (payload.parentId ?? null)) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference a sibling under payload.parentId",
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const collection = getControlElementCollection({
+        state,
+        controlId: payload.controlId,
+      });
+      const nodeResult = removeNodeOrResult({
+        tree: collection.tree,
+        nodeId: payload.elementId,
+        errorMessage: "control element move target missing from tree",
+      });
+      if (!nodeResult.valid) {
+        return nodeResult;
+      }
+
+      insertTreeNode({
+        tree: collection.tree,
+        node: nodeResult.node,
+        parentId: payload.parentId ?? null,
+        index: payload.index,
+        position: payload.position,
+        positionTargetId: payload.positionTargetId,
+      });
 
       return state;
     },
@@ -11942,6 +12727,8 @@ export const validatePayload = ({ type, payload }) => {
 
 export const validateAgainstState = ({ state, command }) => {
   return captureValidation(() => {
+    const normalizedState = normalizeStateCollections(state);
+
     if (!isPlainObject(command)) {
       return invalidPrecondition("command must be an object");
     }
@@ -11954,7 +12741,7 @@ export const validateAgainstState = ({ state, command }) => {
       );
     }
 
-    const stateResult = validateState({ state });
+    const stateResult = validateState({ state: normalizedState });
     if (!stateResult.valid) {
       if (stateResult.error.kind === "invariant") {
         return invalidInvariant(
@@ -11976,7 +12763,7 @@ export const validateAgainstState = ({ state, command }) => {
 
     const validationResult = captureValidation(() =>
       definition.validateAgainstState({
-        state,
+        state: normalizedState,
         payload: command.payload,
       }),
     );
@@ -11987,12 +12774,16 @@ export const validateAgainstState = ({ state, command }) => {
 
 export const processCommand = ({ state, command }) => {
   return captureValidation(() => {
+    const normalizedState = normalizeStateCollections(state);
+    const shouldMaterializeControls =
+      typeof command?.type === "string" && command.type.startsWith("control.");
+
     if (!isPlainObject(command)) {
       return invalidPrecondition("command must be an object");
     }
 
     const preconditionResult = validateAgainstState({
-      state,
+      state: normalizedState,
       command,
     });
     if (!preconditionResult.valid) {
@@ -12005,14 +12796,21 @@ export const processCommand = ({ state, command }) => {
     }
 
     const nextState = definition.reduce({
-      state: structuredClone(state),
+      state: structuredClone(
+        shouldMaterializeControls ? normalizedState : state,
+      ),
       payload: command.payload,
     });
     if (nextState?.valid === false) {
       return nextState;
     }
 
-    const finalState = nextState === undefined ? state : nextState;
+    const finalState =
+      nextState === undefined
+        ? shouldMaterializeControls
+          ? normalizedState
+          : state
+        : nextState;
     const stateResult = validateState({
       state: finalState,
     });
