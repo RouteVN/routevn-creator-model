@@ -1748,6 +1748,7 @@ const validateLayoutElementData = ({
     "variableId",
     "$when",
     "click",
+    "rightClick",
     "change",
   ];
 
@@ -1881,6 +1882,10 @@ const validateLayoutElementData = ({
     return invalidFromErrorFactory(errorFactory, `${path}.click must be an object when provided`);
   }
 
+  if (data.rightClick !== undefined && !isPlainObject(data.rightClick)) {
+    return invalidFromErrorFactory(errorFactory, `${path}.rightClick must be an object when provided`);
+  }
+
   if (data.change !== undefined && !isPlainObject(data.change)) {
     return invalidFromErrorFactory(errorFactory, `${path}.change must be an object when provided`);
   }
@@ -1932,6 +1937,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "variableId",
           "$when",
           "click",
+          "rightClick",
           "change",
         ],
         path: itemPath,
