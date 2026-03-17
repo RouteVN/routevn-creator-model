@@ -55,4 +55,8 @@ export const createEmptyTestState = () => ({
     items: {},
     tree: [],
   },
+  controls: {
+    items: {},
+    tree: [],
+  },
 });

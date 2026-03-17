@@ -363,6 +363,71 @@ const createLayoutBaseState = () => {
   return state;
 };
 
+const createControlBaseState = () => {
+  const state = withTextStyleRefs(createEmptyTestState());
+
+  state.controls.items["control-default"] = {
+    id: "control-default",
+    type: "control",
+    name: "Default Control",
+    elements: {
+      items: {
+        "container-root": {
+          id: "container-root",
+          type: "container",
+          name: "Root",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+        "text-a": {
+          id: "text-a",
+          type: "text",
+          name: "Title",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          textStyleId: "text-style-ui",
+        },
+        "text-b": {
+          id: "text-b",
+          type: "text",
+          name: "Subtitle",
+          x: 0,
+          y: 20,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "World",
+          textStyleId: "text-style-ui",
+        },
+      },
+      tree: [
+        createTreeNode("container-root", [
+          createTreeNode("text-a"),
+          createTreeNode("text-b"),
+        ]),
+      ],
+    },
+  };
+  state.controls.tree = [createTreeNode("control-default")];
+
+  return state;
+};
+
 const createFolderedCommandCases = ({
   familyName,
   collectionKey,
@@ -1450,6 +1515,23 @@ const directCases = [
       name: "Dialogue Updated",
     },
   }),
+  ...createFolderedCommandCases({
+    familyName: "control",
+    collectionKey: "controls",
+    idField: "controlId",
+    idsField: "controlIds",
+    createData: {
+      type: "control",
+      name: "Default Control",
+      elements: {
+        items: {},
+        tree: [],
+      },
+    },
+    updateData: {
+      name: "Control Updated",
+    },
+  }),
   {
     type: "character.sprite.create",
     runPositive: () => {
@@ -1816,6 +1898,201 @@ const directCases = [
         }),
       ).toThrow(
         "payload.parentId must reference a folder or container layout element",
+      );
+    },
+  },
+  {
+    type: "control.element.create",
+    runPositive: () => {
+      const state = createControlBaseState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "control.element.create",
+          payload: {
+            controlId: "control-default",
+            elementId: "text-c",
+            parentId: "container-root",
+            data: {
+              type: "text",
+              name: "Body",
+              x: 0,
+              y: 40,
+              anchorX: 0,
+              anchorY: 0,
+              scaleX: 1,
+              scaleY: 1,
+              rotation: 0,
+              text: "More",
+              textStyleId: "text-style-ui",
+            },
+          },
+        },
+      });
+
+      expect(
+        result.state.controls.items["control-default"].elements.items["text-c"],
+      ).toEqual({
+        id: "text-c",
+        type: "text",
+        name: "Body",
+        x: 0,
+        y: 40,
+        anchorX: 0,
+        anchorY: 0,
+        scaleX: 1,
+        scaleY: 1,
+        rotation: 0,
+        text: "More",
+        textStyleId: "text-style-ui",
+      });
+    },
+    runNegative: () => {
+      const state = createControlBaseState();
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "control.element.create",
+            payload: {
+              controlId: "control-default",
+              elementId: "text-c",
+              parentId: "text-a",
+              data: {
+                type: "text",
+                name: "Body",
+                x: 0,
+                y: 40,
+                anchorX: 0,
+                anchorY: 0,
+                scaleX: 1,
+                scaleY: 1,
+                rotation: 0,
+                text: "More",
+                textStyleId: "text-style-ui",
+              },
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.parentId must reference a folder or container control element",
+      );
+    },
+  },
+  {
+    type: "control.element.update",
+    runPositive: () => {
+      const state = createControlBaseState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "control.element.update",
+          payload: {
+            controlId: "control-default",
+            elementId: "text-a",
+            data: {
+              opacity: 0.5,
+            },
+          },
+        },
+      });
+
+      expect(
+        result.state.controls.items["control-default"].elements.items["text-a"]
+          .opacity,
+      ).toBe(0.5);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "control.element.update",
+          payload: {
+            controlId: "control-default",
+            elementId: "text-a",
+            data: {
+              opacity: 2,
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.data.opacity must be a finite number between 0 and 1 when provided",
+      );
+    },
+  },
+  {
+    type: "control.element.delete",
+    runPositive: () => {
+      const state = createControlBaseState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "control.element.delete",
+          payload: {
+            controlId: "control-default",
+            elementIds: ["text-b"],
+          },
+        },
+      });
+
+      expect(
+        result.state.controls.items["control-default"].elements.items["text-b"],
+      ).toBeUndefined();
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "control.element.delete",
+          payload: {
+            controlId: "control-default",
+            elementIds: [],
+          },
+        }),
+      ).toThrow("payload.elementIds must be a non-empty array");
+    },
+  },
+  {
+    type: "control.element.move",
+    runPositive: () => {
+      const state = createControlBaseState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "control.element.move",
+          payload: {
+            controlId: "control-default",
+            elementId: "text-a",
+            parentId: "container-root",
+            position: "after",
+            positionTargetId: "text-b",
+          },
+        },
+      });
+
+      expect(
+        result.state.controls.items[
+          "control-default"
+        ].elements.tree[0].children.map((entry) => entry.id),
+      ).toEqual(["text-b", "text-a"]);
+    },
+    runNegative: () => {
+      const state = createControlBaseState();
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "control.element.move",
+            payload: {
+              controlId: "control-default",
+              elementId: "text-a",
+              parentId: "text-b",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.parentId must reference a folder or container control element",
       );
     },
   },

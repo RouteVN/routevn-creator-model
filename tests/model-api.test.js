@@ -118,12 +118,34 @@ test("validatePayload rejects duplicate line ids in line.create", () => {
   ).toThrow("payload.lines[1].lineId must be unique");
 });
 
-test("validatePayload accepts keyboard data in layout.update", () => {
-  expect(
+test("validatePayload rejects keyboard data in layout.update", () => {
+  expectValidation(() =>
     validatePayload({
       type: "layout.update",
       payload: {
-        layoutId: "layout-base",
+        layoutId: "layout-dialogue",
+        data: {
+          keyboard: {
+            enter: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow("payload.data.keyboard is not allowed");
+});
+
+test("validatePayload accepts keyboard data in control.update", () => {
+  expect(
+    validatePayload({
+      type: "control.update",
+      payload: {
+        controlId: "control-default",
         data: {
           keyboard: {
             enter: {
@@ -142,27 +164,26 @@ test("validatePayload accepts keyboard data in layout.update", () => {
   });
 });
 
-test("processCommand persists keyboard data on layouts", () => {
+test("processCommand persists keyboard data on controls", () => {
   const state = createEmptyTestState();
 
-  state.layouts.items["layout-base"] = {
-    id: "layout-base",
-    type: "layout",
-    name: "Base Layout",
-    layoutType: "base",
+  state.controls.items["control-default"] = {
+    id: "control-default",
+    type: "control",
+    name: "Default Control",
     elements: {
       items: {},
       tree: [],
     },
   };
-  state.layouts.tree = [{ id: "layout-base", children: [] }];
+  state.controls.tree = [{ id: "control-default", children: [] }];
 
   const result = processCommand({
     state,
     command: {
-      type: "layout.update",
+      type: "control.update",
       payload: {
-        layoutId: "layout-base",
+        controlId: "control-default",
         data: {
           keyboard: {
             enter: {
@@ -179,7 +200,7 @@ test("processCommand persists keyboard data on layouts", () => {
   });
 
   expect(result.valid).toBe(true);
-  expect(result.state.layouts.items["layout-base"].keyboard).toEqual({
+  expect(result.state.controls.items["control-default"].keyboard).toEqual({
     enter: {
       payload: {
         actions: {
@@ -189,6 +210,15 @@ test("processCommand persists keyboard data on layouts", () => {
     },
   });
   expect(validateState({ state: result.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts legacy state without controls collection", () => {
+  const state = createEmptyTestState();
+  delete state.controls;
+
+  expect(validateState({ state })).toEqual({
     valid: true,
   });
 });
@@ -622,6 +652,10 @@ test("registry exposes only fully implemented command types", () => {
     "layout.update",
     "layout.delete",
     "layout.move",
+    "control.create",
+    "control.update",
+    "control.delete",
+    "control.move",
     "character.sprite.create",
     "character.sprite.update",
     "character.sprite.delete",
@@ -629,6 +663,10 @@ test("registry exposes only fully implemented command types", () => {
     "layout.element.create",
     "layout.element.update",
     "layout.element.delete",
+    "control.element.create",
+    "control.element.update",
+    "control.element.delete",
+    "control.element.move",
     "layout.element.move",
   ]);
 });
