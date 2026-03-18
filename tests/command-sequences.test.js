@@ -153,6 +153,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
           parentId: "folder-prologue",
           data: {
             name: "Flashback",
+            description: "First playable memory",
             position: {
               x: 120,
               y: 80,
@@ -166,6 +167,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
           sceneId: "scene-flashback",
           data: {
             name: "Train Station",
+            description: "Arrival platform scene",
             position: {
               x: 320,
             },
@@ -196,6 +198,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
           id: "scene-flashback",
           type: "scene",
           name: "Flashback",
+          description: "First playable memory",
           position: {
             x: 120,
             y: 80,
@@ -230,6 +233,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
           id: "scene-flashback",
           type: "scene",
           name: "Train Station",
+          description: "Arrival platform scene",
           position: {
             x: 320,
             y: 80,
@@ -267,6 +271,7 @@ test("applies a story and scenes command sequence with intermediate state snapsh
           id: "scene-flashback",
           type: "scene",
           name: "Train Station",
+          description: "Arrival platform scene",
           position: {
             x: 320,
             y: 80,
