@@ -112,6 +112,7 @@ const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_ELEMENT_BASE_TYPES = [
   "folder",
   "container",
+  "rect",
   "sprite",
   "text",
   "text-revealing",
@@ -387,8 +388,8 @@ const validateSceneItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item?.type === "scene"
-            ? ["id", "type", "name", "position", "sections"]
-            : ["id", "type", "name", "position"],
+            ? ["id", "type", "name", "description", "position", "sections"]
+            : ["id", "type", "name", "description", "position"],
         path: itemPath,
         errorFactory,
       });
@@ -422,6 +423,13 @@ const validateSceneItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -2121,6 +2129,47 @@ const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
   }
 };
 
+const validateLayoutElementBorder = ({ border, path, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: border,
+      allowedKeys: ["color", "alpha", "width"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (border.color !== undefined && !isString(border.color)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.color must be a string when provided`,
+    );
+  }
+
+  if (
+    border.alpha !== undefined &&
+    (!isFiniteNumber(border.alpha) || border.alpha < 0 || border.alpha > 1)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.alpha must be a finite number between 0 and 1 when provided`,
+    );
+  }
+
+  if (
+    border.width !== undefined &&
+    (!isFiniteNumber(border.width) || border.width < 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.width must be a finite number greater than or equal to 0 when provided`,
+    );
+  }
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -2144,6 +2193,8 @@ const validateLayoutElementData = ({
     "scaleY",
     "rotation",
     "opacity",
+    "fill",
+    "border",
     "text",
     "style",
     "displaySpeed",
@@ -2273,6 +2324,13 @@ const validateLayoutElementData = ({
     }
   }
 
+  if (data.fill !== undefined && !isString(data.fill)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.fill must be a string when provided`,
+    );
+  }
+
   if (
     data.direction !== undefined &&
     data.direction !== "horizontal" &&
@@ -2306,6 +2364,26 @@ const validateLayoutElementData = ({
       const result = validateLayoutElementStyle({
         style: data.style,
         path: `${path}.style`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  if (data.border !== undefined) {
+    if (!isPlainObject(data.border)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.border must be an object when provided`,
+      );
+    }
+
+    {
+      const result = validateLayoutElementBorder({
+        border: data.border,
+        path: `${path}.border`,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -2357,6 +2435,8 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "scaleY",
           "rotation",
           "opacity",
+          "fill",
+          "border",
           "text",
           "style",
           "displaySpeed",
@@ -2630,7 +2710,6 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
           return result;
         }
       }
-
     }
   }
 };
@@ -4085,7 +4164,7 @@ const validateSceneCreateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "type", "position"],
+      allowedKeys: ["name", "description", "type", "position"],
       path: "payload.data",
       errorFactory,
     });
@@ -4098,6 +4177,13 @@ const validateSceneCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -4128,7 +4214,7 @@ const validateSceneUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "position"],
+      allowedKeys: ["name", "description", "position"],
       path: "payload.data",
       errorFactory,
     });
@@ -4138,9 +4224,10 @@ const validateSceneUpdateData = ({ data, errorFactory }) => {
   }
 
   const hasName = data.name !== undefined;
+  const hasDescription = data.description !== undefined;
   const hasPosition = data.position !== undefined;
 
-  if (!hasName && !hasPosition) {
+  if (!hasName && !hasDescription && !hasPosition) {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data must include at least one updatable field",
@@ -4151,6 +4238,13 @@ const validateSceneUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (hasDescription && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6055,7 +6149,6 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
         return result;
       }
     }
-
   }
 };
 
@@ -6095,7 +6188,6 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
       "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice' when provided",
     );
   }
-
 };
 
 const validateControlCreateData = ({ data, errorFactory }) => {
@@ -7326,6 +7418,10 @@ const COMMAND_DEFINITIONS = [
         name: payload.data.name,
       };
 
+      if (payload.data.description !== undefined) {
+        nextScene.description = payload.data.description;
+      }
+
       if (nextScene.type === "scene") {
         nextScene.sections = createEmptyNestedCollection();
       }
@@ -7393,6 +7489,10 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.data.name !== undefined) {
         nextScene.name = payload.data.name;
+      }
+
+      if (payload.data.description !== undefined) {
+        nextScene.description = payload.data.description;
       }
 
       if (payload.data.position !== undefined) {

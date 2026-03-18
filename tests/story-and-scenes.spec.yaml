@@ -33,7 +33,7 @@ in:
             name: Wake Up
             position:
               x: 100
-              'y': 200
+              "y": 200
             sections:
               items: {}
               tree: []
@@ -109,7 +109,7 @@ out:
           name: Wake Up
           position:
             x: 100
-            'y': 200
+            "y": 200
           sections:
             items: {}
             tree: []
@@ -325,9 +325,10 @@ in:
             id: scene-a
             type: scene
             name: Intro
+            description: Opening scene
             position:
               x: 120
-              'y': 80
+              "y": 80
             sections:
               items: {}
               tree: []
@@ -376,6 +377,7 @@ in:
         sceneId: scene-a
         data:
           name: Train Station
+          description: Station platform intro
           position:
             x: 320
 out:
@@ -389,9 +391,10 @@ out:
           id: scene-a
           type: scene
           name: Train Station
+          description: Station platform intro
           position:
             x: 320
-            'y': 80
+            "y": 80
           sections:
             items: {}
             tree: []
@@ -466,6 +469,23 @@ in:
       data:
         type: folder
 throws: payload.data.type is not allowed
+---
+case: scene.update accepts description-only patches
+in:
+  - type: scene.update
+    payload:
+      sceneId: scene-a
+      data:
+        description: Updated scene summary
+---
+case: scene.create accepts description
+in:
+  - type: scene.create
+    payload:
+      sceneId: scene-x
+      data:
+        name: Intro
+        description: Opening scene
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
