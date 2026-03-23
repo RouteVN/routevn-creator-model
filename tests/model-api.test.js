@@ -299,6 +299,27 @@ test("validatePayload accepts layout element rightClick interactions", () => {
   });
 });
 
+test("validatePayload accepts layout element textStyle overrides", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          textStyle: {
+            align: "center",
+            wordWrapWidth: 480,
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout elements with rightClick interactions", () => {
   const state = createEmptyTestState();
 
@@ -377,6 +398,203 @@ test("validateState accepts layout elements with rightClick interactions", () =>
   expect(validateState({ state })).toEqual({
     valid: true,
   });
+});
+
+test("validateState accepts layout elements with textStyle overrides", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-font-ui"] = {
+    id: "file-font-ui",
+    type: "font",
+    mimeType: "font/ttf",
+    size: 1,
+    sha256: "font-ui-sha256",
+  };
+  state.files.tree.push({
+    id: "file-font-ui",
+    children: [],
+  });
+
+  state.fonts.items["font-ui"] = {
+    id: "font-ui",
+    type: "font",
+    name: "UI Font",
+    fileId: "file-font-ui",
+    fontFamily: "Suit",
+  };
+  state.fonts.tree.push({
+    id: "font-ui",
+    children: [],
+  });
+
+  state.colors.items["color-ui"] = {
+    id: "color-ui",
+    type: "color",
+    name: "White",
+    hex: "#ffffff",
+  };
+  state.colors.tree.push({
+    id: "color-ui",
+    children: [],
+  });
+
+  state.textStyles.items["text-style-ui"] = {
+    id: "text-style-ui",
+    type: "textStyle",
+    name: "UI Text",
+    fontId: "font-ui",
+    colorId: "color-ui",
+    fontSize: 32,
+    lineHeight: 1.4,
+    fontWeight: "700",
+  };
+  state.textStyles.tree.push({
+    id: "text-style-ui",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          textStyleId: "text-style-ui",
+          textStyle: {
+            align: "center",
+            wordWrapWidth: 480,
+          },
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState rejects legacy layout element style overrides", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-font-ui"] = {
+    id: "file-font-ui",
+    type: "font",
+    mimeType: "font/ttf",
+    size: 1,
+    sha256: "font-ui-sha256",
+  };
+  state.files.tree.push({
+    id: "file-font-ui",
+    children: [],
+  });
+
+  state.fonts.items["font-ui"] = {
+    id: "font-ui",
+    type: "font",
+    name: "UI Font",
+    fileId: "file-font-ui",
+    fontFamily: "Suit",
+  };
+  state.fonts.tree.push({
+    id: "font-ui",
+    children: [],
+  });
+
+  state.colors.items["color-ui"] = {
+    id: "color-ui",
+    type: "color",
+    name: "White",
+    hex: "#ffffff",
+  };
+  state.colors.tree.push({
+    id: "color-ui",
+    children: [],
+  });
+
+  state.textStyles.items["text-style-ui"] = {
+    id: "text-style-ui",
+    type: "textStyle",
+    name: "UI Text",
+    fontId: "font-ui",
+    colorId: "color-ui",
+    fontSize: 32,
+    lineHeight: 1.4,
+    fontWeight: "700",
+  };
+  state.textStyles.tree.push({
+    id: "text-style-ui",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          textStyleId: "text-style-ui",
+          style: {
+            align: "center",
+          },
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "state.layouts.items.layout-ui.elements.items.text-1.style is not allowed",
+  );
 });
 
 test("validateState requires the files collection", () => {

@@ -2095,10 +2095,14 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
   }
 };
 
-const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
+const validateLayoutElementTextStyle = ({
+  textStyle,
+  path,
+  errorFactory,
+}) => {
   {
     const result = validateAllowedKeys({
-      value: style,
+      value: textStyle,
       allowedKeys: ["align", "wordWrapWidth"],
       path,
       errorFactory,
@@ -2109,8 +2113,8 @@ const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
   }
 
   if (
-    style.align !== undefined &&
-    !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(style.align)
+    textStyle.align !== undefined &&
+    !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(textStyle.align)
   ) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -2119,8 +2123,8 @@ const validateLayoutElementStyle = ({ style, path, errorFactory }) => {
   }
 
   if (
-    style.wordWrapWidth !== undefined &&
-    !isFiniteNumber(style.wordWrapWidth)
+    textStyle.wordWrapWidth !== undefined &&
+    !isFiniteNumber(textStyle.wordWrapWidth)
   ) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -2196,7 +2200,7 @@ const validateLayoutElementData = ({
     "fill",
     "border",
     "text",
-    "style",
+    "textStyle",
     "displaySpeed",
     "imageId",
     "hoverImageId",
@@ -2359,11 +2363,11 @@ const validateLayoutElementData = ({
     );
   }
 
-  if (data.style !== undefined) {
+  if (data.textStyle !== undefined) {
     {
-      const result = validateLayoutElementStyle({
-        style: data.style,
-        path: `${path}.style`,
+      const result = validateLayoutElementTextStyle({
+        textStyle: data.textStyle,
+        path: `${path}.textStyle`,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -2438,7 +2442,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "fill",
           "border",
           "text",
-          "style",
+          "textStyle",
           "displaySpeed",
           "imageId",
           "hoverImageId",
