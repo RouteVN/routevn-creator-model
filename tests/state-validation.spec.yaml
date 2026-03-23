@@ -992,3 +992,110 @@ in:
           - id: layout-dialogue
             children: []
 throws: state.layouts.items.layout-dialogue.elements.items.text-title.opacity must be a finite number between 0 and 1 when provided
+---
+case: validateState rejects legacy layout text style overrides
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items:
+          file-font-ui:
+            id: file-font-ui
+            type: font
+            mimeType: font/ttf
+            size: 1
+            sha256: file-font-ui-sha256
+        tree:
+          - id: file-font-ui
+            children: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items:
+          font-ui:
+            id: font-ui
+            type: font
+            name: UI Font
+            fileId: file-font-ui
+            fontFamily: Suit
+        tree:
+          - id: font-ui
+            children: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-ui:
+            id: color-ui
+            type: color
+            name: White
+            hex: '#ffffff'
+        tree:
+          - id: color-ui
+            children: []
+      textStyles:
+        items:
+          text-style-ui:
+            id: text-style-ui
+            type: textStyle
+            name: UI Style
+            fontId: font-ui
+            colorId: color-ui
+            fontSize: 32
+            lineHeight: 1.4
+            fontWeight: '700'
+        tree:
+          - id: text-style-ui
+            children: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          layout-dialogue:
+            id: layout-dialogue
+            type: layout
+            name: Dialogue
+            layoutType: dialogue
+            elements:
+              items:
+                text-title:
+                  id: text-title
+                  type: text
+                  name: Title
+                  x: 0
+                  'y': 0
+                  anchorX: 0
+                  anchorY: 0
+                  scaleX: 1
+                  scaleY: 1
+                  rotation: 0
+                  textStyleId: text-style-ui
+                  text: Hello
+                  style:
+                    align: center
+              tree:
+                - id: text-title
+        tree:
+          - id: layout-dialogue
+            children: []
+throws: state.layouts.items.layout-dialogue.elements.items.text-title.style is not allowed
