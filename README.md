@@ -85,6 +85,8 @@ Design rules:
   this package
 - `project` may start empty; fields like `resolution` are optional until the
   model starts owning them
+- random ids across RouteVN should use `nanoid` with the RouteVN base58 variant;
+  deterministic derived tokens such as partition hashes are a separate case
 
 ## File Structure
 

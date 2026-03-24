@@ -100,6 +100,16 @@ Do not:
 - The live state must contain domain data only.
 - Do not store model version in the state tree.
 
+## ID Rules
+
+- For random identifier generation, use `nanoid` only.
+- Use the RouteVN base58 variant for random ids.
+- Do not introduce ad hoc random id schemes such as timestamps, `Math.random()`,
+  UUID helpers, or custom alphabets unless there is an explicit documented
+  exception.
+- Deterministic derived identifiers are allowed when they are not random ids:
+  for example compact partition tokens derived from a scene id.
+
 ## Testing Rules
 
 Every supported command should have both:
