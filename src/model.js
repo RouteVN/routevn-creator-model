@@ -54,7 +54,7 @@ const normalizeStateCollections = (state) => {
 const isString = (value) => typeof value === "string";
 const isHexColor = (value) =>
   typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
-const LIVE_TWEEN_PROPERTY_KEYS = [
+const UPDATE_TWEEN_PROPERTY_KEYS = [
   "alpha",
   "x",
   "y",
@@ -62,7 +62,7 @@ const LIVE_TWEEN_PROPERTY_KEYS = [
   "scaleY",
   "rotation",
 ];
-const REPLACE_TWEEN_PROPERTY_KEYS = [
+const TRANSITION_TWEEN_PROPERTY_KEYS = [
   "translateX",
   "translateY",
   "alpha",
@@ -1325,14 +1325,14 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     );
   }
 
-  if (animation.type !== "live" && animation.type !== "replace") {
+  if (animation.type !== "update" && animation.type !== "transition") {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.type must be 'live' or 'replace'`,
+      `${path}.type must be 'update' or 'transition'`,
     );
   }
 
-  if (animation.type === "live") {
+  if (animation.type === "update") {
     if (
       animation.prev !== undefined ||
       animation.next !== undefined ||
@@ -1340,23 +1340,23 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     ) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${path}.live animations cannot define prev, next, or mask`,
+        `${path}.update animations cannot define prev, next, or mask`,
       );
     }
 
     if (animation.tween === undefined) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${path}.tween is required when ${path}.type is 'live'`,
+        `${path}.tween is required when ${path}.type is 'update'`,
       );
     }
 
     {
       const result = validateTweenDefinition({
         tween: animation.tween,
-        allowedProperties: LIVE_TWEEN_PROPERTY_KEYS,
+        allowedProperties: UPDATE_TWEEN_PROPERTY_KEYS,
         path: `${path}.tween`,
-        unsupportedMessage: "is not a supported live tween property",
+        unsupportedMessage: "is not a supported update tween property",
         errorFactory,
       });
       if (result?.valid === false) {
@@ -1370,7 +1370,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
   if (animation.tween !== undefined) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.replace animations cannot define tween`,
+      `${path}.transition animations cannot define tween`,
     );
   }
 
@@ -1381,7 +1381,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path} must define at least one of prev, next, or mask when ${path}.type is 'replace'`,
+      `${path} must define at least one of prev, next, or mask when ${path}.type is 'transition'`,
     );
   }
 
@@ -1405,9 +1405,9 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     {
       const result = validateTweenDefinition({
         tween: animation[side].tween,
-        allowedProperties: REPLACE_TWEEN_PROPERTY_KEYS,
+        allowedProperties: TRANSITION_TWEEN_PROPERTY_KEYS,
         path: `${path}.${side}.tween`,
-        unsupportedMessage: "is not a supported replace tween property",
+        unsupportedMessage: "is not a supported transition tween property",
         errorFactory,
       });
       if (result?.valid === false) {

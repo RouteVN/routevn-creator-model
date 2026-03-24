@@ -8,7 +8,7 @@ suites:
 suite: processCommand
 exportName: processCommand
 ---
-case: animation.create inserts a live animation before a sibling inside a folder
+case: animation.create inserts a update animation before a sibling inside a folder
 in:
   - state:
       project: {}
@@ -40,7 +40,7 @@ in:
             type: animation
             name: Fade Out
             animation:
-              type: live
+              type: update
               tween:
                 alpha:
                   initialValue: 1
@@ -86,7 +86,7 @@ in:
           type: animation
           name: Slide In
           animation:
-            type: live
+            type: update
             tween:
               x:
                 initialValue: 960
@@ -126,7 +126,7 @@ out:
           type: animation
           name: Fade Out
           animation:
-            type: live
+            type: update
             tween:
               alpha:
                 initialValue: 1
@@ -140,7 +140,7 @@ out:
           type: animation
           name: Slide In
           animation:
-            type: live
+            type: update
             tween:
               x:
                 initialValue: 960
@@ -178,7 +178,7 @@ out:
       items: {}
       tree: []
 ---
-case: animation.update replaces an existing animation with a replace mask definition
+case: animation.update replaces an existing animation with a transition mask definition
 in:
   - state:
       project: {}
@@ -206,7 +206,7 @@ in:
             type: animation
             name: Slide In
             animation:
-              type: live
+              type: update
               tween:
                 x:
                   initialValue: 960
@@ -246,7 +246,7 @@ in:
         data:
           name: Rule Dissolve
           animation:
-            type: replace
+            type: transition
             mask:
               kind: single
               texture: masks/spiral-07.png
@@ -285,7 +285,7 @@ out:
           type: animation
           name: Rule Dissolve
           animation:
-            type: replace
+            type: transition
             mask:
               kind: single
               texture: masks/spiral-07.png
@@ -354,7 +354,7 @@ in:
             type: animation
             name: Slide In
             animation:
-              type: live
+              type: update
               tween:
                 x:
                   initialValue: 960
@@ -432,7 +432,7 @@ out:
           type: animation
           name: Slide In
           animation:
-            type: live
+            type: update
             tween:
               x:
                 initialValue: 960
@@ -506,7 +506,7 @@ in:
             type: animation
             name: Slide In
             animation:
-              type: live
+              type: update
               tween:
                 x:
                   initialValue: 960
@@ -594,7 +594,7 @@ out:
 suite: validatePayload
 exportName: validatePayload
 ---
-case: animation.create rejects unsupported live tween properties
+case: animation.create rejects unsupported update tween properties
 in:
   - type: animation.create
     payload:
@@ -603,13 +603,13 @@ in:
         type: animation
         name: Shake
         animation:
-          type: live
+          type: update
           tween:
             skewX:
               keyframes:
                 - duration: 200
                   value: 10
-throws: payload.data.animation.tween.skewX is not a supported live tween property
+throws: payload.data.animation.tween.skewX is not a supported update tween property
 ---
 case: animation.update rejects unsupported easing values
 in:
@@ -618,7 +618,7 @@ in:
       animationId: animation-a
       data:
         animation:
-          type: live
+          type: update
           tween:
             x:
               initialValue: 10
@@ -688,7 +688,7 @@ in:
         animationId: folder-motion
         data:
           animation:
-            type: live
+            type: update
             tween:
               x:
                 keyframes:
@@ -724,7 +724,7 @@ in:
             type: animation
             name: Slide In
             animation:
-              type: live
+              type: update
               tween:
                 x:
                   keyframes:
@@ -735,7 +735,7 @@ in:
             type: animation
             name: Fade Out
             animation:
-              type: live
+              type: update
               tween:
                 alpha:
                   keyframes:

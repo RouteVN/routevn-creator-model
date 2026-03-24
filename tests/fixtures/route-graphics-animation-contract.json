@@ -32,7 +32,7 @@
     "easeOutElastic",
     "easeInOutElastic"
   ],
-  "liveTweenProperties": [
+  "updateTweenProperties": [
     "alpha",
     "x",
     "y",
@@ -40,7 +40,7 @@
     "scaleY",
     "rotation"
   ],
-  "replaceTweenProperties": [
+  "transitionTweenProperties": [
     "translateX",
     "translateY",
     "alpha",

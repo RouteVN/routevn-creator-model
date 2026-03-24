@@ -941,7 +941,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
             type: "animation",
             name: "Slide In",
             animation: {
-              type: "live",
+              type: "update",
               tween: {
                 x: {
                   initialValue: 960,
@@ -966,7 +966,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
           data: {
             name: "Push Left",
             animation: {
-              type: "replace",
+              type: "transition",
               prev: {
                 tween: {
                   translateX: {
@@ -1039,7 +1039,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
     type: "animation",
     name: "Slide In",
     animation: {
-      type: "live",
+      type: "update",
       tween: {
         x: {
           initialValue: 960,
@@ -1070,7 +1070,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
   const expected3 = cloneState(expected2);
   expected3.animations.items["animation-a"].name = "Push Left";
   expected3.animations.items["animation-a"].animation = {
-    type: "replace",
+    type: "transition",
     prev: {
       tween: {
         translateX: {
@@ -1120,7 +1120,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
       type: "animation",
       name: "Push Left",
       animation: {
-        type: "replace",
+        type: "transition",
         prev: {
           tween: {
             translateX: {
