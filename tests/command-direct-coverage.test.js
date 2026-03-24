@@ -1389,7 +1389,7 @@ const directCases = [
       type: "animation",
       name: "Animation",
       animation: {
-        type: "live",
+        type: "update",
         tween: {
           x: {
             keyframes: [{ duration: 100, value: 1 }],

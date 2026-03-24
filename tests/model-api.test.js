@@ -231,7 +231,7 @@ test("validatePayload rejects unsupported animation easing values", () => {
         animationId: "animation-a",
         data: {
           animation: {
-            type: "live",
+            type: "update",
             tween: {
               x: {
                 initialValue: 10,
@@ -253,7 +253,7 @@ test("validatePayload rejects unsupported animation easing values", () => {
   );
 });
 
-test("validatePayload rejects invalid replace mask textures", () => {
+test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
     validatePayload({
       type: "animation.update",
@@ -261,7 +261,7 @@ test("validatePayload rejects invalid replace mask textures", () => {
         animationId: "animation-a",
         data: {
           animation: {
-            type: "replace",
+            type: "transition",
             mask: {
               kind: "sequence",
               textures: ["mask-a", ""],

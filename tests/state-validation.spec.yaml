@@ -568,7 +568,7 @@ in:
             type: animation
             name: Fade
             animation:
-              type: live
+              type: update
               tween:
                 skewX: 1
         tree:
@@ -595,7 +595,7 @@ in:
       layouts:
         items: {}
         tree: []
-throws: state.animations.items.animation-a.animation.tween.skewX is not a supported live tween property
+throws: state.animations.items.animation-a.animation.tween.skewX is not a supported update tween property
 ---
 case: validateState rejects invalid font item shape
 in:

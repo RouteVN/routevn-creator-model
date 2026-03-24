@@ -9,7 +9,7 @@ const animationSchemaPath = new URL(
 );
 
 const contract = JSON.parse(await readFile(animationSchemaPath, "utf8"));
-const { easingKeys, liveTweenProperties, replaceTweenProperties } = contract;
+const { easingKeys, updateTweenProperties, transitionTweenProperties } = contract;
 
 test("animation easing support stays in sync with Route Graphics", () => {
   expect(easingKeys.length).toBeGreaterThan(0);
@@ -24,7 +24,7 @@ test("animation easing support stays in sync with Route Graphics", () => {
             type: "animation",
             name: "Anim",
             animation: {
-              type: "live",
+              type: "update",
               tween: {
                 x: {
                   keyframes: [
@@ -44,8 +44,8 @@ test("animation easing support stays in sync with Route Graphics", () => {
   }
 });
 
-test("animation live and replace tween properties stay in sync with Route Graphics", () => {
-  expect(liveTweenProperties).toEqual([
+test("animation update and transition tween properties stay in sync with Route Graphics", () => {
+  expect(updateTweenProperties).toEqual([
     "alpha",
     "x",
     "y",
@@ -54,7 +54,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
     "rotation",
   ]);
 
-  expect(replaceTweenProperties).toEqual([
+  expect(transitionTweenProperties).toEqual([
     "translateX",
     "translateY",
     "alpha",
@@ -63,7 +63,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
     "rotation",
   ]);
 
-  for (const propertyName of liveTweenProperties) {
+  for (const propertyName of updateTweenProperties) {
     expect(
       validatePayload({
         type: "animation.create",
@@ -73,7 +73,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
             type: "animation",
             name: "Anim",
             animation: {
-              type: "live",
+              type: "update",
               tween: {
                 [propertyName]: {
                   keyframes: [{ duration: 100, value: 1 }],
@@ -86,7 +86,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
     ).toEqual({ valid: true });
   }
 
-  for (const propertyName of replaceTweenProperties) {
+  for (const propertyName of transitionTweenProperties) {
     expect(
       validatePayload({
         type: "animation.create",
@@ -96,7 +96,7 @@ test("animation live and replace tween properties stay in sync with Route Graphi
             type: "animation",
             name: "Anim",
             animation: {
-              type: "replace",
+              type: "transition",
               prev: {
                 tween: {
                   [propertyName]: {
@@ -122,7 +122,7 @@ test("animation mask variants from Route Graphics remain accepted", () => {
           type: "animation",
           name: "Mask Sequence",
           animation: {
-            type: "replace",
+            type: "transition",
             mask: {
               kind: "sequence",
               textures: ["a", "b"],
@@ -142,7 +142,7 @@ test("animation mask variants from Route Graphics remain accepted", () => {
           type: "animation",
           name: "Mask Composite",
           animation: {
-            type: "replace",
+            type: "transition",
             mask: {
               kind: "composite",
               items: [{ texture: "a", channel: "alpha" }],
