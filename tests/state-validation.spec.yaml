@@ -711,7 +711,7 @@ in:
       layouts:
         items: {}
         tree: []
-throws: 'state.colors.items.color-a.hex must be a #RRGGBB string'
+throws: "state.colors.items.color-a.hex must be a #RRGGBB string"
 ---
 case: validateState rejects variable defaults that do not match the variable type
 in:
@@ -808,7 +808,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: '#ffffff'
+            hex: "#ffffff"
         tree:
           - id: color-ui
             children: []
@@ -822,7 +822,7 @@ in:
             colorId: color-ui
             fontSize: 32
             lineHeight: 1.4
-            fontWeight: '700'
+            fontWeight: "700"
         tree:
           - id: text-style-ui
             children: []
@@ -942,7 +942,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: '#ffffff'
+            hex: "#ffffff"
         tree:
           - id: color-ui
             children: []
@@ -956,7 +956,7 @@ in:
             colorId: color-ui
             fontSize: 32
             lineHeight: 1.4
-            fontWeight: '700'
+            fontWeight: "700"
         tree:
           - id: text-style-ui
             children: []
@@ -977,7 +977,7 @@ in:
                   type: text
                   name: Title
                   x: 0
-                  'y': 0
+                  "y": 0
                   anchorX: 0
                   anchorY: 0
                   scaleX: 1
@@ -992,6 +992,76 @@ in:
           - id: layout-dialogue
             children: []
 throws: state.layouts.items.layout-dialogue.elements.items.text-title.opacity must be a finite number between 0 and 1 when provided
+---
+case: validateState rejects invalid layout revealEffect values
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          layout-dialogue:
+            id: layout-dialogue
+            type: layout
+            name: Dialogue
+            layoutType: dialogue
+            elements:
+              items:
+                text-title:
+                  id: text-title
+                  type: text-revealing-ref-dialogue-content
+                  name: Title
+                  x: 0
+                  "y": 0
+                  anchorX: 0
+                  anchorY: 0
+                  scaleX: 1
+                  scaleY: 1
+                  rotation: 0
+                  revealEffect: sparkle
+              tree:
+                - id: text-title
+        tree:
+          - id: layout-dialogue
+            children: []
+throws: state.layouts.items.layout-dialogue.elements.items.text-title.revealEffect must be one of typewriter, softWipe, none when provided
 ---
 case: validateState rejects legacy layout text style overrides
 in:
@@ -1048,7 +1118,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: '#ffffff'
+            hex: "#ffffff"
         tree:
           - id: color-ui
             children: []
@@ -1062,7 +1132,7 @@ in:
             colorId: color-ui
             fontSize: 32
             lineHeight: 1.4
-            fontWeight: '700'
+            fontWeight: "700"
         tree:
           - id: text-style-ui
             children: []
@@ -1083,7 +1153,7 @@ in:
                   type: text
                   name: Title
                   x: 0
-                  'y': 0
+                  "y": 0
                   anchorX: 0
                   anchorY: 0
                   scaleX: 1
