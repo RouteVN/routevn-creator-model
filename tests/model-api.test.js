@@ -320,6 +320,24 @@ test("validatePayload accepts layout element textStyle overrides", () => {
   });
 });
 
+test("validatePayload accepts layout element revealEffect", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          revealEffect: "softWipe",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout elements with rightClick interactions", () => {
   const state = createEmptyTestState();
 
@@ -479,6 +497,50 @@ test("validateState accepts layout elements with textStyle overrides", () => {
             align: "center",
             wordWrapWidth: 480,
           },
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout elements with revealEffect", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "dialogue",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text-revealing-ref-dialogue-content",
+          name: "Dialogue",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          revealEffect: "softWipe",
         },
       },
       tree: [

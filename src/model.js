@@ -109,6 +109,7 @@ const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
 const LAYOUT_TYPE_KEYS = ["normal", "dialogue", "nvl", "choice"];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
+const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
 const LAYOUT_ELEMENT_BASE_TYPES = [
   "folder",
   "container",
@@ -2095,11 +2096,7 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
   }
 };
 
-const validateLayoutElementTextStyle = ({
-  textStyle,
-  path,
-  errorFactory,
-}) => {
+const validateLayoutElementTextStyle = ({ textStyle, path, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: textStyle,
@@ -2202,6 +2199,7 @@ const validateLayoutElementData = ({
     "text",
     "textStyle",
     "displaySpeed",
+    "revealEffect",
     "imageId",
     "hoverImageId",
     "clickImageId",
@@ -2314,6 +2312,7 @@ const validateLayoutElementData = ({
     "clickTextStyleId",
     "containerType",
     "variableId",
+    "revealEffect",
     "thumbImageId",
     "barImageId",
     "hoverThumbImageId",
@@ -2332,6 +2331,16 @@ const validateLayoutElementData = ({
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.fill must be a string when provided`,
+    );
+  }
+
+  if (
+    data.revealEffect !== undefined &&
+    !LAYOUT_TEXT_REVEAL_EFFECT_KEYS.includes(data.revealEffect)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.revealEffect must be one of ${LAYOUT_TEXT_REVEAL_EFFECT_KEYS.join(", ")} when provided`,
     );
   }
 
@@ -2444,6 +2453,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "text",
           "textStyle",
           "displaySpeed",
+          "revealEffect",
           "imageId",
           "hoverImageId",
           "clickImageId",
