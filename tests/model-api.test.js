@@ -3,6 +3,8 @@ import { expect, test } from "vitest";
 import {
   SCHEMA_VERSION,
   processCommand,
+  SYSTEM_VARIABLE_GROUPS,
+  SYSTEM_VARIABLE_IDS,
   validateAgainstState,
   validatePayload,
   validateState,
@@ -23,6 +25,14 @@ test("public api exports functions only", () => {
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
   expect(typeof processCommand).toBe("function");
+});
+
+test("system variable ids stay aligned with the registry", () => {
+  const registryIds = SYSTEM_VARIABLE_GROUPS.flatMap((group) =>
+    (group.variables || []).map((variable) => variable.id),
+  );
+
+  expect(SYSTEM_VARIABLE_IDS).toEqual(registryIds);
 });
 
 test("validation functions return valid results instead of throwing", () => {
@@ -546,6 +556,53 @@ test("validateState accepts layout elements with revealEffect", () => {
       tree: [
         {
           id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout slider variableId refs to system variables", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "slider-1": {
+          id: "slider-1",
+          type: "slider",
+          name: "Slider",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 20,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          min: 0,
+          max: 100,
+          step: 1,
+          variableId: "_dialogueTextSpeed",
+        },
+      },
+      tree: [
+        {
+          id: "slider-1",
           children: [],
         },
       ],

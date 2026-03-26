@@ -15,6 +15,7 @@ import {
   isPlainObject,
   removeTreeNode,
 } from "./helpers.js";
+import { isSystemVariableId } from "./systemVariables.js";
 
 const COLLECTION_KEYS = [
   "scenes",
@@ -219,6 +220,15 @@ const invalidInvariant = (message, details = {}) =>
     path: details.path,
     details,
   });
+
+const isVariableReferenceTarget = (state, variableId) => {
+  if (isSystemVariableId(variableId)) {
+    return true;
+  }
+
+  const variable = state.variables.items[variableId];
+  return isPlainObject(variable) && variable.type !== "folder";
+};
 
 const toDomainErrorDetails = (publicError) => {
   const details = isPlainObject(publicError?.details)
@@ -3899,8 +3909,7 @@ export const assertInvariants = ({ state }) => {
     elementId,
     targetId,
   }) => {
-    const variable = state.variables.items[targetId];
-    if (!isPlainObject(variable) || variable.type === "folder") {
+    if (!isVariableReferenceTarget(state, targetId)) {
       return invalidInvariant(
         `${ownerLabel} element variableId must reference an existing non-folder variable`,
         {
@@ -6511,8 +6520,7 @@ const validateVisualElementReferenceTargets = ({
   }
 
   if (data.variableId !== undefined) {
-    const variable = state.variables.items[data.variableId];
-    if (!isPlainObject(variable) || variable.type === "folder") {
+    if (!isVariableReferenceTarget(state, data.variableId)) {
       return invalidFromErrorFactory(
         errorFactory,
         `${ownerLabel} element variableId must reference an existing non-folder variable`,
