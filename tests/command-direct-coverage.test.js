@@ -72,7 +72,9 @@ const createCollectionState = ({
 };
 
 const withFontAndColorRefs = (state) => {
-  withFiles(state, [{ id: "file-font-ui", type: "font", mimeType: "font/ttf" }]);
+  withFiles(state, [
+    { id: "file-font-ui", type: "font", mimeType: "font/ttf" },
+  ]);
   state.fonts.items["font-ui"] = {
     id: "font-ui",
     type: "font",
@@ -1205,12 +1207,12 @@ const directCases = [
         state,
         command: {
           type: "file.create",
-        payload: {
-          fileId: "file-a",
-          data: {
-            mimeType: "image/png",
-            size: 128,
-            sha256: "file-a-sha256",
+          payload: {
+            fileId: "file-a",
+            data: {
+              mimeType: "image/png",
+              size: 128,
+              sha256: "file-a-sha256",
             },
           },
         },
@@ -1736,6 +1738,7 @@ const directCases = [
               rotation: 0,
               text: "More",
               textStyleId: "text-style-ui",
+              variableId: "_dialogueTextSpeed",
             },
           },
         },
@@ -1756,6 +1759,7 @@ const directCases = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
+        variableId: "_dialogueTextSpeed",
       });
     },
     runNegative: () => {
@@ -1803,7 +1807,7 @@ const directCases = [
             layoutId: "layout-dialogue",
             elementId: "text-a",
             data: {
-              opacity: 0.5,
+              variableId: "_dialogueTextSpeed",
             },
           },
         },
@@ -1811,8 +1815,8 @@ const directCases = [
 
       expect(
         result.state.layouts.items["layout-dialogue"].elements.items["text-a"]
-          .opacity,
-      ).toBe(0.5);
+          .variableId,
+      ).toBe("_dialogueTextSpeed");
     },
     runNegative: () => {
       expectValidation(() =>
@@ -1931,6 +1935,7 @@ const directCases = [
               rotation: 0,
               text: "More",
               textStyleId: "text-style-ui",
+              variableId: "_dialogueTextSpeed",
             },
           },
         },
@@ -1951,6 +1956,7 @@ const directCases = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
+        variableId: "_dialogueTextSpeed",
       });
     },
     runNegative: () => {
@@ -1998,7 +2004,7 @@ const directCases = [
             controlId: "control-default",
             elementId: "text-a",
             data: {
-              opacity: 0.5,
+              variableId: "_dialogueTextSpeed",
             },
           },
         },
@@ -2006,8 +2012,8 @@ const directCases = [
 
       expect(
         result.state.controls.items["control-default"].elements.items["text-a"]
-          .opacity,
-      ).toBe(0.5);
+          .variableId,
+      ).toBe("_dialogueTextSpeed");
     },
     runNegative: () => {
       expectValidation(() =>
