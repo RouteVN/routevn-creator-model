@@ -38,6 +38,7 @@ const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
 });
+
 const normalizeStateCollections = (state) => {
   if (!isPlainObject(state)) {
     return state;
@@ -108,7 +109,13 @@ const ANIMATION_EASING_KEYS = [
 ];
 const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
-const LAYOUT_TYPE_KEYS = ["normal", "dialogue", "nvl", "choice"];
+const LAYOUT_TYPE_KEYS = [
+  "normal",
+  "save-load",
+  "dialogue",
+  "nvl",
+  "choice",
+];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
 const LAYOUT_ELEMENT_BASE_TYPES = [
@@ -124,6 +131,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "text-ref-choice-item-content",
   "text-ref-dialogue-line-character-name",
   "text-ref-dialogue-line-content",
+  "fragment-ref",
   "container-ref-choice-item",
   "container-ref-dialogue-line",
 ];
@@ -2230,6 +2238,7 @@ const validateLayoutElementData = ({
     "step",
     "initialValue",
     "variableId",
+    "fragmentLayoutId",
     "$when",
     "click",
     "rightClick",
@@ -2322,6 +2331,7 @@ const validateLayoutElementData = ({
     "clickTextStyleId",
     "containerType",
     "variableId",
+    "fragmentLayoutId",
     "revealEffect",
     "thumbImageId",
     "barImageId",
@@ -2484,6 +2494,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "step",
           "initialValue",
           "variableId",
+          "fragmentLayoutId",
           "$when",
           "click",
           "rightClick",
@@ -2684,7 +2695,15 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name"]
-            : ["id", "type", "name", "layoutType", "elements"],
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "layoutType",
+                "isFragment",
+                "elements",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -2714,11 +2733,28 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       );
     }
 
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
     if (item.type === "layout") {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice'`,
+        );
+      }
+
+      if (
+        item.isFragment !== undefined &&
+        typeof item.isFragment !== "boolean"
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.isFragment must be a boolean when provided`,
         );
       }
 
@@ -3923,6 +3959,32 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertFragmentLayoutReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+  }) => {
+    const layout = state.layouts.items[targetId];
+    if (
+      !isPlainObject(layout) ||
+      layout.type !== "layout" ||
+      layout.isFragment !== true
+    ) {
+      return invalidInvariant(
+        `${ownerLabel} element fragmentLayoutId must reference an existing fragment layout`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          fragmentLayoutId: targetId,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertElementReferencesForCollection = ({
     items,
     ownerIdField,
@@ -3986,6 +4048,19 @@ export const assertInvariants = ({ state }) => {
             ownerLabel,
             elementId,
             targetId: element.variableId,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        if (element.fragmentLayoutId !== undefined) {
+          const result = assertFragmentLayoutReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.fragmentLayoutId,
           });
           if (!result.valid) {
             return result;
@@ -6136,7 +6211,14 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name"]
-          : ["type", "name", "layoutType", "elements"],
+          : [
+              "type",
+              "name",
+              "description",
+              "layoutType",
+              "isFragment",
+              "elements",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -6152,11 +6234,28 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (data.type === "layout") {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice'",
+      );
+    }
+
+    if (
+      data.isFragment !== undefined &&
+      typeof data.isFragment !== "boolean"
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.isFragment must be a boolean when provided",
       );
     }
 
@@ -6179,7 +6278,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "layoutType"],
+      allowedKeys: ["name", "description", "layoutType", "isFragment"],
       path: "payload.data",
       errorFactory,
     });
@@ -6202,13 +6301,30 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (
     data.layoutType !== undefined &&
     !LAYOUT_TYPE_KEYS.includes(data.layoutType)
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice' when provided",
+    );
+  }
+
+  if (
+    data.isFragment !== undefined &&
+    typeof data.isFragment !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.isFragment must be a boolean when provided",
     );
   }
 };
@@ -6528,6 +6644,25 @@ const validateVisualElementReferenceTargets = ({
           [ownerIdField]: ownerId,
           elementId,
           variableId: data.variableId,
+        },
+      );
+    }
+  }
+
+  if (data.fragmentLayoutId !== undefined) {
+    const fragmentLayout = state.layouts.items[data.fragmentLayoutId];
+    if (
+      !isPlainObject(fragmentLayout) ||
+      fragmentLayout.type !== "layout" ||
+      fragmentLayout.isFragment !== true
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element fragmentLayoutId must reference an existing fragment layout`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          fragmentLayoutId: data.fragmentLayoutId,
         },
       );
     }
@@ -11198,7 +11333,9 @@ const COMMAND_DEFINITIONS = [
       name: payload.data.name,
       ...(payload.data.type === "layout"
         ? {
+            description: payload.data.description,
             layoutType: payload.data.layoutType,
+            isFragment: payload.data.isFragment,
             elements: structuredClone(payload.data.elements),
           }
         : {}),

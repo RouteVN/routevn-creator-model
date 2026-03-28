@@ -174,6 +174,93 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
+test("validatePayload accepts save-load layout type", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-save-load",
+        data: {
+          type: "layout",
+          name: "Save/Load Layout",
+          layoutType: "save-load",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-save-load",
+        data: {
+          layoutType: "save-load",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts isFragment on layouts", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          type: "layout",
+          name: "Fragment Layout",
+          layoutType: "normal",
+          isFragment: true,
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          isFragment: true,
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          description: "Layout description",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("processCommand persists keyboard data on controls", () => {
   const state = createEmptyTestState();
 
@@ -340,6 +427,26 @@ test("validatePayload accepts layout element revealEffect", () => {
         replace: false,
         data: {
           revealEffect: "softWipe",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts layout element fragment references", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "fragment-1",
+        replace: false,
+        data: {
+          type: "fragment-ref",
+          name: "Fragment",
+          fragmentLayoutId: "layout-fragment",
         },
       },
     }),
@@ -561,6 +668,86 @@ test("validateState accepts layout elements with revealEffect", () => {
       ],
     },
   };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout elements with fragment references", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-fragment"] = {
+    id: "layout-fragment",
+    type: "layout",
+    name: "Fragment",
+    layoutType: "normal",
+    isFragment: true,
+    elements: {
+      items: {
+        "fragment-text": {
+          id: "fragment-text",
+          type: "text",
+          name: "Fragment Text",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 20,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "fragment-text",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "fragment-1": {
+          id: "fragment-1",
+          type: "fragment-ref",
+          name: "Fragment Ref",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          fragmentLayoutId: "layout-fragment",
+        },
+      },
+      tree: [
+        {
+          id: "fragment-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-fragment",
+    children: [],
+  });
   state.layouts.tree.push({
     id: "layout-ui",
     children: [],
