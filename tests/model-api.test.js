@@ -174,16 +174,16 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
-test("validatePayload accepts save-load layout type", () => {
+test("validatePayload accepts save and load layout types", () => {
   expect(
     validatePayload({
       type: "layout.create",
       payload: {
-        layoutId: "layout-save-load",
+        layoutId: "layout-save",
         data: {
           type: "layout",
-          name: "Save/Load Layout",
-          layoutType: "save-load",
+          name: "Save Layout",
+          layoutType: "save",
           elements: {
             items: {},
             tree: [],
@@ -199,9 +199,23 @@ test("validatePayload accepts save-load layout type", () => {
     validatePayload({
       type: "layout.update",
       payload: {
-        layoutId: "layout-save-load",
+        layoutId: "layout-save",
         data: {
-          layoutType: "save-load",
+          layoutType: "save",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-load",
+        data: {
+          layoutType: "load",
         },
       },
     }),

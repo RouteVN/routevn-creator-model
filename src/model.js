@@ -111,7 +111,8 @@ const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
 const LAYOUT_TYPE_KEYS = [
   "normal",
-  "save-load",
+  "save",
+  "load",
   "dialogue",
   "nvl",
   "choice",
@@ -2744,7 +2745,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice'`,
         );
       }
 
@@ -6245,7 +6246,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice'",
       );
     }
 
@@ -6314,7 +6315,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'save-load', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice' when provided",
     );
   }
 
