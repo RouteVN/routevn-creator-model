@@ -130,10 +130,13 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "text-ref-character-name",
   "text-revealing-ref-dialogue-content",
   "text-ref-choice-item-content",
+  "text-ref-save-load-slot-date",
   "text-ref-dialogue-line-character-name",
   "text-ref-dialogue-line-content",
+  "sprite-ref-save-load-slot-image",
   "fragment-ref",
   "container-ref-choice-item",
+  "container-ref-save-load-slot",
   "container-ref-dialogue-line",
 ];
 export const SCHEMA_VERSION = 2;
@@ -141,6 +144,7 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
   "container-ref-choice-item",
+  "container-ref-save-load-slot",
   "container-ref-dialogue-line",
 ];
 const DOMAIN_ERROR_KIND_BY_NAME = {
