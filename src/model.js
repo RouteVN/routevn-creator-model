@@ -243,6 +243,23 @@ const isVariableReferenceTarget = (state, variableId) => {
   return isPlainObject(variable) && variable.type !== "folder";
 };
 
+const LAYOUT_SPECIAL_CONDITION_ID_SET = new Set([
+  "__saveDataAvailable",
+  "__isLineCompleted",
+]);
+
+const isLayoutConditionVariableTarget = (state, variableId) => {
+  if (typeof variableId !== "string" || variableId.length === 0) {
+    return false;
+  }
+
+  if (LAYOUT_SPECIAL_CONDITION_ID_SET.has(variableId)) {
+    return true;
+  }
+
+  return isVariableReferenceTarget(state, variableId);
+};
+
 const toDomainErrorDetails = (publicError) => {
   const details = isPlainObject(publicError?.details)
     ? { ...publicError.details }
@@ -2229,10 +2246,14 @@ const validateLayoutElementData = ({
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
+    "conditionalTextStyles",
     "direction",
     "gap",
     "containerType",
     "scroll",
+    "inheritHoverToChildren",
+    "inheritClickToChildren",
+    "inheritRightClickToChildren",
     "anchorToBottom",
     "thumbImageId",
     "barImageId",
@@ -2244,6 +2265,9 @@ const validateLayoutElementData = ({
     "initialValue",
     "variableId",
     "fragmentLayoutId",
+    "paginationMode",
+    "paginationVariableId",
+    "paginationSize",
     "$when",
     "click",
     "rightClick",
@@ -2295,6 +2319,7 @@ const validateLayoutElementData = ({
     "min",
     "max",
     "step",
+    "paginationSize",
     "opacity",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
@@ -2337,6 +2362,8 @@ const validateLayoutElementData = ({
     "containerType",
     "variableId",
     "fragmentLayoutId",
+    "paginationMode",
+    "paginationVariableId",
     "revealEffect",
     "thumbImageId",
     "barImageId",
@@ -2349,6 +2376,71 @@ const validateLayoutElementData = ({
         errorFactory,
         `${path}.${key} must be a string when provided`,
       );
+    }
+  }
+
+  if (data.conditionalTextStyles !== undefined) {
+    if (!Array.isArray(data.conditionalTextStyles)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.conditionalTextStyles must be an array when provided`,
+      );
+    }
+
+    for (let index = 0; index < data.conditionalTextStyles.length; index += 1) {
+      const rule = data.conditionalTextStyles[index];
+      const rulePath = `${path}.conditionalTextStyles.${index}`;
+
+      if (!isPlainObject(rule)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath} must be an object`,
+        );
+      }
+
+      {
+        const result = validateAllowedKeys({
+          value: rule,
+          allowedKeys: ["variableId", "op", "value", "textStyleId"],
+          path: rulePath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(rule.variableId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.variableId must be a non-empty string`,
+        );
+      }
+
+      if (rule.op !== "eq") {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.op must be "eq"`,
+        );
+      }
+
+      if (!isNonEmptyString(rule.textStyleId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.textStyleId must be a non-empty string`,
+        );
+      }
+
+      if (
+        !isString(rule.value) &&
+        typeof rule.value !== "boolean" &&
+        !isFiniteNumber(rule.value)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.value must be a string, boolean, or finite number`,
+        );
+      }
     }
   }
 
@@ -2380,10 +2472,51 @@ const validateLayoutElementData = ({
     );
   }
 
+  if (
+    data.paginationMode !== undefined &&
+    data.paginationMode !== "continuous" &&
+    data.paginationMode !== "paginated"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.paginationMode must be 'continuous' or 'paginated' when provided`,
+    );
+  }
+
   if (data.scroll !== undefined && typeof data.scroll !== "boolean") {
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.scroll must be a boolean when provided`,
+    );
+  }
+
+  if (
+    data.inheritHoverToChildren !== undefined &&
+    typeof data.inheritHoverToChildren !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.inheritHoverToChildren must be a boolean when provided`,
+    );
+  }
+
+  if (
+    data.inheritClickToChildren !== undefined &&
+    typeof data.inheritClickToChildren !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.inheritClickToChildren must be a boolean when provided`,
+    );
+  }
+
+  if (
+    data.inheritRightClickToChildren !== undefined &&
+    typeof data.inheritRightClickToChildren !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.inheritRightClickToChildren must be a boolean when provided`,
     );
   }
 
@@ -2485,10 +2618,14 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
+          "conditionalTextStyles",
           "direction",
           "gap",
           "containerType",
           "scroll",
+          "inheritHoverToChildren",
+          "inheritClickToChildren",
+          "inheritRightClickToChildren",
           "anchorToBottom",
           "thumbImageId",
           "barImageId",
@@ -2500,6 +2637,9 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "initialValue",
           "variableId",
           "fragmentLayoutId",
+          "paginationMode",
+          "paginationVariableId",
+          "paginationSize",
           "$when",
           "click",
           "rightClick",
@@ -4042,6 +4182,45 @@ export const assertInvariants = ({ state }) => {
             });
             if (!result.valid) {
               return result;
+            }
+          }
+        }
+
+        if (Array.isArray(element.conditionalTextStyles)) {
+          for (
+            let index = 0;
+            index < element.conditionalTextStyles.length;
+            index += 1
+          ) {
+            const rule = element.conditionalTextStyles[index];
+
+            if (rule?.textStyleId !== undefined) {
+              const result = assertTextStyleReference({
+                ownerIdField,
+                ownerId,
+                ownerLabel,
+                elementId,
+                field: `conditionalTextStyles.${index}.textStyleId`,
+                targetId: rule.textStyleId,
+              });
+              if (!result.valid) {
+                return result;
+              }
+            }
+
+            if (
+              rule?.variableId !== undefined &&
+              !isLayoutConditionVariableTarget(state, rule.variableId)
+            ) {
+              return invalidInvariant(
+                `${ownerLabel} element conditionalTextStyles variableId must reference an existing variable or supported runtime condition`,
+                {
+                  [ownerIdField]: ownerId,
+                  elementId,
+                  field: `conditionalTextStyles.${index}.variableId`,
+                  targetId: rule.variableId,
+                },
+              );
             }
           }
         }
@@ -6254,10 +6433,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (
-      data.isFragment !== undefined &&
-      typeof data.isFragment !== "boolean"
-    ) {
+    if (data.isFragment !== undefined && typeof data.isFragment !== "boolean") {
       return invalidFromErrorFactory(
         errorFactory,
         "payload.data.isFragment must be a boolean when provided",
@@ -6323,10 +6499,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.isFragment !== undefined &&
-    typeof data.isFragment !== "boolean"
-  ) {
+  if (data.isFragment !== undefined && typeof data.isFragment !== "boolean") {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.isFragment must be a boolean when provided",
@@ -6637,6 +6810,39 @@ const validateVisualElementReferenceTargets = ({
           targetId: data.clickTextStyleId,
         },
       );
+    }
+  }
+
+  if (Array.isArray(data.conditionalTextStyles)) {
+    for (let index = 0; index < data.conditionalTextStyles.length; index += 1) {
+      const rule = data.conditionalTextStyles[index];
+      const textStyle = state.textStyles.items[rule.textStyleId];
+
+      if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element conditionalTextStyles.${index}.textStyleId must reference an existing non-folder text style`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `conditionalTextStyles.${index}.textStyleId`,
+            targetId: rule.textStyleId,
+          },
+        );
+      }
+
+      if (!isLayoutConditionVariableTarget(state, rule.variableId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element conditionalTextStyles.${index}.variableId must reference an existing variable or supported runtime condition`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `conditionalTextStyles.${index}.variableId`,
+            targetId: rule.variableId,
+          },
+        );
+      }
     }
   }
 
