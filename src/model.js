@@ -113,6 +113,7 @@ const LAYOUT_TYPE_KEYS = [
   "normal",
   "save",
   "load",
+  "confirmDialog",
   "dialogue",
   "nvl",
   "choice",
@@ -138,6 +139,8 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-choice-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-confirm-dialog-ok",
+  "container-ref-confirm-dialog-cancel",
 ];
 export const SCHEMA_VERSION = 2;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
@@ -146,6 +149,8 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "container-ref-choice-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-confirm-dialog-ok",
+  "container-ref-confirm-dialog-cancel",
 ];
 const DOMAIN_ERROR_KIND_BY_NAME = {
   PayloadValidationError: "payload",
@@ -246,6 +251,8 @@ const isVariableReferenceTarget = (state, variableId) => {
 const LAYOUT_SPECIAL_CONDITION_ID_SET = new Set([
   "__saveDataAvailable",
   "__isLineCompleted",
+  "__autoMode",
+  "__skipMode",
 ]);
 
 const isLayoutConditionVariableTarget = (state, variableId) => {
@@ -2889,7 +2896,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'`,
         );
       }
 
@@ -6429,7 +6436,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'",
       );
     }
 
@@ -6495,7 +6502,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'save', 'load', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice' when provided",
     );
   }
 

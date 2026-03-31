@@ -238,6 +238,20 @@ test("validatePayload accepts save and load layout types", () => {
   ).toEqual({
     valid: true,
   });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-confirm",
+        data: {
+          layoutType: "confirmDialog",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 });
 
 test("validatePayload accepts isFragment on layouts", () => {
@@ -477,6 +491,42 @@ test("validatePayload accepts layout element fragment references", () => {
           type: "fragment-ref",
           name: "Fragment",
           fragmentLayoutId: "layout-fragment",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts confirm dialog container refs", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "confirm-ok",
+        replace: false,
+        data: {
+          type: "container-ref-confirm-dialog-ok",
+          name: "Container (Confirm OK)",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "confirm-cancel",
+        replace: false,
+        data: {
+          type: "container-ref-confirm-dialog-cancel",
+          name: "Container (Confirm Cancel)",
         },
       },
     }),
@@ -933,6 +983,18 @@ test("validateState accepts conditional text styles on layout elements", () => {
             },
             {
               variableId: "__isLineCompleted",
+              op: "eq",
+              value: true,
+              textStyleId: "text-style-alert",
+            },
+            {
+              variableId: "__autoMode",
+              op: "eq",
+              value: false,
+              textStyleId: "text-style-alert",
+            },
+            {
+              variableId: "__skipMode",
               op: "eq",
               value: true,
               textStyleId: "text-style-alert",
