@@ -190,16 +190,16 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
-test("validatePayload accepts save and load layout types", () => {
+test("validatePayload accepts save-load layout type", () => {
   expect(
     validatePayload({
       type: "layout.create",
       payload: {
-        layoutId: "layout-save",
+        layoutId: "layout-save-load",
         data: {
           type: "layout",
-          name: "Save Layout",
-          layoutType: "save",
+          name: "Save Load Layout",
+          layoutType: "save-load",
           elements: {
             items: {},
             tree: [],
@@ -215,23 +215,9 @@ test("validatePayload accepts save and load layout types", () => {
     validatePayload({
       type: "layout.update",
       payload: {
-        layoutId: "layout-save",
+        layoutId: "layout-save-load",
         data: {
-          layoutType: "save",
-        },
-      },
-    }),
-  ).toEqual({
-    valid: true,
-  });
-
-  expect(
-    validatePayload({
-      type: "layout.update",
-      payload: {
-        layoutId: "layout-load",
-        data: {
-          layoutType: "load",
+          layoutType: "save-load",
         },
       },
     }),
@@ -976,25 +962,25 @@ test("validateState accepts conditional text styles on layout elements", () => {
           textStyleId: "text-style-ui",
           conditionalTextStyles: [
             {
-              variableId: "_currentSaveLoadPagination",
+              target: "variables._currentSaveLoadPagination",
               op: "eq",
               value: 1,
               textStyleId: "text-style-alert",
             },
             {
-              variableId: "__isLineCompleted",
+              target: "isLineCompleted",
               op: "eq",
               value: true,
               textStyleId: "text-style-alert",
             },
             {
-              variableId: "__autoMode",
+              target: "autoMode",
               op: "eq",
               value: false,
               textStyleId: "text-style-alert",
             },
             {
-              variableId: "__skipMode",
+              target: "skipMode",
               op: "eq",
               value: true,
               textStyleId: "text-style-alert",
@@ -1043,9 +1029,15 @@ test("validateState accepts container child interaction inheritance flags", () =
           scaleX: 1,
           scaleY: 1,
           rotation: 0,
-          inheritHoverToChildren: true,
-          inheritClickToChildren: true,
-          inheritRightClickToChildren: true,
+          hover: {
+            inheritToChildren: true,
+          },
+          click: {
+            inheritToChildren: true,
+          },
+          rightClick: {
+            inheritToChildren: true,
+          },
         },
       },
       tree: [

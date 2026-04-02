@@ -111,8 +111,7 @@ const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
 const LAYOUT_TYPE_KEYS = [
   "normal",
-  "save",
-  "load",
+  "save-load",
   "confirmDialog",
   "dialogue",
   "nvl",
@@ -248,23 +247,79 @@ const isVariableReferenceTarget = (state, variableId) => {
   return isPlainObject(variable) && variable.type !== "folder";
 };
 
-const LAYOUT_SPECIAL_CONDITION_ID_SET = new Set([
-  "__saveDataAvailable",
-  "__isLineCompleted",
-  "__autoMode",
-  "__skipMode",
+const LAYOUT_CONDITION_TARGET_SET = new Set([
+  "item.savedAt",
+  "isLineCompleted",
+  "autoMode",
+  "skipMode",
 ]);
+const VARIABLE_TARGET_DOT_PATTERN = /^variables\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
+const VARIABLE_TARGET_BRACKET_PATTERN = /^variables\[(.+)\]$/;
 
-const isLayoutConditionVariableTarget = (state, variableId) => {
-  if (typeof variableId !== "string" || variableId.length === 0) {
+const parseLayoutConditionTarget = (target) => {
+  if (!isNonEmptyString(target)) {
+    return undefined;
+  }
+
+  if (LAYOUT_CONDITION_TARGET_SET.has(target)) {
+    return {
+      kind: "runtime",
+      target,
+    };
+  }
+
+  const dotMatch = target.match(VARIABLE_TARGET_DOT_PATTERN);
+  if (dotMatch) {
+    return {
+      kind: "variable",
+      target,
+      variableId: dotMatch[1],
+    };
+  }
+
+  const bracketMatch = target.match(VARIABLE_TARGET_BRACKET_PATTERN);
+  if (!bracketMatch) {
+    return undefined;
+  }
+
+  const rawValue = bracketMatch[1].trim();
+
+  try {
+    const variableId = JSON.parse(rawValue);
+    if (isNonEmptyString(variableId)) {
+      return {
+        kind: "variable",
+        target,
+        variableId,
+      };
+    }
+  } catch {}
+
+  if (rawValue.startsWith("'") && rawValue.endsWith("'")) {
+    const variableId = rawValue.slice(1, -1);
+    if (isNonEmptyString(variableId)) {
+      return {
+        kind: "variable",
+        target,
+        variableId,
+      };
+    }
+  }
+
+  return undefined;
+};
+
+const isLayoutConditionTarget = (state, target) => {
+  const parsedTarget = parseLayoutConditionTarget(target);
+  if (!parsedTarget) {
     return false;
   }
 
-  if (LAYOUT_SPECIAL_CONDITION_ID_SET.has(variableId)) {
+  if (parsedTarget.kind === "runtime") {
     return true;
   }
 
-  return isVariableReferenceTarget(state, variableId);
+  return isVariableReferenceTarget(state, parsedTarget.variableId);
 };
 
 const toDomainErrorDetails = (publicError) => {
@@ -2218,6 +2273,29 @@ const validateLayoutElementBorder = ({ border, path, errorFactory }) => {
   }
 };
 
+const validateLayoutElementInteraction = ({
+  interaction,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(interaction)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  if (
+    interaction.inheritToChildren !== undefined &&
+    typeof interaction.inheritToChildren !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.inheritToChildren must be a boolean when provided`,
+    );
+  }
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -2258,9 +2336,9 @@ const validateLayoutElementData = ({
     "gap",
     "containerType",
     "scroll",
-    "inheritHoverToChildren",
-    "inheritClickToChildren",
-    "inheritRightClickToChildren",
+    "hover",
+    "click",
+    "rightClick",
     "anchorToBottom",
     "thumbImageId",
     "barImageId",
@@ -2276,8 +2354,6 @@ const validateLayoutElementData = ({
     "paginationVariableId",
     "paginationSize",
     "$when",
-    "click",
-    "rightClick",
     "change",
   ];
 
@@ -2408,7 +2484,7 @@ const validateLayoutElementData = ({
       {
         const result = validateAllowedKeys({
           value: rule,
-          allowedKeys: ["variableId", "op", "value", "textStyleId"],
+          allowedKeys: ["target", "op", "value", "textStyleId"],
           path: rulePath,
           errorFactory,
         });
@@ -2417,10 +2493,17 @@ const validateLayoutElementData = ({
         }
       }
 
-      if (!isNonEmptyString(rule.variableId)) {
+      if (!isNonEmptyString(rule.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${rulePath}.variableId must be a non-empty string`,
+          `${rulePath}.target must be a non-empty string`,
+        );
+      }
+
+      if (!parseLayoutConditionTarget(rule.target)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.target must be a supported layout condition target`,
         );
       }
 
@@ -2497,34 +2580,43 @@ const validateLayoutElementData = ({
     );
   }
 
-  if (
-    data.inheritHoverToChildren !== undefined &&
-    typeof data.inheritHoverToChildren !== "boolean"
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.inheritHoverToChildren must be a boolean when provided`,
-    );
+  if (data.hover !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.hover,
+        path: `${path}.hover`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
-  if (
-    data.inheritClickToChildren !== undefined &&
-    typeof data.inheritClickToChildren !== "boolean"
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.inheritClickToChildren must be a boolean when provided`,
-    );
+  if (data.click !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.click,
+        path: `${path}.click`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
-  if (
-    data.inheritRightClickToChildren !== undefined &&
-    typeof data.inheritRightClickToChildren !== "boolean"
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.inheritRightClickToChildren must be a boolean when provided`,
-    );
+  if (data.rightClick !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.rightClick,
+        path: `${path}.rightClick`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (
@@ -2568,20 +2660,6 @@ const validateLayoutElementData = ({
         return result;
       }
     }
-  }
-
-  if (data.click !== undefined && !isPlainObject(data.click)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.click must be an object when provided`,
-    );
-  }
-
-  if (data.rightClick !== undefined && !isPlainObject(data.rightClick)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.rightClick must be an object when provided`,
-    );
   }
 
   if (data.change !== undefined && !isPlainObject(data.change)) {
@@ -2630,9 +2708,9 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "gap",
           "containerType",
           "scroll",
-          "inheritHoverToChildren",
-          "inheritClickToChildren",
-          "inheritRightClickToChildren",
+          "hover",
+          "click",
+          "rightClick",
           "anchorToBottom",
           "thumbImageId",
           "barImageId",
@@ -2648,8 +2726,6 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "paginationVariableId",
           "paginationSize",
           "$when",
-          "click",
-          "rightClick",
           "change",
         ],
         path: itemPath,
@@ -2896,7 +2972,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'`,
         );
       }
 
@@ -4216,16 +4292,16 @@ export const assertInvariants = ({ state }) => {
             }
 
             if (
-              rule?.variableId !== undefined &&
-              !isLayoutConditionVariableTarget(state, rule.variableId)
+              rule?.target !== undefined &&
+              !isLayoutConditionTarget(state, rule.target)
             ) {
               return invalidInvariant(
-                `${ownerLabel} element conditionalTextStyles variableId must reference an existing variable or supported runtime condition`,
+                `${ownerLabel} element conditionalTextStyles target must reference an existing variable or supported runtime condition`,
                 {
                   [ownerIdField]: ownerId,
                   elementId,
-                  field: `conditionalTextStyles.${index}.variableId`,
-                  targetId: rule.variableId,
+                  field: `conditionalTextStyles.${index}.target`,
+                  targetId: rule.target,
                 },
               );
             }
@@ -6436,7 +6512,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'",
       );
     }
 
@@ -6502,7 +6578,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'save', 'load', 'confirmDialog', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice' when provided",
     );
   }
 
@@ -6838,15 +6914,15 @@ const validateVisualElementReferenceTargets = ({
         );
       }
 
-      if (!isLayoutConditionVariableTarget(state, rule.variableId)) {
+      if (!isLayoutConditionTarget(state, rule.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${ownerLabel} element conditionalTextStyles.${index}.variableId must reference an existing variable or supported runtime condition`,
+          `${ownerLabel} element conditionalTextStyles.${index}.target must reference an existing variable or supported runtime condition`,
           {
             [ownerIdField]: ownerId,
             elementId,
-            field: `conditionalTextStyles.${index}.variableId`,
-            targetId: rule.variableId,
+            field: `conditionalTextStyles.${index}.target`,
+            targetId: rule.target,
           },
         );
       }
