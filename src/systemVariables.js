@@ -21,6 +21,15 @@ export const SYSTEM_VARIABLE_GROUPS = Object.freeze([
         description:
           "Controls the default dialogue text speed stored for this device.",
       },
+      {
+        id: "_currentSaveLoadPagination",
+        name: "Current Save/Load Pagination",
+        scope: "runtime-screen",
+        type: "number",
+        default: 0,
+        description:
+          "The current save/load pagination index. Resolves to 0, 1, 2, 3, and so on for the active save/load page.",
+      },
     ]),
   },
 ]);

@@ -35,6 +35,22 @@ test("system variable ids stay aligned with the registry", () => {
   expect(SYSTEM_VARIABLE_IDS).toEqual(registryIds);
 });
 
+test("system variable registry includes current save/load pagination", () => {
+  const variable = SYSTEM_VARIABLE_GROUPS.flatMap(
+    (group) => group.variables || [],
+  ).find((item) => item.id === "_currentSaveLoadPagination");
+
+  expect(variable).toEqual({
+    id: "_currentSaveLoadPagination",
+    name: "Current Save/Load Pagination",
+    scope: "runtime-screen",
+    type: "number",
+    default: 0,
+    description:
+      "The current save/load pagination index. Resolves to 0, 1, 2, 3, and so on for the active save/load page.",
+  });
+});
+
 test("validation functions return valid results instead of throwing", () => {
   expect(
     validatePayload({
@@ -166,6 +182,107 @@ test("validatePayload accepts keyboard data in control.update", () => {
               },
             },
           },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts save-load layout type", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-save-load",
+        data: {
+          type: "layout",
+          name: "Save Load Layout",
+          layoutType: "save-load",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-save-load",
+        data: {
+          layoutType: "save-load",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-confirm",
+        data: {
+          layoutType: "confirmDialog",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts isFragment on layouts", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          type: "layout",
+          name: "Fragment Layout",
+          layoutType: "normal",
+          isFragment: true,
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          isFragment: true,
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-normal",
+        data: {
+          description: "Layout description",
         },
       },
     }),
@@ -340,6 +457,62 @@ test("validatePayload accepts layout element revealEffect", () => {
         replace: false,
         data: {
           revealEffect: "softWipe",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts layout element fragment references", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "fragment-1",
+        replace: false,
+        data: {
+          type: "fragment-ref",
+          name: "Fragment",
+          fragmentLayoutId: "layout-fragment",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts confirm dialog container refs", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "confirm-ok",
+        replace: false,
+        data: {
+          type: "container-ref-confirm-dialog-ok",
+          name: "Container (Confirm OK)",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "confirm-cancel",
+        replace: false,
+        data: {
+          type: "container-ref-confirm-dialog-cancel",
+          name: "Container (Confirm Cancel)",
         },
       },
     }),
@@ -571,6 +744,86 @@ test("validateState accepts layout elements with revealEffect", () => {
   });
 });
 
+test("validateState accepts layout elements with fragment references", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-fragment"] = {
+    id: "layout-fragment",
+    type: "layout",
+    name: "Fragment",
+    layoutType: "normal",
+    isFragment: true,
+    elements: {
+      items: {
+        "fragment-text": {
+          id: "fragment-text",
+          type: "text",
+          name: "Fragment Text",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 20,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "fragment-text",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "fragment-1": {
+          id: "fragment-1",
+          type: "fragment-ref",
+          name: "Fragment Ref",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          fragmentLayoutId: "layout-fragment",
+        },
+      },
+      tree: [
+        {
+          id: "fragment-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-fragment",
+    children: [],
+  });
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout slider variableId refs to system variables", () => {
   const state = createEmptyTestState();
 
@@ -603,6 +856,283 @@ test("validateState accepts layout slider variableId refs to system variables", 
       tree: [
         {
           id: "slider-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts conditional text styles on layout elements", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-image-a"] = {
+    id: "file-image-a",
+    type: "image",
+    mimeType: "image/png",
+    size: 1,
+    sha256: "image-a-sha256",
+  };
+  state.files.items["file-image-a-thumb"] = {
+    id: "file-image-a-thumb",
+    type: "image",
+    mimeType: "image/png",
+    size: 1,
+    sha256: "image-a-thumb-sha256",
+  };
+  state.files.tree.push({
+    id: "file-image-a",
+    children: [],
+  });
+  state.files.tree.push({
+    id: "file-image-a-thumb",
+    children: [],
+  });
+
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-image-a",
+    thumbnailFileId: "file-image-a-thumb",
+  };
+  state.images.tree.push({
+    id: "image-a",
+    children: [],
+  });
+
+  state.files.items["file-font-ui"] = {
+    id: "file-font-ui",
+    type: "font",
+    mimeType: "font/ttf",
+    size: 1,
+    sha256: "font-ui-sha256",
+  };
+  state.files.tree.push({
+    id: "file-font-ui",
+    children: [],
+  });
+
+  state.fonts.items["font-ui"] = {
+    id: "font-ui",
+    type: "font",
+    name: "UI Font",
+    fileId: "file-font-ui",
+    fontFamily: "Suit",
+  };
+  state.fonts.tree.push({
+    id: "font-ui",
+    children: [],
+  });
+
+  state.colors.items["color-ui"] = {
+    id: "color-ui",
+    type: "color",
+    name: "White",
+    hex: "#ffffff",
+  };
+  state.colors.tree.push({
+    id: "color-ui",
+    children: [],
+  });
+
+  state.textStyles.items["text-style-ui"] = {
+    id: "text-style-ui",
+    type: "textStyle",
+    name: "UI Text",
+    fontId: "font-ui",
+    colorId: "color-ui",
+    fontSize: 32,
+    lineHeight: 1.4,
+    fontWeight: "700",
+  };
+  state.textStyles.items["text-style-alert"] = {
+    id: "text-style-alert",
+    type: "textStyle",
+    name: "Alert Text",
+    fontId: "font-ui",
+    colorId: "color-ui",
+    fontSize: 32,
+    lineHeight: 1.4,
+    fontWeight: "700",
+  };
+  state.textStyles.tree.push({
+    id: "text-style-ui",
+    children: [],
+  });
+  state.textStyles.tree.push({
+    id: "text-style-alert",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          textStyleId: "text-style-ui",
+          conditionalOverrides: [
+            {
+              when: {
+                target: "variables._currentSaveLoadPagination",
+                op: "eq",
+                value: 1,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+                hoverTextStyleId: "text-style-alert",
+                clickTextStyleId: "text-style-alert",
+                opacity: 0.5,
+                anchorX: 0.5,
+                anchorY: 1,
+                visible: false,
+                textStyle: {
+                  align: "center",
+                },
+              },
+            },
+            {
+              when: {
+                target: "isLineCompleted",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
+            },
+            {
+              when: {
+                target: "autoMode",
+                op: "eq",
+                value: false,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
+            },
+            {
+              when: {
+                target: "skipMode",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
+            },
+          ],
+        },
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Portrait",
+          x: 0,
+          y: 0,
+          width: 256,
+          height: 256,
+          imageId: "image-a",
+          conditionalOverrides: [
+            {
+              when: {
+                target: "autoMode",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                imageId: "image-a",
+                hoverImageId: "image-a",
+                clickImageId: "image-a",
+                opacity: 0.25,
+                visible: false,
+              },
+            },
+          ],
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+        {
+          id: "sprite-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts container child interaction inheritance flags", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "container-1": {
+          id: "container-1",
+          type: "container",
+          name: "Container",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          hover: {
+            inheritToChildren: true,
+          },
+          click: {
+            inheritToChildren: true,
+          },
+          rightClick: {
+            inheritToChildren: true,
+          },
+        },
+      },
+      tree: [
+        {
+          id: "container-1",
           children: [],
         },
       ],

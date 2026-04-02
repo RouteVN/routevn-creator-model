@@ -38,6 +38,7 @@ const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
 });
+
 const normalizeStateCollections = (state) => {
   if (!isPlainObject(state)) {
     return state;
@@ -108,7 +109,14 @@ const ANIMATION_EASING_KEYS = [
 ];
 const VARIABLE_SCOPE_KEYS = ["context", "global-device", "global-account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
-const LAYOUT_TYPE_KEYS = ["normal", "dialogue", "nvl", "choice"];
+const LAYOUT_TYPE_KEYS = [
+  "normal",
+  "save-load",
+  "confirmDialog",
+  "dialogue",
+  "nvl",
+  "choice",
+];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
 const LAYOUT_ELEMENT_BASE_TYPES = [
@@ -122,17 +130,26 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "text-ref-character-name",
   "text-revealing-ref-dialogue-content",
   "text-ref-choice-item-content",
+  "text-ref-save-load-slot-date",
   "text-ref-dialogue-line-character-name",
   "text-ref-dialogue-line-content",
+  "sprite-ref-save-load-slot-image",
+  "fragment-ref",
   "container-ref-choice-item",
+  "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-confirm-dialog-ok",
+  "container-ref-confirm-dialog-cancel",
 ];
 export const SCHEMA_VERSION = 2;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
   "container-ref-choice-item",
+  "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-confirm-dialog-ok",
+  "container-ref-confirm-dialog-cancel",
 ];
 const DOMAIN_ERROR_KIND_BY_NAME = {
   PayloadValidationError: "payload",
@@ -228,6 +245,81 @@ const isVariableReferenceTarget = (state, variableId) => {
 
   const variable = state.variables.items[variableId];
   return isPlainObject(variable) && variable.type !== "folder";
+};
+
+const LAYOUT_CONDITION_TARGET_SET = new Set([
+  "item.savedAt",
+  "isLineCompleted",
+  "autoMode",
+  "skipMode",
+]);
+const VARIABLE_TARGET_DOT_PATTERN = /^variables\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
+const VARIABLE_TARGET_BRACKET_PATTERN = /^variables\[(.+)\]$/;
+
+const parseLayoutConditionTarget = (target) => {
+  if (!isNonEmptyString(target)) {
+    return undefined;
+  }
+
+  if (LAYOUT_CONDITION_TARGET_SET.has(target)) {
+    return {
+      kind: "runtime",
+      target,
+    };
+  }
+
+  const dotMatch = target.match(VARIABLE_TARGET_DOT_PATTERN);
+  if (dotMatch) {
+    return {
+      kind: "variable",
+      target,
+      variableId: dotMatch[1],
+    };
+  }
+
+  const bracketMatch = target.match(VARIABLE_TARGET_BRACKET_PATTERN);
+  if (!bracketMatch) {
+    return undefined;
+  }
+
+  const rawValue = bracketMatch[1].trim();
+
+  try {
+    const variableId = JSON.parse(rawValue);
+    if (isNonEmptyString(variableId)) {
+      return {
+        kind: "variable",
+        target,
+        variableId,
+      };
+    }
+  } catch {}
+
+  if (rawValue.startsWith("'") && rawValue.endsWith("'")) {
+    const variableId = rawValue.slice(1, -1);
+    if (isNonEmptyString(variableId)) {
+      return {
+        kind: "variable",
+        target,
+        variableId,
+      };
+    }
+  }
+
+  return undefined;
+};
+
+const isLayoutConditionTarget = (state, target) => {
+  const parsedTarget = parseLayoutConditionTarget(target);
+  if (!parsedTarget) {
+    return false;
+  }
+
+  if (parsedTarget.kind === "runtime") {
+    return true;
+  }
+
+  return isVariableReferenceTarget(state, parsedTarget.variableId);
 };
 
 const toDomainErrorDetails = (publicError) => {
@@ -2181,6 +2273,29 @@ const validateLayoutElementBorder = ({ border, path, errorFactory }) => {
   }
 };
 
+const validateLayoutElementInteraction = ({
+  interaction,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(interaction)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  if (
+    interaction.inheritToChildren !== undefined &&
+    typeof interaction.inheritToChildren !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.inheritToChildren must be a boolean when provided`,
+    );
+  }
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -2216,10 +2331,14 @@ const validateLayoutElementData = ({
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
+    "conditionalOverrides",
     "direction",
     "gap",
     "containerType",
     "scroll",
+    "hover",
+    "click",
+    "rightClick",
     "anchorToBottom",
     "thumbImageId",
     "barImageId",
@@ -2230,9 +2349,11 @@ const validateLayoutElementData = ({
     "step",
     "initialValue",
     "variableId",
+    "fragmentLayoutId",
+    "paginationMode",
+    "paginationVariableId",
+    "paginationSize",
     "$when",
-    "click",
-    "rightClick",
     "change",
   ];
 
@@ -2281,6 +2402,7 @@ const validateLayoutElementData = ({
     "min",
     "max",
     "step",
+    "paginationSize",
     "opacity",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
@@ -2322,6 +2444,9 @@ const validateLayoutElementData = ({
     "clickTextStyleId",
     "containerType",
     "variableId",
+    "fragmentLayoutId",
+    "paginationMode",
+    "paginationVariableId",
     "revealEffect",
     "thumbImageId",
     "barImageId",
@@ -2334,6 +2459,191 @@ const validateLayoutElementData = ({
         errorFactory,
         `${path}.${key} must be a string when provided`,
       );
+    }
+  }
+
+  if (data.conditionalOverrides !== undefined) {
+    if (!Array.isArray(data.conditionalOverrides)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.conditionalOverrides must be an array when provided`,
+      );
+    }
+
+    for (let index = 0; index < data.conditionalOverrides.length; index += 1) {
+      const rule = data.conditionalOverrides[index];
+      const rulePath = `${path}.conditionalOverrides.${index}`;
+
+      if (!isPlainObject(rule)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath} must be an object`,
+        );
+      }
+
+      {
+        const result = validateAllowedKeys({
+          value: rule,
+          allowedKeys: ["when", "set"],
+          path: rulePath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isPlainObject(rule.when)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when must be an object`,
+        );
+      }
+
+      {
+        const result = validateAllowedKeys({
+          value: rule.when,
+          allowedKeys: ["target", "op", "value"],
+          path: `${rulePath}.when`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(rule.when.target)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when.target must be a non-empty string`,
+        );
+      }
+
+      if (!parseLayoutConditionTarget(rule.when.target)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when.target must be a supported layout condition target`,
+        );
+      }
+
+      if (
+        !isString(rule.when.value) &&
+        typeof rule.when.value !== "boolean" &&
+        !isFiniteNumber(rule.when.value)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when.value must be a string, boolean, or finite number`,
+        );
+      }
+
+      if (rule.when.op !== "eq") {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when.op must be "eq"`,
+        );
+      }
+
+      if (!isPlainObject(rule.set)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set must be an object`,
+        );
+      }
+
+      {
+        const result = validateAllowedKeys({
+          value: rule.set,
+          allowedKeys: [
+            "textStyleId",
+            "hoverTextStyleId",
+            "clickTextStyleId",
+            "imageId",
+            "hoverImageId",
+            "clickImageId",
+            "opacity",
+            "anchorX",
+            "anchorY",
+            "visible",
+            "textStyle",
+          ],
+          path: `${rulePath}.set`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      for (const field of [
+        "textStyleId",
+        "hoverTextStyleId",
+        "clickTextStyleId",
+        "imageId",
+        "hoverImageId",
+        "clickImageId",
+      ]) {
+        if (
+          rule.set[field] !== undefined &&
+          !isNonEmptyString(rule.set[field])
+        ) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.${field} must be a non-empty string when provided`,
+          );
+        }
+      }
+
+      if (
+        rule.set.opacity !== undefined &&
+        (!isFiniteNumber(rule.set.opacity) ||
+          rule.set.opacity < 0 ||
+          rule.set.opacity > 1)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set.opacity must be a finite number between 0 and 1 when provided`,
+        );
+      }
+
+      for (const field of ["anchorX", "anchorY"]) {
+        if (rule.set[field] !== undefined && !isFiniteNumber(rule.set[field])) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.${field} must be a finite number when provided`,
+          );
+        }
+      }
+
+      if (
+        rule.set.visible !== undefined &&
+        typeof rule.set.visible !== "boolean"
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set.visible must be a boolean when provided`,
+        );
+      }
+
+      if (rule.set.textStyle !== undefined) {
+        if (!isPlainObject(rule.set.textStyle)) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.textStyle must be an object when provided`,
+          );
+        }
+
+        {
+          const result = validateLayoutElementTextStyle({
+            textStyle: rule.set.textStyle,
+            path: `${rulePath}.set.textStyle`,
+            errorFactory,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
+      }
     }
   }
 
@@ -2365,11 +2675,61 @@ const validateLayoutElementData = ({
     );
   }
 
+  if (
+    data.paginationMode !== undefined &&
+    data.paginationMode !== "continuous" &&
+    data.paginationMode !== "paginated"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.paginationMode must be 'continuous' or 'paginated' when provided`,
+    );
+  }
+
   if (data.scroll !== undefined && typeof data.scroll !== "boolean") {
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.scroll must be a boolean when provided`,
     );
+  }
+
+  if (data.hover !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.hover,
+        path: `${path}.hover`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  if (data.click !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.click,
+        path: `${path}.click`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  if (data.rightClick !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.rightClick,
+        path: `${path}.rightClick`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (
@@ -2415,20 +2775,6 @@ const validateLayoutElementData = ({
     }
   }
 
-  if (data.click !== undefined && !isPlainObject(data.click)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.click must be an object when provided`,
-    );
-  }
-
-  if (data.rightClick !== undefined && !isPlainObject(data.rightClick)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.rightClick must be an object when provided`,
-    );
-  }
-
   if (data.change !== undefined && !isPlainObject(data.change)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -2470,10 +2816,14 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
+          "conditionalOverrides",
           "direction",
           "gap",
           "containerType",
           "scroll",
+          "hover",
+          "click",
+          "rightClick",
           "anchorToBottom",
           "thumbImageId",
           "barImageId",
@@ -2484,9 +2834,11 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "step",
           "initialValue",
           "variableId",
+          "fragmentLayoutId",
+          "paginationMode",
+          "paginationVariableId",
+          "paginationSize",
           "$when",
-          "click",
-          "rightClick",
           "change",
         ],
         path: itemPath,
@@ -2684,7 +3036,15 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name"]
-            : ["id", "type", "name", "layoutType", "elements"],
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "layoutType",
+                "isFragment",
+                "elements",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -2714,11 +3074,28 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       );
     }
 
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
     if (item.type === "layout") {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'`,
+        );
+      }
+
+      if (
+        item.isFragment !== undefined &&
+        typeof item.isFragment !== "boolean"
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.isFragment must be a boolean when provided`,
         );
       }
 
@@ -3923,6 +4300,32 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertFragmentLayoutReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+  }) => {
+    const layout = state.layouts.items[targetId];
+    if (
+      !isPlainObject(layout) ||
+      layout.type !== "layout" ||
+      layout.isFragment !== true
+    ) {
+      return invalidInvariant(
+        `${ownerLabel} element fragmentLayoutId must reference an existing fragment layout`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          fragmentLayoutId: targetId,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertElementReferencesForCollection = ({
     items,
     ownerIdField,
@@ -3979,6 +4382,51 @@ export const assertInvariants = ({ state }) => {
           }
         }
 
+        if (Array.isArray(element.conditionalOverrides)) {
+          for (
+            let index = 0;
+            index < element.conditionalOverrides.length;
+            index += 1
+          ) {
+            const rule = element.conditionalOverrides[index];
+
+            for (const field of [
+              "textStyleId",
+              "hoverTextStyleId",
+              "clickTextStyleId",
+            ]) {
+              if (rule?.set?.[field] !== undefined) {
+                const result = assertTextStyleReference({
+                  ownerIdField,
+                  ownerId,
+                  ownerLabel,
+                  elementId,
+                  field: `conditionalOverrides.${index}.set.${field}`,
+                  targetId: rule.set[field],
+                });
+                if (!result.valid) {
+                  return result;
+                }
+              }
+            }
+
+            if (
+              rule?.when?.target !== undefined &&
+              !isLayoutConditionTarget(state, rule.when.target)
+            ) {
+              return invalidInvariant(
+                `${ownerLabel} element conditionalOverrides when target must reference an existing variable or supported runtime condition`,
+                {
+                  [ownerIdField]: ownerId,
+                  elementId,
+                  field: `conditionalOverrides.${index}.when.target`,
+                  targetId: rule.when.target,
+                },
+              );
+            }
+          }
+        }
+
         if (element.variableId !== undefined) {
           const result = assertVariableReference({
             ownerIdField,
@@ -3986,6 +4434,19 @@ export const assertInvariants = ({ state }) => {
             ownerLabel,
             elementId,
             targetId: element.variableId,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        if (element.fragmentLayoutId !== undefined) {
+          const result = assertFragmentLayoutReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.fragmentLayoutId,
           });
           if (!result.valid) {
             return result;
@@ -6136,7 +6597,14 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name"]
-          : ["type", "name", "layoutType", "elements"],
+          : [
+              "type",
+              "name",
+              "description",
+              "layoutType",
+              "isFragment",
+              "elements",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -6152,11 +6620,25 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (data.type === "layout") {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'",
+      );
+    }
+
+    if (data.isFragment !== undefined && typeof data.isFragment !== "boolean") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.isFragment must be a boolean when provided",
       );
     }
 
@@ -6179,7 +6661,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "layoutType"],
+      allowedKeys: ["name", "description", "layoutType", "isFragment"],
       path: "payload.data",
       errorFactory,
     });
@@ -6202,13 +6684,27 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (
     data.layoutType !== undefined &&
     !LAYOUT_TYPE_KEYS.includes(data.layoutType)
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice' when provided",
+    );
+  }
+
+  if (data.isFragment !== undefined && typeof data.isFragment !== "boolean") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.isFragment must be a boolean when provided",
     );
   }
 };
@@ -6519,6 +7015,69 @@ const validateVisualElementReferenceTargets = ({
     }
   }
 
+  if (Array.isArray(data.conditionalOverrides)) {
+    for (let index = 0; index < data.conditionalOverrides.length; index += 1) {
+      const rule = data.conditionalOverrides[index];
+
+      for (const field of [
+        "textStyleId",
+        "hoverTextStyleId",
+        "clickTextStyleId",
+      ]) {
+        if (rule?.set?.[field] === undefined) {
+          continue;
+        }
+
+        const textStyle = state.textStyles.items[rule.set[field]];
+        if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder text style`,
+            {
+              [ownerIdField]: ownerId,
+              elementId,
+              field: `conditionalOverrides.${index}.set.${field}`,
+              targetId: rule.set[field],
+            },
+          );
+        }
+      }
+
+      for (const field of ["imageId", "hoverImageId", "clickImageId"]) {
+        if (rule?.set?.[field] === undefined) {
+          continue;
+        }
+
+        const image = state.images.items[rule.set[field]];
+        if (!isPlainObject(image) || image.type === "folder") {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder image`,
+            {
+              [ownerIdField]: ownerId,
+              elementId,
+              field: `conditionalOverrides.${index}.set.${field}`,
+              targetId: rule.set[field],
+            },
+          );
+        }
+      }
+
+      if (!isLayoutConditionTarget(state, rule?.when?.target)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element conditionalOverrides.${index}.when.target must reference an existing variable or supported runtime condition`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `conditionalOverrides.${index}.when.target`,
+            targetId: rule?.when?.target,
+          },
+        );
+      }
+    }
+  }
+
   if (data.variableId !== undefined) {
     if (!isVariableReferenceTarget(state, data.variableId)) {
       return invalidFromErrorFactory(
@@ -6528,6 +7087,25 @@ const validateVisualElementReferenceTargets = ({
           [ownerIdField]: ownerId,
           elementId,
           variableId: data.variableId,
+        },
+      );
+    }
+  }
+
+  if (data.fragmentLayoutId !== undefined) {
+    const fragmentLayout = state.layouts.items[data.fragmentLayoutId];
+    if (
+      !isPlainObject(fragmentLayout) ||
+      fragmentLayout.type !== "layout" ||
+      fragmentLayout.isFragment !== true
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element fragmentLayoutId must reference an existing fragment layout`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          fragmentLayoutId: data.fragmentLayoutId,
         },
       );
     }
@@ -11198,7 +11776,9 @@ const COMMAND_DEFINITIONS = [
       name: payload.data.name,
       ...(payload.data.type === "layout"
         ? {
+            description: payload.data.description,
             layoutType: payload.data.layoutType,
+            isFragment: payload.data.isFragment,
             elements: structuredClone(payload.data.elements),
           }
         : {}),
