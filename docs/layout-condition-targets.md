@@ -6,7 +6,7 @@ Layout conditions use a direct engine-facing `target` string.
 
 This contract is used for:
 
-- `conditionalTextStyles` in the creator model
+- `conditionalOverrides[].when` in the creator model
 - layout-editor visibility conditions in the client before they compile to
   `$when`
 
@@ -33,10 +33,26 @@ Current authored rule shape:
 
 ```js
 {
-  target: string,
-  op: "eq",
-  value: string | number | boolean,
-  textStyleId: string,
+  when: {
+    target: string,
+    op: "eq",
+    value: string | number | boolean,
+  },
+  set: {
+    textStyleId?: string,
+    hoverTextStyleId?: string,
+    clickTextStyleId?: string,
+    imageId?: string,
+    hoverImageId?: string,
+    clickImageId?: string,
+    opacity?: number,
+    anchorX?: number,
+    anchorY?: number,
+    visible?: boolean,
+    textStyle?: {
+      align?: "left" | "center" | "right",
+    },
+  },
 }
 ```
 
@@ -44,12 +60,36 @@ Example:
 
 ```js
 {
-  target: "autoMode",
-  op: "eq",
-  value: true,
-  textStyleId: "text-style-auto",
+  when: {
+    target: "autoMode",
+    op: "eq",
+    value: true,
+  },
+  set: {
+    textStyleId: "text-style-auto",
+    opacity: 0.7,
+  },
 }
 ```
+
+Currently supported `set` keys are:
+
+- `textStyleId`
+- `hoverTextStyleId`
+- `clickTextStyleId`
+- `imageId`
+- `hoverImageId`
+- `clickImageId`
+- `opacity`
+- `anchorX`
+- `anchorY`
+- `visible`
+- `textStyle.align`
+
+For `visible`, the client compiler folds the override into the element `$when`
+expression instead of emitting a separate runtime `visible` property. This
+keeps the authored interface simple while still allowing conditional show/hide
+behavior.
 
 ## Allowed Targets
 
@@ -131,25 +171,31 @@ Runtime state:
 
 ```js
 {
-  target: "autoMode",
-  op: "eq",
-  value: true,
+  when: {
+    target: "autoMode",
+    op: "eq",
+    value: true,
+  },
 }
 ```
 
 ```js
 {
-  target: "skipMode",
-  op: "eq",
-  value: false,
+  when: {
+    target: "skipMode",
+    op: "eq",
+    value: false,
+  },
 }
 ```
 
 ```js
 {
-  target: "isLineCompleted",
-  op: "eq",
-  value: true,
+  when: {
+    target: "isLineCompleted",
+    op: "eq",
+    value: true,
+  },
 }
 ```
 
@@ -157,9 +203,11 @@ Save/load slot state:
 
 ```js
 {
-  target: "item.savedAt",
-  op: "eq",
-  value: true,
+  when: {
+    target: "item.savedAt",
+    op: "eq",
+    value: true,
+  },
 }
 ```
 
@@ -167,17 +215,21 @@ Variable state:
 
 ```js
 {
-  target: "variables.playerMode",
-  op: "eq",
-  value: "alert",
+  when: {
+    target: "variables.playerMode",
+    op: "eq",
+    value: "alert",
+  },
 }
 ```
 
 ```js
 {
-  target: 'variables["player-mode"]',
-  op: "eq",
-  value: "alert",
+  when: {
+    target: 'variables["player-mode"]',
+    op: "eq",
+    value: "alert",
+  },
 }
 ```
 
@@ -186,7 +238,7 @@ Variable state:
 - This `target` string replaces the older overloaded `variableId` contract for
   layout-condition authoring.
 - The creator model currently validates this `target` contract for
-  `conditionalTextStyles`.
+  `conditionalOverrides[].when`.
 - Raw `$when` is still a string field in persisted layout element data.
 - The long-term direction is to keep one shared target contract across model,
   client authoring, and engine template evaluation.

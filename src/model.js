@@ -2331,7 +2331,7 @@ const validateLayoutElementData = ({
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
-    "conditionalTextStyles",
+    "conditionalOverrides",
     "direction",
     "gap",
     "containerType",
@@ -2462,17 +2462,17 @@ const validateLayoutElementData = ({
     }
   }
 
-  if (data.conditionalTextStyles !== undefined) {
-    if (!Array.isArray(data.conditionalTextStyles)) {
+  if (data.conditionalOverrides !== undefined) {
+    if (!Array.isArray(data.conditionalOverrides)) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${path}.conditionalTextStyles must be an array when provided`,
+        `${path}.conditionalOverrides must be an array when provided`,
       );
     }
 
-    for (let index = 0; index < data.conditionalTextStyles.length; index += 1) {
-      const rule = data.conditionalTextStyles[index];
-      const rulePath = `${path}.conditionalTextStyles.${index}`;
+    for (let index = 0; index < data.conditionalOverrides.length; index += 1) {
+      const rule = data.conditionalOverrides[index];
+      const rulePath = `${path}.conditionalOverrides.${index}`;
 
       if (!isPlainObject(rule)) {
         return invalidFromErrorFactory(
@@ -2484,7 +2484,7 @@ const validateLayoutElementData = ({
       {
         const result = validateAllowedKeys({
           value: rule,
-          allowedKeys: ["target", "op", "value", "textStyleId"],
+          allowedKeys: ["when", "set"],
           path: rulePath,
           errorFactory,
         });
@@ -2493,43 +2493,156 @@ const validateLayoutElementData = ({
         }
       }
 
-      if (!isNonEmptyString(rule.target)) {
+      if (!isPlainObject(rule.when)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${rulePath}.target must be a non-empty string`,
+          `${rulePath}.when must be an object`,
         );
       }
 
-      if (!parseLayoutConditionTarget(rule.target)) {
+      {
+        const result = validateAllowedKeys({
+          value: rule.when,
+          allowedKeys: ["target", "op", "value"],
+          path: `${rulePath}.when`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(rule.when.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${rulePath}.target must be a supported layout condition target`,
+          `${rulePath}.when.target must be a non-empty string`,
         );
       }
 
-      if (rule.op !== "eq") {
+      if (!parseLayoutConditionTarget(rule.when.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${rulePath}.op must be "eq"`,
-        );
-      }
-
-      if (!isNonEmptyString(rule.textStyleId)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${rulePath}.textStyleId must be a non-empty string`,
+          `${rulePath}.when.target must be a supported layout condition target`,
         );
       }
 
       if (
-        !isString(rule.value) &&
-        typeof rule.value !== "boolean" &&
-        !isFiniteNumber(rule.value)
+        !isString(rule.when.value) &&
+        typeof rule.when.value !== "boolean" &&
+        !isFiniteNumber(rule.when.value)
       ) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${rulePath}.value must be a string, boolean, or finite number`,
+          `${rulePath}.when.value must be a string, boolean, or finite number`,
         );
+      }
+
+      if (rule.when.op !== "eq") {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.when.op must be "eq"`,
+        );
+      }
+
+      if (!isPlainObject(rule.set)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set must be an object`,
+        );
+      }
+
+      {
+        const result = validateAllowedKeys({
+          value: rule.set,
+          allowedKeys: [
+            "textStyleId",
+            "hoverTextStyleId",
+            "clickTextStyleId",
+            "imageId",
+            "hoverImageId",
+            "clickImageId",
+            "opacity",
+            "anchorX",
+            "anchorY",
+            "visible",
+            "textStyle",
+          ],
+          path: `${rulePath}.set`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      for (const field of [
+        "textStyleId",
+        "hoverTextStyleId",
+        "clickTextStyleId",
+        "imageId",
+        "hoverImageId",
+        "clickImageId",
+      ]) {
+        if (
+          rule.set[field] !== undefined &&
+          !isNonEmptyString(rule.set[field])
+        ) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.${field} must be a non-empty string when provided`,
+          );
+        }
+      }
+
+      if (
+        rule.set.opacity !== undefined &&
+        (!isFiniteNumber(rule.set.opacity) ||
+          rule.set.opacity < 0 ||
+          rule.set.opacity > 1)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set.opacity must be a finite number between 0 and 1 when provided`,
+        );
+      }
+
+      for (const field of ["anchorX", "anchorY"]) {
+        if (rule.set[field] !== undefined && !isFiniteNumber(rule.set[field])) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.${field} must be a finite number when provided`,
+          );
+        }
+      }
+
+      if (
+        rule.set.visible !== undefined &&
+        typeof rule.set.visible !== "boolean"
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${rulePath}.set.visible must be a boolean when provided`,
+        );
+      }
+
+      if (rule.set.textStyle !== undefined) {
+        if (!isPlainObject(rule.set.textStyle)) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${rulePath}.set.textStyle must be an object when provided`,
+          );
+        }
+
+        {
+          const result = validateLayoutElementTextStyle({
+            textStyle: rule.set.textStyle,
+            path: `${rulePath}.set.textStyle`,
+            errorFactory,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
       }
     }
   }
@@ -2703,7 +2816,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
-          "conditionalTextStyles",
+          "conditionalOverrides",
           "direction",
           "gap",
           "containerType",
@@ -4269,39 +4382,45 @@ export const assertInvariants = ({ state }) => {
           }
         }
 
-        if (Array.isArray(element.conditionalTextStyles)) {
+        if (Array.isArray(element.conditionalOverrides)) {
           for (
             let index = 0;
-            index < element.conditionalTextStyles.length;
+            index < element.conditionalOverrides.length;
             index += 1
           ) {
-            const rule = element.conditionalTextStyles[index];
+            const rule = element.conditionalOverrides[index];
 
-            if (rule?.textStyleId !== undefined) {
-              const result = assertTextStyleReference({
-                ownerIdField,
-                ownerId,
-                ownerLabel,
-                elementId,
-                field: `conditionalTextStyles.${index}.textStyleId`,
-                targetId: rule.textStyleId,
-              });
-              if (!result.valid) {
-                return result;
+            for (const field of [
+              "textStyleId",
+              "hoverTextStyleId",
+              "clickTextStyleId",
+            ]) {
+              if (rule?.set?.[field] !== undefined) {
+                const result = assertTextStyleReference({
+                  ownerIdField,
+                  ownerId,
+                  ownerLabel,
+                  elementId,
+                  field: `conditionalOverrides.${index}.set.${field}`,
+                  targetId: rule.set[field],
+                });
+                if (!result.valid) {
+                  return result;
+                }
               }
             }
 
             if (
-              rule?.target !== undefined &&
-              !isLayoutConditionTarget(state, rule.target)
+              rule?.when?.target !== undefined &&
+              !isLayoutConditionTarget(state, rule.when.target)
             ) {
               return invalidInvariant(
-                `${ownerLabel} element conditionalTextStyles target must reference an existing variable or supported runtime condition`,
+                `${ownerLabel} element conditionalOverrides when target must reference an existing variable or supported runtime condition`,
                 {
                   [ownerIdField]: ownerId,
                   elementId,
-                  field: `conditionalTextStyles.${index}.target`,
-                  targetId: rule.target,
+                  field: `conditionalOverrides.${index}.when.target`,
+                  targetId: rule.when.target,
                 },
               );
             }
@@ -6896,33 +7015,63 @@ const validateVisualElementReferenceTargets = ({
     }
   }
 
-  if (Array.isArray(data.conditionalTextStyles)) {
-    for (let index = 0; index < data.conditionalTextStyles.length; index += 1) {
-      const rule = data.conditionalTextStyles[index];
-      const textStyle = state.textStyles.items[rule.textStyleId];
+  if (Array.isArray(data.conditionalOverrides)) {
+    for (let index = 0; index < data.conditionalOverrides.length; index += 1) {
+      const rule = data.conditionalOverrides[index];
 
-      if (!isPlainObject(textStyle) || textStyle.type === "folder") {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${ownerLabel} element conditionalTextStyles.${index}.textStyleId must reference an existing non-folder text style`,
-          {
-            [ownerIdField]: ownerId,
-            elementId,
-            field: `conditionalTextStyles.${index}.textStyleId`,
-            targetId: rule.textStyleId,
-          },
-        );
+      for (const field of [
+        "textStyleId",
+        "hoverTextStyleId",
+        "clickTextStyleId",
+      ]) {
+        if (rule?.set?.[field] === undefined) {
+          continue;
+        }
+
+        const textStyle = state.textStyles.items[rule.set[field]];
+        if (!isPlainObject(textStyle) || textStyle.type === "folder") {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder text style`,
+            {
+              [ownerIdField]: ownerId,
+              elementId,
+              field: `conditionalOverrides.${index}.set.${field}`,
+              targetId: rule.set[field],
+            },
+          );
+        }
       }
 
-      if (!isLayoutConditionTarget(state, rule.target)) {
+      for (const field of ["imageId", "hoverImageId", "clickImageId"]) {
+        if (rule?.set?.[field] === undefined) {
+          continue;
+        }
+
+        const image = state.images.items[rule.set[field]];
+        if (!isPlainObject(image) || image.type === "folder") {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder image`,
+            {
+              [ownerIdField]: ownerId,
+              elementId,
+              field: `conditionalOverrides.${index}.set.${field}`,
+              targetId: rule.set[field],
+            },
+          );
+        }
+      }
+
+      if (!isLayoutConditionTarget(state, rule?.when?.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${ownerLabel} element conditionalTextStyles.${index}.target must reference an existing variable or supported runtime condition`,
+          `${ownerLabel} element conditionalOverrides.${index}.when.target must reference an existing variable or supported runtime condition`,
           {
             [ownerIdField]: ownerId,
             elementId,
-            field: `conditionalTextStyles.${index}.target`,
-            targetId: rule.target,
+            field: `conditionalOverrides.${index}.when.target`,
+            targetId: rule?.when?.target,
           },
         );
       }

@@ -874,6 +874,41 @@ test("validateState accepts layout slider variableId refs to system variables", 
 test("validateState accepts conditional text styles on layout elements", () => {
   const state = createEmptyTestState();
 
+  state.files.items["file-image-a"] = {
+    id: "file-image-a",
+    type: "image",
+    mimeType: "image/png",
+    size: 1,
+    sha256: "image-a-sha256",
+  };
+  state.files.items["file-image-a-thumb"] = {
+    id: "file-image-a-thumb",
+    type: "image",
+    mimeType: "image/png",
+    size: 1,
+    sha256: "image-a-thumb-sha256",
+  };
+  state.files.tree.push({
+    id: "file-image-a",
+    children: [],
+  });
+  state.files.tree.push({
+    id: "file-image-a-thumb",
+    children: [],
+  });
+
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-image-a",
+    thumbnailFileId: "file-image-a-thumb",
+  };
+  state.images.tree.push({
+    id: "image-a",
+    children: [],
+  });
+
   state.files.items["file-font-ui"] = {
     id: "file-font-ui",
     type: "font",
@@ -960,30 +995,81 @@ test("validateState accepts conditional text styles on layout elements", () => {
           rotation: 0,
           text: "Hello",
           textStyleId: "text-style-ui",
-          conditionalTextStyles: [
+          conditionalOverrides: [
             {
-              target: "variables._currentSaveLoadPagination",
-              op: "eq",
-              value: 1,
-              textStyleId: "text-style-alert",
+              when: {
+                target: "variables._currentSaveLoadPagination",
+                op: "eq",
+                value: 1,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+                hoverTextStyleId: "text-style-alert",
+                clickTextStyleId: "text-style-alert",
+                opacity: 0.5,
+                anchorX: 0.5,
+                anchorY: 1,
+                visible: false,
+                textStyle: {
+                  align: "center",
+                },
+              },
             },
             {
-              target: "isLineCompleted",
-              op: "eq",
-              value: true,
-              textStyleId: "text-style-alert",
+              when: {
+                target: "isLineCompleted",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
             },
             {
-              target: "autoMode",
-              op: "eq",
-              value: false,
-              textStyleId: "text-style-alert",
+              when: {
+                target: "autoMode",
+                op: "eq",
+                value: false,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
             },
             {
-              target: "skipMode",
-              op: "eq",
-              value: true,
-              textStyleId: "text-style-alert",
+              when: {
+                target: "skipMode",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                textStyleId: "text-style-alert",
+              },
+            },
+          ],
+        },
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Portrait",
+          x: 0,
+          y: 0,
+          width: 256,
+          height: 256,
+          imageId: "image-a",
+          conditionalOverrides: [
+            {
+              when: {
+                target: "autoMode",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                imageId: "image-a",
+                hoverImageId: "image-a",
+                clickImageId: "image-a",
+                opacity: 0.25,
+                visible: false,
+              },
             },
           ],
         },
@@ -991,6 +1077,10 @@ test("validateState accepts conditional text styles on layout elements", () => {
       tree: [
         {
           id: "text-1",
+          children: [],
+        },
+        {
+          id: "sprite-1",
           children: [],
         },
       ],
