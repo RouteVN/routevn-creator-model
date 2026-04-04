@@ -116,6 +116,7 @@ const LAYOUT_TYPE_KEYS = [
   "dialogue",
   "nvl",
   "choice",
+  "history",
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
@@ -133,11 +134,14 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "text-ref-save-load-slot-date",
   "text-ref-dialogue-line-character-name",
   "text-ref-dialogue-line-content",
+  "text-ref-history-line-character-name",
+  "text-ref-history-line-content",
   "sprite-ref-save-load-slot-image",
   "fragment-ref",
   "container-ref-choice-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-history-line",
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
@@ -148,6 +152,7 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "container-ref-choice-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
+  "container-ref-history-line",
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
@@ -3043,6 +3048,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "description",
                 "layoutType",
                 "isFragment",
+                "thumbnailFileId",
                 "elements",
               ],
         path: itemPath,
@@ -3081,11 +3087,21 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       );
     }
 
+    if (
+      item.thumbnailFileId !== undefined &&
+      !isNonEmptyString(item.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
+      );
+    }
+
     if (item.type === "layout") {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'`,
+          `${itemPath}.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history'`,
         );
       }
 
@@ -3132,7 +3148,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name"]
-            : ["id", "type", "name", "elements", "keyboard"],
+            : ["id", "type", "name", "thumbnailFileId", "elements", "keyboard"],
         path: itemPath,
         errorFactory,
       });
@@ -3159,6 +3175,16 @@ const validateControlItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (
+      item.thumbnailFileId !== undefined &&
+      !isNonEmptyString(item.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
     }
 
@@ -4228,6 +4254,40 @@ export const assertInvariants = ({ state }) => {
       if (!result.valid) {
         return result;
       }
+    }
+  }
+
+  for (const [layoutId, layout] of Object.entries(state.layouts.items)) {
+    if (layout.type !== "layout" || layout.thumbnailFileId === undefined) {
+      continue;
+    }
+
+    const result = validateFileReference({
+      state,
+      fileId: layout.thumbnailFileId,
+      path: "layout.thumbnailFileId",
+      details: { layoutId, thumbnailFileId: layout.thumbnailFileId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  for (const [controlId, control] of Object.entries(state.controls.items)) {
+    if (control.type !== "control" || control.thumbnailFileId === undefined) {
+      continue;
+    }
+
+    const result = validateFileReference({
+      state,
+      fileId: control.thumbnailFileId,
+      path: "control.thumbnailFileId",
+      details: { controlId, thumbnailFileId: control.thumbnailFileId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
     }
   }
 
@@ -6603,6 +6663,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "description",
               "layoutType",
               "isFragment",
+              "thumbnailFileId",
               "elements",
             ],
       path: "payload.data",
@@ -6627,11 +6688,21 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
+  }
+
   if (data.type === "layout") {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice'",
+        "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history'",
       );
     }
 
@@ -6661,7 +6732,13 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "layoutType", "isFragment"],
+      allowedKeys: [
+        "name",
+        "description",
+        "layoutType",
+        "isFragment",
+        "thumbnailFileId",
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -6692,12 +6769,22 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   }
 
   if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
+  }
+
+  if (
     data.layoutType !== undefined &&
     !LAYOUT_TYPE_KEYS.includes(data.layoutType)
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', or 'choice' when provided",
+      "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history' when provided",
     );
   }
 
@@ -6730,7 +6817,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name"]
-          : ["type", "name", "elements", "keyboard"],
+          : ["type", "name", "thumbnailFileId", "elements", "keyboard"],
       path: "payload.data",
       errorFactory,
     });
@@ -6743,6 +6830,16 @@ const validateControlCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
@@ -6777,7 +6874,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "keyboard"],
+      allowedKeys: ["name", "keyboard", "thumbnailFileId"],
       path: "payload.data",
       errorFactory,
     });
@@ -6797,6 +6894,16 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
@@ -11779,11 +11886,30 @@ const COMMAND_DEFINITIONS = [
             description: payload.data.description,
             layoutType: payload.data.layoutType,
             isFragment: payload.data.isFragment,
+            ...(payload.data.thumbnailFileId !== undefined
+              ? {
+                  thumbnailFileId: payload.data.thumbnailFileId,
+                }
+              : {}),
             elements: structuredClone(payload.data.elements),
           }
         : {}),
     }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "layout") {
+        return;
+      }
+
+      return validateReferencedFilesInData({
+        state,
+        data: payload.data,
+        fields: ["thumbnailFileId"],
+        details: {
+          layoutId: payload.layoutId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
@@ -11791,6 +11917,17 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder layout items cannot update layout fields",
         );
+      }
+
+      if (currentItem.type === "layout") {
+        return validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId"],
+          details: {
+            layoutId: payload.layoutId,
+          },
+        });
       }
     },
   }),
@@ -11807,6 +11944,11 @@ const COMMAND_DEFINITIONS = [
       name: payload.data.name,
       ...(payload.data.type === "control"
         ? {
+            ...(payload.data.thumbnailFileId !== undefined
+              ? {
+                  thumbnailFileId: payload.data.thumbnailFileId,
+                }
+              : {}),
             elements: structuredClone(payload.data.elements),
             ...(payload.data.keyboard !== undefined
               ? {
@@ -11816,7 +11958,21 @@ const COMMAND_DEFINITIONS = [
           }
         : {}),
     }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "control") {
+        return;
+      }
+
+      return validateReferencedFilesInData({
+        state,
+        data: payload.data,
+        fields: ["thumbnailFileId"],
+        details: {
+          controlId: payload.controlId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some((key) => key !== "name")
@@ -11824,6 +11980,17 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder control items cannot update control fields",
         );
+      }
+
+      if (currentItem.type === "control") {
+        return validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId"],
+          details: {
+            controlId: payload.controlId,
+          },
+        });
       }
     },
   }),

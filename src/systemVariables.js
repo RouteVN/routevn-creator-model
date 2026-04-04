@@ -24,11 +24,29 @@ export const SYSTEM_VARIABLE_GROUPS = Object.freeze([
       {
         id: "_currentSaveLoadPagination",
         name: "Current Save/Load Pagination",
-        scope: "runtime-screen",
+        scope: "context",
         type: "number",
         default: 0,
         description:
           "The current save/load pagination index. Resolves to 0, 1, 2, 3, and so on for the active save/load page.",
+      },
+      {
+        id: "_currentMenuPage",
+        name: "Current Menu Page",
+        scope: "context",
+        type: "string",
+        default: "",
+        description:
+          "The current menu page id for the active UI flow. Typical values include options, save, load, and history.",
+      },
+      {
+        id: "_menuEntryPoint",
+        name: "Menu Entry Point",
+        scope: "context",
+        type: "string",
+        default: "",
+        description:
+          "Indicates how the current menu flow was opened. Typical values include title and read.",
       },
     ]),
   },
