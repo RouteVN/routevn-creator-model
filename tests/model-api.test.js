@@ -19,6 +19,23 @@ import { listCommandTypes } from "../src/model.js";
 import { expectValidation } from "./support/expectValidation.js";
 import { createEmptyTestState } from "./support/createEmptyTestState.js";
 
+const addFileRecordToState = (
+  state,
+  { fileId, mimeType = "image/jpeg", size = 1, sha256 = `${fileId}-sha256` },
+) => {
+  state.files.items[fileId] = {
+    id: fileId,
+    type: "image",
+    mimeType,
+    size,
+    sha256,
+  };
+  state.files.tree.push({
+    id: fileId,
+    children: [],
+  });
+};
+
 test("public api exports functions only", () => {
   expect(SCHEMA_VERSION).toBe(2);
   expect(typeof validateState).toBe("function");
@@ -190,6 +207,77 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
+test("validatePayload accepts thumbnailFileId on layouts and controls", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-thumb",
+        data: {
+          type: "layout",
+          name: "Thumbnail Layout",
+          layoutType: "normal",
+          thumbnailFileId: "file-thumb-layout",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-thumb",
+        data: {
+          thumbnailFileId: "file-thumb-layout",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "control.create",
+      payload: {
+        controlId: "control-thumb",
+        data: {
+          type: "control",
+          name: "Thumbnail Control",
+          thumbnailFileId: "file-thumb-control",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "control.update",
+      payload: {
+        controlId: "control-thumb",
+        data: {
+          thumbnailFileId: "file-thumb-control",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload accepts save-load layout type", () => {
   expect(
     validatePayload({
@@ -232,6 +320,40 @@ test("validatePayload accepts save-load layout type", () => {
         layoutId: "layout-confirm",
         data: {
           layoutType: "confirmDialog",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-history",
+        data: {
+          type: "layout",
+          name: "History Layout",
+          layoutType: "history",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-history",
+        data: {
+          layoutType: "history",
         },
       },
     }),
@@ -337,6 +459,75 @@ test("processCommand persists keyboard data on controls", () => {
     },
   });
   expect(validateState({ state: result.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand persists thumbnailFileId on layouts and controls", () => {
+  const state = createEmptyTestState();
+
+  addFileRecordToState(state, { fileId: "file-layout-thumb" });
+  addFileRecordToState(state, { fileId: "file-control-thumb" });
+
+  state.layouts.items["layout-default"] = {
+    id: "layout-default",
+    type: "layout",
+    name: "Default Layout",
+    layoutType: "normal",
+    elements: {
+      items: {},
+      tree: [],
+    },
+  };
+  state.layouts.tree = [{ id: "layout-default", children: [] }];
+
+  state.controls.items["control-default"] = {
+    id: "control-default",
+    type: "control",
+    name: "Default Control",
+    elements: {
+      items: {},
+      tree: [],
+    },
+  };
+  state.controls.tree = [{ id: "control-default", children: [] }];
+
+  const layoutResult = processCommand({
+    state,
+    command: {
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-default",
+        data: {
+          thumbnailFileId: "file-layout-thumb",
+        },
+      },
+    },
+  });
+
+  expect(layoutResult.valid).toBe(true);
+  expect(
+    layoutResult.state.layouts.items["layout-default"].thumbnailFileId,
+  ).toBe("file-layout-thumb");
+
+  const controlResult = processCommand({
+    state: layoutResult.state,
+    command: {
+      type: "control.update",
+      payload: {
+        controlId: "control-default",
+        data: {
+          thumbnailFileId: "file-control-thumb",
+        },
+      },
+    },
+  });
+
+  expect(controlResult.valid).toBe(true);
+  expect(
+    controlResult.state.controls.items["control-default"].thumbnailFileId,
+  ).toBe("file-control-thumb");
+  expect(validateState({ state: controlResult.state })).toEqual({
     valid: true,
   });
 });
@@ -736,6 +927,86 @@ test("validateState accepts layout elements with revealEffect", () => {
   };
   state.layouts.tree.push({
     id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts history layout element references", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-history"] = {
+    id: "layout-history",
+    type: "layout",
+    name: "History",
+    layoutType: "history",
+    elements: {
+      items: {
+        "history-item": {
+          id: "history-item",
+          type: "container-ref-history-line",
+          name: "History Item",
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 120,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+        "history-character": {
+          id: "history-character",
+          type: "text-ref-history-line-character-name",
+          name: "Character",
+          x: 0,
+          y: 0,
+          width: 160,
+          height: 32,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+        "history-content": {
+          id: "history-content",
+          type: "text-ref-history-line-content",
+          name: "Content",
+          x: 0,
+          y: 40,
+          width: 760,
+          height: 64,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+      },
+      tree: [
+        {
+          id: "history-item",
+          children: [
+            {
+              id: "history-character",
+              children: [],
+            },
+            {
+              id: "history-content",
+              children: [],
+            },
+          ],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-history",
     children: [],
   });
 
