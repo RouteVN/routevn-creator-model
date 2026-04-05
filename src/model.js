@@ -2129,6 +2129,7 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
                 "id",
                 "type",
                 "name",
+                "thumbnailFileId",
                 "fileId",
                 "fileType",
                 "fileSize",
@@ -2165,6 +2166,16 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "image") {
+      if (
+        item.thumbnailFileId !== undefined &&
+        !isNonEmptyString(item.thumbnailFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
+        );
+      }
+
       if (!isNonEmptyString(item.fileId)) {
         return invalidFromErrorFactory(
           errorFactory,
