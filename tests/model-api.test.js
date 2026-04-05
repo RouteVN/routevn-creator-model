@@ -239,76 +239,149 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
-test("validatePayload accepts thumbnailFileId on layouts and controls", () => {
-  expect(
-    validatePayload({
-      type: "layout.create",
-      payload: {
-        layoutId: "layout-thumb",
-        data: {
-          type: "layout",
-          name: "Thumbnail Layout",
-          layoutType: "normal",
-          thumbnailFileId: "file-thumb-layout",
-          elements: {
-            items: {},
-            tree: [],
+test(
+  "validatePayload accepts thumbnailFileId on layouts, controls, and character sprites",
+  () => {
+    expect(
+      validatePayload({
+        type: "layout.create",
+        payload: {
+          layoutId: "layout-thumb",
+          data: {
+            type: "layout",
+            name: "Thumbnail Layout",
+            layoutType: "normal",
+            thumbnailFileId: "file-thumb-layout",
+            elements: {
+              items: {},
+              tree: [],
+            },
           },
         },
-      },
-    }),
-  ).toEqual({
-    valid: true,
-  });
+      }),
+    ).toEqual({
+      valid: true,
+    });
 
-  expect(
-    validatePayload({
-      type: "layout.update",
-      payload: {
-        layoutId: "layout-thumb",
-        data: {
-          thumbnailFileId: "file-thumb-layout",
-        },
-      },
-    }),
-  ).toEqual({
-    valid: true,
-  });
-
-  expect(
-    validatePayload({
-      type: "control.create",
-      payload: {
-        controlId: "control-thumb",
-        data: {
-          type: "control",
-          name: "Thumbnail Control",
-          thumbnailFileId: "file-thumb-control",
-          elements: {
-            items: {},
-            tree: [],
+    expect(
+      validatePayload({
+        type: "layout.update",
+        payload: {
+          layoutId: "layout-thumb",
+          data: {
+            thumbnailFileId: "file-thumb-layout",
           },
         },
-      },
-    }),
-  ).toEqual({
-    valid: true,
-  });
+      }),
+    ).toEqual({
+      valid: true,
+    });
 
-  expect(
-    validatePayload({
-      type: "control.update",
-      payload: {
-        controlId: "control-thumb",
-        data: {
-          thumbnailFileId: "file-thumb-control",
+    expect(
+      validatePayload({
+        type: "control.create",
+        payload: {
+          controlId: "control-thumb",
+          data: {
+            type: "control",
+            name: "Thumbnail Control",
+            thumbnailFileId: "file-thumb-control",
+            elements: {
+              items: {},
+              tree: [],
+            },
+          },
         },
-      },
-    }),
-  ).toEqual({
-    valid: true,
-  });
-});
+      }),
+    ).toEqual({
+      valid: true,
+    });
+
+    expect(
+      validatePayload({
+        type: "control.update",
+        payload: {
+          controlId: "control-thumb",
+          data: {
+            thumbnailFileId: "file-thumb-control",
+          },
+        },
+      }),
+    ).toEqual({
+      valid: true,
+    });
+
+    expect(
+      validatePayload({
+        type: "character.create",
+        payload: {
+          characterId: "character-thumb",
+          data: {
+            type: "character",
+            name: "Thumbnail Character",
+            sprites: {
+              items: {
+                "folder-default": {
+                  id: "folder-default",
+                  type: "folder",
+                  name: "Default",
+                },
+                "sprite-default": {
+                  id: "sprite-default",
+                  type: "image",
+                  name: "Default Sprite",
+                  fileId: "file-sprite",
+                  thumbnailFileId: "file-sprite-thumb",
+                },
+              },
+              tree: [
+                {
+                  id: "folder-default",
+                  children: [{ id: "sprite-default", children: [] }],
+                },
+              ],
+            },
+          },
+        },
+      }),
+    ).toEqual({
+      valid: true,
+    });
+
+    expect(
+      validatePayload({
+        type: "character.sprite.create",
+        payload: {
+          characterId: "character-thumb",
+          spriteId: "sprite-new",
+          data: {
+            type: "image",
+            name: "New Sprite",
+            fileId: "file-sprite",
+            thumbnailFileId: "file-sprite-thumb",
+          },
+        },
+      }),
+    ).toEqual({
+      valid: true,
+    });
+
+    expect(
+      validatePayload({
+        type: "character.sprite.update",
+        payload: {
+          characterId: "character-thumb",
+          spriteId: "sprite-default",
+          data: {
+            thumbnailFileId: "file-sprite-thumb",
+          },
+        },
+      }),
+    ).toEqual({
+      valid: true,
+    });
+  },
+);
 
 test("validatePayload accepts save-load layout type", () => {
   expect(
@@ -560,6 +633,114 @@ test("processCommand persists thumbnailFileId on layouts and controls", () => {
     controlResult.state.controls.items["control-default"].thumbnailFileId,
   ).toBe("file-control-thumb");
   expect(validateState({ state: controlResult.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand persists thumbnailFileId on character sprites", () => {
+  const state = createEmptyTestState();
+
+  addFileRecordToState(state, { fileId: "file-sprite-initial" });
+  addFileRecordToState(state, { fileId: "file-sprite-initial-thumb" });
+  addFileRecordToState(state, { fileId: "file-sprite-created" });
+  addFileRecordToState(state, { fileId: "file-sprite-created-thumb" });
+  addFileRecordToState(state, { fileId: "file-sprite-updated-thumb" });
+
+  const characterResult = processCommand({
+    state,
+    command: {
+      type: "character.create",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          type: "character",
+          name: "Hero",
+          sprites: {
+            items: {
+              "folder-default": {
+                id: "folder-default",
+                type: "folder",
+                name: "Default",
+              },
+              "sprite-initial": {
+                id: "sprite-initial",
+                type: "image",
+                name: "Neutral",
+                fileId: "file-sprite-initial",
+                thumbnailFileId: "file-sprite-initial-thumb",
+              },
+            },
+            tree: [
+              {
+                id: "folder-default",
+                children: [{ id: "sprite-initial", children: [] }],
+              },
+            ],
+          },
+        },
+      },
+    },
+  });
+
+  expect(characterResult.valid).toBe(true);
+  expect(
+    characterResult.state.characters.items["character-hero"].sprites.items[
+      "sprite-initial"
+    ].thumbnailFileId,
+  ).toBe("file-sprite-initial-thumb");
+  expect(validateState({ state: characterResult.state })).toEqual({
+    valid: true,
+  });
+
+  const spriteCreateResult = processCommand({
+    state: characterResult.state,
+    command: {
+      type: "character.sprite.create",
+      payload: {
+        characterId: "character-hero",
+        spriteId: "sprite-created",
+        parentId: "folder-default",
+        data: {
+          type: "image",
+          name: "Happy",
+          fileId: "file-sprite-created",
+          thumbnailFileId: "file-sprite-created-thumb",
+        },
+      },
+    },
+  });
+
+  expect(spriteCreateResult.valid).toBe(true);
+  expect(
+    spriteCreateResult.state.characters.items["character-hero"].sprites.items[
+      "sprite-created"
+    ].thumbnailFileId,
+  ).toBe("file-sprite-created-thumb");
+  expect(validateState({ state: spriteCreateResult.state })).toEqual({
+    valid: true,
+  });
+
+  const spriteUpdateResult = processCommand({
+    state: spriteCreateResult.state,
+    command: {
+      type: "character.sprite.update",
+      payload: {
+        characterId: "character-hero",
+        spriteId: "sprite-initial",
+        data: {
+          thumbnailFileId: "file-sprite-updated-thumb",
+        },
+      },
+    },
+  });
+
+  expect(spriteUpdateResult.valid).toBe(true);
+  expect(
+    spriteUpdateResult.state.characters.items["character-hero"].sprites.items[
+      "sprite-initial"
+    ].thumbnailFileId,
+  ).toBe("file-sprite-updated-thumb");
+  expect(validateState({ state: spriteUpdateResult.state })).toEqual({
     valid: true,
   });
 });
