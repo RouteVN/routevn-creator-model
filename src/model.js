@@ -4254,6 +4254,25 @@ export const assertInvariants = ({ state }) => {
       if (!result.valid) {
         return result;
       }
+
+      if (sprite.thumbnailFileId === undefined) {
+        continue;
+      }
+
+      const thumbnailResult = validateFileReference({
+        state,
+        fileId: sprite.thumbnailFileId,
+        path: "character.sprite.thumbnailFileId",
+        details: {
+          characterId,
+          spriteId,
+          thumbnailFileId: sprite.thumbnailFileId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!thumbnailResult.valid) {
+        return thumbnailResult;
+      }
     }
   }
 
@@ -6323,6 +6342,7 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "fileId",
+              "thumbnailFileId",
               "fileType",
               "fileSize",
               "width",
@@ -6348,6 +6368,16 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         "payload.data.fileId must be a non-empty string",
+      );
+    }
+
+    if (
+      data.thumbnailFileId !== undefined &&
+      !isNonEmptyString(data.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.thumbnailFileId must be a non-empty string when provided",
       );
     }
 
@@ -6396,6 +6426,7 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
         "name",
         "description",
         "fileId",
+        "thumbnailFileId",
         "fileType",
         "fileSize",
         "width",
@@ -6427,6 +6458,16 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
@@ -7859,6 +7900,15 @@ const findReferencedFileUsage = ({ state, fileId }) => {
         return {
           kind: "character.sprite",
           field: "fileId",
+          ownerId: spriteId,
+          characterId,
+        };
+      }
+
+      if (sprite.thumbnailFileId === fileId) {
+        return {
+          kind: "character.sprite",
+          field: "thumbnailFileId",
           ownerId: spriteId,
           characterId,
         };
@@ -11843,6 +11893,24 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        if (sprite.thumbnailFileId === undefined) {
+          continue;
+        }
+
+        const thumbnailResult = validateFileReference({
+          state,
+          fileId: sprite.thumbnailFileId,
+          path: "payload.data.sprites.items.*.thumbnailFileId",
+          details: {
+            characterId: payload.characterId,
+            spriteId,
+            thumbnailFileId: sprite.thumbnailFileId,
+          },
+        });
+        if (!thumbnailResult.valid) {
+          return thumbnailResult;
+        }
       }
     },
     validateUpdateState: ({ state, payload, currentItem }) => {
@@ -12105,7 +12173,7 @@ const COMMAND_DEFINITIONS = [
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
-          fields: ["fileId"],
+          fields: ["fileId", "thumbnailFileId"],
           details: {
             characterId: payload.characterId,
             spriteId: payload.spriteId,
@@ -12208,7 +12276,7 @@ const COMMAND_DEFINITIONS = [
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
-          fields: ["fileId"],
+          fields: ["fileId", "thumbnailFileId"],
           details: {
             characterId: payload.characterId,
             spriteId: payload.spriteId,
