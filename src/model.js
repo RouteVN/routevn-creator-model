@@ -1141,7 +1141,12 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
   }
 };
 
-const validateTweenProperty = ({ config, path, errorFactory }) => {
+const validateTweenProperty = ({
+  config,
+  path,
+  allowEmptyKeyframes = false,
+  errorFactory,
+}) => {
   {
     const result = validateAllowedKeys({
       value: config,
@@ -1181,6 +1186,13 @@ const validateTweenProperty = ({ config, path, errorFactory }) => {
       return result;
     }
   }
+
+  if (!allowEmptyKeyframes && config.keyframes.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes must contain at least one keyframe`,
+    );
+  }
 };
 
 const validateTweenDefinition = ({
@@ -1188,6 +1200,7 @@ const validateTweenDefinition = ({
   allowedProperties,
   path,
   unsupportedMessage,
+  allowEmptyKeyframes = false,
   errorFactory,
 }) => {
   if (!isPlainObject(tween)) {
@@ -1215,6 +1228,7 @@ const validateTweenDefinition = ({
       const result = validateTweenProperty({
         config,
         path: propertyPath,
+        allowEmptyKeyframes,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -1593,6 +1607,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
         allowedProperties: TRANSITION_TWEEN_PROPERTY_KEYS,
         path: `${path}.${side}.tween`,
         unsupportedMessage: "is not a supported transition tween property",
+        allowEmptyKeyframes: true,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -4144,6 +4159,108 @@ const validateFileReference = ({
   return VALID_RESULT;
 };
 
+const validateImageReference = ({
+  state,
+  imageId,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (imageId === undefined || imageId === null) {
+    return VALID_RESULT;
+  }
+
+  const image = state.images?.items?.[imageId];
+  if (!isPlainObject(image) || image.type === "folder") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference an existing non-folder image`,
+      details,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAnimationMaskImageReferences = ({
+  state,
+  animation,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (
+    !isPlainObject(animation) ||
+    animation.type !== "transition" ||
+    !isPlainObject(animation.mask)
+  ) {
+    return VALID_RESULT;
+  }
+
+  const { mask } = animation;
+
+  if (mask.imageId !== undefined) {
+    const result = validateImageReference({
+      state,
+      imageId: mask.imageId,
+      path: `${path}.mask.imageId`,
+      details: {
+        ...details,
+        field: "imageId",
+        imageId: mask.imageId,
+      },
+      errorFactory,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  if (Array.isArray(mask.imageIds)) {
+    for (const [index, imageId] of mask.imageIds.entries()) {
+      const result = validateImageReference({
+        state,
+        imageId,
+        path: `${path}.mask.imageIds[${index}]`,
+        details: {
+          ...details,
+          field: `imageIds[${index}]`,
+          imageId,
+        },
+        errorFactory,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  if (Array.isArray(mask.items)) {
+    for (const [index, item] of mask.items.entries()) {
+      if (item?.imageId === undefined) {
+        continue;
+      }
+
+      const result = validateImageReference({
+        state,
+        imageId: item.imageId,
+        path: `${path}.mask.items[${index}].imageId`,
+        details: {
+          ...details,
+          field: `items[${index}].imageId`,
+          imageId: item.imageId,
+        },
+        errorFactory,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 export const assertInvariants = ({ state }) => {
   if (!isPlainObject(state)) {
     return invalidInvariant("state must be an object");
@@ -4366,6 +4483,23 @@ export const assertInvariants = ({ state }) => {
       fileId: font.fileId,
       path: "font.fileId",
       details: { fontId, fileId: font.fileId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  for (const [animationId, animation] of Object.entries(state.animations.items)) {
+    if (animation.type !== "animation") {
+      continue;
+    }
+
+    const result = validateAnimationMaskImageReferences({
+      state,
+      animation: animation.animation,
+      path: "animation",
+      details: { animationId },
       errorFactory: createInvariantValidationError,
     });
     if (!result.valid) {
@@ -10886,6 +11020,19 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "animation") {
+        const result = validateAnimationMaskImageReferences({
+          state,
+          animation: payload.data.animation,
+          path: "payload.data.animation",
+          details: { animationId: payload.animationId },
+          errorFactory: createPreconditionValidationError,
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
     },
     reduce: ({ state, payload }) => {
       const nextAnimation = {
@@ -10963,6 +11110,19 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder animation items cannot update animation fields",
         );
+      }
+
+      if (payload.data.animation !== undefined) {
+        const result = validateAnimationMaskImageReferences({
+          state,
+          animation: payload.data.animation,
+          path: "payload.data.animation",
+          details: { animationId: payload.animationId },
+          errorFactory: createPreconditionValidationError,
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     },
     reduce: ({ state, payload }) => {

@@ -824,6 +824,29 @@ test("validatePayload accepts empty transition tween keyframes arrays", () => {
   });
 });
 
+test("validatePayload rejects empty update tween keyframes arrays", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "update",
+            tween: {
+              x: {
+                keyframes: [],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.tween.x.keyframes must contain at least one keyframe",
+  );
+});
+
 test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
     validatePayload({
@@ -1912,6 +1935,81 @@ test("validateAgainstState accepts image creation without semantic file-kind che
   ).toEqual({
     valid: true,
   });
+});
+
+test("validateAgainstState rejects missing transition mask image refs", () => {
+  const state = createEmptyTestState();
+
+  state.animations.items["animation-a"] = {
+    id: "animation-a",
+    type: "animation",
+    name: "Animation A",
+    animation: {
+      type: "update",
+      tween: {
+        x: {
+          initialValue: 0,
+          keyframes: [{ duration: 100, value: 1 }],
+        },
+      },
+    },
+  };
+  state.animations.tree = [
+    {
+      id: "animation-a",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-a",
+          data: {
+            animation: {
+              type: "transition",
+              mask: {
+                kind: "sequence",
+                imageIds: ["image-missing"],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.mask.imageIds[0] must reference an existing non-folder image",
+  );
+});
+
+test("validateState rejects transition mask image refs to missing images", () => {
+  const state = createEmptyTestState();
+
+  state.animations.items["animation-a"] = {
+    id: "animation-a",
+    type: "animation",
+    name: "Animation A",
+    animation: {
+      type: "transition",
+      mask: {
+        kind: "single",
+        imageId: "image-missing",
+      },
+    },
+  };
+  state.animations.tree = [
+    {
+      id: "animation-a",
+      children: [],
+    },
+  ];
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "animation.mask.imageId must reference an existing non-folder image",
+  );
 });
 
 test("validateAgainstState rejects deleting folders that contain referenced files", () => {
