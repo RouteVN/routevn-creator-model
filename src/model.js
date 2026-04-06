@@ -1072,11 +1072,8 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
 };
 
 const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
-  if (!Array.isArray(keyframes) || keyframes.length === 0) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path} must be a non-empty array`,
-    );
+  if (!Array.isArray(keyframes)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an array`);
   }
 
   for (const [index, keyframe] of keyframes.entries()) {

@@ -784,6 +784,32 @@ test("validatePayload rejects unsupported animation easing values", () => {
   );
 });
 
+test("validatePayload accepts empty transition tween keyframes arrays", () => {
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "transition",
+            next: {
+              tween: {
+                translateX: {
+                  initialValue: 1,
+                  keyframes: [],
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
     validatePayload({
