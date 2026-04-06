@@ -1185,6 +1185,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "font",
             name: "UI Font",
+            description: "Primary interface family",
             fileId: "file-font",
             fontFamily: "Suit",
           },
@@ -1197,6 +1198,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "color",
             name: "White",
+            description: "Default light foreground",
             hex: "#ffffff",
           },
         },
@@ -1208,6 +1210,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "textStyle",
             name: "Dialogue",
+            description: "Primary spoken-line style",
             fontId: "font-ui",
             colorId: "color-ui",
             fontSize: 32,
@@ -1317,6 +1320,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
         payload: {
           textStyleId: "style-ui",
           data: {
+            description: "Main dialogue text treatment",
             previewText: "Hello",
             strokeWidth: 2,
           },
@@ -1359,6 +1363,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "transform",
             name: "Camera",
+            description: "Base camera framing",
             x: 0,
             y: 0,
             scaleX: 1,
@@ -1374,6 +1379,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
         payload: {
           transformId: "transform-camera",
           data: {
+            description: "Centered camera framing",
             x: 320,
             y: 180,
           },
@@ -1386,6 +1392,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "number",
             name: "Score",
+            description: "Tracks player score",
             scope: "context",
             default: 0,
             value: 0,
@@ -1397,6 +1404,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
         payload: {
           variableId: "variable-score",
           data: {
+            description: "Tracks the current accumulated score",
             name: "Total Score",
             value: 10,
           },
@@ -1407,6 +1415,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
         payload: {
           layoutId: "layout-dialogue",
           data: {
+            description: "Primary dialogue chrome",
             name: "Dialogue Main",
           },
         },
@@ -1471,6 +1480,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "font-ui",
       type: "font",
       name: "UI Font",
+      description: "Primary interface family",
       fileId: "file-font",
       fontFamily: "Suit",
     },
@@ -1483,6 +1493,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "color-ui",
       type: "color",
       name: "White",
+      description: "Default light foreground",
       hex: "#ffffff",
     },
   };
@@ -1494,6 +1505,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "style-ui",
       type: "textStyle",
       name: "Dialogue",
+      description: "Primary spoken-line style",
       fontId: "font-ui",
       colorId: "color-ui",
       fontSize: 32,
@@ -1625,6 +1637,8 @@ test("applies a ui resources and layout command tape with intermediate state sna
   };
 
   const expected9 = cloneState(expected8);
+  expected9.textStyles.items["style-ui"].description =
+    "Main dialogue text treatment";
   expected9.textStyles.items["style-ui"].previewText = "Hello";
   expected9.textStyles.items["style-ui"].strokeWidth = 2;
 
@@ -1658,6 +1672,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "transform-camera",
       type: "transform",
       name: "Camera",
+      description: "Base camera framing",
       x: 0,
       y: 0,
       scaleX: 1,
@@ -1670,6 +1685,8 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected13.transforms.tree = [{ id: "transform-camera", children: [] }];
 
   const expected14 = cloneState(expected13);
+  expected14.transforms.items["transform-camera"].description =
+    "Centered camera framing";
   expected14.transforms.items["transform-camera"].x = 320;
   expected14.transforms.items["transform-camera"].y = 180;
 
@@ -1679,6 +1696,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "variable-score",
       type: "number",
       name: "Score",
+      description: "Tracks player score",
       scope: "context",
       default: 0,
       value: 0,
@@ -1687,10 +1705,14 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected15.variables.tree = [{ id: "variable-score", children: [] }];
 
   const expected16 = cloneState(expected15);
+  expected16.variables.items["variable-score"].description =
+    "Tracks the current accumulated score";
   expected16.variables.items["variable-score"].name = "Total Score";
   expected16.variables.items["variable-score"].value = 10;
 
   const expected17 = cloneState(expected16);
+  expected17.layouts.items["layout-dialogue"].description =
+    "Primary dialogue chrome";
   expected17.layouts.items["layout-dialogue"].name = "Dialogue Main";
 
   const expected18 = cloneState(expected17);

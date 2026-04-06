@@ -240,7 +240,7 @@ test("validatePayload accepts keyboard data in control.update", () => {
 });
 
 test(
-  "validatePayload accepts thumbnailFileId on layouts, controls, and character sprites",
+  "validatePayload accepts description and thumbnailFileId on layouts, controls, and character sprites",
   () => {
     expect(
       validatePayload({
@@ -250,6 +250,7 @@ test(
           data: {
             type: "layout",
             name: "Thumbnail Layout",
+            description: "Main dialogue frame",
             layoutType: "normal",
             thumbnailFileId: "file-thumb-layout",
             elements: {
@@ -269,6 +270,7 @@ test(
         payload: {
           layoutId: "layout-thumb",
           data: {
+            description: "Main dialogue frame",
             thumbnailFileId: "file-thumb-layout",
           },
         },
@@ -285,6 +287,7 @@ test(
           data: {
             type: "control",
             name: "Thumbnail Control",
+            description: "Shared navigation control",
             thumbnailFileId: "file-thumb-control",
             elements: {
               items: {},
@@ -303,6 +306,7 @@ test(
         payload: {
           controlId: "control-thumb",
           data: {
+            description: "Shared navigation control",
             thumbnailFileId: "file-thumb-control",
           },
         },
@@ -325,11 +329,13 @@ test(
                   id: "folder-default",
                   type: "folder",
                   name: "Default",
+                  description: "Default sprite group",
                 },
                 "sprite-default": {
                   id: "sprite-default",
                   type: "image",
                   name: "Default Sprite",
+                  description: "Neutral idle sprite",
                   fileId: "file-sprite",
                   thumbnailFileId: "file-sprite-thumb",
                 },
@@ -568,7 +574,7 @@ test("processCommand persists keyboard data on controls", () => {
   });
 });
 
-test("processCommand persists thumbnailFileId on layouts and controls", () => {
+test("processCommand persists description and thumbnailFileId on layouts and controls", () => {
   const state = createEmptyTestState();
 
   addFileRecordToState(state, { fileId: "file-layout-thumb" });
@@ -604,6 +610,7 @@ test("processCommand persists thumbnailFileId on layouts and controls", () => {
       payload: {
         layoutId: "layout-default",
         data: {
+          description: "Main dialogue frame",
           thumbnailFileId: "file-layout-thumb",
         },
       },
@@ -611,6 +618,9 @@ test("processCommand persists thumbnailFileId on layouts and controls", () => {
   });
 
   expect(layoutResult.valid).toBe(true);
+  expect(layoutResult.state.layouts.items["layout-default"].description).toBe(
+    "Main dialogue frame",
+  );
   expect(
     layoutResult.state.layouts.items["layout-default"].thumbnailFileId,
   ).toBe("file-layout-thumb");
@@ -622,6 +632,7 @@ test("processCommand persists thumbnailFileId on layouts and controls", () => {
       payload: {
         controlId: "control-default",
         data: {
+          description: "Shared navigation control",
           thumbnailFileId: "file-control-thumb",
         },
       },
@@ -629,6 +640,9 @@ test("processCommand persists thumbnailFileId on layouts and controls", () => {
   });
 
   expect(controlResult.valid).toBe(true);
+  expect(controlResult.state.controls.items["control-default"].description).toBe(
+    "Shared navigation control",
+  );
   expect(
     controlResult.state.controls.items["control-default"].thumbnailFileId,
   ).toBe("file-control-thumb");
@@ -810,6 +824,28 @@ test("validatePayload accepts empty transition tween keyframes arrays", () => {
   });
 });
 
+test("validatePayload rejects empty update tween keyframes arrays", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "update",
+            tween: {
+              x: {
+                keyframes: [],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.tween.x.keyframes must contain at least one keyframe",
+  );
+});
 test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
     validatePayload({
@@ -830,6 +866,34 @@ test("validatePayload rejects invalid transition mask textures", () => {
   ).toThrow(
     "payload.data.animation.mask.textures[1] must be a non-empty string",
   );
+});
+
+test("validatePayload accepts editor transition mask fields", () => {
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "transition",
+            mask: {
+              kind: "sequence",
+              imageIds: ["image-a", "image-b"],
+              channel: "red",
+              invert: false,
+              softness: 0.08,
+              sample: "linear",
+              progressDuration: 900,
+              progressEasing: "linear",
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 });
 
 test("validatePayload accepts layout element rightClick interactions", () => {
@@ -1870,6 +1934,81 @@ test("validateAgainstState accepts image creation without semantic file-kind che
   ).toEqual({
     valid: true,
   });
+});
+
+test("validateAgainstState rejects missing transition mask image refs", () => {
+  const state = createEmptyTestState();
+
+  state.animations.items["animation-a"] = {
+    id: "animation-a",
+    type: "animation",
+    name: "Animation A",
+    animation: {
+      type: "update",
+      tween: {
+        x: {
+          initialValue: 0,
+          keyframes: [{ duration: 100, value: 1 }],
+        },
+      },
+    },
+  };
+  state.animations.tree = [
+    {
+      id: "animation-a",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-a",
+          data: {
+            animation: {
+              type: "transition",
+              mask: {
+                kind: "sequence",
+                imageIds: ["image-missing"],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.mask.imageIds[0] must reference an existing non-folder image",
+  );
+});
+
+test("validateState rejects transition mask image refs to missing images", () => {
+  const state = createEmptyTestState();
+
+  state.animations.items["animation-a"] = {
+    id: "animation-a",
+    type: "animation",
+    name: "Animation A",
+    animation: {
+      type: "transition",
+      mask: {
+        kind: "single",
+        imageId: "image-missing",
+      },
+    },
+  };
+  state.animations.tree = [
+    {
+      id: "animation-a",
+      children: [],
+    },
+  ];
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "animation.mask.imageId must reference an existing non-folder image",
+  );
 });
 
 test("validateAgainstState rejects deleting folders that contain referenced files", () => {
