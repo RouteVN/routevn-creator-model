@@ -846,7 +846,6 @@ test("validatePayload rejects empty update tween keyframes arrays", () => {
     "payload.data.animation.tween.x.keyframes must contain at least one keyframe",
   );
 });
-
 test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
     validatePayload({
