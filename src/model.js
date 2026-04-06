@@ -1230,6 +1230,8 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
       value: mask,
       allowedKeys: [
         "kind",
+        "imageId",
+        "imageIds",
         "texture",
         "textures",
         "items",
@@ -1239,6 +1241,8 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
         "invert",
         "sample",
         "progress",
+        "progressDuration",
+        "progressEasing",
       ],
       path,
       errorFactory,
@@ -1273,6 +1277,13 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
     );
   }
 
+  if (mask.imageId !== undefined && !isNonEmptyString(mask.imageId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.imageId must be a non-empty string when provided`,
+    );
+  }
+
   if (mask.textures !== undefined) {
     if (!Array.isArray(mask.textures) || mask.textures.length === 0) {
       return invalidFromErrorFactory(
@@ -1286,6 +1297,24 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${path}.textures[${index}] must be a non-empty string`,
+        );
+      }
+    }
+  }
+
+  if (mask.imageIds !== undefined) {
+    if (!Array.isArray(mask.imageIds) || mask.imageIds.length === 0) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.imageIds must be a non-empty array when provided`,
+      );
+    }
+
+    for (const [index, imageId] of mask.imageIds.entries()) {
+      if (!isNonEmptyString(imageId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path}.imageIds[${index}] must be a non-empty string`,
         );
       }
     }
@@ -1305,7 +1334,7 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
       {
         const result = validateAllowedKeys({
           value: item,
-          allowedKeys: ["texture", "channel", "invert"],
+          allowedKeys: ["texture", "imageId", "channel", "invert"],
           path: itemPath,
           errorFactory,
         });
@@ -1314,10 +1343,33 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
         }
       }
 
-      if (!isNonEmptyString(item.texture)) {
+      if (
+        item.texture !== undefined &&
+        !isNonEmptyString(item.texture)
+      ) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.texture must be a non-empty string`,
+          `${itemPath}.texture must be a non-empty string when provided`,
+        );
+      }
+
+      if (
+        item.imageId !== undefined &&
+        !isNonEmptyString(item.imageId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.imageId must be a non-empty string when provided`,
+        );
+      }
+
+      if (
+        !isNonEmptyString(item.texture) &&
+        !isNonEmptyString(item.imageId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath} must define texture or imageId`,
         );
       }
 
@@ -1388,17 +1440,45 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
     }
   }
 
-  if (mask.kind === "single" && !isNonEmptyString(mask.texture)) {
+  if (
+    mask.progressDuration !== undefined &&
+    (!isFiniteNumber(mask.progressDuration) || mask.progressDuration < 1)
+  ) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.texture is required when ${path}.kind is 'single'`,
+      `${path}.progressDuration must be a finite number greater than or equal to 1 when provided`,
     );
   }
 
-  if (mask.kind === "sequence" && mask.textures === undefined) {
+  if (
+    mask.progressEasing !== undefined &&
+    !ANIMATION_EASING_KEYS.includes(mask.progressEasing)
+  ) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.textures is required when ${path}.kind is 'sequence'`,
+      `${path}.progressEasing must be a supported Route Graphics easing`,
+    );
+  }
+
+  if (
+    mask.kind === "single" &&
+    !isNonEmptyString(mask.texture) &&
+    !isNonEmptyString(mask.imageId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.texture or ${path}.imageId is required when ${path}.kind is 'single'`,
+    );
+  }
+
+  if (
+    mask.kind === "sequence" &&
+    mask.textures === undefined &&
+    mask.imageIds === undefined
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.textures or ${path}.imageIds is required when ${path}.kind is 'sequence'`,
     );
   }
 
@@ -1551,8 +1631,8 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
-            : ["id", "type", "name", "animation"],
+            ? ["id", "type", "name", "description"]
+            : ["id", "type", "name", "description", "animation"],
         path: itemPath,
         errorFactory,
       });
@@ -1579,6 +1659,13 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -1613,11 +1700,12 @@ const validateFontItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
                 "name",
+                "description",
                 "fileId",
                 "fontFamily",
                 "fileType",
@@ -1649,6 +1737,13 @@ const validateFontItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -1700,8 +1795,8 @@ const validateColorItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
-            : ["id", "type", "name", "hex"],
+            ? ["id", "type", "name", "description"]
+            : ["id", "type", "name", "description", "hex"],
         path: itemPath,
         errorFactory,
       });
@@ -1731,6 +1826,13 @@ const validateColorItems = ({ items, path, errorFactory }) => {
       );
     }
 
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
     if (item.type === "color" && !isHexColor(item.hex)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -1756,11 +1858,12 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
                 "name",
+                "description",
                 "x",
                 "y",
                 "scaleX",
@@ -1795,6 +1898,13 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -1861,8 +1971,8 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           variableType === "folder"
-            ? ["id", "type", "name"]
-            : ["id", "type", "name", "scope", "default", "value"],
+            ? ["id", "type", "name", "description"]
+            : ["id", "type", "name", "description", "scope", "default", "value"],
         path: itemPath,
         errorFactory,
       });
@@ -1889,6 +1999,13 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -1942,11 +2059,12 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
                 "name",
+                "description",
                 "fontId",
                 "colorId",
                 "fontSize",
@@ -1988,6 +2106,13 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -2121,11 +2246,12 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
                 "name",
+                "description",
                 "thumbnailFileId",
                 "fileId",
                 "fileType",
@@ -2159,6 +2285,13 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -2907,7 +3040,7 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
@@ -2948,14 +3081,14 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (item.type === "character") {
-      if (item.description !== undefined && !isString(item.description)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.description must be a string when provided`,
-        );
-      }
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
 
+    if (item.type === "character") {
       if (item.shortcut !== undefined && !isString(item.shortcut)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -3048,7 +3181,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
+            ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
@@ -3155,8 +3288,16 @@ const validateControlItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
-            : ["id", "type", "name", "thumbnailFileId", "elements", "keyboard"],
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "thumbnailFileId",
+                "elements",
+                "keyboard",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -3183,6 +3324,13 @@ const validateControlItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
       );
     }
 
@@ -5550,8 +5698,16 @@ const validateFontCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
-          : ["type", "name", "fileId", "fontFamily", "fileType", "fileSize"],
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "fileId",
+              "fontFamily",
+              "fileType",
+              "fileSize",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -5564,6 +5720,13 @@ const validateFontCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5602,7 +5765,14 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "fileId", "fontFamily", "fileType", "fileSize"],
+      allowedKeys: [
+        "name",
+        "description",
+        "fileId",
+        "fontFamily",
+        "fileType",
+        "fileSize",
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -5622,6 +5792,13 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5773,7 +5950,9 @@ const validateColorCreateData = ({ data, errorFactory }) => {
     const result = validateAllowedKeys({
       value: data,
       allowedKeys:
-        data.type === "folder" ? ["type", "name"] : ["type", "name", "hex"],
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "hex"],
       path: "payload.data",
       errorFactory,
     });
@@ -5789,6 +5968,13 @@ const validateColorCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (data.type === "color" && !isHexColor(data.hex)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -5801,7 +5987,7 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "hex"],
+      allowedKeys: ["name", "description", "hex"],
       path: "payload.data",
       errorFactory,
     });
@@ -5821,6 +6007,13 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5852,8 +6045,8 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
-          : ["type", "name", "animation"],
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "animation"],
       path: "payload.data",
       errorFactory,
     });
@@ -5866,6 +6059,13 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5887,7 +6087,7 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "animation"],
+      allowedKeys: ["name", "description", "animation"],
       path: "payload.data",
       errorFactory,
     });
@@ -5907,6 +6107,13 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5944,10 +6151,11 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
+          ? ["type", "name", "description"]
           : [
               "type",
               "name",
+              "description",
               "x",
               "y",
               "scaleX",
@@ -5968,6 +6176,13 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -5997,6 +6212,7 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys: [
         "name",
+        "description",
         "x",
         "y",
         "scaleX",
@@ -6024,6 +6240,13 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6065,8 +6288,8 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
-          : ["type", "name", "scope", "default", "value"],
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "scope", "default", "value"],
       path: "payload.data",
       errorFactory,
     });
@@ -6079,6 +6302,13 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6119,7 +6349,7 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "scope", "default", "value"],
+      allowedKeys: ["name", "description", "scope", "default", "value"],
       path: "payload.data",
       errorFactory,
     });
@@ -6139,6 +6369,13 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6170,10 +6407,11 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
+          ? ["type", "name", "description"]
           : [
               "type",
               "name",
+              "description",
               "fontId",
               "colorId",
               "fontSize",
@@ -6204,6 +6442,13 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (data.type === "textStyle") {
     {
       const result = validateTextStyleItems({
@@ -6229,6 +6474,7 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys: [
         "name",
+        "description",
         "fontId",
         "colorId",
         "fontSize",
@@ -6263,6 +6509,13 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6349,6 +6602,7 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
           : [
               "type",
               "name",
+              "description",
               "fileId",
               "thumbnailFileId",
               "fileType",
@@ -6368,6 +6622,13 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6414,13 +6675,6 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         "payload.data.height must be a finite number when provided",
-      );
-    }
-
-    if (data.description !== undefined && !isString(data.description)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.description must be a string when provided",
       );
     }
   }
@@ -6535,7 +6789,7 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
+          ? ["type", "name", "description"]
           : [
               "type",
               "name",
@@ -6561,14 +6815,14 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type === "character") {
-    if (data.description !== undefined && !isString(data.description)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.description must be a string when provided",
-      );
-    }
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
 
+  if (data.type === "character") {
     if (data.shortcut !== undefined && !isString(data.shortcut)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6705,7 +6959,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
+          ? ["type", "name", "description"]
           : [
               "type",
               "name",
@@ -6865,8 +7119,15 @@ const validateControlCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
-          : ["type", "name", "thumbnailFileId", "elements", "keyboard"],
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "thumbnailFileId",
+              "elements",
+              "keyboard",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -6879,6 +7140,13 @@ const validateControlCreateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -6923,7 +7191,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "keyboard", "thumbnailFileId"],
+      allowedKeys: ["name", "description", "keyboard", "thumbnailFileId"],
       path: "payload.data",
       errorFactory,
     });
@@ -6943,6 +7211,13 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
     );
   }
 
@@ -10619,6 +10894,10 @@ const COMMAND_DEFINITIONS = [
         name: payload.data.name,
       };
 
+      if (payload.data.description !== undefined) {
+        nextAnimation.description = payload.data.description;
+      }
+
       if (payload.data.type === "animation") {
         nextAnimation.animation = structuredClone(payload.data.animation);
       }
@@ -11004,6 +11283,10 @@ const COMMAND_DEFINITIONS = [
         type: payload.data.type,
         name: payload.data.name,
       };
+
+      if (payload.data.description !== undefined) {
+        nextFont.description = payload.data.description;
+      }
 
       if (payload.data.type === "font") {
         nextFont.fileId = payload.data.fileId;
@@ -11401,6 +11684,10 @@ const COMMAND_DEFINITIONS = [
         name: payload.data.name,
       };
 
+      if (payload.data.description !== undefined) {
+        nextColor.description = payload.data.description;
+      }
+
       if (payload.data.type === "color") {
         nextColor.hex = payload.data.hex;
       }
@@ -11678,6 +11965,11 @@ const COMMAND_DEFINITIONS = [
       id: payload.transformId,
       type: payload.data.type,
       name: payload.data.name,
+      ...(payload.data.description !== undefined
+        ? {
+            description: payload.data.description,
+          }
+        : {}),
       ...(payload.data.type === "transform"
         ? {
             x: payload.data.x,
@@ -11693,7 +11985,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder transform items cannot update transform fields",
@@ -11712,6 +12006,11 @@ const COMMAND_DEFINITIONS = [
       id: payload.variableId,
       type: payload.data.type,
       name: payload.data.name,
+      ...(payload.data.description !== undefined
+        ? {
+            description: payload.data.description,
+          }
+        : {}),
       ...(payload.data.type === "folder"
         ? {}
         : {
@@ -11723,7 +12022,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder variable items cannot update variable fields",
@@ -11795,7 +12096,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder text style items cannot update text style fields",
@@ -11831,12 +12134,12 @@ const COMMAND_DEFINITIONS = [
         name: payload.data.name,
       };
 
-      if (item.type !== "character") {
-        return item;
-      }
-
       if (payload.data.description !== undefined) {
         item.description = payload.data.description;
+      }
+
+      if (item.type !== "character") {
+        return item;
       }
 
       if (payload.data.shortcut !== undefined) {
@@ -11924,7 +12227,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder character items cannot update character fields",
@@ -11957,9 +12262,13 @@ const COMMAND_DEFINITIONS = [
       id: payload.layoutId,
       type: payload.data.type,
       name: payload.data.name,
-      ...(payload.data.type === "layout"
+      ...(payload.data.description !== undefined
         ? {
             description: payload.data.description,
+          }
+        : {}),
+      ...(payload.data.type === "layout"
+        ? {
             layoutType: payload.data.layoutType,
             isFragment: payload.data.isFragment,
             ...(payload.data.thumbnailFileId !== undefined
@@ -11988,7 +12297,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder layout items cannot update layout fields",
@@ -12018,6 +12329,11 @@ const COMMAND_DEFINITIONS = [
       id: payload.controlId,
       type: payload.data.type,
       name: payload.data.name,
+      ...(payload.data.description !== undefined
+        ? {
+            description: payload.data.description,
+          }
+        : {}),
       ...(payload.data.type === "control"
         ? {
             ...(payload.data.thumbnailFileId !== undefined
@@ -12051,7 +12367,9 @@ const COMMAND_DEFINITIONS = [
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder control items cannot update control fields",
@@ -12273,7 +12591,9 @@ const COMMAND_DEFINITIONS = [
 
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder sprite items cannot update image fields",

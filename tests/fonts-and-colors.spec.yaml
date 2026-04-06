@@ -93,6 +93,7 @@ in:
         data:
           type: font
           name: Display
+          description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
           fileType: font/otf
@@ -155,6 +156,7 @@ out:
           id: font-a
           type: font
           name: Display
+          description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
           fileType: font/otf
@@ -249,6 +251,7 @@ in:
         fontId: font-a
         data:
           name: Display Serif
+          description: Updated display family
           fileSize: 4096
 out:
   state:
@@ -290,6 +293,7 @@ out:
           id: font-a
           type: font
           name: Display Serif
+          description: Updated display family
           fileId: file-a
           fontFamily: Fraunces
           fileSize: 4096
@@ -532,6 +536,7 @@ in:
         data:
           type: color
           name: Primary
+          description: Core brand tone
           hex: '#112233'
 out:
   state:
@@ -580,6 +585,7 @@ out:
           id: color-a
           type: color
           name: Primary
+          description: Core brand tone
           hex: '#112233'
       tree:
         - id: folder-brand
@@ -656,6 +662,7 @@ in:
         colorId: color-a
         data:
           name: Primary Dark
+          description: Deeper emphasis tone
           hex: '#223344'
 out:
   state:
@@ -695,6 +702,7 @@ out:
           id: color-a
           type: color
           name: Primary Dark
+          description: Deeper emphasis tone
           hex: '#223344'
       tree:
         - id: color-a

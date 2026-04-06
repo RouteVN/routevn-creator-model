@@ -59,6 +59,7 @@ in:
         data:
           type: transform
           name: Camera
+          description: Default framing transform
           x: 100
           'y': 200
           scaleX: 1
@@ -101,6 +102,7 @@ out:
           id: transform-camera
           type: transform
           name: Camera
+          description: Default framing transform
           x: 100
           'y': 200
           scaleX: 1
@@ -176,6 +178,7 @@ in:
         data:
           type: boolean
           name: Has Seen Intro
+          description: Tracks whether the intro has played
           scope: context
           default: false
           value: false
@@ -223,6 +226,7 @@ out:
           id: hasSeenIntro
           type: boolean
           name: Has Seen Intro
+          description: Tracks whether the intro has played
           scope: context
           default: false
           value: false
@@ -308,6 +312,7 @@ in:
         data:
           type: textStyle
           name: Dialogue
+          description: Main spoken-line styling
           fontId: font-ui
           colorId: color-ui
           fontSize: 32
@@ -378,6 +383,7 @@ out:
           id: style-ui
           type: textStyle
           name: Dialogue
+          description: Main spoken-line styling
           fontId: font-ui
           colorId: color-ui
           fontSize: 32
