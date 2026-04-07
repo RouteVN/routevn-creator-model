@@ -1095,6 +1095,50 @@ test("validateState accepts layout elements with rightClick interactions", () =>
   });
 });
 
+test("validateState accepts layout elements with aspectRatioLock", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          aspectRatioLock: 2,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+      },
+      tree: [
+        {
+          id: "sprite-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout elements with textStyle overrides", () => {
   const state = createEmptyTestState();
 

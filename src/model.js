@@ -2474,6 +2474,7 @@ const validateLayoutElementData = ({
     "y",
     "width",
     "height",
+    "aspectRatioLock",
     "anchorX",
     "anchorY",
     "scaleX",
@@ -2572,6 +2573,16 @@ const validateLayoutElementData = ({
         `${path}.${key} must be a finite number when provided`,
       );
     }
+  }
+
+  if (
+    data.aspectRatioLock !== undefined &&
+    (!isFiniteNumber(data.aspectRatioLock) || data.aspectRatioLock <= 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.aspectRatioLock must be a finite number greater than 0 when provided`,
+    );
   }
 
   if (
@@ -2959,6 +2970,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "y",
           "width",
           "height",
+          "aspectRatioLock",
           "anchorX",
           "anchorY",
           "scaleX",
