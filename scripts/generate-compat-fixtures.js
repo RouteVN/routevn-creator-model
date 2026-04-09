@@ -1,8 +1,8 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import yaml from "js-yaml";
+import { SCHEMA_VERSION } from "../src/index.js";
 import { createEmptyTestState } from "../tests/support/createEmptyTestState.js";
 
-const SCHEMA_VERSION = 1;
 const COMPAT_SCHEMA_ROOT = new URL(
   `../tests/compat/schema-${SCHEMA_VERSION}/`,
   import.meta.url,

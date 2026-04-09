@@ -156,7 +156,7 @@ temporary artifact.
 Minimum required checks:
 
 ```bash
-bunx vitest run tests/compatibility-fixtures.test.js
+bun run test:compat
 bunx vitest run tests/model-api.test.js tests/compatibility-fixtures.test.js
 ```
 
@@ -175,6 +175,8 @@ currently enforces:
   payload fixtures
 - every current-schema command type has `minimal.yaml`
 - every current-schema command type has `full.yaml`
+- the current schema archive contains payloads, states, and streams
+- schema archives stay contiguous from `schema-1` through the current schema
 - all archived payload fixtures still pass `validatePayload()`
 - all archived state fixtures still pass `validateState()`
 - all archived stream fixtures still replay through `processCommand()`

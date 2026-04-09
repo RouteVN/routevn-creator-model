@@ -188,6 +188,8 @@ const listSchemaVersions = async () => {
     .sort((left, right) => left - right);
 };
 
+export const listCompatibilitySchemaVersions = async () => listSchemaVersions();
+
 const loadCompatibilityFixturesByKind = async (kind) => {
   const schemaVersions = await listSchemaVersions();
   const filesBySchema = await Promise.all(

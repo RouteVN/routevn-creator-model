@@ -27,6 +27,7 @@
   },
   "scripts": {
     "test": "bunx vitest run",
+    "test:compat": "bunx vitest run tests/compatibility-fixtures.test.js",
     "test:watch": "bunx vitest",
     "bench": "bun scripts/benchmark-process-command.js",
     "generate:compat-fixtures": "node scripts/generate-compat-fixtures.js"

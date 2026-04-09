@@ -8,6 +8,7 @@ import {
 import { listCommandTypes } from "../src/model.js";
 import {
   getCurrentSchemaPayloadCoverage,
+  listCompatibilitySchemaVersions,
   loadCompatibilityPayloadFixtures,
   loadCompatibilityStateFixtures,
   loadCompatibilityStreamFixtures,
@@ -17,6 +18,7 @@ const payloadFixtures = await loadCompatibilityPayloadFixtures();
 const stateFixtures = await loadCompatibilityStateFixtures();
 const streamFixtures = await loadCompatibilityStreamFixtures();
 const currentSchemaPayloadCoverage = await getCurrentSchemaPayloadCoverage();
+const archivedSchemaVersions = await listCompatibilitySchemaVersions();
 
 const isPlainObject = (value) =>
   !!value && typeof value === "object" && !Array.isArray(value);
@@ -53,11 +55,21 @@ const expectCompatibilitySubset = (actual, expected, path = "state") => {
 
 test("compatibility state fixtures exist for the current schema line", () => {
   expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(1);
-  expect(stateFixtures.length).toBeGreaterThan(0);
+  expect(
+    stateFixtures.some((fixture) => fixture.schemaVersion === SCHEMA_VERSION),
+  ).toBe(true);
 });
 
 test("compatibility payload fixtures exist for the current schema line", () => {
-  expect(payloadFixtures.length).toBeGreaterThan(0);
+  expect(
+    payloadFixtures.some((fixture) => fixture.schemaVersion === SCHEMA_VERSION),
+  ).toBe(true);
+});
+
+test("compatibility schema archives stay contiguous", () => {
+  expect(archivedSchemaVersions).toEqual(
+    Array.from({ length: SCHEMA_VERSION }, (_, index) => index + 1),
+  );
 });
 
 test("current schema payload fixture coverage stays aligned with command types", () => {
@@ -103,7 +115,9 @@ for (const fixture of stateFixtures) {
 }
 
 test("compatibility stream fixtures exist for the current schema line", () => {
-  expect(streamFixtures.length).toBeGreaterThan(0);
+  expect(
+    streamFixtures.some((fixture) => fixture.schemaVersion === SCHEMA_VERSION),
+  ).toBe(true);
 });
 
 for (const fixture of streamFixtures) {

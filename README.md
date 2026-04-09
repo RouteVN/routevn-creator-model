@@ -84,6 +84,7 @@ Design rules:
 - `SCHEMA_VERSION` is the source of truth for persisted command schema versioning
 - `SCHEMA_VERSION` must stay aligned with the minor version from `package.json`
 - patch releases must not change persisted schema compatibility
+- `bun run test:compat` is the required compatibility gate for model changes
 - `processCommand()` is the authoritative state transition
 - model state should contain project-owned runtime data only
 - app-owned metadata like project id, name, and description should stay out of
