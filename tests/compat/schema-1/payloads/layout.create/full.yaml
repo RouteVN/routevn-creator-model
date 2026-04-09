@@ -1,0 +1,14 @@
+schemaVersion: 1
+type: layout.create
+payload:
+  layoutId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: layout
+    name: Dialogue
+    layoutType: dialogue
+    elements:
+      items: {}
+      tree: []

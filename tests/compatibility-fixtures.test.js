@@ -5,13 +5,18 @@ import {
   validatePayload,
   validateState,
 } from "../src/index.js";
+import { listCommandTypes } from "../src/model.js";
 import {
+  getCurrentSchemaPayloadCoverage,
+  loadCompatibilityPayloadFixtures,
   loadCompatibilityStateFixtures,
   loadCompatibilityStreamFixtures,
 } from "./support/compatFixtures.js";
 
+const payloadFixtures = await loadCompatibilityPayloadFixtures();
 const stateFixtures = await loadCompatibilityStateFixtures();
 const streamFixtures = await loadCompatibilityStreamFixtures();
+const currentSchemaPayloadCoverage = await getCurrentSchemaPayloadCoverage();
 
 const isPlainObject = (value) =>
   !!value && typeof value === "object" && !Array.isArray(value);
@@ -51,8 +56,46 @@ test("compatibility state fixtures exist for the current schema line", () => {
   expect(stateFixtures.length).toBeGreaterThan(0);
 });
 
+test("compatibility payload fixtures exist for the current schema line", () => {
+  expect(payloadFixtures.length).toBeGreaterThan(0);
+});
+
+test("current schema payload fixture coverage stays aligned with command types", () => {
+  const commandTypes = listCommandTypes().slice().sort();
+  const coveredCommandTypes = Array.from(
+    currentSchemaPayloadCoverage.keys(),
+  ).sort();
+
+  expect(coveredCommandTypes).toEqual(commandTypes);
+
+  for (const commandType of commandTypes) {
+    const coverage = currentSchemaPayloadCoverage.get(commandType) ?? new Set();
+    expect(
+      coverage.has("minimal"),
+      `${commandType} is missing payload fixture minimal.yaml`,
+    ).toBe(true);
+    expect(
+      coverage.has("full"),
+      `${commandType} is missing payload fixture full.yaml`,
+    ).toBe(true);
+  }
+});
+
+for (const fixture of payloadFixtures) {
+  test(`compat payload: schema-${fixture.schemaVersion}/${fixture.type}/${fixture.fixtureName}`, () => {
+    expect(
+      validatePayload({
+        type: fixture.type,
+        payload: fixture.payload,
+      }),
+    ).toEqual({
+      valid: true,
+    });
+  });
+}
+
 for (const fixture of stateFixtures) {
-  test(`compat state: ${fixture.fixtureName}`, () => {
+  test(`compat state: schema-${fixture.schemaVersion}/${fixture.fixtureName}`, () => {
     expect(validateState({ state: fixture.state })).toEqual({
       valid: true,
     });
@@ -64,7 +107,7 @@ test("compatibility stream fixtures exist for the current schema line", () => {
 });
 
 for (const fixture of streamFixtures) {
-  test(`compat stream: ${fixture.fixtureName}`, () => {
+  test(`compat stream: schema-${fixture.schemaVersion}/${fixture.fixtureName}`, () => {
     expect(validateState({ state: fixture.initialState })).toEqual({
       valid: true,
     });

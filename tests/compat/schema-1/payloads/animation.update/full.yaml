@@ -1,0 +1,13 @@
+schemaVersion: 1
+type: animation.update
+payload:
+  animationId: item-a
+  data:
+    description: Soft mask transition
+    animation:
+      type: update
+      tween:
+        x:
+          keyframes:
+            - duration: 100
+              value: 50

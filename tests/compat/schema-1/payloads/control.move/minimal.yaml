@@ -1,0 +1,6 @@
+schemaVersion: 1
+type: control.move
+payload:
+  controlId: item-a
+  parentId: folder-a
+  position: last

@@ -1,0 +1,17 @@
+schemaVersion: 1
+type: image.create
+payload:
+  imageId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: image
+    name: Background
+    description: Establishing shot
+    fileId: file-image
+    thumbnailFileId: thumb-image
+    fileType: image/png
+    fileSize: 2048
+    width: 1920
+    height: 1080

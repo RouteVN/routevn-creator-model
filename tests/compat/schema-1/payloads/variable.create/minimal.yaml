@@ -1,0 +1,10 @@
+schemaVersion: 1
+type: variable.create
+payload:
+  variableId: item-a
+  data:
+    type: number
+    name: Score
+    scope: context
+    default: 0
+    value: 0

@@ -1,0 +1,6 @@
+schemaVersion: 1
+type: video.update
+payload:
+  videoId: item-a
+  data:
+    width: 1280

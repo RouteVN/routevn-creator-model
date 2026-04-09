@@ -1,0 +1,6 @@
+schemaVersion: 1
+type: control.update
+payload:
+  controlId: item-a
+  data:
+    name: Control Updated

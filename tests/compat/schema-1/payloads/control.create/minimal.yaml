@@ -1,0 +1,10 @@
+schemaVersion: 1
+type: control.create
+payload:
+  controlId: item-a
+  data:
+    type: control
+    name: Default Control
+    elements:
+      items: {}
+      tree: []

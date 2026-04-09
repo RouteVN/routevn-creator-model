@@ -194,10 +194,13 @@ real public API returns `{ valid: ... }` result objects.
 
 Compatibility fixtures live under `tests/compat/schema-<n>/`.
 
+- `payloads/` fixtures are frozen command payload shapes for that schema version
 - `states/` fixtures are frozen persisted-state snapshots for that schema version
 - `streams/` fixtures are frozen command sequences for that schema version
 - current tests must continue to validate/replay every archived compatibility
   fixture from the same or older schema versions
+- current schema payload coverage must include `minimal.yaml` and `full.yaml` for
+  every public command type
 
 ## Current Scope
 

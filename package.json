@@ -28,7 +28,8 @@
   "scripts": {
     "test": "bunx vitest run",
     "test:watch": "bunx vitest",
-    "bench": "bun scripts/benchmark-process-command.js"
+    "bench": "bun scripts/benchmark-process-command.js",
+    "generate:compat-fixtures": "node scripts/generate-compat-fixtures.js"
   },
   "devDependencies": {
     "js-yaml": "^4.1.0",

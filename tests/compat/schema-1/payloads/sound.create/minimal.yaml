@@ -1,0 +1,8 @@
+schemaVersion: 1
+type: sound.create
+payload:
+  soundId: item-a
+  data:
+    type: sound
+    name: Sound
+    fileId: file-sound
