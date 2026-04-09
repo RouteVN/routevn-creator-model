@@ -1,8 +1,0 @@
-schemaVersion: 2
-type: color.create
-payload:
-  colorId: item-a
-  data:
-    type: color
-    name: Color
-    hex: '#112233'

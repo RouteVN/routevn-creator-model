@@ -145,7 +145,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 1;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",

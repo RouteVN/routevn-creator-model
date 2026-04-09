@@ -1,6 +1,0 @@
-schemaVersion: 2
-type: image.move
-payload:
-  imageId: item-a
-  parentId: folder-a
-  position: last

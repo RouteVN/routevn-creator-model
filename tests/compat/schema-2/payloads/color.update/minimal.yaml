@@ -1,6 +1,0 @@
-schemaVersion: 2
-type: color.update
-payload:
-  colorId: item-a
-  data:
-    hex: '#223344'

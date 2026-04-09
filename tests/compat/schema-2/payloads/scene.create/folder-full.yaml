@@ -1,7 +1,0 @@
-schemaVersion: 2
-type: scene.create
-payload:
-  sceneId: folder-prologue
-  data:
-    type: folder
-    name: Prologue

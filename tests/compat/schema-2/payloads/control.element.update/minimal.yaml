@@ -1,7 +1,0 @@
-schemaVersion: 2
-type: control.element.update
-payload:
-  controlId: control-default
-  elementId: text-a
-  data:
-    name: Title Updated

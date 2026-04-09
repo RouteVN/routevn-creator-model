@@ -1,7 +1,0 @@
-schemaVersion: 2
-type: layout.element.update
-payload:
-  layoutId: layout-dialogue
-  elementId: text-a
-  data:
-    variableId: _dialogueTextSpeed

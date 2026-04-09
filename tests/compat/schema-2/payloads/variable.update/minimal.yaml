@@ -1,6 +1,0 @@
-schemaVersion: 2
-type: variable.update
-payload:
-  variableId: item-a
-  data:
-    value: 10
