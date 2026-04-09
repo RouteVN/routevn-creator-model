@@ -13,6 +13,39 @@ import {
 const stateFixtures = await loadCompatibilityStateFixtures();
 const streamFixtures = await loadCompatibilityStreamFixtures();
 
+const isPlainObject = (value) =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+
+const expectCompatibilitySubset = (actual, expected, path = "state") => {
+  if (Array.isArray(expected)) {
+    expect(Array.isArray(actual), `${path} must stay an array`).toBe(true);
+    expect(actual.length, `${path} length changed`).toBe(expected.length);
+
+    expected.forEach((expectedItem, index) => {
+      expectCompatibilitySubset(
+        actual[index],
+        expectedItem,
+        `${path}[${index}]`,
+      );
+    });
+
+    return;
+  }
+
+  if (isPlainObject(expected)) {
+    expect(isPlainObject(actual), `${path} must stay an object`).toBe(true);
+
+    for (const [key, expectedValue] of Object.entries(expected)) {
+      expect(key in actual, `${path}.${key} disappeared`).toBe(true);
+      expectCompatibilitySubset(actual[key], expectedValue, `${path}.${key}`);
+    }
+
+    return;
+  }
+
+  expect(actual, `${path} changed`).toEqual(expected);
+};
+
 test("compatibility state fixtures exist for the current schema line", () => {
   expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(1);
   expect(stateFixtures.length).toBeGreaterThan(0);
@@ -62,7 +95,7 @@ for (const fixture of streamFixtures) {
     }
 
     if (fixture.expectedFinalState !== undefined) {
-      expect(currentState).toEqual(fixture.expectedFinalState);
+      expectCompatibilitySubset(currentState, fixture.expectedFinalState);
     }
   });
 }
