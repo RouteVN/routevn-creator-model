@@ -1,0 +1,21 @@
+schemaVersion: 2
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: text-c
+  parentId: container-root
+  position: before
+  positionTargetId: text-a
+  data:
+    type: text
+    name: Body
+    x: 0
+    'y': 40
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    text: More
+    textStyleId: text-style-ui
+    variableId: _dialogueTextSpeed

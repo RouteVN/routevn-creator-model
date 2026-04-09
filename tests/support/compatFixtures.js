@@ -150,6 +150,7 @@ const upgradeSchema1PayloadFixture = (fixture) => {
 const upgradeFixtureForCurrentSchema = (fixture) => {
   switch (fixture.schemaVersion) {
     case 1:
+    case 2:
       if (fixture.kind === "state") {
         return upgradeSchema1StateFixture(fixture);
       }

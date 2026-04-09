@@ -1,0 +1,6 @@
+schemaVersion: 2
+type: video.delete
+payload:
+  videoIds:
+    - item-a
+    - item-b

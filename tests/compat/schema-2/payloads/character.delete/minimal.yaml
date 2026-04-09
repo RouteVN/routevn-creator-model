@@ -1,0 +1,5 @@
+schemaVersion: 2
+type: character.delete
+payload:
+  characterIds:
+    - item-a

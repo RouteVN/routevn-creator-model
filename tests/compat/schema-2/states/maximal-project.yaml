@@ -1,0 +1,449 @@
+schemaVersion: 2
+state:
+  project: {}
+  story:
+    initialSceneId: scene-a
+  scenes:
+    items:
+      scene-a:
+        id: scene-a
+        type: scene
+        name: Intro
+        sections:
+          items:
+            section-a:
+              id: section-a
+              name: Section A
+              lines:
+                items:
+                  line-a:
+                    id: line-a
+                    actions:
+                      say: hello
+                  line-b:
+                    id: line-b
+                    actions:
+                      say: bye
+                tree:
+                  - id: line-a
+                    children: []
+                  - id: line-b
+                    children: []
+            section-b:
+              id: section-b
+              name: Section B
+              lines:
+                items:
+                  line-other:
+                    id: line-other
+                    actions:
+                      say: other
+                tree:
+                  - id: line-other
+                    children: []
+          tree:
+            - id: section-a
+              children: []
+            - id: section-b
+              children: []
+      folder-scenes:
+        id: folder-scenes
+        type: folder
+        name: Folder
+      scene-b:
+        id: scene-b
+        type: scene
+        name: Middle
+        sections:
+          items:
+            section-other:
+              id: section-other
+              name: Other
+              lines:
+                items: {}
+                tree: []
+          tree:
+            - id: section-other
+              children: []
+    tree:
+      - id: scene-a
+        children: []
+      - id: folder-scenes
+        children:
+          - id: scene-b
+            children: []
+  files:
+    items:
+      file-font-ui:
+        id: file-font-ui
+        type: font
+        mimeType: font/ttf
+        size: 1
+        sha256: file-font-ui-sha256
+      file-smile:
+        id: file-smile
+        type: image
+        mimeType: image/png
+        size: 256
+        sha256: file-smile-sha256
+      file-angry:
+        id: file-angry
+        type: image
+        mimeType: image/png
+        size: 256
+        sha256: file-angry-sha256
+      file-image-rich:
+        id: file-image-rich
+        type: image
+        mimeType: image/png
+        size: 2048
+        sha256: file-image-rich-sha256
+      thumb-image-rich:
+        id: thumb-image-rich
+        type: image-thumbnail
+        mimeType: image/webp
+        size: 1
+        sha256: thumb-image-rich-sha256
+      file-sound-rich:
+        id: file-sound-rich
+        type: audio
+        mimeType: audio/mp3
+        size: 1024
+        sha256: file-sound-rich-sha256
+      waveform-sound-rich:
+        id: waveform-sound-rich
+        type: audio-waveform
+        mimeType: application/json
+        size: 1
+        sha256: waveform-sound-rich-sha256
+      file-video-rich:
+        id: file-video-rich
+        type: video
+        mimeType: video/mp4
+        size: 4096
+        sha256: file-video-rich-sha256
+      thumb-video-rich:
+        id: thumb-video-rich
+        type: video-thumbnail
+        mimeType: image/jpeg
+        size: 1
+        sha256: thumb-video-rich-sha256
+    tree:
+      - id: file-font-ui
+        children: []
+      - id: file-smile
+        children: []
+      - id: file-angry
+        children: []
+      - id: file-image-rich
+        children: []
+      - id: thumb-image-rich
+        children: []
+      - id: file-sound-rich
+        children: []
+      - id: waveform-sound-rich
+        children: []
+      - id: file-video-rich
+        children: []
+      - id: thumb-video-rich
+        children: []
+  images:
+    items:
+      folder-art:
+        id: folder-art
+        type: folder
+        name: Art
+      image-rich:
+        id: image-rich
+        type: image
+        name: Background
+        description: Establishing shot
+        fileId: file-image-rich
+        thumbnailFileId: thumb-image-rich
+        fileType: image/png
+        fileSize: 2048
+        width: 1920
+        height: 1080
+    tree:
+      - id: folder-art
+        children:
+          - id: image-rich
+            children: []
+  sounds:
+    items:
+      folder-audio:
+        id: folder-audio
+        type: folder
+        name: Audio
+      sound-rich:
+        id: sound-rich
+        type: sound
+        name: Ambience
+        description: Night ambience
+        fileId: file-sound-rich
+        fileType: audio/mp3
+        fileSize: 1024
+        waveformDataFileId: waveform-sound-rich
+        duration: 42.5
+    tree:
+      - id: folder-audio
+        children:
+          - id: sound-rich
+            children: []
+  videos:
+    items:
+      folder-video:
+        id: folder-video
+        type: folder
+        name: Video
+      video-rich:
+        id: video-rich
+        type: video
+        name: Opening
+        description: Opening cinematic
+        fileId: file-video-rich
+        thumbnailFileId: thumb-video-rich
+        fileType: video/mp4
+        fileSize: 4096
+        width: 1280
+        height: 720
+    tree:
+      - id: folder-video
+        children:
+          - id: video-rich
+            children: []
+  animations:
+    items:
+      animation-rich:
+        id: animation-rich
+        type: animation
+        name: Entrance Motion
+        description: Entrance motion
+        animation:
+          type: update
+          tween:
+            x:
+              keyframes:
+                - duration: 100
+                  value: -120
+                  easing: linear
+                - duration: 100
+                  value: 0
+                  easing: easeOutQuad
+    tree:
+      - id: animation-rich
+        children: []
+  characters:
+    items:
+      character-hero:
+        id: character-hero
+        type: character
+        name: Hero
+        sprites:
+          items:
+            folder-default:
+              id: folder-default
+              type: folder
+              name: Default
+            sprite-a:
+              id: sprite-a
+              type: image
+              name: Smile
+              fileId: file-smile
+            sprite-b:
+              id: sprite-b
+              type: image
+              name: Angry
+              fileId: file-angry
+          tree:
+            - id: folder-default
+              children:
+                - id: sprite-a
+                  children: []
+            - id: sprite-b
+              children: []
+    tree:
+      - id: character-hero
+        children: []
+  fonts:
+    items:
+      font-ui:
+        id: font-ui
+        type: font
+        name: UI Font
+        fileId: file-font-ui
+        fontFamily: Suit
+    tree:
+      - id: font-ui
+        children: []
+  transforms:
+    items:
+      transform-rich:
+        id: transform-rich
+        type: transform
+        name: Camera
+        description: Default framing transform
+        x: 100
+        'y': 200
+        scaleX: 1
+        scaleY: 1
+        anchorX: 0
+        anchorY: 0
+        rotation: 0
+    tree:
+      - id: transform-rich
+        children: []
+  colors:
+    items:
+      color-ui:
+        id: color-ui
+        type: color
+        name: White
+        hex: '#ffffff'
+    tree:
+      - id: color-ui
+        children: []
+  textStyles:
+    items:
+      text-style-ui:
+        id: text-style-ui
+        type: textStyle
+        name: UI Style
+        fontId: font-ui
+        colorId: color-ui
+        fontSize: 32
+        lineHeight: 1.4
+        fontWeight: '700'
+    tree:
+      - id: text-style-ui
+        children: []
+  variables:
+    items:
+      variable-rich:
+        id: variable-rich
+        type: boolean
+        name: Has Seen Intro
+        description: Tracks whether the intro has played
+        scope: context
+        default: false
+        value: false
+    tree:
+      - id: variable-rich
+        children: []
+  layouts:
+    items:
+      layout-dialogue:
+        id: layout-dialogue
+        type: layout
+        name: Dialogue
+        layoutType: dialogue
+        elements:
+          items:
+            container-root:
+              id: container-root
+              type: container
+              name: Root
+              x: 0
+              'y': 0
+              width: 100
+              height: 100
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+            text-a:
+              id: text-a
+              type: text
+              name: Title
+              x: 0
+              'y': 0
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              text: Hello
+              textStyleId: text-style-ui
+              variableId: variable-rich
+            text-b:
+              id: text-b
+              type: text
+              name: Subtitle
+              x: 0
+              'y': 20
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              text: World
+              textStyleId: text-style-ui
+          tree:
+            - id: container-root
+              children:
+                - id: text-a
+                  children: []
+                - id: text-b
+                  children: []
+    tree:
+      - id: layout-dialogue
+        children: []
+  controls:
+    items:
+      control-default:
+        id: control-default
+        type: control
+        name: Default Control
+        elements:
+          items:
+            container-root:
+              id: container-root
+              type: container
+              name: Root
+              x: 0
+              'y': 0
+              width: 100
+              height: 100
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+            text-a:
+              id: text-a
+              type: text
+              name: Title
+              x: 0
+              'y': 0
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              text: Hello
+              textStyleId: text-style-ui
+              variableId: variable-rich
+            text-b:
+              id: text-b
+              type: text
+              name: Subtitle
+              x: 0
+              'y': 20
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              text: World
+              textStyleId: text-style-ui
+          tree:
+            - id: container-root
+              children:
+                - id: text-a
+                  children: []
+                - id: text-b
+                  children: []
+    tree:
+      - id: control-default
+        children: []

@@ -1,0 +1,17 @@
+schemaVersion: 2
+type: video.create
+payload:
+  videoId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: video
+    name: Opening
+    description: Opening cinematic
+    fileId: file-video
+    thumbnailFileId: thumb-video
+    fileType: video/mp4
+    fileSize: 4096
+    width: 1280
+    height: 720

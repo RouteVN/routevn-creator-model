@@ -1,0 +1,9 @@
+schemaVersion: 2
+type: video.update
+payload:
+  videoId: item-a
+  data:
+    description: Opening cinematic
+    thumbnailFileId: thumb-video
+    width: 1920
+    height: 1080

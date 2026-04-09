@@ -1,0 +1,8 @@
+schemaVersion: 2
+type: file.create
+payload:
+  fileId: file-a
+  data:
+    mimeType: video/mp4
+    size: 4096
+    sha256: file-a-sha256

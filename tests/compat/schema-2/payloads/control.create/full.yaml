@@ -1,0 +1,13 @@
+schemaVersion: 2
+type: control.create
+payload:
+  controlId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: control
+    name: Default Control
+    elements:
+      items: {}
+      tree: []
