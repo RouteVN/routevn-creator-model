@@ -1,0 +1,26 @@
+schemaVersion: 1
+type: animation.create
+payload:
+  animationId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: animation
+    name: Entrance Motion
+    description: Entrance motion
+    animation:
+      type: update
+      tween:
+        x:
+          keyframes:
+            - duration: 100
+              value: -120
+              easing: linear
+            - duration: 100
+              value: 0
+              easing: easeOutQuad
+        alpha:
+          keyframes:
+            - duration: 100
+              value: 1

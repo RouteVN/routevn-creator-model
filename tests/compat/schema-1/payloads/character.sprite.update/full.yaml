@@ -1,0 +1,9 @@
+schemaVersion: 1
+type: character.sprite.update
+payload:
+  characterId: character-hero
+  spriteId: sprite-a
+  data:
+    name: Smile Updated
+    width: 640
+    height: 640

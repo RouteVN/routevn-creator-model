@@ -1,0 +1,6 @@
+schemaVersion: 1
+type: transform.update
+payload:
+  transformId: item-a
+  data:
+    x: 320

@@ -145,7 +145,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 1;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -1357,30 +1357,21 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
         }
       }
 
-      if (
-        item.texture !== undefined &&
-        !isNonEmptyString(item.texture)
-      ) {
+      if (item.texture !== undefined && !isNonEmptyString(item.texture)) {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.texture must be a non-empty string when provided`,
         );
       }
 
-      if (
-        item.imageId !== undefined &&
-        !isNonEmptyString(item.imageId)
-      ) {
+      if (item.imageId !== undefined && !isNonEmptyString(item.imageId)) {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.imageId must be a non-empty string when provided`,
         );
       }
 
-      if (
-        !isNonEmptyString(item.texture) &&
-        !isNonEmptyString(item.imageId)
-      ) {
+      if (!isNonEmptyString(item.texture) && !isNonEmptyString(item.imageId)) {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath} must define texture or imageId`,
@@ -1987,7 +1978,15 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           variableType === "folder"
             ? ["id", "type", "name", "description"]
-            : ["id", "type", "name", "description", "scope", "default", "value"],
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "scope",
+                "default",
+                "value",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -4502,7 +4501,9 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
-  for (const [animationId, animation] of Object.entries(state.animations.items)) {
+  for (const [animationId, animation] of Object.entries(
+    state.animations.items,
+  )) {
     if (animation.type !== "animation") {
       continue;
     }

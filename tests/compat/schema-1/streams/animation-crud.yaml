@@ -1,0 +1,131 @@
+schemaVersion: 1
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: animation.create
+    payload:
+      animationId: folder-motion
+      data:
+        type: folder
+        name: Motion
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      parentId: folder-motion
+      data:
+        type: animation
+        name: Entrance
+        animation:
+          type: update
+          tween:
+            x:
+              keyframes:
+                - duration: 100
+                  value: -120
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        description: Entrance motion
+  - type: animation.move
+    payload:
+      animationId: animation-a
+      parentId: folder-motion
+      position: last
+  - type: animation.delete
+    payload:
+      animationIds:
+        - animation-a
+        - folder-motion

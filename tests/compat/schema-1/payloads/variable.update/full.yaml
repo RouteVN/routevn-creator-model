@@ -1,0 +1,8 @@
+schemaVersion: 1
+type: variable.update
+payload:
+  variableId: item-a
+  data:
+    description: Progress score
+    default: 0
+    value: 10

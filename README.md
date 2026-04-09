@@ -5,6 +5,9 @@ Shared RouteVN domain model package.
 Repo rules and contribution expectations are in
 [GUIDELINES.md](./GUIDELINES.md).
 
+Schema compatibility maintenance rules are in
+[docs/schema-compatibility.md](./docs/schema-compatibility.md).
+
 This repo is intended to be the single source of truth for:
 
 - state validation
@@ -79,6 +82,9 @@ Design rules:
 - pure functions whenever possible
 - command payload shape is validated separately from state-aware preconditions
 - `SCHEMA_VERSION` is the source of truth for persisted command schema versioning
+- `SCHEMA_VERSION` must stay aligned with the minor version from `package.json`
+- patch releases must not change persisted schema compatibility
+- `bun run test:compat` is the required compatibility gate for model changes
 - `processCommand()` is the authoritative state transition
 - model state should contain project-owned runtime data only
 - app-owned metadata like project id, name, and description should stay out of
@@ -189,6 +195,20 @@ There are 2 test styles:
 YAML Puty specs use [tests/support/putyApi.js](./tests/support/putyApi.js) as a
 small adapter so the declarative `throws:` assertions can stay concise while the
 real public API returns `{ valid: ... }` result objects.
+
+Compatibility fixtures live under `tests/compat/schema-<n>/`.
+
+- `payloads/` fixtures are frozen command payload shapes for that schema version
+- `states/` fixtures are frozen persisted-state snapshots for that schema version
+- `streams/` fixtures are frozen command sequences for that schema version
+- current tests must continue to validate/replay every archived compatibility
+  fixture from the same or older schema versions
+- current schema payload coverage must include `minimal.yaml` and `full.yaml` for
+  every public command type
+
+See also:
+
+- [docs/schema-compatibility.md](./docs/schema-compatibility.md)
 
 ## Current Scope
 

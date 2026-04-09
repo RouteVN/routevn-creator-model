@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { readFile } from "node:fs/promises";
 
 import {
   SCHEMA_VERSION,
@@ -36,8 +37,25 @@ const addFileRecordToState = (
   });
 };
 
-test("public api exports functions only", () => {
-  expect(SCHEMA_VERSION).toBe(2);
+const readPackageSchemaVersion = async () => {
+  const packageJsonFile = new URL("../package.json", import.meta.url);
+  const packageJson = JSON.parse(await readFile(packageJsonFile, "utf8"));
+  const schemaVersion = Number.parseInt(
+    String(packageJson.version ?? "").split(".")[1] ?? "",
+    10,
+  );
+
+  if (!Number.isInteger(schemaVersion) || schemaVersion <= 0) {
+    throw new Error(
+      "package.json version must include a positive integer minor version for schemaVersion",
+    );
+  }
+
+  return schemaVersion;
+};
+
+test("public api exports functions only", async () => {
+  expect(SCHEMA_VERSION).toBe(await readPackageSchemaVersion());
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
@@ -239,155 +257,152 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
-test(
-  "validatePayload accepts description and thumbnailFileId on layouts, controls, and character sprites",
-  () => {
-    expect(
-      validatePayload({
-        type: "layout.create",
-        payload: {
-          layoutId: "layout-thumb",
-          data: {
-            type: "layout",
-            name: "Thumbnail Layout",
-            description: "Main dialogue frame",
-            layoutType: "normal",
-            thumbnailFileId: "file-thumb-layout",
-            elements: {
-              items: {},
-              tree: [],
-            },
+test("validatePayload accepts description and thumbnailFileId on layouts, controls, and character sprites", () => {
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-thumb",
+        data: {
+          type: "layout",
+          name: "Thumbnail Layout",
+          description: "Main dialogue frame",
+          layoutType: "normal",
+          thumbnailFileId: "file-thumb-layout",
+          elements: {
+            items: {},
+            tree: [],
           },
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 
-    expect(
-      validatePayload({
-        type: "layout.update",
-        payload: {
-          layoutId: "layout-thumb",
-          data: {
-            description: "Main dialogue frame",
-            thumbnailFileId: "file-thumb-layout",
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-thumb",
+        data: {
+          description: "Main dialogue frame",
+          thumbnailFileId: "file-thumb-layout",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "control.create",
+      payload: {
+        controlId: "control-thumb",
+        data: {
+          type: "control",
+          name: "Thumbnail Control",
+          description: "Shared navigation control",
+          thumbnailFileId: "file-thumb-control",
+          elements: {
+            items: {},
+            tree: [],
           },
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 
-    expect(
-      validatePayload({
-        type: "control.create",
-        payload: {
-          controlId: "control-thumb",
-          data: {
-            type: "control",
-            name: "Thumbnail Control",
-            description: "Shared navigation control",
-            thumbnailFileId: "file-thumb-control",
-            elements: {
-              items: {},
-              tree: [],
-            },
-          },
+  expect(
+    validatePayload({
+      type: "control.update",
+      payload: {
+        controlId: "control-thumb",
+        data: {
+          description: "Shared navigation control",
+          thumbnailFileId: "file-thumb-control",
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 
-    expect(
-      validatePayload({
-        type: "control.update",
-        payload: {
-          controlId: "control-thumb",
-          data: {
-            description: "Shared navigation control",
-            thumbnailFileId: "file-thumb-control",
-          },
-        },
-      }),
-    ).toEqual({
-      valid: true,
-    });
-
-    expect(
-      validatePayload({
-        type: "character.create",
-        payload: {
-          characterId: "character-thumb",
-          data: {
-            type: "character",
-            name: "Thumbnail Character",
-            sprites: {
-              items: {
-                "folder-default": {
-                  id: "folder-default",
-                  type: "folder",
-                  name: "Default",
-                  description: "Default sprite group",
-                },
-                "sprite-default": {
-                  id: "sprite-default",
-                  type: "image",
-                  name: "Default Sprite",
-                  description: "Neutral idle sprite",
-                  fileId: "file-sprite",
-                  thumbnailFileId: "file-sprite-thumb",
-                },
+  expect(
+    validatePayload({
+      type: "character.create",
+      payload: {
+        characterId: "character-thumb",
+        data: {
+          type: "character",
+          name: "Thumbnail Character",
+          sprites: {
+            items: {
+              "folder-default": {
+                id: "folder-default",
+                type: "folder",
+                name: "Default",
+                description: "Default sprite group",
               },
-              tree: [
-                {
-                  id: "folder-default",
-                  children: [{ id: "sprite-default", children: [] }],
-                },
-              ],
+              "sprite-default": {
+                id: "sprite-default",
+                type: "image",
+                name: "Default Sprite",
+                description: "Neutral idle sprite",
+                fileId: "file-sprite",
+                thumbnailFileId: "file-sprite-thumb",
+              },
             },
+            tree: [
+              {
+                id: "folder-default",
+                children: [{ id: "sprite-default", children: [] }],
+              },
+            ],
           },
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 
-    expect(
-      validatePayload({
-        type: "character.sprite.create",
-        payload: {
-          characterId: "character-thumb",
-          spriteId: "sprite-new",
-          data: {
-            type: "image",
-            name: "New Sprite",
-            fileId: "file-sprite",
-            thumbnailFileId: "file-sprite-thumb",
-          },
+  expect(
+    validatePayload({
+      type: "character.sprite.create",
+      payload: {
+        characterId: "character-thumb",
+        spriteId: "sprite-new",
+        data: {
+          type: "image",
+          name: "New Sprite",
+          fileId: "file-sprite",
+          thumbnailFileId: "file-sprite-thumb",
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
 
-    expect(
-      validatePayload({
-        type: "character.sprite.update",
-        payload: {
-          characterId: "character-thumb",
-          spriteId: "sprite-default",
-          data: {
-            thumbnailFileId: "file-sprite-thumb",
-          },
+  expect(
+    validatePayload({
+      type: "character.sprite.update",
+      payload: {
+        characterId: "character-thumb",
+        spriteId: "sprite-default",
+        data: {
+          thumbnailFileId: "file-sprite-thumb",
         },
-      }),
-    ).toEqual({
-      valid: true,
-    });
-  },
-);
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
 
 test("validatePayload accepts save-load layout type", () => {
   expect(
@@ -640,9 +655,9 @@ test("processCommand persists description and thumbnailFileId on layouts and con
   });
 
   expect(controlResult.valid).toBe(true);
-  expect(controlResult.state.controls.items["control-default"].description).toBe(
-    "Shared navigation control",
-  );
+  expect(
+    controlResult.state.controls.items["control-default"].description,
+  ).toBe("Shared navigation control");
   expect(
     controlResult.state.controls.items["control-default"].thumbnailFileId,
   ).toBe("file-control-thumb");

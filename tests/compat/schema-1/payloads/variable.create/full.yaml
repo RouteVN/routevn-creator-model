@@ -1,0 +1,14 @@
+schemaVersion: 1
+type: variable.create
+payload:
+  variableId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: boolean
+    name: Has Seen Intro
+    description: Tracks whether the intro has played
+    scope: context
+    default: false
+    value: false

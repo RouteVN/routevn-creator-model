@@ -1,0 +1,16 @@
+schemaVersion: 1
+type: sound.create
+payload:
+  soundId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: sound
+    name: Ambience
+    description: Night ambience
+    fileId: file-sound
+    fileType: audio/mp3
+    fileSize: 1024
+    waveformDataFileId: waveform-sound
+    duration: 42.5
