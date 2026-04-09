@@ -1,0 +1,131 @@
+schemaVersion: 1
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: layout.create
+    payload:
+      layoutId: layout-1
+      data:
+        type: layout
+        name: Main Layout
+        layoutType: normal
+        elements:
+          items: {}
+          tree: []
+  - type: layout.element.create
+    payload:
+      layoutId: layout-1
+      elementId: text-1
+      data:
+        type: text
+        name: Dialogue Text
+        x: 48
+        "y": 64
+expectedFinalState:
+  project: {}
+  story:
+    initialSceneId: null
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items:
+      layout-1:
+        id: layout-1
+        type: layout
+        name: Main Layout
+        layoutType: normal
+        elements:
+          items:
+            text-1:
+              id: text-1
+              type: text
+              name: Dialogue Text
+              x: 48
+              "y": 64
+          tree:
+            - id: text-1
+              children: []
+    tree:
+      - id: layout-1
+        children: []
+  controls:
+    items: {}
+    tree: []

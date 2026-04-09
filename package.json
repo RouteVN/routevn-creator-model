@@ -31,6 +31,7 @@
     "bench": "bun scripts/benchmark-process-command.js"
   },
   "devDependencies": {
+    "js-yaml": "^4.1.0",
     "puty": "0.1.2",
     "vitest": "^3.2.1"
   }

@@ -192,6 +192,13 @@ YAML Puty specs use [tests/support/putyApi.js](./tests/support/putyApi.js) as a
 small adapter so the declarative `throws:` assertions can stay concise while the
 real public API returns `{ valid: ... }` result objects.
 
+Compatibility fixtures live under `tests/compat/schema-<n>/`.
+
+- `states/` fixtures are frozen persisted-state snapshots for that schema version
+- `streams/` fixtures are frozen command sequences for that schema version
+- current tests must continue to validate/replay every archived compatibility
+  fixture from the same or older schema versions
+
 ## Current Scope
 
 Currently implemented command types:

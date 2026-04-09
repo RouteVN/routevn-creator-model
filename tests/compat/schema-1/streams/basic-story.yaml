@@ -1,0 +1,193 @@
+schemaVersion: 1
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: scene-intro
+        scenes:
+          items:
+            scene-intro:
+              id: scene-intro
+              type: scene
+              name: Intro
+              sections:
+                items: {}
+                tree: []
+          tree:
+            - id: scene-intro
+              children: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: section.create
+    payload:
+      sceneId: scene-intro
+      sectionId: section-1
+      data:
+        name: Section 1
+  - type: line.create
+    payload:
+      sectionId: section-1
+      lines:
+        - lineId: line-1
+          data:
+            actions:
+              dialogue:
+                mode: adv
+                content:
+                  - text: Hello
+expectedFinalState:
+  project: {}
+  story:
+    initialSceneId: scene-intro
+  scenes:
+    items:
+      scene-intro:
+        id: scene-intro
+        type: scene
+        name: Intro
+        sections:
+          items:
+            section-1:
+              id: section-1
+              name: Section 1
+              lines:
+                items:
+                  line-1:
+                    id: line-1
+                    actions:
+                      dialogue:
+                        mode: adv
+                        content:
+                          - text: Hello
+                tree:
+                  - id: line-1
+          tree:
+            - id: section-1
+              children: []
+    tree:
+      - id: scene-intro
+        children: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
