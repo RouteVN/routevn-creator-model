@@ -1,0 +1,17 @@
+schemaVersion: 2
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: spritesheet-body
+  data:
+    type: spritesheet-animation
+    name: Body Animation
+    x: 0
+    'y': 0
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    resourceId: spritesheet-ui
+    animationName: idle

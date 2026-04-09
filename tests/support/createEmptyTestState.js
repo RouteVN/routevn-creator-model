@@ -15,6 +15,10 @@ export const createEmptyTestState = () => ({
     items: {},
     tree: [],
   },
+  spritesheets: {
+    items: {},
+    tree: [],
+  },
   sounds: {
     items: {},
     tree: [],

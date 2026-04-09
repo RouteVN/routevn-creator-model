@@ -327,6 +327,140 @@ out:
       tree: []
 
 ---
+case: animation.create stores auto tween properties on update animations
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          folder-motion:
+            id: folder-motion
+            type: folder
+            name: Motion
+        tree:
+          - id: folder-motion
+            children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: animation.create
+      payload:
+        animationId: animation-auto
+        parentId: folder-motion
+        position: last
+        data:
+          type: animation
+          name: Fade In
+          description: Auto tween motion
+          animation:
+            type: update
+            tween:
+              alpha:
+                auto:
+                  duration: 1000
+                  easing: linear
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items:
+        folder-motion:
+          id: folder-motion
+          type: folder
+          name: Motion
+        animation-auto:
+          id: animation-auto
+          type: animation
+          name: Fade In
+          description: Auto tween motion
+          animation:
+            type: update
+            tween:
+              alpha:
+                auto:
+                  duration: 1000
+                  easing: linear
+      tree:
+        - id: folder-motion
+          children:
+            - id: animation-auto
+              children: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+
+---
 case: animation.update accepts editor transition mask fields
 in:
   - state:
@@ -838,6 +972,42 @@ in:
                   value: 50
                   easing: easeInWhatever
 throws: payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing
+---
+case: animation.create rejects update tween properties with both auto and keyframes
+in:
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      data:
+        type: animation
+        name: Mixed Tween
+        animation:
+          type: update
+          tween:
+            x:
+              auto:
+                duration: 1000
+                easing: linear
+              keyframes:
+                - duration: 300
+                  value: 50
+throws: payload.data.animation.tween.x.keyframes and payload.data.animation.tween.x.auto cannot both be defined
+---
+case: animation.update rejects initialValue when auto tween is defined
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: update
+          tween:
+            x:
+              initialValue: 10
+              auto:
+                duration: 1000
+                easing: linear
+throws: payload.data.animation.tween.x.initialValue is not supported when payload.data.animation.tween.x.auto is defined
 ---
 suite: validateAgainstState
 exportName: validateAgainstState

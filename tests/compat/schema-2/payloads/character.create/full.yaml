@@ -1,0 +1,15 @@
+schemaVersion: 2
+type: character.create
+payload:
+  characterId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: character
+    name: Hero
+    description: Main actor
+    shortcut: '1'
+    sprites:
+      items: {}
+      tree: []
