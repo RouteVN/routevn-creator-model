@@ -5,6 +5,9 @@ Shared RouteVN domain model package.
 Repo rules and contribution expectations are in
 [GUIDELINES.md](./GUIDELINES.md).
 
+Schema compatibility maintenance rules are in
+[docs/schema-compatibility.md](./docs/schema-compatibility.md).
+
 This repo is intended to be the single source of truth for:
 
 - state validation
@@ -201,6 +204,10 @@ Compatibility fixtures live under `tests/compat/schema-<n>/`.
   fixture from the same or older schema versions
 - current schema payload coverage must include `minimal.yaml` and `full.yaml` for
   every public command type
+
+See also:
+
+- [docs/schema-compatibility.md](./docs/schema-compatibility.md)
 
 ## Current Scope
 
