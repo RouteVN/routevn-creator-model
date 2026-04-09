@@ -182,7 +182,7 @@ state:
         type: transform
         name: Main Transform
         x: 0
-        'y': 0
+        "y": 0
         scaleX: 1
         scaleY: 1
         anchorX: 0
@@ -197,7 +197,7 @@ state:
         id: color-main
         type: color
         name: Main Color
-        hex: '#112233'
+        hex: "#112233"
     tree:
       - id: color-main
         children: []
@@ -211,7 +211,7 @@ state:
         colorId: color-main
         fontSize: 28
         lineHeight: 1.4
-        fontWeight: '700'
+        fontWeight: "700"
     tree:
       - id: text-style-main
         children: []

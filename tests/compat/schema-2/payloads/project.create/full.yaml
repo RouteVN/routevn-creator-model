@@ -282,9 +282,7 @@ payload:
                   duration: 1000
                   easing: linear
               alpha:
-                keyframes:
-                  - duration: 100
-                    value: 1
+                keyframes: []
       tree:
         - id: animation-rich
           children: []
@@ -339,7 +337,7 @@ payload:
           name: Camera
           description: Default framing transform
           x: 100
-          'y': 200
+          "y": 200
           scaleX: 1
           scaleY: 1
           anchorX: 0
@@ -354,7 +352,7 @@ payload:
           id: color-ui
           type: color
           name: White
-          hex: '#ffffff'
+          hex: "#ffffff"
       tree:
         - id: color-ui
           children: []
@@ -368,7 +366,7 @@ payload:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: '700'
+          fontWeight: "700"
       tree:
         - id: text-style-ui
           children: []
@@ -399,7 +397,7 @@ payload:
                 type: container
                 name: Root
                 x: 0
-                'y': 0
+                "y": 0
                 width: 100
                 height: 100
                 anchorX: 0
@@ -412,7 +410,7 @@ payload:
                 type: text
                 name: Title
                 x: 0
-                'y': 0
+                "y": 0
                 anchorX: 0
                 anchorY: 0
                 scaleX: 1
@@ -425,7 +423,7 @@ payload:
                 type: text
                 name: Subtitle
                 x: 0
-                'y': 20
+                "y": 20
                 anchorX: 0
                 anchorY: 0
                 scaleX: 1
@@ -456,7 +454,7 @@ payload:
                 type: container
                 name: Root
                 x: 0
-                'y': 0
+                "y": 0
                 width: 100
                 height: 100
                 anchorX: 0
@@ -469,7 +467,7 @@ payload:
                 type: text
                 name: Title
                 x: 0
-                'y': 0
+                "y": 0
                 anchorX: 0
                 anchorY: 0
                 scaleX: 1
@@ -482,7 +480,7 @@ payload:
                 type: text
                 name: Subtitle
                 x: 0
-                'y': 20
+                "y": 20
                 anchorX: 0
                 anchorY: 0
                 scaleX: 1

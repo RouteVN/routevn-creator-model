@@ -9,7 +9,7 @@ payload:
     type: character
     name: Hero
     description: Main actor
-    shortcut: '1'
+    shortcut: "1"
     sprites:
       items: {}
       tree: []

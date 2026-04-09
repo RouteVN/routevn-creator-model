@@ -4,4 +4,4 @@ payload:
   characterId: item-a
   data:
     description: Lead actor
-    shortcut: '2'
+    shortcut: "2"

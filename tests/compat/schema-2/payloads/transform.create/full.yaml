@@ -10,7 +10,7 @@ payload:
     name: Camera
     description: Default framing transform
     x: 100
-    'y': 200
+    "y": 200
     scaleX: 1
     scaleY: 1
     anchorX: 0

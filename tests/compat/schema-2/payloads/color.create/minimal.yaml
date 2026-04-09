@@ -5,4 +5,4 @@ payload:
   data:
     type: color
     name: Color
-    hex: '#112233'
+    hex: "#112233"

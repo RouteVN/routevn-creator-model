@@ -1829,6 +1829,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
         allowedProperties: UPDATE_TWEEN_PROPERTY_KEYS,
         path: `${path}.tween`,
         unsupportedMessage: "is not a supported update tween property",
+        allowEmptyKeyframes: true,
         errorFactory,
       });
       if (result?.valid === false) {

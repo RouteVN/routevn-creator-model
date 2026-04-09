@@ -11,4 +11,4 @@ payload:
     description: Station platform intro
     position:
       x: 320
-      'y': 80
+      "y": 80

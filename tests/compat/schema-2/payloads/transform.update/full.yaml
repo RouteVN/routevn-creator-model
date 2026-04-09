@@ -5,5 +5,5 @@ payload:
   data:
     description: Updated framing
     x: 320
-    'y': 240
+    "y": 240
     rotation: 15

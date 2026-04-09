@@ -4,4 +4,4 @@ payload:
   colorId: item-a
   data:
     description: Deeper emphasis tone
-    hex: '#223344'
+    hex: "#223344"

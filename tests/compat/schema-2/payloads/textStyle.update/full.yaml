@@ -6,5 +6,5 @@ payload:
     description: Main spoken-line styling
     fontSize: 40
     lineHeight: 1.6
-    fontWeight: '600'
+    fontWeight: "600"
     previewText: Preview

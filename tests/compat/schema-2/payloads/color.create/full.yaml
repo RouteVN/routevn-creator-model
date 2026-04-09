@@ -9,4 +9,4 @@ payload:
     type: color
     name: Color
     description: Core brand tone
-    hex: '#112233'
+    hex: "#112233"

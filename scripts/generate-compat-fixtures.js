@@ -735,7 +735,7 @@ const createRichCompatibilityState = () => {
           },
         },
         alpha: {
-          keyframes: [{ duration: 100, value: 1 }],
+          keyframes: [],
         },
       },
     },
@@ -1368,6 +1368,23 @@ const payloadFixtures = [
       },
     },
   }),
+  {
+    type: "animation.update",
+    fixtureName: "empty-keyframes",
+    payload: {
+      animationId: "item-a",
+      data: {
+        animation: {
+          type: "update",
+          tween: {
+            x: {
+              keyframes: [],
+            },
+          },
+        },
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "font",
     idField: "fontId",

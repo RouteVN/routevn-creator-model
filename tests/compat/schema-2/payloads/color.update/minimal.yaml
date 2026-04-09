@@ -3,4 +3,4 @@ type: color.update
 payload:
   colorId: item-a
   data:
-    hex: '#223344'
+    hex: "#223344"

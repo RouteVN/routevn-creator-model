@@ -973,6 +973,18 @@ in:
                   easing: easeInWhatever
 throws: payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing
 ---
+case: animation.update accepts empty update tween keyframes arrays
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: update
+          tween:
+            x:
+              keyframes: []
+---
 case: animation.create rejects update tween properties with both auto and keyframes
 in:
   - type: animation.create

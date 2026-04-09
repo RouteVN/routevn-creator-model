@@ -145,7 +145,7 @@ commands:
       data:
         type: color
         name: White
-        hex: '#ffffff'
+        hex: "#ffffff"
   - type: color.update
     payload:
       colorId: color-ui
@@ -170,7 +170,7 @@ commands:
         type: transform
         name: Camera
         x: 0
-        'y': 0
+        "y": 0
         scaleX: 1
         scaleY: 1
         anchorX: 0
@@ -229,7 +229,7 @@ commands:
         colorId: color-ui
         fontSize: 32
         lineHeight: 1.4
-        fontWeight: '700'
+        fontWeight: "700"
   - type: textStyle.update
     payload:
       textStyleId: style-ui
