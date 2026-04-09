@@ -79,7 +79,8 @@ Design rules:
 - pure functions whenever possible
 - command payload shape is validated separately from state-aware preconditions
 - `SCHEMA_VERSION` is the source of truth for persisted command schema versioning
-- `SCHEMA_VERSION` must stay aligned with the major version from `package.json`
+- `SCHEMA_VERSION` must stay aligned with the minor version from `package.json`
+- patch releases must not change persisted schema compatibility
 - `processCommand()` is the authoritative state transition
 - model state should contain project-owned runtime data only
 - app-owned metadata like project id, name, and description should stay out of

@@ -37,23 +37,25 @@ const addFileRecordToState = (
   });
 };
 
-const readPackageMajorVersion = async () => {
+const readPackageSchemaVersion = async () => {
   const packageJsonFile = new URL("../package.json", import.meta.url);
   const packageJson = JSON.parse(await readFile(packageJsonFile, "utf8"));
-  const majorVersion = Number.parseInt(
-    String(packageJson.version ?? "").split(".")[0] ?? "",
+  const schemaVersion = Number.parseInt(
+    String(packageJson.version ?? "").split(".")[1] ?? "",
     10,
   );
 
-  if (!Number.isInteger(majorVersion) || majorVersion <= 0) {
-    throw new Error("package.json version must start with a positive integer");
+  if (!Number.isInteger(schemaVersion) || schemaVersion <= 0) {
+    throw new Error(
+      "package.json version must include a positive integer minor version for schemaVersion",
+    );
   }
 
-  return majorVersion;
+  return schemaVersion;
 };
 
 test("public api exports functions only", async () => {
-  expect(SCHEMA_VERSION).toBe(await readPackageMajorVersion());
+  expect(SCHEMA_VERSION).toBe(await readPackageSchemaVersion());
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
