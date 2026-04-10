@@ -31,6 +31,10 @@ export const createEmptyTestState = () => ({
     items: {},
     tree: [],
   },
+  particles: {
+    items: {},
+    tree: [],
+  },
   characters: {
     items: {},
     tree: [],

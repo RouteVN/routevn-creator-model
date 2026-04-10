@@ -994,6 +994,26 @@ test("validatePayload accepts layout element fragment references", () => {
   });
 });
 
+test("validatePayload accepts layout element particle references", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "particle-1",
+        replace: false,
+        data: {
+          type: "particle",
+          name: "Snow Overlay",
+          particleId: "particle-snow",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload accepts confirm dialog container refs", () => {
   expect(
     validatePayload({
@@ -2181,6 +2201,10 @@ test("registry exposes only fully implemented command types", () => {
     "color.update",
     "color.delete",
     "color.move",
+    "particle.create",
+    "particle.update",
+    "particle.delete",
+    "particle.move",
     "transform.create",
     "transform.update",
     "transform.delete",
