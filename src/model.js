@@ -25,6 +25,7 @@ const COLLECTION_KEYS = [
   "sounds",
   "videos",
   "animations",
+  "particles",
   "characters",
   "fonts",
   "transforms",
@@ -45,7 +46,7 @@ const normalizeStateCollections = (state) => {
     return state;
   }
 
-  const missingCollectionKeys = ["spritesheets", "controls"].filter(
+  const missingCollectionKeys = ["spritesheets", "particles", "controls"].filter(
     (key) => state[key] === undefined,
   );
 
@@ -135,6 +136,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container",
   "rect",
   "sprite",
+  "particle",
   "spritesheet-animation",
   "text",
   "text-revealing",
@@ -2224,6 +2226,144 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
   }
 };
 
+const validateParticleModules = ({ modules, path, errorFactory }) => {
+  if (!isPlainObject(modules)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  if (!isPlainObject(modules.emission)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.emission must be an object`,
+    );
+  }
+
+  if (!isPlainObject(modules.appearance)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.appearance must be an object`,
+    );
+  }
+
+  if (
+    modules.movement !== undefined &&
+    !isPlainObject(modules.movement)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.movement must be an object when provided`,
+    );
+  }
+
+  if (modules.bounds !== undefined && !isPlainObject(modules.bounds)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.bounds must be an object when provided`,
+    );
+  }
+};
+
+const validateParticleItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "particle") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'particle'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "width",
+                "height",
+                "seed",
+                "modules",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
+    if (item.type !== "particle") {
+      continue;
+    }
+
+    if (!isFiniteNumber(item.width) || item.width <= 0) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.width must be a positive finite number`,
+      );
+    }
+
+    if (!isFiniteNumber(item.height) || item.height <= 0) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.height must be a positive finite number`,
+      );
+    }
+
+    if (item.seed !== undefined && !isFiniteNumber(item.seed)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.seed must be a finite number when provided`,
+      );
+    }
+
+    {
+      const result = validateParticleModules({
+        modules: item.modules,
+        path: `${itemPath}.modules`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
 const validateVariableTypedValue = ({
   value,
   variableType,
@@ -2801,6 +2941,7 @@ const validateLayoutElementData = ({
     "step",
     "initialValue",
     "variableId",
+    "particleId",
     "fragmentLayoutId",
     "paginationMode",
     "paginationVariableId",
@@ -2900,6 +3041,7 @@ const validateLayoutElementData = ({
     "text",
     "resourceId",
     "animationName",
+    "particleId",
     "imageId",
     "hoverImageId",
     "clickImageId",
@@ -2944,6 +3086,18 @@ const validateLayoutElementData = ({
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.animationName must be a non-empty string`,
+      );
+    }
+  }
+
+  if (data.type === "particle") {
+    if (
+      (!allowPartial || data.particleId !== undefined) &&
+      !isNonEmptyString(data.particleId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.particleId must be a non-empty string`,
       );
     }
   }
@@ -3299,6 +3453,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "revealEffect",
           "resourceId",
           "animationName",
+          "particleId",
           "imageId",
           "hoverImageId",
           "clickImageId",
@@ -4293,6 +4448,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.particles") {
+    {
+      const result = validateParticleItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.variables") {
     {
       const result = validateVariableItems({
@@ -4458,6 +4624,7 @@ const validateCollection = ({ collection, path }) => {
     }
   } else if (
     path === "state.files" ||
+    path === "state.particles" ||
     path === "state.transforms" ||
     path === "state.variables" ||
     path === "state.textStyles" ||
@@ -5124,6 +5291,29 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertParticleReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+  }) => {
+    const particle = state.particles?.items?.[targetId];
+    if (!isPlainObject(particle) || particle.type === "folder") {
+      return invalidInvariant(
+        `${ownerLabel} element particleId must reference an existing non-folder particle`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "particleId",
+          targetId,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertElementReferencesForCollection = ({
     items,
     ownerIdField,
@@ -5148,6 +5338,19 @@ export const assertInvariants = ({ state }) => {
             elementId,
             targetId: element.resourceId,
             animationName: element.animationName,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        if (element.type === "particle" || element.particleId !== undefined) {
+          const result = assertParticleReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.particleId,
           });
           if (!result.valid) {
             return result;
@@ -7014,6 +7217,185 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 };
 
+const validateParticleCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "particle") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'particle'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "width",
+              "height",
+              "seed",
+              "modules",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.type !== "particle") {
+    return;
+  }
+
+  if (!isFiniteNumber(data.width) || data.width <= 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.width must be a positive finite number",
+    );
+  }
+
+  if (!isFiniteNumber(data.height) || data.height <= 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.height must be a positive finite number",
+    );
+  }
+
+  if (
+    data.seed !== undefined &&
+    data.seed !== null &&
+    !isFiniteNumber(data.seed)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.seed must be a finite number when provided",
+    );
+  }
+
+  {
+    const result = validateParticleModules({
+      modules: data.modules,
+      path: "payload.data.modules",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+};
+
+const validateParticleUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "width",
+        "height",
+        "seed",
+        "modules",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (
+    data.width !== undefined &&
+    (!isFiniteNumber(data.width) || data.width <= 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.width must be a positive finite number when provided",
+    );
+  }
+
+  if (
+    data.height !== undefined &&
+    (!isFiniteNumber(data.height) || data.height <= 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.height must be a positive finite number when provided",
+    );
+  }
+
+  if (
+    data.seed !== undefined &&
+    data.seed !== null &&
+    !isFiniteNumber(data.seed)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.seed must be a finite number when provided",
+    );
+  }
+
+  if (data.modules !== undefined) {
+    {
+      const result = validateParticleModules({
+        modules: data.modules,
+        path: "payload.data.modules",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
 const validateTransformUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
@@ -8125,6 +8507,22 @@ const validateVisualElementReferenceTargets = ({
           elementId,
           field: "animationName",
           targetId: data.animationName,
+        },
+      );
+    }
+  }
+
+  if (data.type === "particle" || data.particleId !== undefined) {
+    const particle = state.particles?.items?.[data.particleId];
+    if (!isPlainObject(particle) || particle.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element particleId must reference an existing non-folder particle`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "particleId",
+          targetId: data.particleId,
         },
       );
     }
@@ -12951,6 +13349,66 @@ const COMMAND_DEFINITIONS = [
     },
   },
   ...createFolderedCollectionCommandDefinitions({
+    familyName: "particle",
+    collectionKey: "particles",
+    idField: "particleId",
+    itemLabel: "particle item",
+    createDataValidator: validateParticleCreateData,
+    updateDataValidator: validateParticleUpdateData,
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.particleId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      if (payload.data.type !== "particle") {
+        return item;
+      }
+
+      item.width = payload.data.width;
+      item.height = payload.data.height;
+      item.modules = structuredClone(payload.data.modules);
+
+      if (
+        payload.data.seed !== undefined &&
+        payload.data.seed !== null
+      ) {
+        item.seed = payload.data.seed;
+      }
+
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) => {
+      const nextItem = {
+        ...structuredClone(currentItem),
+        ...structuredClone(payload.data),
+      };
+
+      if (payload.data.seed === null) {
+        delete nextItem.seed;
+      }
+
+      return nextItem;
+    },
+    validateUpdateState: ({ payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
+      ) {
+        return invalidPrecondition(
+          "folder particle items cannot update particle fields",
+        );
+      }
+    },
+  }),
+  ...createFolderedCollectionCommandDefinitions({
     familyName: "transform",
     collectionKey: "transforms",
     idField: "transformId",
@@ -14960,7 +15418,8 @@ export const processCommand = ({ state, command }) => {
     const shouldMaterializeNormalizedState =
       typeof command?.type === "string" &&
       (command.type.startsWith("control.") ||
-        command.type.startsWith("spritesheet."));
+        command.type.startsWith("spritesheet.") ||
+        command.type.startsWith("particle."));
 
     if (!isPlainObject(command)) {
       return invalidPrecondition("command must be an object");

@@ -1,0 +1,47 @@
+schemaVersion: 2
+type: particle.create
+payload:
+  particleId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: particle
+    name: Snow
+    description: Falling snow preset
+    width: 1280
+    height: 720
+    seed: 12345
+    modules:
+      emission:
+        mode: continuous
+        rate: 24
+        maxActive: 80
+        duration: infinite
+        particleLifetime:
+          min: 1
+          max: 2
+        source:
+          kind: rect
+          data:
+            x: 0
+            "y": 0
+            width: 1280
+            height: 24
+      movement:
+        velocity:
+          kind: directional
+          direction: 90
+          speed:
+            min: 30
+            max: 60
+      appearance:
+        texture: snowflake
+        scale:
+          mode: range
+          min: 0.2
+          max: 0.5
+      bounds:
+        mode: recycle
+        source: area
+        padding: 40

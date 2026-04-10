@@ -1,0 +1,5 @@
+schemaVersion: 2
+type: particle.move
+payload:
+  particleId: item-a
+  position: last

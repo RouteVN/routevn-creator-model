@@ -374,6 +374,23 @@ const createLayoutBaseState = () => {
   return state;
 };
 
+const withParticleRefs = (state) => {
+  state.particles.items["particle-snow"] = {
+    id: "particle-snow",
+    type: "particle",
+    name: "Snow",
+    width: 1280,
+    height: 720,
+    seed: 42,
+    modules: {
+      emission: {},
+      appearance: {},
+    },
+  };
+  state.particles.tree = [createTreeNode("particle-snow")];
+  return state;
+};
+
 const createControlBaseState = () => {
   const state = withTextStyleRefs(createEmptyTestState());
 
@@ -438,6 +455,87 @@ const createControlBaseState = () => {
 
   return state;
 };
+
+test("layout.element.create accepts particle elements", () => {
+  const state = withParticleRefs(createLayoutBaseState());
+  const result = processCommand({
+    state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "particle-a",
+        parentId: "container-root",
+        data: {
+          type: "particle",
+          name: "Snow Overlay",
+          x: 0,
+          y: 0,
+          width: 1280,
+          height: 720,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          particleId: "particle-snow",
+        },
+      },
+    },
+  });
+
+  expect(
+    result.state.layouts.items["layout-dialogue"].elements.items["particle-a"],
+  ).toEqual({
+    id: "particle-a",
+    type: "particle",
+    name: "Snow Overlay",
+    x: 0,
+    y: 0,
+    width: 1280,
+    height: 720,
+    anchorX: 0,
+    anchorY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    rotation: 0,
+    particleId: "particle-snow",
+  });
+});
+
+test("validateAgainstState rejects missing particle references in layout elements", () => {
+  const state = createLayoutBaseState();
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-dialogue",
+          elementId: "particle-a",
+          parentId: "container-root",
+          data: {
+            type: "particle",
+            name: "Snow Overlay",
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 720,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            particleId: "particle-missing",
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element particleId must reference an existing non-folder particle",
+  );
+});
 
 const createFolderedCommandCases = ({
   familyName,
@@ -1460,6 +1558,45 @@ const directCases = [
     },
     updateData: {
       hex: "#223344",
+    },
+  }),
+  ...createFolderedCommandCases({
+    familyName: "particle",
+    collectionKey: "particles",
+    idField: "particleId",
+    idsField: "particleIds",
+    createData: {
+      type: "particle",
+      name: "Snow",
+      width: 1280,
+      height: 720,
+      seed: 12345,
+      modules: {
+        emission: {
+          mode: "continuous",
+          rate: 20,
+          particleLifetime: {
+            min: 1,
+            max: 2,
+          },
+          source: {
+            kind: "rect",
+            data: {
+              x: 0,
+              y: 0,
+              width: 1280,
+              height: 20,
+            },
+          },
+        },
+        appearance: {
+          texture: "snowflake",
+        },
+      },
+    },
+    updateData: {
+      width: 1440,
+      seed: 67890,
     },
   }),
   ...createFolderedCommandCases({

@@ -1,0 +1,25 @@
+schemaVersion: 2
+type: particle.create
+payload:
+  particleId: item-a
+  data:
+    type: particle
+    name: Snow
+    width: 1280
+    height: 720
+    modules:
+      emission:
+        mode: continuous
+        rate: 24
+        particleLifetime:
+          min: 1
+          max: 2
+        source:
+          kind: rect
+          data:
+            x: 0
+            "y": 0
+            width: 1280
+            height: 24
+      appearance:
+        texture: snowflake
