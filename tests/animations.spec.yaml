@@ -1021,6 +1021,43 @@ in:
                 easing: linear
 throws: payload.data.animation.tween.x.initialValue is not supported when payload.data.animation.tween.x.auto is defined
 ---
+case: animation.create rejects auto tween properties on transition prev tween
+in:
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      data:
+        type: animation
+        name: Transition Auto
+        animation:
+          type: transition
+          prev:
+            tween:
+              translateX:
+                auto:
+                  duration: 1000
+                  easing: linear
+throws: payload.data.animation.prev.tween.translateX.auto is not allowed
+---
+case: animation.create rejects auto tween properties on transition mask progress
+in:
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      data:
+        type: animation
+        name: Transition Mask Auto
+        animation:
+          type: transition
+          mask:
+            kind: single
+            texture: masks/spiral-07.png
+            progress:
+              auto:
+                duration: 1000
+                easing: linear
+throws: payload.data.animation.mask.progress.auto is not allowed
+---
 suite: validateAgainstState
 exportName: validateAgainstState
 ---

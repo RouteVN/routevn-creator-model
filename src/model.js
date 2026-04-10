@@ -1395,12 +1395,15 @@ const validateTweenProperty = ({
   config,
   path,
   allowEmptyKeyframes = false,
+  allowAuto = false,
   errorFactory,
 }) => {
   {
     const result = validateAllowedKeys({
       value: config,
-      allowedKeys: ["initialValue", "keyframes", "auto"],
+      allowedKeys: allowAuto
+        ? ["initialValue", "keyframes", "auto"]
+        : ["initialValue", "keyframes"],
       path,
       errorFactory,
     });
@@ -1483,6 +1486,7 @@ const validateTweenDefinition = ({
   path,
   unsupportedMessage,
   allowEmptyKeyframes = false,
+  allowAuto = false,
   errorFactory,
 }) => {
   if (!isPlainObject(tween)) {
@@ -1511,6 +1515,7 @@ const validateTweenDefinition = ({
         config,
         path: propertyPath,
         allowEmptyKeyframes,
+        allowAuto,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -1830,6 +1835,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
         path: `${path}.tween`,
         unsupportedMessage: "is not a supported update tween property",
         allowEmptyKeyframes: true,
+        allowAuto: true,
         errorFactory,
       });
       if (result?.valid === false) {
