@@ -1383,6 +1383,35 @@ const directCases = [
     decorateState: withVideoFileRefs,
   }),
   ...createFolderedCommandCases({
+    familyName: "spritesheet",
+    collectionKey: "spritesheets",
+    idField: "spritesheetId",
+    idsField: "spritesheetIds",
+    createData: {
+      type: "spritesheet",
+      name: "Hero Idle",
+      fileId: "file-image",
+      thumbnailFileId: "thumb-image",
+      jsonData: {
+        meta: {
+          image: "hero-idle.png",
+        },
+      },
+      animations: {
+        idle: {
+          frames: [0, 1, 2, 3],
+          animationSpeed: 1,
+          loop: true,
+        },
+      },
+    },
+    updateData: {
+      name: "Hero Idle Updated",
+      frameCount: 6,
+    },
+    decorateState: withImageFileRefs,
+  }),
+  ...createFolderedCommandCases({
     familyName: "animation",
     collectionKey: "animations",
     idField: "animationId",
