@@ -15,7 +15,7 @@ import {
   isPlainObject,
   removeTreeNode,
 } from "./helpers.js";
-import { isSystemVariableId } from "./systemVariables.js";
+import { isRuntimeFieldId } from "./runtimeFields.js";
 
 const COLLECTION_KEYS = [
   "scenes",
@@ -46,9 +46,11 @@ const normalizeStateCollections = (state) => {
     return state;
   }
 
-  const missingCollectionKeys = ["spritesheets", "particles", "controls"].filter(
-    (key) => state[key] === undefined,
-  );
+  const missingCollectionKeys = [
+    "spritesheets",
+    "particles",
+    "controls",
+  ].filter((key) => state[key] === undefined);
 
   if (missingCollectionKeys.length === 0) {
     return state;
@@ -257,20 +259,12 @@ const invalidInvariant = (message, details = {}) =>
   });
 
 const isVariableReferenceTarget = (state, variableId) => {
-  if (isSystemVariableId(variableId)) {
-    return true;
-  }
-
   const variable = state.variables.items[variableId];
   return isPlainObject(variable) && variable.type !== "folder";
 };
 
-const LAYOUT_CONDITION_TARGET_SET = new Set([
-  "item.savedAt",
-  "isLineCompleted",
-  "autoMode",
-  "skipMode",
-]);
+const LAYOUT_ITEM_TARGET_SET = new Set(["item.savedAt"]);
+const RUNTIME_TARGET_DOT_PATTERN = /^runtime\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
 const VARIABLE_TARGET_DOT_PATTERN = /^variables\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
 const VARIABLE_TARGET_BRACKET_PATTERN = /^variables\[(.+)\]$/;
 
@@ -279,10 +273,19 @@ const parseLayoutConditionTarget = (target) => {
     return undefined;
   }
 
-  if (LAYOUT_CONDITION_TARGET_SET.has(target)) {
+  if (LAYOUT_ITEM_TARGET_SET.has(target)) {
+    return {
+      kind: "item",
+      target,
+    };
+  }
+
+  const runtimeMatch = target.match(RUNTIME_TARGET_DOT_PATTERN);
+  if (runtimeMatch && isRuntimeFieldId(runtimeMatch[1])) {
     return {
       kind: "runtime",
       target,
+      runtimeId: runtimeMatch[1],
     };
   }
 
@@ -2245,10 +2248,7 @@ const validateParticleModules = ({ modules, path, errorFactory }) => {
     );
   }
 
-  if (
-    modules.movement !== undefined &&
-    !isPlainObject(modules.movement)
-  ) {
+  if (modules.movement !== undefined && !isPlainObject(modules.movement)) {
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.movement must be an object when provided`,
@@ -13374,10 +13374,7 @@ const COMMAND_DEFINITIONS = [
       item.height = payload.data.height;
       item.modules = structuredClone(payload.data.modules);
 
-      if (
-        payload.data.seed !== undefined &&
-        payload.data.seed !== null
-      ) {
+      if (payload.data.seed !== undefined && payload.data.seed !== null) {
         item.seed = payload.data.seed;
       }
 

@@ -284,6 +284,9 @@ state:
     tree:
       - id: animation-rich
         children: []
+  particles:
+    items: {}
+    tree: []
   characters:
     items:
       character-hero:

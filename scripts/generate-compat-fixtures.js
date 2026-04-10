@@ -1438,6 +1438,61 @@ const payloadFixtures = [
     },
   }),
   ...createFolderedPayloadSets({
+    family: "particle",
+    idField: "particleId",
+    idsField: "particleIds",
+    minimalCreateData: {
+      type: "particle",
+      name: "Snow",
+      width: 1280,
+      height: 720,
+      seed: 12345,
+      modules: {
+        emission: {},
+        appearance: {},
+      },
+    },
+    fullCreateData: {
+      type: "particle",
+      name: "Snow Overlay",
+      description: "Ambient snowfall overlay",
+      width: 1280,
+      height: 720,
+      seed: 12345,
+      modules: {
+        emission: {
+          mode: "continuous",
+          rate: 20,
+          particleLifetime: {
+            min: 1,
+            max: 2,
+          },
+          source: {
+            kind: "rect",
+            data: {
+              x: 0,
+              y: 0,
+              width: 1280,
+              height: 20,
+            },
+          },
+        },
+        appearance: {
+          texture: "snowflake",
+        },
+      },
+    },
+    minimalUpdateData: {
+      width: 1440,
+    },
+    fullUpdateData: {
+      description: "Updated snowfall overlay",
+      width: 1440,
+      height: 900,
+      seed: 67890,
+    },
+  }),
+  ...createFolderedPayloadSets({
     family: "transform",
     idField: "transformId",
     idsField: "transformIds",
@@ -1724,7 +1779,7 @@ const payloadFixtures = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-rich",
       },
     },
     {
@@ -1828,7 +1883,7 @@ const payloadFixtures = [
       layoutId: "layout-dialogue",
       elementId: "text-a",
       data: {
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-rich",
       },
     },
   ),
@@ -1896,7 +1951,7 @@ const payloadFixtures = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-rich",
       },
     },
     {
@@ -2000,7 +2055,7 @@ const payloadFixtures = [
       controlId: "control-default",
       elementId: "text-a",
       data: {
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-rich",
       },
     },
   ),

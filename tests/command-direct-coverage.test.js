@@ -310,6 +310,15 @@ const createCharacterBaseState = () => {
 
 const createLayoutBaseState = () => {
   const state = withTextStyleRefs(createEmptyTestState());
+  state.variables.items["variable-ui"] = {
+    id: "variable-ui",
+    type: "number",
+    name: "UI Value",
+    scope: "global-device",
+    default: 50,
+    value: 50,
+  };
+  state.variables.tree = [createTreeNode("variable-ui")];
 
   state.layouts.items["layout-dialogue"] = {
     id: "layout-dialogue",
@@ -393,6 +402,15 @@ const withParticleRefs = (state) => {
 
 const createControlBaseState = () => {
   const state = withTextStyleRefs(createEmptyTestState());
+  state.variables.items["variable-ui"] = {
+    id: "variable-ui",
+    type: "number",
+    name: "UI Value",
+    scope: "global-device",
+    default: 50,
+    value: 50,
+  };
+  state.variables.tree = [createTreeNode("variable-ui")];
 
   state.controls.items["control-default"] = {
     id: "control-default",
@@ -1904,7 +1922,7 @@ const directCases = [
               rotation: 0,
               text: "More",
               textStyleId: "text-style-ui",
-              variableId: "_dialogueTextSpeed",
+              variableId: "variable-ui",
             },
           },
         },
@@ -1925,7 +1943,7 @@ const directCases = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-ui",
       });
     },
     runNegative: () => {
@@ -1973,7 +1991,7 @@ const directCases = [
             layoutId: "layout-dialogue",
             elementId: "text-a",
             data: {
-              variableId: "_dialogueTextSpeed",
+              variableId: "variable-ui",
             },
           },
         },
@@ -1982,7 +2000,7 @@ const directCases = [
       expect(
         result.state.layouts.items["layout-dialogue"].elements.items["text-a"]
           .variableId,
-      ).toBe("_dialogueTextSpeed");
+      ).toBe("variable-ui");
     },
     runNegative: () => {
       expectValidation(() =>
@@ -2101,7 +2119,7 @@ const directCases = [
               rotation: 0,
               text: "More",
               textStyleId: "text-style-ui",
-              variableId: "_dialogueTextSpeed",
+              variableId: "variable-ui",
             },
           },
         },
@@ -2122,7 +2140,7 @@ const directCases = [
         rotation: 0,
         text: "More",
         textStyleId: "text-style-ui",
-        variableId: "_dialogueTextSpeed",
+        variableId: "variable-ui",
       });
     },
     runNegative: () => {
@@ -2170,7 +2188,7 @@ const directCases = [
             controlId: "control-default",
             elementId: "text-a",
             data: {
-              variableId: "_dialogueTextSpeed",
+              variableId: "variable-ui",
             },
           },
         },
@@ -2179,7 +2197,7 @@ const directCases = [
       expect(
         result.state.controls.items["control-default"].elements.items["text-a"]
           .variableId,
-      ).toBe("_dialogueTextSpeed");
+      ).toBe("variable-ui");
     },
     runNegative: () => {
       expectValidation(() =>

@@ -3,4 +3,4 @@ type: particle.update
 payload:
   particleId: item-a
   data:
-    name: Snow Updated
+    width: 1440

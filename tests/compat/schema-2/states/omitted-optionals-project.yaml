@@ -152,6 +152,9 @@ state:
     tree:
       - id: animation-main
         children: []
+  particles:
+    items: {}
+    tree: []
   characters:
     items:
       character-main:
