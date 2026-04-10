@@ -210,6 +210,11 @@ See also:
 
 - [docs/schema-compatibility.md](./docs/schema-compatibility.md)
 
+Current animation update tween properties support either:
+
+- `keyframes`
+- `auto: { duration, easing }`
+
 ## Current Scope
 
 Currently implemented command types:
@@ -232,6 +237,10 @@ Currently implemented command types:
 - `image.update`
 - `image.delete`
 - `image.move`
+- `spritesheet.create`
+- `spritesheet.update`
+- `spritesheet.delete`
+- `spritesheet.move`
 - `sound.create`
 - `sound.update`
 - `sound.delete`
@@ -280,6 +289,14 @@ Currently implemented command types:
 - `layout.element.update`
 - `layout.element.delete`
 - `layout.element.move`
+- `control.create`
+- `control.update`
+- `control.delete`
+- `control.move`
+- `control.element.create`
+- `control.element.update`
+- `control.element.delete`
+- `control.element.move`
 
 The rest of the future command surface should be added only when full
 validation, preconditions, reducer behavior, and tests are added together.

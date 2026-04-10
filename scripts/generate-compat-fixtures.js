@@ -87,6 +87,45 @@ const withTextStyleRefs = (state) => {
   return state;
 };
 
+const withSpritesheetRefs = (state) => {
+  withFiles(state, [
+    { id: "file-spritesheet-ui", type: "image", mimeType: "image/png" },
+    {
+      id: "thumb-spritesheet-ui",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+    },
+  ]);
+  state.spritesheets.items["spritesheet-ui"] = {
+    id: "spritesheet-ui",
+    type: "spritesheet",
+    name: "UI Spritesheet",
+    fileId: "file-spritesheet-ui",
+    thumbnailFileId: "thumb-spritesheet-ui",
+    fileType: "image/png",
+    fileSize: 1024,
+    sheetWidth: 512,
+    sheetHeight: 256,
+    frameCount: 2,
+    width: 256,
+    height: 256,
+    jsonData: {
+      meta: {
+        image: "ui-spritesheet.png",
+      },
+    },
+    animations: {
+      idle: {
+        frames: [0, 1],
+        animationSpeed: 1,
+        loop: true,
+      },
+    },
+  };
+  state.spritesheets.tree = [createTreeNode("spritesheet-ui")];
+  return state;
+};
+
 const createSceneBaseState = () => {
   const state = createEmptyTestState();
   state.story.initialSceneId = "scene-a";
@@ -220,7 +259,7 @@ const createCharacterBaseState = () => {
 };
 
 const createLayoutBaseState = () => {
-  const state = withTextStyleRefs(createEmptyTestState());
+  const state = withSpritesheetRefs(withTextStyleRefs(createEmptyTestState()));
   state.layouts.items["layout-dialogue"] = {
     id: "layout-dialogue",
     type: "layout",
@@ -284,7 +323,7 @@ const createLayoutBaseState = () => {
 };
 
 const createControlBaseState = () => {
-  const state = withTextStyleRefs(createEmptyTestState());
+  const state = withSpritesheetRefs(withTextStyleRefs(createEmptyTestState()));
   state.controls.items["control-default"] = {
     id: "control-default",
     type: "control",
@@ -368,6 +407,18 @@ const createSparseCompatibilityState = () => {
   state.scenes.tree = [createTreeNode("scene-main")];
   withFiles(state, [
     { id: "file-image", type: "image", mimeType: "image/png" },
+    {
+      id: "file-spritesheet",
+      type: "image",
+      mimeType: "image/png",
+      size: 1024,
+    },
+    {
+      id: "thumb-spritesheet",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+      size: 64,
+    },
     { id: "file-sound", type: "audio", mimeType: "audio/mpeg" },
     { id: "file-video", type: "video", mimeType: "video/mp4" },
     { id: "thumb-video", type: "video-thumbnail", mimeType: "image/jpeg" },
@@ -380,6 +431,33 @@ const createSparseCompatibilityState = () => {
     fileId: "file-image",
   };
   state.images.tree = [createTreeNode("image-main")];
+  state.spritesheets.items["spritesheet-main"] = {
+    id: "spritesheet-main",
+    type: "spritesheet",
+    name: "Main Spritesheet",
+    fileId: "file-spritesheet",
+    thumbnailFileId: "thumb-spritesheet",
+    fileType: "image/png",
+    fileSize: 1024,
+    sheetWidth: 512,
+    sheetHeight: 256,
+    frameCount: 2,
+    width: 256,
+    height: 256,
+    jsonData: {
+      meta: {
+        image: "main-spritesheet.png",
+      },
+    },
+    animations: {
+      default: {
+        frames: [0, 1],
+        animationSpeed: 1,
+        loop: true,
+      },
+    },
+  };
+  state.spritesheets.tree = [createTreeNode("spritesheet-main")];
   state.sounds.items["sound-main"] = {
     id: "sound-main",
     type: "sound",
@@ -403,7 +481,10 @@ const createSparseCompatibilityState = () => {
       type: "update",
       tween: {
         x: {
-          keyframes: [{ duration: 100, value: 1 }],
+          auto: {
+            duration: 1000,
+            easing: "linear",
+          },
         },
       },
     },
@@ -490,6 +571,18 @@ const createRichCompatibilityState = () => {
     { id: "file-angry", type: "image", mimeType: "image/png", size: 256 },
     { id: "file-image-rich", type: "image", mimeType: "image/png", size: 2048 },
     { id: "thumb-image-rich", type: "image-thumbnail", mimeType: "image/webp" },
+    {
+      id: "file-spritesheet-rich",
+      type: "image",
+      mimeType: "image/png",
+      size: 3072,
+    },
+    {
+      id: "thumb-spritesheet-rich",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+      size: 128,
+    },
     { id: "file-sound-rich", type: "audio", mimeType: "audio/mp3", size: 1024 },
     {
       id: "waveform-sound-rich",
@@ -553,6 +646,41 @@ const createRichCompatibilityState = () => {
   state.images.tree = [
     createTreeNode("folder-art", [createTreeNode("image-rich")]),
   ];
+  state.spritesheets.items["folder-spritesheets"] = {
+    id: "folder-spritesheets",
+    type: "folder",
+    name: "Spritesheets",
+  };
+  state.spritesheets.items["spritesheet-rich"] = {
+    id: "spritesheet-rich",
+    type: "spritesheet",
+    name: "Hero Idle",
+    description: "Idle loop spritesheet",
+    fileId: "file-spritesheet-rich",
+    thumbnailFileId: "thumb-spritesheet-rich",
+    fileType: "image/png",
+    fileSize: 3072,
+    sheetWidth: 1024,
+    sheetHeight: 512,
+    frameCount: 4,
+    width: 256,
+    height: 256,
+    jsonData: {
+      meta: {
+        image: "hero-idle.png",
+      },
+    },
+    animations: {
+      idle: {
+        frames: [0, 1, 2, 3],
+        animationSpeed: 1,
+        loop: true,
+      },
+    },
+  };
+  state.spritesheets.tree = [
+    createTreeNode("folder-spritesheets", [createTreeNode("spritesheet-rich")]),
+  ];
   state.sounds.items["folder-audio"] = {
     id: "folder-audio",
     type: "folder",
@@ -601,10 +729,13 @@ const createRichCompatibilityState = () => {
       type: "update",
       tween: {
         x: {
-          keyframes: [
-            { duration: 100, value: -120, easing: "linear" },
-            { duration: 100, value: 0, easing: "easeOutQuad" },
-          ],
+          auto: {
+            duration: 1000,
+            easing: "linear",
+          },
+        },
+        alpha: {
+          keyframes: [],
         },
       },
     },
@@ -617,8 +748,42 @@ const createCrossReferencedState = () => {
   const state = createRichCompatibilityState();
   state.layouts.items["layout-dialogue"].elements.items["text-a"].variableId =
     "variable-rich";
+  state.layouts.items["layout-dialogue"].elements.items["anim-idle"] = {
+    id: "anim-idle",
+    type: "spritesheet-animation",
+    name: "Idle Loop",
+    x: 0,
+    y: 80,
+    anchorX: 0,
+    anchorY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    rotation: 0,
+    resourceId: "spritesheet-rich",
+    animationName: "idle",
+  };
+  state.layouts.items["layout-dialogue"].elements.tree[0].children.push(
+    createTreeNode("anim-idle"),
+  );
   state.controls.items["control-default"].elements.items["text-a"].variableId =
     "variable-rich";
+  state.controls.items["control-default"].elements.items["anim-idle"] = {
+    id: "anim-idle",
+    type: "spritesheet-animation",
+    name: "Idle Loop",
+    x: 0,
+    y: 80,
+    anchorX: 0,
+    anchorY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    rotation: 0,
+    resourceId: "spritesheet-rich",
+    animationName: "idle",
+  };
+  state.controls.items["control-default"].elements.tree[0].children.push(
+    createTreeNode("anim-idle"),
+  );
   return state;
 };
 
@@ -1021,6 +1186,74 @@ const payloadFixtures = [
     },
   }),
   ...createFolderedPayloadSets({
+    family: "spritesheet",
+    idField: "spritesheetId",
+    idsField: "spritesheetIds",
+    minimalCreateData: {
+      type: "spritesheet",
+      name: "Spritesheet",
+      fileId: "file-image",
+      jsonData: {
+        meta: {
+          image: "sheet.png",
+        },
+      },
+      animations: {
+        default: {
+          frames: [0],
+        },
+      },
+    },
+    fullCreateData: {
+      type: "spritesheet",
+      name: "Hero Idle",
+      description: "Idle loop spritesheet",
+      fileId: "file-image",
+      thumbnailFileId: "thumb-image",
+      fileType: "image/png",
+      fileSize: 2048,
+      sheetWidth: 1024,
+      sheetHeight: 512,
+      frameCount: 4,
+      width: 256,
+      height: 256,
+      jsonData: {
+        meta: {
+          image: "hero-idle.png",
+        },
+      },
+      animations: {
+        idle: {
+          frames: [0, 1, 2, 3],
+          animationSpeed: 1,
+          loop: true,
+        },
+      },
+    },
+    minimalUpdateData: {
+      name: "Spritesheet Updated",
+    },
+    fullUpdateData: {
+      description: "Updated idle loop spritesheet",
+      thumbnailFileId: "thumb-image",
+      frameCount: 6,
+      width: 320,
+      height: 256,
+      jsonData: {
+        meta: {
+          image: "hero-idle-updated.png",
+        },
+      },
+      animations: {
+        idle: {
+          frames: [0, 1, 2, 3, 4, 5],
+          animationSpeed: 1.25,
+          loop: true,
+        },
+      },
+    },
+  }),
+  ...createFolderedPayloadSets({
     family: "sound",
     idField: "soundId",
     idsField: "soundIds",
@@ -1103,10 +1336,10 @@ const payloadFixtures = [
         type: "update",
         tween: {
           x: {
-            keyframes: [
-              { duration: 100, value: -120, easing: "linear" },
-              { duration: 100, value: 0, easing: "easeOutQuad" },
-            ],
+            auto: {
+              duration: 1000,
+              easing: "linear",
+            },
           },
           alpha: {
             keyframes: [{ duration: 100, value: 1 }],
@@ -1123,12 +1356,35 @@ const payloadFixtures = [
         type: "update",
         tween: {
           x: {
-            keyframes: [{ duration: 100, value: 50 }],
+            auto: {
+              duration: 1200,
+              easing: "easeOutQuad",
+            },
+          },
+          alpha: {
+            keyframes: [{ duration: 100, value: 0.6 }],
           },
         },
       },
     },
   }),
+  {
+    type: "animation.update",
+    fixtureName: "empty-keyframes",
+    payload: {
+      animationId: "item-a",
+      data: {
+        animation: {
+          type: "update",
+          tween: {
+            x: {
+              keyframes: [],
+            },
+          },
+        },
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "font",
     idField: "fontId",
@@ -1523,6 +1779,23 @@ const payloadFixtures = [
           imageId: "image-rich",
         },
       },
+      "spritesheet-full": {
+        layoutId: "layout-dialogue",
+        elementId: "spritesheet-body",
+        data: {
+          type: "spritesheet-animation",
+          name: "Body Animation",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          resourceId: "spritesheet-ui",
+          animationName: "idle",
+        },
+      },
       "slider-full": {
         layoutId: "layout-dialogue",
         elementId: "slider-body",
@@ -1676,6 +1949,23 @@ const payloadFixtures = [
           scaleY: 1,
           rotation: 0,
           imageId: "image-rich",
+        },
+      },
+      "spritesheet-full": {
+        controlId: "control-default",
+        elementId: "spritesheet-body",
+        data: {
+          type: "spritesheet-animation",
+          name: "Body Animation",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          resourceId: "spritesheet-ui",
+          animationName: "idle",
         },
       },
       "slider-full": {
@@ -1927,6 +2217,28 @@ const streamFixtures = [
       {
         type: "file.create",
         payload: {
+          fileId: "file-spritesheet",
+          data: {
+            mimeType: "image/png",
+            size: 1024,
+            sha256: "file-spritesheet-sha256",
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "thumb-spritesheet",
+          data: {
+            mimeType: "image/webp",
+            size: 64,
+            sha256: "thumb-spritesheet-sha256",
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
           fileId: "file-sound",
           data: {
             mimeType: "audio/mp3",
@@ -2002,6 +2314,55 @@ const streamFixtures = [
         payload: {
           imageId: "image-a",
           parentId: "folder-art",
+          position: "last",
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "folder-spritesheets",
+          data: { type: "folder", name: "Spritesheets" },
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "spritesheet-a",
+          parentId: "folder-spritesheets",
+          data: {
+            type: "spritesheet",
+            name: "Hero Idle",
+            fileId: "file-spritesheet",
+            thumbnailFileId: "thumb-spritesheet",
+            width: 256,
+            height: 256,
+            jsonData: {
+              meta: {
+                image: "hero-idle.png",
+              },
+            },
+            animations: {
+              idle: {
+                frames: [0, 1],
+                animationSpeed: 1,
+                loop: true,
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-a",
+          data: { description: "Idle loop spritesheet" },
+        },
+      },
+      {
+        type: "spritesheet.move",
+        payload: {
+          spritesheetId: "spritesheet-a",
+          parentId: "folder-spritesheets",
           position: "last",
         },
       },
@@ -2083,6 +2444,10 @@ const streamFixtures = [
         payload: { imageIds: ["image-a", "folder-art"] },
       },
       {
+        type: "spritesheet.delete",
+        payload: { spritesheetIds: ["spritesheet-a", "folder-spritesheets"] },
+      },
+      {
         type: "sound.delete",
         payload: { soundIds: ["sound-a", "folder-audio"] },
       },
@@ -2096,6 +2461,8 @@ const streamFixtures = [
           fileIds: [
             "thumb-image",
             "file-image",
+            "thumb-spritesheet",
+            "file-spritesheet",
             "waveform-sound",
             "file-sound",
             "thumb-video",
@@ -2339,7 +2706,14 @@ const streamFixtures = [
             name: "Entrance",
             animation: {
               type: "update",
-              tween: { x: { keyframes: [{ duration: 100, value: -120 }] } },
+              tween: {
+                x: {
+                  auto: {
+                    duration: 1000,
+                    easing: "linear",
+                  },
+                },
+              },
             },
           },
         },
@@ -2348,7 +2722,23 @@ const streamFixtures = [
         type: "animation.update",
         payload: {
           animationId: "animation-a",
-          data: { description: "Entrance motion" },
+          data: {
+            description: "Entrance motion",
+            animation: {
+              type: "update",
+              tween: {
+                x: {
+                  auto: {
+                    duration: 1200,
+                    easing: "easeOutQuad",
+                  },
+                },
+                alpha: {
+                  keyframes: [{ duration: 100, value: 1 }],
+                },
+              },
+            },
+          },
         },
       },
       {
@@ -2557,6 +2947,27 @@ const streamFixtures = [
         },
       },
       {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-alt",
+          elementId: "anim-a",
+          parentId: "container-root",
+          data: {
+            type: "spritesheet-animation",
+            name: "Idle Loop",
+            x: 0,
+            y: 80,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            resourceId: "spritesheet-ui",
+            animationName: "idle",
+          },
+        },
+      },
+      {
         type: "layout.element.update",
         payload: {
           layoutId: "layout-alt",
@@ -2577,7 +2988,7 @@ const streamFixtures = [
         type: "layout.element.delete",
         payload: {
           layoutId: "layout-alt",
-          elementIds: ["text-a", "container-root"],
+          elementIds: ["text-a", "anim-a", "container-root"],
         },
       },
       {
@@ -2667,6 +3078,27 @@ const streamFixtures = [
         },
       },
       {
+        type: "control.element.create",
+        payload: {
+          controlId: "control-alt",
+          elementId: "anim-a",
+          parentId: "container-root",
+          data: {
+            type: "spritesheet-animation",
+            name: "Idle Loop",
+            x: 0,
+            y: 80,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            resourceId: "spritesheet-ui",
+            animationName: "idle",
+          },
+        },
+      },
+      {
         type: "control.element.update",
         payload: {
           controlId: "control-alt",
@@ -2687,7 +3119,7 @@ const streamFixtures = [
         type: "control.element.delete",
         payload: {
           controlId: "control-alt",
-          elementIds: ["text-a", "container-root"],
+          elementIds: ["text-a", "anim-a", "container-root"],
         },
       },
       {

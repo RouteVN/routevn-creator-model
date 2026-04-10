@@ -21,6 +21,7 @@ const COLLECTION_KEYS = [
   "scenes",
   "files",
   "images",
+  "spritesheets",
   "sounds",
   "videos",
   "animations",
@@ -44,14 +45,23 @@ const normalizeStateCollections = (state) => {
     return state;
   }
 
-  if (state.controls !== undefined) {
+  const missingCollectionKeys = ["spritesheets", "controls"].filter(
+    (key) => state[key] === undefined,
+  );
+
+  if (missingCollectionKeys.length === 0) {
     return state;
   }
 
-  return {
+  const nextState = {
     ...state,
-    controls: createEmptyCollectionState(),
   };
+
+  missingCollectionKeys.forEach((key) => {
+    nextState[key] = createEmptyCollectionState();
+  });
+
+  return nextState;
 };
 const isString = (value) => typeof value === "string";
 const isHexColor = (value) =>
@@ -125,6 +135,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container",
   "rect",
   "sprite",
+  "spritesheet-animation",
   "text",
   "text-revealing",
   "slider",
@@ -145,7 +156,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -853,6 +864,207 @@ const validateImageItems = ({ items, path, errorFactory }) => {
   }
 };
 
+const validateSpritesheetAnimationMap = ({
+  animations,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(animations)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  for (const [animationName, animation] of Object.entries(animations)) {
+    const animationPath = `${path}.${animationName}`;
+
+    if (!isNonEmptyString(animationName)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${animationPath} must use a non-empty animation name`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: animation,
+        allowedKeys: ["frames", "animationSpeed", "loop"],
+        path: animationPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!Array.isArray(animation.frames)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${animationPath}.frames must be an array`,
+      );
+    }
+
+    for (let index = 0; index < animation.frames.length; index += 1) {
+      const frame = animation.frames[index];
+      if (!Number.isInteger(frame) || frame < 0) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${animationPath}.frames.${index} must be an integer greater than or equal to 0`,
+        );
+      }
+    }
+
+    if (
+      animation.animationSpeed !== undefined &&
+      !isFiniteNumber(animation.animationSpeed)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${animationPath}.animationSpeed must be a finite number when provided`,
+      );
+    }
+
+    if (animation.loop !== undefined && typeof animation.loop !== "boolean") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${animationPath}.loop must be a boolean when provided`,
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateSpritesheetItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "spritesheet") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'spritesheet'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "thumbnailFileId",
+                "fileId",
+                "fileType",
+                "fileSize",
+                "sheetWidth",
+                "sheetHeight",
+                "frameCount",
+                "width",
+                "height",
+                "jsonData",
+                "animations",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
+    if (item.type === "spritesheet") {
+      if (
+        item.thumbnailFileId !== undefined &&
+        !isNonEmptyString(item.thumbnailFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
+        );
+      }
+
+      if (!isNonEmptyString(item.fileId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
+      }
+
+      if (item.fileType !== undefined && !isString(item.fileType)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileType must be a string when provided`,
+        );
+      }
+
+      for (const key of [
+        "fileSize",
+        "sheetWidth",
+        "sheetHeight",
+        "frameCount",
+        "width",
+        "height",
+      ]) {
+        if (item[key] !== undefined && !isFiniteNumber(item[key])) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${itemPath}.${key} must be a finite number when provided`,
+          );
+        }
+      }
+
+      if (!isPlainObject(item.jsonData)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.jsonData must be an object`,
+        );
+      }
+
+      {
+        const result = validateSpritesheetAnimationMap({
+          animations: item.animations,
+          path: `${itemPath}.animations`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    }
+  }
+};
+
 const validateSoundItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -1141,16 +1353,11 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
   }
 };
 
-const validateTweenProperty = ({
-  config,
-  path,
-  allowEmptyKeyframes = false,
-  errorFactory,
-}) => {
+const validateAutoTweenProperty = ({ auto, path, errorFactory }) => {
   {
     const result = validateAllowedKeys({
-      value: config,
-      allowedKeys: ["initialValue", "keyframes"],
+      value: auto,
+      allowedKeys: ["duration", "easing"],
       path,
       errorFactory,
     });
@@ -1159,10 +1366,66 @@ const validateTweenProperty = ({
     }
   }
 
-  if (!("keyframes" in config)) {
+  if (!("duration" in auto)) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.keyframes is required`,
+      `${path}.duration is required`,
+    );
+  }
+
+  if (!isFiniteNumber(auto.duration) || auto.duration < 1) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.duration must be a finite number >= 1`,
+    );
+  }
+
+  if (
+    auto.easing !== undefined &&
+    !ANIMATION_EASING_KEYS.includes(auto.easing)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.easing must be a supported Route Graphics easing`,
+    );
+  }
+};
+
+const validateTweenProperty = ({
+  config,
+  path,
+  allowEmptyKeyframes = false,
+  allowAuto = false,
+  errorFactory,
+}) => {
+  {
+    const result = validateAllowedKeys({
+      value: config,
+      allowedKeys: allowAuto
+        ? ["initialValue", "keyframes", "auto"]
+        : ["initialValue", "keyframes"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  const hasKeyframes = "keyframes" in config;
+  const hasAuto = "auto" in config;
+
+  if (!hasKeyframes && !hasAuto) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes or ${path}.auto is required`,
+    );
+  }
+
+  if (hasKeyframes && hasAuto) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes and ${path}.auto cannot both be defined`,
     );
   }
 
@@ -1174,6 +1437,28 @@ const validateTweenProperty = ({
       errorFactory,
       `${path}.initialValue must be a finite number`,
     );
+  }
+
+  if (hasAuto) {
+    if (config.initialValue !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.initialValue is not supported when ${path}.auto is defined`,
+      );
+    }
+
+    {
+      const result = validateAutoTweenProperty({
+        auto: config.auto,
+        path: `${path}.auto`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    return;
   }
 
   {
@@ -1201,6 +1486,7 @@ const validateTweenDefinition = ({
   path,
   unsupportedMessage,
   allowEmptyKeyframes = false,
+  allowAuto = false,
   errorFactory,
 }) => {
   if (!isPlainObject(tween)) {
@@ -1229,6 +1515,7 @@ const validateTweenDefinition = ({
         config,
         path: propertyPath,
         allowEmptyKeyframes,
+        allowAuto,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -1547,6 +1834,8 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
         allowedProperties: UPDATE_TWEEN_PROPERTY_KEYS,
         path: `${path}.tween`,
         unsupportedMessage: "is not a supported update tween property",
+        allowEmptyKeyframes: true,
+        allowAuto: true,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -2486,6 +2775,8 @@ const validateLayoutElementData = ({
     "textStyle",
     "displaySpeed",
     "revealEffect",
+    "resourceId",
+    "animationName",
     "imageId",
     "hoverImageId",
     "clickImageId",
@@ -2607,6 +2898,8 @@ const validateLayoutElementData = ({
 
   for (const key of [
     "text",
+    "resourceId",
+    "animationName",
     "imageId",
     "hoverImageId",
     "clickImageId",
@@ -2629,6 +2922,28 @@ const validateLayoutElementData = ({
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.${key} must be a string when provided`,
+      );
+    }
+  }
+
+  if (data.type === "spritesheet-animation") {
+    if (
+      (!allowPartial || data.resourceId !== undefined) &&
+      !isNonEmptyString(data.resourceId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.resourceId must be a non-empty string`,
+      );
+    }
+
+    if (
+      (!allowPartial || data.animationName !== undefined) &&
+      !isNonEmptyString(data.animationName)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.animationName must be a non-empty string`,
       );
     }
   }
@@ -2982,6 +3297,8 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "textStyle",
           "displaySpeed",
           "revealEffect",
+          "resourceId",
+          "animationName",
           "imageId",
           "hoverImageId",
           "clickImageId",
@@ -3888,6 +4205,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.spritesheets") {
+    {
+      const result = validateSpritesheetItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.files") {
     {
       const result = validateFileItems({
@@ -4056,6 +4384,18 @@ const validateCollection = ({ collection, path }) => {
         nodes: collection.tree,
         items: collection.items,
         path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  } else if (path === "state.spritesheets") {
+    {
+      const result = validateGenericFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+        folderLabel: "folder spritesheet item",
       });
       if (result?.valid === false) {
         return result;
@@ -4417,6 +4757,43 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
+  for (const [spritesheetId, spritesheet] of Object.entries(
+    state.spritesheets.items,
+  )) {
+    if (spritesheet.type !== "spritesheet") {
+      continue;
+    }
+
+    const result = validateFileReference({
+      state,
+      fileId: spritesheet.fileId,
+      path: "spritesheet.fileId",
+      details: { spritesheetId, fileId: spritesheet.fileId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
+    }
+
+    if (spritesheet.thumbnailFileId === undefined) {
+      continue;
+    }
+
+    const thumbnailResult = validateFileReference({
+      state,
+      fileId: spritesheet.thumbnailFileId,
+      path: "spritesheet.thumbnailFileId",
+      details: {
+        spritesheetId,
+        thumbnailFileId: spritesheet.thumbnailFileId,
+      },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!thumbnailResult.valid) {
+      return thumbnailResult;
+    }
+  }
+
   for (const [soundId, sound] of Object.entries(state.sounds.items)) {
     if (sound.type !== "sound") {
       continue;
@@ -4708,6 +5085,45 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertSpritesheetAnimationReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+    animationName,
+  }) => {
+    const spritesheet = state.spritesheets?.items?.[targetId];
+    if (!isPlainObject(spritesheet) || spritesheet.type === "folder") {
+      return invalidInvariant(
+        `${ownerLabel} element resourceId must reference an existing non-folder spritesheet`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "resourceId",
+          targetId,
+        },
+      );
+    }
+
+    if (
+      !isNonEmptyString(animationName) ||
+      !isPlainObject(spritesheet.animations?.[animationName])
+    ) {
+      return invalidInvariant(
+        `${ownerLabel} element animationName must reference an existing spritesheet animation`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "animationName",
+          targetId: animationName,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertElementReferencesForCollection = ({
     items,
     ownerIdField,
@@ -4720,6 +5136,24 @@ export const assertInvariants = ({ state }) => {
       }
 
       for (const [elementId, element] of Object.entries(owner.elements.items)) {
+        if (
+          element.type === "spritesheet-animation" ||
+          element.resourceId !== undefined ||
+          element.animationName !== undefined
+        ) {
+          const result = assertSpritesheetAnimationReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.resourceId,
+            animationName: element.animationName,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         for (const field of [
           "imageId",
           "hoverImageId",
@@ -5457,6 +5891,233 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.height must be a finite number",
     );
+  }
+};
+
+const validateSpritesheetCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "spritesheet") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'spritesheet'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "thumbnailFileId",
+              "fileId",
+              "fileType",
+              "fileSize",
+              "sheetWidth",
+              "sheetHeight",
+              "frameCount",
+              "width",
+              "height",
+              "jsonData",
+              "animations",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.type === "spritesheet") {
+    if (
+      data.thumbnailFileId !== undefined &&
+      !isNonEmptyString(data.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.thumbnailFileId must be a non-empty string when provided",
+      );
+    }
+
+    if (!isNonEmptyString(data.fileId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
+    }
+
+    if (data.fileType !== undefined && !isString(data.fileType)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileType must be a string when provided",
+      );
+    }
+
+    for (const key of [
+      "fileSize",
+      "sheetWidth",
+      "sheetHeight",
+      "frameCount",
+      "width",
+      "height",
+    ]) {
+      if (data[key] !== undefined && !isFiniteNumber(data[key])) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `payload.data.${key} must be a finite number`,
+        );
+      }
+    }
+
+    if (!isPlainObject(data.jsonData)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.jsonData must be an object",
+      );
+    }
+
+    {
+      const result = validateSpritesheetAnimationMap({
+        animations: data.animations,
+        path: "payload.data.animations",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "thumbnailFileId",
+        "fileId",
+        "fileType",
+        "fileSize",
+        "sheetWidth",
+        "sheetHeight",
+        "frameCount",
+        "width",
+        "height",
+        "jsonData",
+        "animations",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
+  }
+
+  if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileId must be a non-empty string when provided",
+    );
+  }
+
+  if (data.fileType !== undefined && !isString(data.fileType)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileType must be a string when provided",
+    );
+  }
+
+  for (const key of [
+    "fileSize",
+    "sheetWidth",
+    "sheetHeight",
+    "frameCount",
+    "width",
+    "height",
+  ]) {
+    if (data[key] !== undefined && !isFiniteNumber(data[key])) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `payload.data.${key} must be a finite number`,
+      );
+    }
+  }
+
+  if (data.jsonData !== undefined && !isPlainObject(data.jsonData)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.jsonData must be an object when provided",
+    );
+  }
+
+  if (data.animations !== undefined) {
+    const result = validateSpritesheetAnimationMap({
+      animations: data.animations,
+      path: "payload.data.animations",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 };
 
@@ -7433,6 +8094,42 @@ const validateVisualElementReferenceTargets = ({
   state,
   errorFactory,
 }) => {
+  if (
+    data.type === "spritesheet-animation" ||
+    data.resourceId !== undefined ||
+    data.animationName !== undefined
+  ) {
+    const spritesheet = state.spritesheets?.items?.[data.resourceId];
+    if (!isPlainObject(spritesheet) || spritesheet.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element resourceId must reference an existing non-folder spritesheet`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "resourceId",
+          targetId: data.resourceId,
+        },
+      );
+    }
+
+    if (
+      !isNonEmptyString(data.animationName) ||
+      !isPlainObject(spritesheet.animations?.[data.animationName])
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element animationName must reference an existing spritesheet animation`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "animationName",
+          targetId: data.animationName,
+        },
+      );
+    }
+  }
+
   if (data.imageId !== undefined) {
     const image = state.images.items[data.imageId];
     if (!isPlainObject(image) || image.type === "folder") {
@@ -8246,6 +8943,30 @@ const findReferencedFileUsage = ({ state, fileId }) => {
     }
   }
 
+  for (const [spritesheetId, spritesheet] of Object.entries(
+    state.spritesheets.items,
+  )) {
+    if (spritesheet.type !== "spritesheet") {
+      continue;
+    }
+
+    if (spritesheet.fileId === fileId) {
+      return {
+        kind: "spritesheet",
+        field: "fileId",
+        ownerId: spritesheetId,
+      };
+    }
+
+    if (spritesheet.thumbnailFileId === fileId) {
+      return {
+        kind: "spritesheet",
+        field: "thumbnailFileId",
+        ownerId: spritesheetId,
+      };
+    }
+  }
+
   for (const [soundId, sound] of Object.entries(state.sounds.items)) {
     if (sound.type !== "sound") {
       continue;
@@ -8436,6 +9157,108 @@ const COMMAND_DEFINITIONS = [
             ...(usage.characterId ? { characterId: usage.characterId } : {}),
           },
         );
+      }
+    },
+  }),
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "spritesheet",
+    collectionKey: "spritesheets",
+    idField: "spritesheetId",
+    itemLabel: "spritesheet item",
+    createDataValidator: validateSpritesheetCreateData,
+    updateDataValidator: validateSpritesheetUpdateData,
+    createItem: ({ payload }) => ({
+      id: payload.spritesheetId,
+      type: payload.data.type,
+      name: payload.data.name,
+      ...(payload.data.description !== undefined
+        ? {
+            description: payload.data.description,
+          }
+        : {}),
+      ...(payload.data.type === "spritesheet"
+        ? {
+            fileId: payload.data.fileId,
+            ...(payload.data.thumbnailFileId !== undefined
+              ? {
+                  thumbnailFileId: payload.data.thumbnailFileId,
+                }
+              : {}),
+            ...(payload.data.fileType !== undefined
+              ? {
+                  fileType: payload.data.fileType,
+                }
+              : {}),
+            ...(payload.data.fileSize !== undefined
+              ? {
+                  fileSize: payload.data.fileSize,
+                }
+              : {}),
+            ...(payload.data.sheetWidth !== undefined
+              ? {
+                  sheetWidth: payload.data.sheetWidth,
+                }
+              : {}),
+            ...(payload.data.sheetHeight !== undefined
+              ? {
+                  sheetHeight: payload.data.sheetHeight,
+                }
+              : {}),
+            ...(payload.data.frameCount !== undefined
+              ? {
+                  frameCount: payload.data.frameCount,
+                }
+              : {}),
+            ...(payload.data.width !== undefined
+              ? {
+                  width: payload.data.width,
+                }
+              : {}),
+            ...(payload.data.height !== undefined
+              ? {
+                  height: payload.data.height,
+                }
+              : {}),
+            jsonData: structuredClone(payload.data.jsonData),
+            animations: structuredClone(payload.data.animations),
+          }
+        : {}),
+    }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "spritesheet") {
+        return;
+      }
+
+      return validateReferencedFilesInData({
+        state,
+        data: payload.data,
+        fields: ["fileId", "thumbnailFileId"],
+        details: {
+          spritesheetId: payload.spritesheetId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
+      ) {
+        return invalidPrecondition(
+          "folder spritesheet items cannot update spritesheet fields",
+        );
+      }
+
+      if (currentItem.type === "spritesheet") {
+        return validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "thumbnailFileId"],
+          details: {
+            spritesheetId: payload.spritesheetId,
+          },
+        });
       }
     },
   }),
@@ -14134,8 +14957,10 @@ export const validateAgainstState = ({ state, command }) => {
 export const processCommand = ({ state, command }) => {
   return captureValidation(() => {
     const normalizedState = normalizeStateCollections(state);
-    const shouldMaterializeControls =
-      typeof command?.type === "string" && command.type.startsWith("control.");
+    const shouldMaterializeNormalizedState =
+      typeof command?.type === "string" &&
+      (command.type.startsWith("control.") ||
+        command.type.startsWith("spritesheet."));
 
     if (!isPlainObject(command)) {
       return invalidPrecondition("command must be an object");
@@ -14156,7 +14981,7 @@ export const processCommand = ({ state, command }) => {
 
     const nextState = definition.reduce({
       state: structuredClone(
-        shouldMaterializeControls ? normalizedState : state,
+        shouldMaterializeNormalizedState ? normalizedState : state,
       ),
       payload: command.payload,
     });
@@ -14166,7 +14991,7 @@ export const processCommand = ({ state, command }) => {
 
     const finalState =
       nextState === undefined
-        ? shouldMaterializeControls
+        ? shouldMaterializeNormalizedState
           ? normalizedState
           : state
         : nextState;

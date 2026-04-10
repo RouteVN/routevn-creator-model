@@ -1,0 +1,7 @@
+schemaVersion: 2
+type: font.move
+payload:
+  fontId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

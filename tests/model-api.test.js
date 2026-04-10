@@ -839,8 +839,8 @@ test("validatePayload accepts empty transition tween keyframes arrays", () => {
   });
 });
 
-test("validatePayload rejects empty update tween keyframes arrays", () => {
-  expectValidation(() =>
+test("validatePayload accepts empty update tween keyframes arrays", () => {
+  expect(
     validatePayload({
       type: "animation.update",
       payload: {
@@ -857,9 +857,9 @@ test("validatePayload rejects empty update tween keyframes arrays", () => {
         },
       },
     }),
-  ).toThrow(
-    "payload.data.animation.tween.x.keyframes must contain at least one keyframe",
-  );
+  ).toEqual({
+    valid: true,
+  });
 });
 test("validatePayload rejects invalid transition mask textures", () => {
   expectValidation(() =>
@@ -2140,6 +2140,10 @@ test("registry exposes only fully implemented command types", () => {
     "file.create",
     "file.delete",
     "file.move",
+    "spritesheet.create",
+    "spritesheet.update",
+    "spritesheet.delete",
+    "spritesheet.move",
     "story.update",
     "scene.create",
     "scene.update",
