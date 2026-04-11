@@ -1203,6 +1203,7 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
                 "thumbnailFileId",
                 "fileType",
                 "fileSize",
+                "duration",
                 "width",
                 "height",
               ],
@@ -1268,6 +1269,13 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.fileSize must be a finite number`,
+        );
+      }
+
+      if (item.duration !== undefined && !isFiniteNumber(item.duration)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.duration must be a finite number`,
         );
       }
 
@@ -6530,6 +6538,7 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
               "thumbnailFileId",
               "fileType",
               "fileSize",
+              "duration",
               "width",
               "height",
             ],
@@ -6584,6 +6593,13 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
       );
     }
 
+    if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.duration must be a finite number",
+      );
+    }
+
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6611,6 +6627,7 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
         "thumbnailFileId",
         "fileType",
         "fileSize",
+        "duration",
         "width",
         "height",
       ],
@@ -6671,6 +6688,13 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.fileSize must be a finite number",
+    );
+  }
+
+  if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.duration must be a finite number",
     );
   }
 
@@ -11865,6 +11889,9 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.fileSize !== undefined) {
           nextVideo.fileSize = payload.data.fileSize;
         }
+        if (payload.data.duration !== undefined) {
+          nextVideo.duration = payload.data.duration;
+        }
         if (payload.data.width !== undefined) {
           nextVideo.width = payload.data.width;
         }
@@ -11933,6 +11960,7 @@ const COMMAND_DEFINITIONS = [
           payload.data.thumbnailFileId !== undefined ||
           payload.data.fileType !== undefined ||
           payload.data.fileSize !== undefined ||
+          payload.data.duration !== undefined ||
           payload.data.width !== undefined ||
           payload.data.height !== undefined)
       ) {
