@@ -324,7 +324,7 @@ state:
         type: boolean
         name: Has Seen Intro
         description: Tracks whether the intro has played
-        scope: context
+        scope: account
         default: false
         value: false
     tree:

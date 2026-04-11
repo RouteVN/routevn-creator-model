@@ -61,7 +61,7 @@ in:
           name: Camera
           description: Default framing transform
           x: 100
-          'y': 200
+          "y": 200
           scaleX: 1
           scaleY: 1
           anchorX: 0
@@ -104,7 +104,7 @@ out:
           name: Camera
           description: Default framing transform
           x: 100
-          'y': 200
+          "y": 200
           scaleX: 1
           scaleY: 1
           anchorX: 0
@@ -179,7 +179,7 @@ in:
           type: boolean
           name: Has Seen Intro
           description: Tracks whether the intro has played
-          scope: context
+          scope: account
           default: false
           value: false
 out:
@@ -227,7 +227,7 @@ out:
           type: boolean
           name: Has Seen Intro
           description: Tracks whether the intro has played
-          scope: context
+          scope: account
           default: false
           value: false
       tree:
@@ -292,7 +292,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: '#ffffff'
+            hex: "#ffffff"
         tree:
           - id: color-ui
             children: []
@@ -317,7 +317,7 @@ in:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: '700'
+          fontWeight: "700"
           previewText: Hello
 out:
   state:
@@ -373,7 +373,7 @@ out:
           id: color-ui
           type: color
           name: White
-          hex: '#ffffff'
+          hex: "#ffffff"
       tree:
         - id: color-ui
           children: []
@@ -388,7 +388,7 @@ out:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: '700'
+          fontWeight: "700"
           previewText: Hello
       tree:
         - id: style-ui
@@ -448,7 +448,7 @@ in:
             id: score
             type: number
             name: Score
-            scope: context
+            scope: device
             default: 0
             value: 0
         tree:
@@ -504,7 +504,7 @@ in:
             id: color-ui
             type: color
             name: White
-            hex: '#ffffff'
+            hex: "#ffffff"
         tree:
           - id: color-ui
             children: []
@@ -528,5 +528,5 @@ in:
           colorId: color-ui
           fontSize: 32
           lineHeight: 1.4
-          fontWeight: '700'
+          fontWeight: "700"
 throws: payload.data.fontId must reference an existing non-folder font

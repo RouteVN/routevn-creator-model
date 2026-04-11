@@ -24,6 +24,9 @@ initialState:
   animations:
     items: {}
     tree: []
+  particles:
+    items: {}
+    tree: []
   characters:
     items: {}
     tree: []
@@ -123,6 +126,9 @@ commands:
           items: {}
           tree: []
         animations:
+          items: {}
+          tree: []
+        particles:
           items: {}
           tree: []
         characters:

@@ -24,6 +24,9 @@ state:
   animations:
     items: {}
     tree: []
+  particles:
+    items: {}
+    tree: []
   characters:
     items: {}
     tree: []
