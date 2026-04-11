@@ -789,6 +789,7 @@ test("applies a sound and video command tape with intermediate state snapshots",
             name: "Intro Cut",
             fileId: "file-v",
             thumbnailFileId: "thumb-v",
+            duration: 12.5,
           },
         },
       },
@@ -872,6 +873,7 @@ test("applies a sound and video command tape with intermediate state snapshots",
     name: "Intro Cut",
     fileId: "file-v",
     thumbnailFileId: "thumb-v",
+    duration: 12.5,
   };
   expected5.videos.tree = [
     {

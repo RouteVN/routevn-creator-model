@@ -1492,8 +1492,10 @@ const directCases = [
       name: "Video",
       fileId: "file-video",
       thumbnailFileId: "thumb-video",
+      duration: 42.5,
     },
     updateData: {
+      duration: 84,
       width: 1280,
     },
     decorateState: withVideoFileRefs,
