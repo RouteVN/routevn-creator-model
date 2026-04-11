@@ -2,9 +2,9 @@ import { expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
 
 import {
-  RUNTIME_FIELD_GROUPS,
   RUNTIME_FIELD_IDS,
   SCHEMA_VERSION,
+  isRuntimeFieldId,
   processCommand,
   validateAgainstState,
   validatePayload,
@@ -62,95 +62,31 @@ test("public api exports functions only", async () => {
   expect(typeof processCommand).toBe("function");
 });
 
-test("runtime field ids stay aligned with the registry", () => {
-  const registryIds = RUNTIME_FIELD_GROUPS.flatMap((group) =>
-    (group.fields || []).map((field) => field.id),
-  );
-
-  expect(RUNTIME_FIELD_IDS).toEqual(registryIds);
+test("runtime field ids match the public runtime contract", () => {
+  expect(RUNTIME_FIELD_IDS).toEqual([
+    "dialogueTextSpeed",
+    "autoForwardDelay",
+    "skipUnseenText",
+    "skipTransitionsAndAnimations",
+    "soundVolume",
+    "musicVolume",
+    "muteAll",
+    "saveLoadPagination",
+    "menuPage",
+    "menuEntryPoint",
+    "autoMode",
+    "skipMode",
+    "dialogueUIHidden",
+    "isLineCompleted",
+  ]);
 });
 
-test("runtime field registry includes save/load pagination", () => {
-  const field = RUNTIME_FIELD_GROUPS.flatMap(
-    (group) => group.fields || [],
-  ).find((item) => item.id === "saveLoadPagination");
-
-  expect(field).toEqual({
-    id: "saveLoadPagination",
-    name: "Save/Load Pagination",
-    scope: "context",
-    type: "number",
-    default: 1,
-    source: "context.runtime.saveLoadPagination",
-    description:
-      "Tracks the current save/load pagination page for the active context.",
-  });
-});
-
-test("runtime field registry includes skip unseen text", () => {
-  const field = RUNTIME_FIELD_GROUPS.flatMap(
-    (group) => group.fields || [],
-  ).find((item) => item.id === "skipUnseenText");
-
-  expect(field).toEqual({
-    id: "skipUnseenText",
-    name: "Skip Unseen Text",
-    scope: "device",
-    type: "boolean",
-    default: false,
-    source: "global.skipUnseenText",
-    description:
-      "When enabled, skip mode can continue through lines the player has not viewed yet.",
-  });
-});
-
-test("runtime field registry includes dialogue text speed", () => {
-  const field = RUNTIME_FIELD_GROUPS.flatMap(
-    (group) => group.fields || [],
-  ).find((item) => item.id === "dialogueTextSpeed");
-
-  expect(field).toEqual({
-    id: "dialogueTextSpeed",
-    name: "Dialogue Text Speed",
-    scope: "device",
-    type: "number",
-    default: 50,
-    source: "global.dialogueTextSpeed",
-    description: "Controls the default dialogue text reveal speed.",
-  });
-});
-
-test("runtime field registry includes menu page", () => {
-  const field = RUNTIME_FIELD_GROUPS.flatMap(
-    (group) => group.fields || [],
-  ).find((item) => item.id === "menuPage");
-
-  expect(field).toEqual({
-    id: "menuPage",
-    name: "Menu Page",
-    scope: "context",
-    type: "string",
-    default: "",
-    source: "context.runtime.menuPage",
-    description: "Tracks the current menu page id for the active UI flow.",
-  });
-});
-
-test("runtime field registry includes menu entry point", () => {
-  const field = RUNTIME_FIELD_GROUPS.flatMap(
-    (group) => group.fields || [],
-  ).find((item) => item.id === "menuEntryPoint");
-
-  expect(field).toEqual({
-    id: "menuEntryPoint",
-    name: "Menu Entry Point",
-    scope: "context",
-    type: "string",
-    default: "",
-    source: "context.runtime.menuEntryPoint",
-    description:
-      "Tracks how the current menu flow was opened for the active context.",
-  });
+test("isRuntimeFieldId accepts known runtime ids and rejects unknown values", () => {
+  expect(isRuntimeFieldId("dialogueTextSpeed")).toBe(true);
+  expect(isRuntimeFieldId("saveLoadPagination")).toBe(true);
+  expect(isRuntimeFieldId("unknownRuntimeField")).toBe(false);
+  expect(isRuntimeFieldId("_dialogueTextSpeed")).toBe(false);
+  expect(isRuntimeFieldId(undefined)).toBe(false);
 });
 
 test("validation functions return valid results instead of throwing", () => {
