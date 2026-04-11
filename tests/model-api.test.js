@@ -2,10 +2,10 @@ import { expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
 
 import {
+  RUNTIME_FIELD_IDS,
   SCHEMA_VERSION,
+  isRuntimeFieldId,
   processCommand,
-  SYSTEM_VARIABLE_GROUPS,
-  SYSTEM_VARIABLE_IDS,
   validateAgainstState,
   validatePayload,
   validateState,
@@ -62,60 +62,31 @@ test("public api exports functions only", async () => {
   expect(typeof processCommand).toBe("function");
 });
 
-test("system variable ids stay aligned with the registry", () => {
-  const registryIds = SYSTEM_VARIABLE_GROUPS.flatMap((group) =>
-    (group.variables || []).map((variable) => variable.id),
-  );
-
-  expect(SYSTEM_VARIABLE_IDS).toEqual(registryIds);
+test("runtime field ids match the public runtime contract", () => {
+  expect(RUNTIME_FIELD_IDS).toEqual([
+    "dialogueTextSpeed",
+    "autoForwardDelay",
+    "skipUnseenText",
+    "skipTransitionsAndAnimations",
+    "soundVolume",
+    "musicVolume",
+    "muteAll",
+    "saveLoadPagination",
+    "menuPage",
+    "menuEntryPoint",
+    "autoMode",
+    "skipMode",
+    "dialogueUIHidden",
+    "isLineCompleted",
+  ]);
 });
 
-test("system variable registry includes current save/load pagination", () => {
-  const variable = SYSTEM_VARIABLE_GROUPS.flatMap(
-    (group) => group.variables || [],
-  ).find((item) => item.id === "_currentSaveLoadPagination");
-
-  expect(variable).toEqual({
-    id: "_currentSaveLoadPagination",
-    name: "Current Save/Load Pagination",
-    scope: "context",
-    type: "number",
-    default: 0,
-    description:
-      "The current save/load pagination index. Resolves to 0, 1, 2, 3, and so on for the active save/load page.",
-  });
-});
-
-test("system variable registry includes current menu page", () => {
-  const variable = SYSTEM_VARIABLE_GROUPS.flatMap(
-    (group) => group.variables || [],
-  ).find((item) => item.id === "_currentMenuPage");
-
-  expect(variable).toEqual({
-    id: "_currentMenuPage",
-    name: "Current Menu Page",
-    scope: "context",
-    type: "string",
-    default: "",
-    description:
-      "The current menu page id for the active UI flow. Typical values include options, save, load, and history.",
-  });
-});
-
-test("system variable registry includes menu entry point", () => {
-  const variable = SYSTEM_VARIABLE_GROUPS.flatMap(
-    (group) => group.variables || [],
-  ).find((item) => item.id === "_menuEntryPoint");
-
-  expect(variable).toEqual({
-    id: "_menuEntryPoint",
-    name: "Menu Entry Point",
-    scope: "context",
-    type: "string",
-    default: "",
-    description:
-      "Indicates how the current menu flow was opened. Typical values include title and read.",
-  });
+test("isRuntimeFieldId accepts known runtime ids and rejects unknown values", () => {
+  expect(isRuntimeFieldId("dialogueTextSpeed")).toBe(true);
+  expect(isRuntimeFieldId("saveLoadPagination")).toBe(true);
+  expect(isRuntimeFieldId("unknownRuntimeField")).toBe(false);
+  expect(isRuntimeFieldId("_dialogueTextSpeed")).toBe(false);
+  expect(isRuntimeFieldId(undefined)).toBe(false);
 });
 
 test("validation functions return valid results instead of throwing", () => {
@@ -1477,7 +1448,66 @@ test("validateState accepts layout elements with fragment references", () => {
   });
 });
 
-test("validateState accepts layout slider variableId refs to system variables", () => {
+test("validateState accepts layout slider variableId refs to project variables", () => {
+  const state = createEmptyTestState();
+  state.variables.items["variable-ui"] = {
+    id: "variable-ui",
+    type: "number",
+    name: "UI Value",
+    scope: "device",
+    default: 50,
+    value: 50,
+  };
+  state.variables.tree.push({
+    id: "variable-ui",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "slider-1": {
+          id: "slider-1",
+          type: "slider",
+          name: "Slider",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 20,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          min: 0,
+          max: 100,
+          step: 1,
+          variableId: "variable-ui",
+        },
+      },
+      tree: [
+        {
+          id: "slider-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState rejects layout slider variableId refs to legacy system variables", () => {
   const state = createEmptyTestState();
 
   state.layouts.items["layout-ui"] = {
@@ -1520,7 +1550,18 @@ test("validateState accepts layout slider variableId refs to system variables", 
   });
 
   expect(validateState({ state })).toEqual({
-    valid: true,
+    valid: false,
+    error: {
+      kind: "invariant",
+      code: "invariant_validation_failed",
+      message:
+        "layout element variableId must reference an existing non-folder variable",
+      details: {
+        elementId: "slider-1",
+        layoutId: "layout-ui",
+        variableId: "_dialogueTextSpeed",
+      },
+    },
   });
 });
 
@@ -1651,7 +1692,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
           conditionalOverrides: [
             {
               when: {
-                target: "variables._currentSaveLoadPagination",
+                target: "runtime.saveLoadPagination",
                 op: "eq",
                 value: 1,
               },
@@ -1670,7 +1711,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
             },
             {
               when: {
-                target: "isLineCompleted",
+                target: "runtime.isLineCompleted",
                 op: "eq",
                 value: true,
               },
@@ -1680,7 +1721,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
             },
             {
               when: {
-                target: "autoMode",
+                target: "runtime.autoMode",
                 op: "eq",
                 value: false,
               },
@@ -1690,7 +1731,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
             },
             {
               when: {
-                target: "skipMode",
+                target: "runtime.skipMode",
                 op: "eq",
                 value: true,
               },
@@ -1712,7 +1753,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
           conditionalOverrides: [
             {
               when: {
-                target: "autoMode",
+                target: "runtime.autoMode",
                 op: "eq",
                 value: true,
               },
@@ -1746,6 +1787,68 @@ test("validateState accepts conditional text styles on layout elements", () => {
 
   expect(validateState({ state })).toEqual({
     valid: true,
+  });
+});
+
+test("validateState rejects legacy runtime condition targets on layout elements", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          conditionalOverrides: [
+            {
+              when: {
+                target: "autoMode",
+                op: "eq",
+                value: true,
+              },
+              set: {
+                visible: false,
+              },
+            },
+          ],
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: false,
+    error: {
+      kind: "state",
+      code: "state_validation_failed",
+      message:
+        "state.layouts.items.layout-ui.elements.items.text-1.conditionalOverrides.0.when.target must be a supported layout condition target",
+    },
   });
 });
 

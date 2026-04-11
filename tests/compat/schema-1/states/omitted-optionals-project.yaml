@@ -177,7 +177,7 @@ state:
         id: variable-main
         type: number
         name: Score
-        scope: context
+        scope: device
         default: 0
         value: 0
     tree:

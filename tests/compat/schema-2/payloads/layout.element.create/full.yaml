@@ -18,4 +18,4 @@ payload:
     rotation: 0
     text: More
     textStyleId: text-style-ui
-    variableId: _dialogueTextSpeed
+    variableId: variable-rich

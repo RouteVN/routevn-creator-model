@@ -4,4 +4,4 @@ payload:
   controlId: control-default
   elementId: text-a
   data:
-    variableId: _dialogueTextSpeed
+    variableId: variable-rich

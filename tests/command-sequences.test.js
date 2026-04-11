@@ -1393,7 +1393,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
             type: "number",
             name: "Score",
             description: "Tracks player score",
-            scope: "context",
+            scope: "device",
             default: 0,
             value: 0,
           },
@@ -1406,6 +1406,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             description: "Tracks the current accumulated score",
             name: "Total Score",
+            scope: "account",
             value: 10,
           },
         },
@@ -1697,7 +1698,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       type: "number",
       name: "Score",
       description: "Tracks player score",
-      scope: "context",
+      scope: "device",
       default: 0,
       value: 0,
     },
@@ -1708,6 +1709,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected16.variables.items["variable-score"].description =
     "Tracks the current accumulated score";
   expected16.variables.items["variable-score"].name = "Total Score";
+  expected16.variables.items["variable-score"].scope = "account";
   expected16.variables.items["variable-score"].value = 10;
 
   const expected17 = cloneState(expected16);

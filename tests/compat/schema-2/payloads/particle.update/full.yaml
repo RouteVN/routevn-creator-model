@@ -3,24 +3,7 @@ type: particle.update
 payload:
   particleId: item-a
   data:
-    description: Updated snow preset
+    description: Updated snowfall overlay
     width: 1440
-    height: 810
+    height: 900
     seed: 67890
-    modules:
-      emission:
-        mode: burst
-        burstCount: 16
-        particleLifetime:
-          min: 0.6
-          max: 1.2
-        source:
-          kind: point
-          data:
-            x: 720
-            "y": 405
-      appearance:
-        texture:
-          shape: circle
-          radius: 3
-          color: "#ffffff"

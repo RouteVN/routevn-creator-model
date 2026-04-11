@@ -4,4 +4,4 @@ payload:
   layoutId: layout-dialogue
   elementId: text-a
   data:
-    variableId: _dialogueTextSpeed
+    variableId: variable-rich
