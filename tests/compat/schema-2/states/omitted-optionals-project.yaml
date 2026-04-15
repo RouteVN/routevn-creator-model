@@ -236,7 +236,7 @@ state:
         id: layout-main
         type: layout
         name: Main Layout
-        layoutType: normal
+        layoutType: general
         elements:
           items: {}
           tree: []

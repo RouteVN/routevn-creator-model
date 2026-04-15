@@ -5,7 +5,7 @@ payload:
   data:
     type: layout
     name: Dialogue
-    layoutType: dialogue
+    layoutType: dialogue-adv
     elements:
       items: {}
       tree: []

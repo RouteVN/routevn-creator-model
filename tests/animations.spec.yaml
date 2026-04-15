@@ -985,6 +985,25 @@ in:
             x:
               keyframes: []
 ---
+case: animation.update accepts empty update tween objects
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: update
+          tween: {}
+---
+case: animation.update accepts empty transition definitions
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: transition
+---
 case: animation.create rejects update tween properties with both auto and keyframes
 in:
   - type: animation.create

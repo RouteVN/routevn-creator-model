@@ -123,11 +123,11 @@ const ANIMATION_EASING_KEYS = [
 const VARIABLE_SCOPE_KEYS = ["context", "device", "account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
 const LAYOUT_TYPE_KEYS = [
-  "normal",
+  "general",
   "save-load",
   "confirmDialog",
-  "dialogue",
-  "nvl",
+  "dialogue-adv",
+  "dialogue-nvl",
   "choice",
   "history",
 ];
@@ -1506,13 +1506,6 @@ const validateTweenDefinition = ({
     return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
-  if (Object.keys(tween).length === 0) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path} must include at least one tween property`,
-    );
-  }
-
   for (const [propertyName, config] of Object.entries(tween)) {
     const propertyPath = `${path}.${propertyName}`;
 
@@ -1863,17 +1856,6 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.transition animations cannot define tween`,
-    );
-  }
-
-  if (
-    animation.prev === undefined &&
-    animation.next === undefined &&
-    animation.mask === undefined
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path} must define at least one of prev, next, or mask when ${path}.type is 'transition'`,
     );
   }
 
@@ -3751,7 +3733,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history'`,
+          `${itemPath}.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'`,
         );
       }
 
@@ -8222,7 +8204,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history'",
+        "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'",
       );
     }
 
@@ -8304,7 +8286,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'normal', 'save-load', 'confirmDialog', 'dialogue', 'nvl', 'choice', or 'history' when provided",
+      "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history' when provided",
     );
   }
 

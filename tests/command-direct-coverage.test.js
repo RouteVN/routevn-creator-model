@@ -324,7 +324,7 @@ const createLayoutBaseState = () => {
     id: "layout-dialogue",
     type: "layout",
     name: "Dialogue",
-    layoutType: "dialogue",
+    layoutType: "dialogue-adv",
     elements: {
       items: {
         "container-root": {
@@ -1700,7 +1700,7 @@ const directCases = [
     createData: {
       type: "layout",
       name: "Dialogue",
-      layoutType: "dialogue",
+      layoutType: "dialogue-adv",
       elements: {
         items: {},
         tree: [],

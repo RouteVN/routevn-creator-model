@@ -238,7 +238,7 @@ test("validatePayload accepts description and thumbnailFileId on layouts, contro
           type: "layout",
           name: "Thumbnail Layout",
           description: "Main dialogue frame",
-          layoutType: "normal",
+          layoutType: "general",
           thumbnailFileId: "file-thumb-layout",
           elements: {
             items: {},
@@ -468,7 +468,7 @@ test("validatePayload accepts isFragment on layouts", () => {
         data: {
           type: "layout",
           name: "Fragment Layout",
-          layoutType: "normal",
+          layoutType: "general",
           isFragment: true,
           elements: {
             items: {},
@@ -570,7 +570,7 @@ test("processCommand persists description and thumbnailFileId on layouts and con
     id: "layout-default",
     type: "layout",
     name: "Default Layout",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {},
       tree: [],
@@ -1028,7 +1028,7 @@ test("validateState accepts layout elements with rightClick interactions", () =>
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "button-1": {
@@ -1108,7 +1108,7 @@ test("validateState accepts layout elements with aspectRatioLock", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "sprite-1": {
@@ -1178,7 +1178,7 @@ test("layout element containers use gapX and gapY", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "container-root": {
@@ -1273,7 +1273,7 @@ test("validateState accepts layout elements with textStyle overrides", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "text-1": {
@@ -1322,7 +1322,7 @@ test("validateState accepts layout elements with revealEffect", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "dialogue",
+    layoutType: "dialogue-adv",
     elements: {
       items: {
         "text-1": {
@@ -1446,7 +1446,7 @@ test("validateState accepts layout elements with fragment references", () => {
     id: "layout-fragment",
     type: "layout",
     name: "Fragment",
-    layoutType: "normal",
+    layoutType: "general",
     isFragment: true,
     elements: {
       items: {
@@ -1478,7 +1478,7 @@ test("validateState accepts layout elements with fragment references", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "fragment-1": {
@@ -1538,7 +1538,7 @@ test("validateState accepts layout slider variableId refs to project variables",
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "slider-1": {
@@ -1585,7 +1585,7 @@ test("validateState rejects layout slider variableId refs to legacy system varia
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "slider-1": {
@@ -1742,7 +1742,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "text-1": {
@@ -1868,7 +1868,7 @@ test("validateState rejects legacy runtime condition targets on layout elements"
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "text-1": {
@@ -1930,7 +1930,7 @@ test("validateState accepts container child interaction inheritance flags", () =
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "container-1": {
@@ -2032,7 +2032,7 @@ test("validateState rejects legacy layout element style overrides", () => {
     id: "layout-ui",
     type: "layout",
     name: "UI",
-    layoutType: "normal",
+    layoutType: "general",
     elements: {
       items: {
         "text-1": {
