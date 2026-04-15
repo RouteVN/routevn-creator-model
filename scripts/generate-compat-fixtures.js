@@ -280,6 +280,8 @@ const createLayoutBaseState = () => {
           scaleX: 1,
           scaleY: 1,
           rotation: 0,
+          gapX: 16,
+          gapY: 12,
         },
         "text-a": {
           id: "text-a",
@@ -343,6 +345,8 @@ const createControlBaseState = () => {
           scaleX: 1,
           scaleY: 1,
           rotation: 0,
+          gapX: 16,
+          gapY: 12,
         },
         "text-a": {
           id: "text-a",
@@ -1799,6 +1803,8 @@ const payloadFixtures = [
           scaleX: 1,
           scaleY: 1,
           rotation: 0,
+          gapX: 16,
+          gapY: 12,
         },
       },
       "rect-full": {
@@ -1971,6 +1977,8 @@ const payloadFixtures = [
           scaleX: 1,
           scaleY: 1,
           rotation: 0,
+          gapX: 16,
+          gapY: 12,
         },
       },
       "rect-full": {
@@ -3202,6 +3210,7 @@ const writeYaml = async (fileUrl, value) => {
       lineWidth: -1,
       noRefs: true,
       sortKeys: false,
+      quotingType: '"',
     }),
   );
 };

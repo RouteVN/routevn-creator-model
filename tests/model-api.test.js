@@ -1145,6 +1145,77 @@ test("validateState accepts layout elements with aspectRatioLock", () => {
   });
 });
 
+test("layout element containers use gapX and gapY", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "container-root",
+        data: {
+          type: "container",
+          name: "Root",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          gapX: 16,
+          gapY: 12,
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  const state = createEmptyTestState();
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "normal",
+    elements: {
+      items: {
+        "container-root": {
+          id: "container-root",
+          type: "container",
+          name: "Root",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          gapX: 16,
+          gapY: 12,
+        },
+      },
+      tree: [
+        {
+          id: "container-root",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout elements with textStyle overrides", () => {
   const state = createEmptyTestState();
 
