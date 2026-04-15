@@ -326,7 +326,7 @@ in:
         data:
           type: layout
           name: Dialogue
-          layoutType: dialogue
+          layoutType: dialogue-adv
           elements:
             items: {}
             tree: []
@@ -377,7 +377,7 @@ out:
           id: layout-dialogue
           type: layout
           name: Dialogue
-          layoutType: dialogue
+          layoutType: dialogue-adv
           elements:
             items: {}
             tree: []
@@ -467,7 +467,7 @@ in:
             id: layout-dialogue
             type: layout
             name: Dialogue
-            layoutType: dialogue
+            layoutType: dialogue-adv
             elements:
               items:
                 container-root:
@@ -588,7 +588,7 @@ out:
           id: layout-dialogue
           type: layout
           name: Dialogue
-          layoutType: dialogue
+          layoutType: dialogue-adv
           elements:
             items:
               container-root:
@@ -708,7 +708,7 @@ in:
             id: layout-dialogue
             type: layout
             name: Dialogue
-            layoutType: dialogue
+            layoutType: dialogue-adv
             elements:
               items:
                 container-root:
@@ -836,7 +836,7 @@ out:
           id: layout-dialogue
           type: layout
           name: Dialogue
-          layoutType: dialogue
+          layoutType: dialogue-adv
           elements:
             items:
               container-root:
@@ -925,7 +925,7 @@ in:
             id: layout-dialogue
             type: layout
             name: Dialogue
-            layoutType: dialogue
+            layoutType: dialogue-adv
             elements:
               items:
                 text-dialogue:
@@ -999,7 +999,7 @@ out:
           id: layout-dialogue
           type: layout
           name: Dialogue
-          layoutType: dialogue
+          layoutType: dialogue-adv
           elements:
             items:
               text-dialogue:

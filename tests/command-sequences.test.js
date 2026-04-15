@@ -1268,7 +1268,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
           data: {
             type: "layout",
             name: "Dialogue",
-            layoutType: "dialogue",
+            layoutType: "dialogue-adv",
             elements: {
               items: {},
               tree: [],
@@ -1569,7 +1569,7 @@ test("applies a ui resources and layout command tape with intermediate state sna
       id: "layout-dialogue",
       type: "layout",
       name: "Dialogue",
-      layoutType: "dialogue",
+      layoutType: "dialogue-adv",
       elements: {
         items: {},
         tree: [],

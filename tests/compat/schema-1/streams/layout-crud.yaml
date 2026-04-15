@@ -128,7 +128,7 @@ commands:
               id: layout-dialogue
               type: layout
               name: Dialogue
-              layoutType: dialogue
+              layoutType: dialogue-adv
               elements:
                 items:
                   container-root:
@@ -198,7 +198,7 @@ commands:
       data:
         type: layout
         name: Alt Layout
-        layoutType: normal
+        layoutType: general
         elements:
           items: {}
           tree: []
