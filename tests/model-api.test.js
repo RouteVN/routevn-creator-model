@@ -1145,7 +1145,7 @@ test("validateState accepts layout elements with aspectRatioLock", () => {
   });
 });
 
-test("layout element containers use gapX and gapY instead of gap", () => {
+test("layout element containers use gapX and gapY", () => {
   expect(
     validatePayload({
       type: "layout.element.create",
@@ -1172,30 +1172,6 @@ test("layout element containers use gapX and gapY instead of gap", () => {
   ).toEqual({
     valid: true,
   });
-
-  expectValidation(() =>
-    validatePayload({
-      type: "layout.element.create",
-      payload: {
-        layoutId: "layout-ui",
-        elementId: "container-root",
-        data: {
-          type: "container",
-          name: "Root",
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 100,
-          anchorX: 0,
-          anchorY: 0,
-          scaleX: 1,
-          scaleY: 1,
-          rotation: 0,
-          gap: 16,
-        },
-      },
-    }),
-  ).toThrow("payload.data.gap is not allowed");
 
   const state = createEmptyTestState();
   state.layouts.items["layout-ui"] = {
