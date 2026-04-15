@@ -8,7 +8,13 @@ payload:
   data:
     type: layout
     name: Dialogue
+    description: Main dialogue frame
     layoutType: dialogue-adv
+    thumbnailFileId: thumb-image
+    preview:
+      backgroundImageId: image-preview-layout
+      runtime:
+        autoMode: true
     elements:
       items: {}
       tree: []

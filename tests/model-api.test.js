@@ -228,7 +228,7 @@ test("validatePayload accepts keyboard data in control.update", () => {
   });
 });
 
-test("validatePayload accepts description and thumbnailFileId on layouts, controls, and character sprites", () => {
+test("validatePayload accepts description, thumbnailFileId, and preview on layouts, controls, and character sprites", () => {
   expect(
     validatePayload({
       type: "layout.create",
@@ -240,6 +240,9 @@ test("validatePayload accepts description and thumbnailFileId on layouts, contro
           description: "Main dialogue frame",
           layoutType: "general",
           thumbnailFileId: "file-thumb-layout",
+          preview: {
+            backgroundImageId: "image-preview",
+          },
           elements: {
             items: {},
             tree: [],
@@ -259,6 +262,11 @@ test("validatePayload accepts description and thumbnailFileId on layouts, contro
         data: {
           description: "Main dialogue frame",
           thumbnailFileId: "file-thumb-layout",
+          preview: {
+            variables: {
+              score: 7,
+            },
+          },
         },
       },
     }),
@@ -276,6 +284,11 @@ test("validatePayload accepts description and thumbnailFileId on layouts, contro
           name: "Thumbnail Control",
           description: "Shared navigation control",
           thumbnailFileId: "file-thumb-control",
+          preview: {
+            runtime: {
+              autoMode: true,
+            },
+          },
           elements: {
             items: {},
             tree: [],
@@ -295,6 +308,11 @@ test("validatePayload accepts description and thumbnailFileId on layouts, contro
         data: {
           description: "Shared navigation control",
           thumbnailFileId: "file-thumb-control",
+          preview: {
+            choice: {
+              items: [{ content: "Play" }],
+            },
+          },
         },
       },
     }),
@@ -560,7 +578,7 @@ test("processCommand persists keyboard data on controls", () => {
   });
 });
 
-test("processCommand persists description and thumbnailFileId on layouts and controls", () => {
+test("processCommand persists description, thumbnailFileId, and preview on layouts and controls", () => {
   const state = createEmptyTestState();
 
   addFileRecordToState(state, { fileId: "file-layout-thumb" });
@@ -598,6 +616,12 @@ test("processCommand persists description and thumbnailFileId on layouts and con
         data: {
           description: "Main dialogue frame",
           thumbnailFileId: "file-layout-thumb",
+          preview: {
+            backgroundImageId: "image-layout-preview",
+            runtime: {
+              autoMode: true,
+            },
+          },
         },
       },
     },
@@ -610,6 +634,12 @@ test("processCommand persists description and thumbnailFileId on layouts and con
   expect(
     layoutResult.state.layouts.items["layout-default"].thumbnailFileId,
   ).toBe("file-layout-thumb");
+  expect(layoutResult.state.layouts.items["layout-default"].preview).toEqual({
+    backgroundImageId: "image-layout-preview",
+    runtime: {
+      autoMode: true,
+    },
+  });
 
   const controlResult = processCommand({
     state: layoutResult.state,
@@ -620,6 +650,11 @@ test("processCommand persists description and thumbnailFileId on layouts and con
         data: {
           description: "Shared navigation control",
           thumbnailFileId: "file-control-thumb",
+          preview: {
+            choice: {
+              items: [{ content: "Continue" }],
+            },
+          },
         },
       },
     },
@@ -632,6 +667,11 @@ test("processCommand persists description and thumbnailFileId on layouts and con
   expect(
     controlResult.state.controls.items["control-default"].thumbnailFileId,
   ).toBe("file-control-thumb");
+  expect(controlResult.state.controls.items["control-default"].preview).toEqual({
+    choice: {
+      items: [{ content: "Continue" }],
+    },
+  });
   expect(validateState({ state: controlResult.state })).toEqual({
     valid: true,
   });

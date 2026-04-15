@@ -4,3 +4,9 @@ payload:
   controlId: item-a
   data:
     name: Control Updated
+    description: Updated navigation control
+    thumbnailFileId: thumb-image
+    preview:
+      choice:
+        items:
+          - content: Play

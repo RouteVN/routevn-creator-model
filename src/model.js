@@ -3656,6 +3656,21 @@ const validateKeyboardMap = ({ value, path, errorFactory }) => {
   return VALID_RESULT;
 };
 
+const validatePreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
 const validateLayoutItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -3681,6 +3696,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "layoutType",
                 "isFragment",
                 "thumbnailFileId",
+                "preview",
                 "elements",
               ],
         path: itemPath,
@@ -3727,6 +3743,17 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validatePreviewObject({
+        value: item.preview,
+        path: `${itemPath}.preview`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     if (item.type === "layout") {
@@ -3786,6 +3813,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
                 "name",
                 "description",
                 "thumbnailFileId",
+                "preview",
                 "elements",
                 "keyboard",
               ],
@@ -3833,6 +3861,17 @@ const validateControlItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validatePreviewObject({
+        value: item.preview,
+        path: `${itemPath}.preview`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     if (item.type === "control") {
@@ -8166,6 +8205,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "layoutType",
               "isFragment",
               "thumbnailFileId",
+              "preview",
               "elements",
             ],
       path: "payload.data",
@@ -8198,6 +8238,17 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validatePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.type === "layout") {
@@ -8240,6 +8291,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
         "layoutType",
         "isFragment",
         "thumbnailFileId",
+        "preview",
       ],
       path: "payload.data",
       errorFactory,
@@ -8278,6 +8330,17 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validatePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (
@@ -8324,6 +8387,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
               "name",
               "description",
               "thumbnailFileId",
+              "preview",
               "elements",
               "keyboard",
             ],
@@ -8359,6 +8423,17 @@ const validateControlCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  {
+    const result = validatePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
   if (data.type === "control") {
     {
       const result = validateNestedCollection({
@@ -8390,7 +8465,13 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "keyboard", "thumbnailFileId"],
+      allowedKeys: [
+        "name",
+        "description",
+        "keyboard",
+        "thumbnailFileId",
+        "preview",
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -8428,6 +8509,17 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validatePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13740,6 +13832,11 @@ const COMMAND_DEFINITIONS = [
                   thumbnailFileId: payload.data.thumbnailFileId,
                 }
               : {}),
+            ...(payload.data.preview !== undefined
+              ? {
+                  preview: structuredClone(payload.data.preview),
+                }
+              : {}),
             elements: structuredClone(payload.data.elements),
           }
         : {}),
@@ -13803,6 +13900,11 @@ const COMMAND_DEFINITIONS = [
             ...(payload.data.thumbnailFileId !== undefined
               ? {
                   thumbnailFileId: payload.data.thumbnailFileId,
+                }
+              : {}),
+            ...(payload.data.preview !== undefined
+              ? {
+                  preview: structuredClone(payload.data.preview),
                 }
               : {}),
             elements: structuredClone(payload.data.elements),

@@ -184,6 +184,12 @@ commands:
               id: control-default
               type: control
               name: Default Control
+              description: Shared navigation control
+              thumbnailFileId: thumb-spritesheet-ui
+              preview:
+                choice:
+                  items:
+                    - content: Continue
               elements:
                 items:
                   container-root:
@@ -250,6 +256,11 @@ commands:
       data:
         type: control
         name: Alt Control
+        description: Alternate navigation control
+        thumbnailFileId: thumb-spritesheet-ui
+        preview:
+          runtime:
+            autoMode: true
         elements:
           items: {}
           tree: []
@@ -258,6 +269,10 @@ commands:
       controlId: control-alt
       data:
         name: Alt Control Updated
+        preview:
+          choice:
+            items:
+              - content: Continue
   - type: control.element.create
     payload:
       controlId: control-alt
