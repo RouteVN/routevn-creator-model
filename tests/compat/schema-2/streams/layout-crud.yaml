@@ -181,7 +181,13 @@ commands:
               id: layout-dialogue
               type: layout
               name: Dialogue
+              description: Main dialogue frame
               layoutType: dialogue-adv
+              thumbnailFileId: thumb-spritesheet-ui
+              preview:
+                backgroundImageId: image-preview-layout
+                runtime:
+                  autoMode: true
               elements:
                 items:
                   container-root:
@@ -251,7 +257,12 @@ commands:
       data:
         type: layout
         name: Alt Layout
+        description: Alternate dialogue layout
         layoutType: general
+        thumbnailFileId: thumb-spritesheet-ui
+        preview:
+          runtime:
+            autoMode: true
         elements:
           items: {}
           tree: []
@@ -260,6 +271,9 @@ commands:
       layoutId: layout-alt
       data:
         name: Alt Layout Updated
+        preview:
+          variables:
+            score: 7
   - type: layout.element.create
     payload:
       layoutId: layout-alt

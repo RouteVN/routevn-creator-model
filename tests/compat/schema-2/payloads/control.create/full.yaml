@@ -8,6 +8,11 @@ payload:
   data:
     type: control
     name: Default Control
+    description: Shared navigation control
+    thumbnailFileId: thumb-image
+    preview:
+      runtime:
+        autoMode: true
     elements:
       items: {}
       tree: []

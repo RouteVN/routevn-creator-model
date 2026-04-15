@@ -264,7 +264,15 @@ const createLayoutBaseState = () => {
     id: "layout-dialogue",
     type: "layout",
     name: "Dialogue",
-    layoutType: "dialogue",
+    description: "Main dialogue frame",
+    layoutType: "dialogue-adv",
+    thumbnailFileId: "thumb-spritesheet-ui",
+    preview: {
+      backgroundImageId: "image-preview-layout",
+      runtime: {
+        autoMode: true,
+      },
+    },
     elements: {
       items: {
         "container-root": {
@@ -330,6 +338,13 @@ const createControlBaseState = () => {
     id: "control-default",
     type: "control",
     name: "Default Control",
+    description: "Shared navigation control",
+    thumbnailFileId: "thumb-spritesheet-ui",
+    preview: {
+      choice: {
+        items: [{ content: "Continue" }],
+      },
+    },
     elements: {
       items: {
         "container-root": {
@@ -553,7 +568,7 @@ const createSparseCompatibilityState = () => {
     id: "layout-main",
     type: "layout",
     name: "Main Layout",
-    layoutType: "normal",
+    layoutType: "general",
     elements: createEmptyNestedCollection(),
   };
   state.layouts.tree = [createTreeNode("layout-main")];
@@ -573,6 +588,12 @@ const createRichCompatibilityState = () => {
     { id: "file-font-ui", type: "font", mimeType: "font/ttf" },
     { id: "file-smile", type: "image", mimeType: "image/png", size: 256 },
     { id: "file-angry", type: "image", mimeType: "image/png", size: 256 },
+    {
+      id: "thumb-spritesheet-ui",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+      size: 128,
+    },
     { id: "file-image-rich", type: "image", mimeType: "image/png", size: 2048 },
     { id: "thumb-image-rich", type: "image-thumbnail", mimeType: "image/webp" },
     {
@@ -1628,13 +1649,21 @@ const payloadFixtures = [
     minimalCreateData: {
       type: "layout",
       name: "Dialogue",
-      layoutType: "dialogue",
+      layoutType: "dialogue-adv",
       elements: createEmptyNestedCollection(),
     },
     fullCreateData: {
       type: "layout",
       name: "Dialogue",
-      layoutType: "dialogue",
+      description: "Main dialogue frame",
+      layoutType: "dialogue-adv",
+      thumbnailFileId: "thumb-image",
+      preview: {
+        backgroundImageId: "image-preview-layout",
+        runtime: {
+          autoMode: true,
+        },
+      },
       elements: createEmptyNestedCollection(),
     },
     minimalUpdateData: {
@@ -1642,6 +1671,13 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       name: "Dialogue Updated",
+      description: "Updated dialogue frame",
+      thumbnailFileId: "thumb-image",
+      preview: {
+        variables: {
+          score: 7,
+        },
+      },
     },
   }),
   ...createFolderedPayloadSets({
@@ -1656,6 +1692,13 @@ const payloadFixtures = [
     fullCreateData: {
       type: "control",
       name: "Default Control",
+      description: "Shared navigation control",
+      thumbnailFileId: "thumb-image",
+      preview: {
+        runtime: {
+          autoMode: true,
+        },
+      },
       elements: createEmptyNestedCollection(),
     },
     minimalUpdateData: {
@@ -1663,6 +1706,13 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       name: "Control Updated",
+      description: "Updated navigation control",
+      thumbnailFileId: "thumb-image",
+      preview: {
+        choice: {
+          items: [{ content: "Play" }],
+        },
+      },
     },
   }),
   ...payloadSet(
@@ -2957,7 +3007,14 @@ const streamFixtures = [
           data: {
             type: "layout",
             name: "Alt Layout",
-            layoutType: "normal",
+            description: "Alternate dialogue layout",
+            layoutType: "general",
+            thumbnailFileId: "thumb-spritesheet-ui",
+            preview: {
+              runtime: {
+                autoMode: true,
+              },
+            },
             elements: { items: {}, tree: [] },
           },
         },
@@ -2966,7 +3023,14 @@ const streamFixtures = [
         type: "layout.update",
         payload: {
           layoutId: "layout-alt",
-          data: { name: "Alt Layout Updated" },
+          data: {
+            name: "Alt Layout Updated",
+            preview: {
+              variables: {
+                score: 7,
+              },
+            },
+          },
         },
       },
       {
@@ -3089,6 +3153,13 @@ const streamFixtures = [
           data: {
             type: "control",
             name: "Alt Control",
+            description: "Alternate navigation control",
+            thumbnailFileId: "thumb-spritesheet-ui",
+            preview: {
+              runtime: {
+                autoMode: true,
+              },
+            },
             elements: { items: {}, tree: [] },
           },
         },
@@ -3097,7 +3168,14 @@ const streamFixtures = [
         type: "control.update",
         payload: {
           controlId: "control-alt",
-          data: { name: "Alt Control Updated" },
+          data: {
+            name: "Alt Control Updated",
+            preview: {
+              choice: {
+                items: [{ content: "Continue" }],
+              },
+            },
+          },
         },
       },
       {
