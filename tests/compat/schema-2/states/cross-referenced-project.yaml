@@ -406,6 +406,8 @@ state:
               scaleX: 1
               scaleY: 1
               rotation: 0
+              gapX: 16
+              gapY: 12
             text-a:
               id: text-a
               type: text
@@ -479,6 +481,8 @@ state:
               scaleX: 1
               scaleY: 1
               rotation: 0
+              gapX: 16
+              gapY: 12
             text-a:
               id: text-a
               type: text
