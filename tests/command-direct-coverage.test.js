@@ -521,6 +521,55 @@ test("layout.element.create accepts particle elements", () => {
   });
 });
 
+test("layout.element.create accepts container elements with absolute direction", () => {
+  const state = createLayoutBaseState();
+  const result = processCommand({
+    state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "container-absolute",
+        parentId: "container-root",
+        data: {
+          type: "container",
+          name: "Absolute Container",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          direction: "absolute",
+        },
+      },
+    },
+  });
+
+  expect(
+    result.state.layouts.items["layout-dialogue"].elements.items[
+      "container-absolute"
+    ],
+  ).toEqual({
+    id: "container-absolute",
+    type: "container",
+    name: "Absolute Container",
+    x: 0,
+    y: 0,
+    width: 200,
+    height: 100,
+    anchorX: 0,
+    anchorY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    rotation: 0,
+    direction: "absolute",
+  });
+});
+
 test("validateAgainstState rejects missing particle references in layout elements", () => {
   const state = createLayoutBaseState();
 
