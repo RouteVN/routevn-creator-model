@@ -1213,6 +1213,21 @@ test("layout element containers use gapX and gapY", () => {
     valid: true,
   });
 
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "container-root",
+        data: {
+          direction: "absolute",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
   const state = createEmptyTestState();
   state.layouts.items["layout-ui"] = {
     id: "layout-ui",
@@ -1241,6 +1256,50 @@ test("layout element containers use gapX and gapY", () => {
       tree: [
         {
           id: "container-root",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout elements with absolute direction", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "container-1": {
+          id: "container-1",
+          type: "container",
+          name: "Container",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          direction: "absolute",
+        },
+      },
+      tree: [
+        {
+          id: "container-1",
           children: [],
         },
       ],

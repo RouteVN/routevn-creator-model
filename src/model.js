@@ -3298,12 +3298,13 @@ const validateLayoutElementData = ({
 
   if (
     data.direction !== undefined &&
+    data.direction !== "absolute" &&
     data.direction !== "horizontal" &&
     data.direction !== "vertical"
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.direction must be 'horizontal' or 'vertical' when provided`,
+      `${path}.direction must be 'absolute', 'horizontal' or 'vertical' when provided`,
     );
   }
 
