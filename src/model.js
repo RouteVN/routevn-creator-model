@@ -15478,50 +15478,118 @@ export const validatePayload = ({ type, payload }) => {
   });
 };
 
+const normalizeCurrentStateValidationResult = (stateResult) => {
+  if (stateResult.valid) {
+    return stateResult;
+  }
+
+  if (stateResult.error.kind === "invariant") {
+    return invalidInvariant(
+      stateResult.error.message,
+      toDomainErrorDetails(stateResult.error),
+    );
+  }
+
+  return invalidState(
+    stateResult.error.message,
+    toDomainErrorDetails(stateResult.error),
+  );
+};
+
+const validateCommandDefinitionAgainstState = ({ state, command }) => {
+  if (!isPlainObject(command)) {
+    return invalidPrecondition("command must be an object");
+  }
+
+  const payloadResult = validatePayload(command);
+  if (!payloadResult.valid) {
+    return invalidPayload(
+      payloadResult.error.message,
+      toDomainErrorDetails(payloadResult.error),
+    );
+  }
+
+  const definition = getCommandDefinition({ type: command.type });
+  if (!definition) {
+    return invalidPrecondition(`unknown command type '${command.type}'`);
+  }
+
+  const validationResult = captureValidation(() =>
+    definition.validateAgainstState({
+      state,
+      payload: command.payload,
+    }),
+  );
+  const normalizedValidationResult = normalizeStateResult(validationResult);
+  if (!normalizedValidationResult.valid) {
+    return normalizedValidationResult;
+  }
+
+  return {
+    valid: true,
+    definition,
+  };
+};
+
+const applyCommandDefinition = ({ state, definition, payload }) => {
+  const nextState = definition.reduce({
+    state,
+    payload,
+  });
+  if (nextState?.valid === false) {
+    return nextState;
+  }
+
+  return {
+    valid: true,
+    state: nextState === undefined ? state : nextState,
+  };
+};
+
+const appendReplayCommandContext = (result, { commandIndex, command } = {}) => {
+  if (result?.valid !== false || !result.error) {
+    return result;
+  }
+
+  const details = isPlainObject(result.error.details)
+    ? structuredClone(result.error.details)
+    : {};
+
+  if (Number.isInteger(commandIndex) && commandIndex >= 0) {
+    details.commandIndex = commandIndex;
+  }
+
+  if (isNonEmptyString(command?.type)) {
+    details.commandType = command.type;
+  }
+
+  return {
+    valid: false,
+    error: {
+      ...result.error,
+      details,
+    },
+  };
+};
+
 export const validateAgainstState = ({ state, command }) => {
   return captureValidation(() => {
     const normalizedState = normalizeStateCollections(state);
 
-    if (!isPlainObject(command)) {
-      return invalidPrecondition("command must be an object");
-    }
-
-    const payloadResult = validatePayload(command);
-    if (!payloadResult.valid) {
-      return invalidPayload(
-        payloadResult.error.message,
-        toDomainErrorDetails(payloadResult.error),
-      );
-    }
-
     const stateResult = validateState({ state: normalizedState });
     if (!stateResult.valid) {
-      if (stateResult.error.kind === "invariant") {
-        return invalidInvariant(
-          stateResult.error.message,
-          toDomainErrorDetails(stateResult.error),
-        );
-      }
-
-      return invalidState(
-        stateResult.error.message,
-        toDomainErrorDetails(stateResult.error),
-      );
+      return normalizeCurrentStateValidationResult(stateResult);
     }
 
-    const definition = getCommandDefinition({ type: command.type });
-    if (!definition) {
-      return invalidPrecondition(`unknown command type '${command.type}'`);
+    const validationResult = validateCommandDefinitionAgainstState({
+      state: normalizedState,
+      command,
+    });
+    if (!validationResult.valid) {
+      return validationResult;
     }
 
-    const validationResult = captureValidation(() =>
-      definition.validateAgainstState({
-        state: normalizedState,
-        payload: command.payload,
-      }),
-    );
-
-    return normalizeStateResult(validationResult);
+    return VALID_RESULT;
   });
 };
 
@@ -15534,49 +15602,97 @@ export const processCommand = ({ state, command }) => {
         command.type.startsWith("spritesheet.") ||
         command.type.startsWith("particle."));
 
-    if (!isPlainObject(command)) {
-      return invalidPrecondition("command must be an object");
+    const stateResult = validateState({ state: normalizedState });
+    if (!stateResult.valid) {
+      return normalizeCurrentStateValidationResult(stateResult);
     }
 
-    const preconditionResult = validateAgainstState({
+    const validationResult = validateCommandDefinitionAgainstState({
       state: normalizedState,
       command,
     });
-    if (!preconditionResult.valid) {
-      return preconditionResult;
+    if (!validationResult.valid) {
+      return validationResult;
     }
 
-    const definition = getCommandDefinition({ type: command.type });
-    if (!definition) {
-      return invalidPrecondition(`unknown command type '${command.type}'`);
-    }
-
-    const nextState = definition.reduce({
+    const applyResult = applyCommandDefinition({
       state: structuredClone(
         shouldMaterializeNormalizedState ? normalizedState : state,
       ),
+      definition: validationResult.definition,
       payload: command.payload,
     });
-    if (nextState?.valid === false) {
-      return nextState;
+    if (!applyResult.valid) {
+      return applyResult;
     }
 
-    const finalState =
-      nextState === undefined
-        ? shouldMaterializeNormalizedState
-          ? normalizedState
-          : state
-        : nextState;
-    const stateResult = validateState({
-      state: finalState,
+    const stateResultAfterCommand = validateState({
+      state: applyResult.state,
     });
-    if (!stateResult.valid) {
-      return stateResult;
+    if (!stateResultAfterCommand.valid) {
+      return stateResultAfterCommand;
     }
 
     return {
       valid: true,
-      state: finalState,
+      state: applyResult.state,
+    };
+  });
+};
+
+export const replayCommands = ({ state, commands }) => {
+  return captureValidation(() => {
+    if (!Array.isArray(commands)) {
+      return invalidPrecondition("commands must be an array");
+    }
+
+    const normalizedState = normalizeStateCollections(state);
+    const stateResult = validateState({
+      state: normalizedState,
+    });
+    if (!stateResult.valid) {
+      return normalizeCurrentStateValidationResult(stateResult);
+    }
+
+    let workingState = structuredClone(normalizedState);
+    for (let index = 0; index < commands.length; index += 1) {
+      const command = commands[index];
+      const validationResult = validateCommandDefinitionAgainstState({
+        state: workingState,
+        command,
+      });
+      if (!validationResult.valid) {
+        return appendReplayCommandContext(validationResult, {
+          commandIndex: index,
+          command,
+        });
+      }
+
+      const applyResult = applyCommandDefinition({
+        state: workingState,
+        definition: validationResult.definition,
+        payload: command.payload,
+      });
+      if (!applyResult.valid) {
+        return appendReplayCommandContext(applyResult, {
+          commandIndex: index,
+          command,
+        });
+      }
+
+      workingState = applyResult.state;
+    }
+
+    const finalStateResult = validateState({
+      state: workingState,
+    });
+    if (!finalStateResult.valid) {
+      return finalStateResult;
+    }
+
+    return {
+      valid: true,
+      state: workingState,
     };
   });
 };
