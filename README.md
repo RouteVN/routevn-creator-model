@@ -42,6 +42,11 @@ processCommand({
   state,
   command: { type, payload },
 });
+
+replayCommands({
+  state,
+  commands: [{ type, payload }],
+});
 ```
 
 `SCHEMA_VERSION` is the exported schema version constant for persisted command
@@ -76,6 +81,12 @@ or:
 { valid: true, state: nextState }
 ```
 
+`replayCommands()` returns the same result shape while applying a trusted
+command tape against a single working state clone. It is intended for batch
+history reconstruction paths such as offline repository boot/import replay,
+where validating the full state before and after every individual command is
+needlessly expensive.
+
 Design rules:
 
 - no classes
@@ -86,6 +97,7 @@ Design rules:
 - patch releases must not change persisted schema compatibility
 - `bun run test:compat` is the required compatibility gate for model changes
 - `processCommand()` is the authoritative state transition
+- `replayCommands()` is the fast batch replay path for trusted command tapes
 - model state should contain project-owned runtime data only
 - app-owned metadata like project id, name, and description should stay out of
   this package

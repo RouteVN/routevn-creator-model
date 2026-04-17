@@ -6,6 +6,7 @@ import {
   SCHEMA_VERSION,
   isRuntimeFieldId,
   processCommand,
+  replayCommands,
   validateAgainstState,
   validatePayload,
   validateState,
@@ -60,6 +61,7 @@ test("public api exports functions only", async () => {
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
   expect(typeof processCommand).toBe("function");
+  expect(typeof replayCommands).toBe("function");
 });
 
 test("runtime field ids match the public runtime contract", () => {
@@ -667,11 +669,13 @@ test("processCommand persists description, thumbnailFileId, and preview on layou
   expect(
     controlResult.state.controls.items["control-default"].thumbnailFileId,
   ).toBe("file-control-thumb");
-  expect(controlResult.state.controls.items["control-default"].preview).toEqual({
-    choice: {
-      items: [{ content: "Continue" }],
+  expect(controlResult.state.controls.items["control-default"].preview).toEqual(
+    {
+      choice: {
+        items: [{ content: "Continue" }],
+      },
     },
-  });
+  );
   expect(validateState({ state: controlResult.state })).toEqual({
     valid: true,
   });

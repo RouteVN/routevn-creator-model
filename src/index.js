@@ -1,4 +1,5 @@
 export {
+  replayCommands,
   SCHEMA_VERSION,
   processCommand,
   validateAgainstState,
