@@ -10,6 +10,4 @@ payload:
     name: Font
     description: Editorial serif family
     fileId: file-font
-    fileType: font/ttf
-    fileSize: 2048
     fontFamily: Suit

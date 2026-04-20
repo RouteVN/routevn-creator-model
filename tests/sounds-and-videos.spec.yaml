@@ -101,8 +101,6 @@ in:
           type: sound
           name: Ambience
           fileId: file-a
-          fileType: audio/mp3
-          fileSize: 1024
           waveformDataFileId: waveform-a
           duration: 42.5
 out:
@@ -159,8 +157,6 @@ out:
           type: sound
           name: Ambience
           fileId: file-a
-          fileType: audio/mp3
-          fileSize: 1024
           waveformDataFileId: waveform-a
           duration: 42.5
       tree:
@@ -735,8 +731,6 @@ in:
           name: Intro Cut
           fileId: file-a
           thumbnailFileId: thumb-a
-          fileType: video/mp4
-          fileSize: 2048
           width: 1920
           height: 1080
 out:
@@ -806,8 +800,6 @@ out:
           name: Intro Cut
           fileId: file-a
           thumbnailFileId: thumb-a
-          fileType: video/mp4
-          fileSize: 2048
           width: 1920
           height: 1080
       tree:

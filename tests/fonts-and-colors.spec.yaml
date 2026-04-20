@@ -96,8 +96,6 @@ in:
           description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
-          fileType: font/otf
-          fileSize: 2048
 out:
   state:
     project: {}
@@ -159,8 +157,6 @@ out:
           description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
-          fileType: font/otf
-          fileSize: 2048
       tree:
         - id: folder-fonts
           children:
@@ -252,7 +248,6 @@ in:
         data:
           name: Display Serif
           description: Updated display family
-          fileSize: 4096
 out:
   state:
     project: {}
@@ -296,7 +291,6 @@ out:
           description: Updated display family
           fileId: file-a
           fontFamily: Fraunces
-          fileSize: 4096
       tree:
         - id: font-a
           children: []

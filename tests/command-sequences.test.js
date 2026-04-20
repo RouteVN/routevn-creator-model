@@ -606,7 +606,6 @@ test("applies an image command tape with intermediate state snapshots", () => {
             name: "Background",
             thumbnailFileId: "thumb-bg",
             fileId: "file-bg",
-            fileType: "image/png",
             width: 1920,
             height: 1080,
           },
@@ -618,7 +617,6 @@ test("applies an image command tape with intermediate state snapshots", () => {
           imageId: "image-bg",
           data: {
             description: "Opening shot",
-            fileSize: 4096,
           },
         },
       },
@@ -663,7 +661,6 @@ test("applies an image command tape with intermediate state snapshots", () => {
     name: "Background",
     thumbnailFileId: "thumb-bg",
     fileId: "file-bg",
-    fileType: "image/png",
     width: 1920,
     height: 1080,
   };
@@ -681,7 +678,6 @@ test("applies an image command tape with intermediate state snapshots", () => {
 
   const expected3 = cloneState(expected2);
   expected3.images.items["image-bg"].description = "Opening shot";
-  expected3.images.items["image-bg"].fileSize = 4096;
 
   const expected4 = cloneState(expected3);
   expected4.images.tree = [
@@ -703,11 +699,9 @@ test("applies an image command tape with intermediate state snapshots", () => {
       name: "Background",
       thumbnailFileId: "thumb-bg",
       fileId: "file-bg",
-      fileType: "image/png",
       width: 1920,
       height: 1080,
       description: "Opening shot",
-      fileSize: 4096,
     },
   };
   expected5.images.tree = [
@@ -1838,7 +1832,6 @@ test("applies a font and color command tape with intermediate state snapshots", 
         payload: {
           fontId: "font-a",
           data: {
-            fileSize: 2048,
             fontFamily: "Fraunces Soft",
           },
         },
@@ -1930,7 +1923,6 @@ test("applies a font and color command tape with intermediate state snapshots", 
   ];
 
   const expected3 = cloneState(expected2);
-  expected3.fonts.items["font-a"].fileSize = 2048;
   expected3.fonts.items["font-a"].fontFamily = "Fraunces Soft";
 
   const expected4 = cloneState(expected3);

@@ -11,8 +11,6 @@ payload:
     description: Idle loop spritesheet
     fileId: file-image
     thumbnailFileId: thumb-image
-    fileType: image/png
-    fileSize: 2048
     sheetWidth: 1024
     sheetHeight: 512
     frameCount: 4

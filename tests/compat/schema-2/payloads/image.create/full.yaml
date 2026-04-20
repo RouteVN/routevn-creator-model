@@ -11,7 +11,5 @@ payload:
     description: Establishing shot
     fileId: file-image
     thumbnailFileId: thumb-image
-    fileType: image/png
-    fileSize: 2048
     width: 1920
     height: 1080

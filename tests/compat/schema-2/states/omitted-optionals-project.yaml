@@ -95,8 +95,6 @@ state:
         name: Main Spritesheet
         fileId: file-spritesheet
         thumbnailFileId: thumb-spritesheet
-        fileType: image/png
-        fileSize: 1024
         sheetWidth: 512
         sheetHeight: 256
         frameCount: 2

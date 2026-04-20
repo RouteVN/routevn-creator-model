@@ -11,7 +11,5 @@ payload:
     description: Opening cinematic
     fileId: file-video
     thumbnailFileId: thumb-video
-    fileType: video/mp4
-    fileSize: 4096
     width: 1280
     height: 720
