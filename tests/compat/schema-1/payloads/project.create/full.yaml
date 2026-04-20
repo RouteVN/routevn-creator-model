@@ -162,8 +162,6 @@ payload:
           description: Establishing shot
           fileId: file-image-rich
           thumbnailFileId: thumb-image-rich
-          fileType: image/png
-          fileSize: 2048
           width: 1920
           height: 1080
       tree:
@@ -183,8 +181,6 @@ payload:
           name: Ambience
           description: Night ambience
           fileId: file-sound-rich
-          fileType: audio/mp3
-          fileSize: 1024
           waveformDataFileId: waveform-sound-rich
           duration: 42.5
       tree:
@@ -205,8 +201,6 @@ payload:
           description: Opening cinematic
           fileId: file-video-rich
           thumbnailFileId: thumb-video-rich
-          fileType: video/mp4
-          fileSize: 4096
           width: 1280
           height: 720
       tree:

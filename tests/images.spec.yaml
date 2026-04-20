@@ -47,7 +47,6 @@ in:
             type: image
             name: Character
             fileId: file-b
-            fileType: image/png
             width: 512
             height: 512
         tree:
@@ -96,8 +95,6 @@ in:
           type: image
           name: Background
           fileId: file-a
-          fileType: image/jpeg
-          fileSize: 2000
           width: 1920
           height: 1080
           description: ''
@@ -139,7 +136,6 @@ out:
           type: image
           name: Character
           fileId: file-b
-          fileType: image/png
           width: 512
           height: 512
         image-a:
@@ -147,8 +143,6 @@ out:
           type: image
           name: Background
           fileId: file-a
-          fileType: image/jpeg
-          fileSize: 2000
           width: 1920
           height: 1080
           description: ''
@@ -218,7 +212,6 @@ in:
             name: Background
             description: ''
             fileId: file-a
-            fileType: image/jpeg
             width: 1920
             height: 1080
         tree:
@@ -261,7 +254,6 @@ in:
         data:
           name: Background Wide
           description: Establishing shot
-          fileSize: 4096
 out:
   state:
     project: {}
@@ -289,8 +281,6 @@ out:
           name: Background Wide
           description: Establishing shot
           fileId: file-a
-          fileType: image/jpeg
-          fileSize: 4096
           width: 1920
           height: 1080
       tree:

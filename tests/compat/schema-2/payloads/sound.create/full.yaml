@@ -10,7 +10,5 @@ payload:
     name: Ambience
     description: Night ambience
     fileId: file-sound
-    fileType: audio/mp3
-    fileSize: 1024
     waveformDataFileId: waveform-sound
     duration: 42.5

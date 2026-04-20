@@ -779,8 +779,6 @@ const validateImageItems = ({ items, path, errorFactory }) => {
                 "description",
                 "thumbnailFileId",
                 "fileId",
-                "fileType",
-                "fileSize",
                 "width",
                 "height",
               ],
@@ -835,20 +833,6 @@ const validateImageItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.fileId must be a non-empty string`,
-        );
-      }
-
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number`,
         );
       }
 
@@ -962,8 +946,6 @@ const validateSpritesheetItems = ({ items, path, errorFactory }) => {
                 "description",
                 "thumbnailFileId",
                 "fileId",
-                "fileType",
-                "fileSize",
                 "sheetWidth",
                 "sheetHeight",
                 "frameCount",
@@ -1026,15 +1008,7 @@ const validateSpritesheetItems = ({ items, path, errorFactory }) => {
         );
       }
 
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
       for (const key of [
-        "fileSize",
         "sheetWidth",
         "sheetHeight",
         "frameCount",
@@ -1093,8 +1067,6 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
                 "name",
                 "description",
                 "fileId",
-                "fileType",
-                "fileSize",
                 "waveformDataFileId",
                 "duration",
               ],
@@ -1139,20 +1111,6 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.fileId must be a non-empty string`,
-        );
-      }
-
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number`,
         );
       }
 
@@ -1201,8 +1159,6 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
                 "description",
                 "fileId",
                 "thumbnailFileId",
-                "fileType",
-                "fileSize",
                 "duration",
                 "width",
                 "height",
@@ -1255,20 +1211,6 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.thumbnailFileId must be a non-empty string`,
-        );
-      }
-
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number`,
         );
       }
 
@@ -1998,8 +1940,6 @@ const validateFontItems = ({ items, path, errorFactory }) => {
                 "description",
                 "fileId",
                 "fontFamily",
-                "fileType",
-                "fileSize",
               ],
         path: itemPath,
         errorFactory,
@@ -2052,19 +1992,6 @@ const validateFontItems = ({ items, path, errorFactory }) => {
         );
       }
 
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number`,
-        );
-      }
     }
   }
 };
@@ -2687,8 +2614,6 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
                 "description",
                 "thumbnailFileId",
                 "fileId",
-                "fileType",
-                "fileSize",
                 "width",
                 "height",
               ],
@@ -2743,20 +2668,6 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.fileId must be a non-empty string`,
-        );
-      }
-
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number when provided`,
         );
       }
 
@@ -3540,8 +3451,6 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
                 "description",
                 "shortcut",
                 "fileId",
-                "fileType",
-                "fileSize",
                 "sprites",
               ],
         path: itemPath,
@@ -3592,20 +3501,6 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.fileId must be a non-empty string when provided`,
-        );
-      }
-
-      if (item.fileType !== undefined && !isString(item.fileType)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileType must be a string when provided`,
-        );
-      }
-
-      if (item.fileSize !== undefined && !isFiniteNumber(item.fileSize)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `${itemPath}.fileSize must be a finite number when provided`,
         );
       }
 
@@ -5966,8 +5861,6 @@ const validateImageCreateData = ({ data, errorFactory }) => {
               "description",
               "thumbnailFileId",
               "fileId",
-              "fileType",
-              "fileSize",
               "width",
               "height",
             ],
@@ -6011,20 +5904,6 @@ const validateImageCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number",
-      );
-    }
-
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6050,8 +5929,6 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
         "description",
         "thumbnailFileId",
         "fileId",
-        "fileType",
-        "fileSize",
         "width",
         "height",
       ],
@@ -6101,20 +5978,6 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number",
-    );
-  }
-
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -6157,8 +6020,6 @@ const validateSpritesheetCreateData = ({ data, errorFactory }) => {
               "description",
               "thumbnailFileId",
               "fileId",
-              "fileType",
-              "fileSize",
               "sheetWidth",
               "sheetHeight",
               "frameCount",
@@ -6207,15 +6068,7 @@ const validateSpritesheetCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
     for (const key of [
-      "fileSize",
       "sheetWidth",
       "sheetHeight",
       "frameCount",
@@ -6259,8 +6112,6 @@ const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
         "description",
         "thumbnailFileId",
         "fileId",
-        "fileType",
-        "fileSize",
         "sheetWidth",
         "sheetHeight",
         "frameCount",
@@ -6315,15 +6166,7 @@ const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
   for (const key of [
-    "fileSize",
     "sheetWidth",
     "sheetHeight",
     "frameCount",
@@ -6383,8 +6226,6 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
               "name",
               "description",
               "fileId",
-              "fileType",
-              "fileSize",
               "waveformDataFileId",
               "duration",
             ],
@@ -6418,20 +6259,6 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number",
-      );
-    }
-
     if (
       data.waveformDataFileId !== undefined &&
       data.waveformDataFileId !== null &&
@@ -6460,8 +6287,6 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
         "name",
         "description",
         "fileId",
-        "fileType",
-        "fileSize",
         "waveformDataFileId",
         "duration",
       ],
@@ -6498,20 +6323,6 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
-    );
-  }
-
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number",
     );
   }
 
@@ -6561,8 +6372,6 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
               "description",
               "fileId",
               "thumbnailFileId",
-              "fileType",
-              "fileSize",
               "duration",
               "width",
               "height",
@@ -6604,20 +6413,6 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number",
-      );
-    }
-
     if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6650,8 +6445,6 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
         "description",
         "fileId",
         "thumbnailFileId",
-        "fileType",
-        "fileSize",
         "duration",
         "width",
         "height",
@@ -6699,20 +6492,6 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number",
     );
   }
 
@@ -6765,8 +6544,6 @@ const validateFontCreateData = ({ data, errorFactory }) => {
               "description",
               "fileId",
               "fontFamily",
-              "fileType",
-              "fileSize",
             ],
       path: "payload.data",
       errorFactory,
@@ -6805,19 +6582,6 @@ const validateFontCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number",
-      );
-    }
   }
 };
 
@@ -6830,8 +6594,6 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
         "description",
         "fileId",
         "fontFamily",
-        "fileType",
-        "fileSize",
       ],
       path: "payload.data",
       errorFactory,
@@ -6876,19 +6638,6 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number",
-    );
-  }
 };
 
 const validateFileCreateData = ({ data, errorFactory }) => {
@@ -7844,8 +7593,6 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
               "description",
               "fileId",
               "thumbnailFileId",
-              "fileType",
-              "fileSize",
               "width",
               "height",
             ],
@@ -7889,20 +7636,6 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number when provided",
-      );
-    }
-
     if (data.width !== undefined && !isFiniteNumber(data.width)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -7928,8 +7661,6 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
         "description",
         "fileId",
         "thumbnailFileId",
-        "fileType",
-        "fileSize",
         "width",
         "height",
       ],
@@ -7979,20 +7710,6 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number when provided",
-    );
-  }
-
   if (data.width !== undefined && !isFiniteNumber(data.width)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -8035,8 +7752,6 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
               "description",
               "shortcut",
               "fileId",
-              "fileType",
-              "fileSize",
               "sprites",
             ],
       path: "payload.data",
@@ -8076,20 +7791,6 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
       );
     }
 
-    if (data.fileType !== undefined && !isString(data.fileType)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileType must be a string when provided",
-      );
-    }
-
-    if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        "payload.data.fileSize must be a finite number when provided",
-      );
-    }
-
     if (data.sprites !== undefined) {
       {
         const result = validateNestedCollection({
@@ -8117,8 +7818,6 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
         "description",
         "shortcut",
         "fileId",
-        "fileType",
-        "fileSize",
       ],
       path: "payload.data",
       errorFactory,
@@ -8163,19 +7862,6 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.fileType !== undefined && !isString(data.fileType)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileType must be a string when provided",
-    );
-  }
-
-  if (data.fileSize !== undefined && !isFiniteNumber(data.fileSize)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.fileSize must be a finite number when provided",
-    );
-  }
 };
 
 const validateLayoutCreateData = ({ data, errorFactory }) => {
@@ -9684,16 +9370,6 @@ const COMMAND_DEFINITIONS = [
                   thumbnailFileId: payload.data.thumbnailFileId,
                 }
               : {}),
-            ...(payload.data.fileType !== undefined
-              ? {
-                  fileType: payload.data.fileType,
-                }
-              : {}),
-            ...(payload.data.fileSize !== undefined
-              ? {
-                  fileSize: payload.data.fileSize,
-                }
-              : {}),
             ...(payload.data.sheetWidth !== undefined
               ? {
                   sheetWidth: payload.data.sheetWidth,
@@ -11117,12 +10793,6 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.thumbnailFileId !== undefined) {
           nextImage.thumbnailFileId = payload.data.thumbnailFileId;
         }
-        if (payload.data.fileType !== undefined) {
-          nextImage.fileType = payload.data.fileType;
-        }
-        if (payload.data.fileSize !== undefined) {
-          nextImage.fileSize = payload.data.fileSize;
-        }
         if (payload.data.width !== undefined) {
           nextImage.width = payload.data.width;
         }
@@ -11189,8 +10859,6 @@ const COMMAND_DEFINITIONS = [
         currentImage.type === "folder" &&
         (payload.data.fileId !== undefined ||
           payload.data.thumbnailFileId !== undefined ||
-          payload.data.fileType !== undefined ||
-          payload.data.fileSize !== undefined ||
           payload.data.width !== undefined ||
           payload.data.height !== undefined)
       ) {
@@ -11539,12 +11207,6 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.data.type === "sound") {
         nextSound.fileId = payload.data.fileId;
-        if (payload.data.fileType !== undefined) {
-          nextSound.fileType = payload.data.fileType;
-        }
-        if (payload.data.fileSize !== undefined) {
-          nextSound.fileSize = payload.data.fileSize;
-        }
         if (payload.data.waveformDataFileId !== undefined) {
           nextSound.waveformDataFileId = payload.data.waveformDataFileId;
         }
@@ -11610,8 +11272,6 @@ const COMMAND_DEFINITIONS = [
       if (
         currentSound.type === "folder" &&
         (payload.data.fileId !== undefined ||
-          payload.data.fileType !== undefined ||
-          payload.data.fileSize !== undefined ||
           payload.data.waveformDataFileId !== undefined ||
           payload.data.duration !== undefined)
       ) {
@@ -11961,12 +11621,6 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.type === "video") {
         nextVideo.fileId = payload.data.fileId;
         nextVideo.thumbnailFileId = payload.data.thumbnailFileId;
-        if (payload.data.fileType !== undefined) {
-          nextVideo.fileType = payload.data.fileType;
-        }
-        if (payload.data.fileSize !== undefined) {
-          nextVideo.fileSize = payload.data.fileSize;
-        }
         if (payload.data.duration !== undefined) {
           nextVideo.duration = payload.data.duration;
         }
@@ -12036,8 +11690,6 @@ const COMMAND_DEFINITIONS = [
         currentVideo.type === "folder" &&
         (payload.data.fileId !== undefined ||
           payload.data.thumbnailFileId !== undefined ||
-          payload.data.fileType !== undefined ||
-          payload.data.fileSize !== undefined ||
           payload.data.duration !== undefined ||
           payload.data.width !== undefined ||
           payload.data.height !== undefined)
@@ -12791,12 +12443,6 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.type === "font") {
         nextFont.fileId = payload.data.fileId;
         nextFont.fontFamily = payload.data.fontFamily;
-        if (payload.data.fileType !== undefined) {
-          nextFont.fileType = payload.data.fileType;
-        }
-        if (payload.data.fileSize !== undefined) {
-          nextFont.fileSize = payload.data.fileSize;
-        }
       }
 
       state.fonts.items[payload.fontId] = nextFont;
@@ -12856,9 +12502,7 @@ const COMMAND_DEFINITIONS = [
       if (
         currentFont.type === "folder" &&
         (payload.data.fileId !== undefined ||
-          payload.data.fontFamily !== undefined ||
-          payload.data.fileType !== undefined ||
-          payload.data.fileSize !== undefined)
+          payload.data.fontFamily !== undefined)
       ) {
         return invalidPrecondition(
           "folder font items cannot update font fields",
@@ -13705,14 +13349,6 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.data.fileId !== undefined) {
         item.fileId = payload.data.fileId;
-      }
-
-      if (payload.data.fileType !== undefined) {
-        item.fileType = payload.data.fileType;
-      }
-
-      if (payload.data.fileSize !== undefined) {
-        item.fileSize = payload.data.fileSize;
       }
 
       item.sprites =

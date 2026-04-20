@@ -99,8 +99,6 @@ commands:
               name: UI Spritesheet
               fileId: file-spritesheet-ui
               thumbnailFileId: thumb-spritesheet-ui
-              fileType: image/png
-              fileSize: 1024
               sheetWidth: 512
               sheetHeight: 256
               frameCount: 2
