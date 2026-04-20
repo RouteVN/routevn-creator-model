@@ -1,0 +1,9 @@
+schemaVersion: 2
+type: line.update_actions
+payload:
+  lineId: line-a
+  data:
+    dialogue:
+      characterId: character-a
+  preserve:
+    - dialogue.content
