@@ -1244,7 +1244,7 @@ const directCases = [
     type: "line.update_actions",
     runPositive: () => {
       const state = createLineBaseState();
-      const result = processCommand({
+      let result = processCommand({
         state,
         command: {
           type: "line.update_actions",
@@ -1265,6 +1265,49 @@ const directCases = [
         say: "hello",
         mood: "tense",
       });
+
+      const preserveState = createLineBaseState();
+      getSceneSection(
+        preserveState,
+        "scene-a",
+        "section-a",
+      ).lines.items["line-a"].actions = {
+        dialogue: {
+          content: [{ text: "Long text stays here" }],
+          characterId: "character-a",
+          ui: {
+            resourceId: "layout-a",
+          },
+          mode: "adv",
+        },
+      };
+
+      result = processCommand({
+        state: preserveState,
+        command: {
+          type: "line.update_actions",
+          payload: {
+            lineId: "line-a",
+            data: {
+              dialogue: {
+                mode: "nvl",
+              },
+            },
+            preserve: ["dialogue.content"],
+          },
+        },
+      });
+
+      expect(
+        getSceneSection(result.state, "scene-a", "section-a").lines.items[
+          "line-a"
+        ].actions,
+      ).toEqual({
+        dialogue: {
+          content: [{ text: "Long text stays here" }],
+          mode: "nvl",
+        },
+      });
     },
     runNegative: () => {
       const state = createLineBaseState();
@@ -1283,6 +1326,23 @@ const directCases = [
           },
         }),
       ).toThrow("payload.lineId must reference an existing line");
+      expectValidation(() =>
+        validatePayload({
+          type: "line.update_actions",
+          payload: {
+            lineId: "line-a",
+            data: {
+              dialogue: {
+                mode: "nvl",
+              },
+            },
+            replace: true,
+            preserve: ["dialogue.content"],
+          },
+        }),
+      ).toThrow(
+        "payload.preserve is only supported when payload.replace is not true",
+      );
     },
   },
   {

@@ -940,6 +940,158 @@ out:
       items: {}
       tree: []
 ---
+case: line.update_actions preserves dialogue content when requested
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: scene-a
+      scenes:
+        items:
+          scene-a:
+            id: scene-a
+            type: scene
+            name: Intro
+            sections:
+              items:
+                section-a:
+                  id: section-a
+                  name: Setup
+                  lines:
+                    items:
+                      line-1:
+                        id: line-1
+                        actions:
+                          dialogue:
+                            content:
+                              - text: Existing dialogue text
+                            characterId: character-a
+                            ui:
+                              resourceId: layout-a
+                            mode: adv
+                    tree:
+                      - id: line-1
+              tree:
+                - id: section-a
+                  children: []
+        tree:
+          - id: scene-a
+            children: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: line.update_actions
+      payload:
+        lineId: line-1
+        data:
+          dialogue:
+            characterId: character-b
+        preserve:
+          - dialogue.content
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: scene-a
+    scenes:
+      items:
+        scene-a:
+          id: scene-a
+          type: scene
+          name: Intro
+          sections:
+            items:
+              section-a:
+                id: section-a
+                name: Setup
+                lines:
+                  items:
+                    line-1:
+                      id: line-1
+                      actions:
+                        dialogue:
+                          content:
+                            - text: Existing dialogue text
+                          characterId: character-b
+                  tree:
+                    - id: line-1
+            tree:
+              - id: section-a
+                children: []
+      tree:
+        - id: scene-a
+          children: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
 case: line.move changes section ownership and target ordering
 in:
   - state:

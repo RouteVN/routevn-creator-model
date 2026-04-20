@@ -36,6 +36,10 @@ const COLLECTION_KEYS = [
   "controls",
 ];
 const ROOT_KEYS = ["project", "story", ...COLLECTION_KEYS];
+const LINE_UPDATE_ACTIONS_PRESERVE_PATHS = ["dialogue.content"];
+const LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET = new Set(
+  LINE_UPDATE_ACTIONS_PRESERVE_PATHS,
+);
 const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
@@ -5834,6 +5838,91 @@ const validateLineUpdateActionsData = ({ data, errorFactory }) => {
   }
 };
 
+const validateLineUpdateActionsPreserve = ({
+  preserve,
+  data,
+  replace,
+  errorFactory,
+}) => {
+  if (preserve === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (replace === true) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.preserve is only supported when payload.replace is not true",
+    );
+  }
+
+  if (!Array.isArray(preserve)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.preserve must be an array when provided",
+    );
+  }
+
+  const seen = new Set();
+  for (let index = 0; index < preserve.length; index += 1) {
+    const path = preserve[index];
+    const preservePath = `payload.preserve[${index}]`;
+
+    if (!isNonEmptyString(path)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${preservePath} must be a non-empty string`,
+      );
+    }
+
+    if (!LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET.has(path)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${preservePath} must be one of: ${LINE_UPDATE_ACTIONS_PRESERVE_PATHS.join(", ")}`,
+      );
+    }
+
+    if (seen.has(path)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${preservePath} must not duplicate another preserve path`,
+      );
+    }
+    seen.add(path);
+
+    if (path === "dialogue.content" && !isPlainObject(data?.dialogue)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.dialogue must be an object when preserving dialogue.content",
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const applyLineUpdateActionsPreserve = ({ currentActions, data, preserve }) => {
+  const nextData = structuredClone(data || {});
+  if (!Array.isArray(preserve) || preserve.length === 0) {
+    return nextData;
+  }
+
+  if (
+    preserve.includes("dialogue.content") &&
+    isPlainObject(nextData.dialogue) &&
+    !Object.hasOwn(nextData.dialogue, "content")
+  ) {
+    const currentContent = currentActions?.dialogue?.content;
+    if (currentContent !== undefined) {
+      nextData.dialogue = {
+        ...structuredClone(nextData.dialogue),
+        content: structuredClone(currentContent),
+      };
+    }
+  }
+
+  return nextData;
+};
+
 const validateImageCreateData = ({ data, errorFactory }) => {
   if (!isPlainObject(data)) {
     return invalidFromErrorFactory(
@@ -10445,7 +10534,7 @@ const COMMAND_DEFINITIONS = [
       {
         const result = validateAllowedKeys({
           value: payload,
-          allowedKeys: ["lineId", "data", "replace"],
+          allowedKeys: ["lineId", "data", "replace", "preserve"],
           path: "payload",
           errorFactory: createPayloadValidationError,
         });
@@ -10476,6 +10565,18 @@ const COMMAND_DEFINITIONS = [
           "payload.replace must be a boolean when provided",
         );
       }
+
+      {
+        const result = validateLineUpdateActionsPreserve({
+          preserve: payload.preserve,
+          data: payload.data,
+          replace: payload.replace,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
     },
     validateAgainstState: ({ state, payload }) => {
       if (!findLineLocation({ state, lineId: payload.lineId })) {
@@ -10487,12 +10588,17 @@ const COMMAND_DEFINITIONS = [
     reduce: ({ state, payload }) => {
       const location = findLineLocation({ state, lineId: payload.lineId });
       const line = location.line;
+      const nextData = applyLineUpdateActionsPreserve({
+        currentActions: line.actions,
+        data: payload.data,
+        preserve: payload.preserve,
+      });
       line.actions =
         payload.replace === true
-          ? structuredClone(payload.data)
+          ? structuredClone(nextData)
           : {
               ...structuredClone(line.actions),
-              ...structuredClone(payload.data),
+              ...structuredClone(nextData),
             };
       return state;
     },

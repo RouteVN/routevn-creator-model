@@ -1029,6 +1029,48 @@ test("validatePayload accepts layout element particle references", () => {
   });
 });
 
+test("validatePayload accepts line.update_actions preserve for dialogue.content", () => {
+  expect(
+    validatePayload({
+      type: "line.update_actions",
+      payload: {
+        lineId: "line-1",
+        data: {
+          dialogue: {
+            characterId: "character-1",
+          },
+        },
+        preserve: ["dialogue.content"],
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload rejects unsupported line.update_actions preserve paths", () => {
+  expect(
+    validatePayload({
+      type: "line.update_actions",
+      payload: {
+        lineId: "line-1",
+        data: {
+          dialogue: {
+            characterId: "character-1",
+          },
+        },
+        preserve: ["dialogue.characterId"],
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: expect.objectContaining({
+      message:
+        "payload.preserve[0] must be one of: dialogue.content",
+    }),
+  });
+});
+
 test("validatePayload accepts confirm dialog container refs", () => {
   expect(
     validatePayload({
