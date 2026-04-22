@@ -16,7 +16,13 @@ const OMITTABLE_EMPTY_COLLECTION_KEYS = [
   "particles",
   "spritesheets",
 ];
-const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = ["images", "sounds", "videos"];
+const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
+  "images",
+  "sounds",
+  "videos",
+  "characters",
+  "transforms",
+];
 
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
