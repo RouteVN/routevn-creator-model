@@ -1,0 +1,10 @@
+schemaVersion: 3
+type: textStyle.update
+payload:
+  textStyleId: item-a
+  data:
+    description: Main spoken-line styling
+    fontSize: 40
+    lineHeight: 1.6
+    fontWeight: "600"
+    previewText: Preview

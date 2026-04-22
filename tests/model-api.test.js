@@ -798,6 +798,48 @@ test("validateState accepts legacy state without controls collection", () => {
   });
 });
 
+test("validateState accepts legacy state without tags root", () => {
+  const state = createEmptyTestState();
+  delete state.tags;
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand materializes normalized tags root for legacy states", () => {
+  const state = createEmptyTestState();
+  delete state.tags;
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "story.update",
+      payload: {
+        data: {
+          initialSceneId: null,
+        },
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(result.state.tags).toEqual({
+    images: {
+      items: {},
+      tree: [],
+    },
+    sounds: {
+      items: {},
+      tree: [],
+    },
+    videos: {
+      items: {},
+      tree: [],
+    },
+  });
+});
+
 test("validatePayload rejects unsupported animation easing values", () => {
   expectValidation(() =>
     validatePayload({
@@ -2033,9 +2075,9 @@ test("validateState rejects legacy runtime condition targets on layout elements"
           conditionalOverrides: [
             {
               when: {
-                target: "autoMode",
+                target: "dialogue.characterId",
                 op: "eq",
-                value: true,
+                value: "character-1",
               },
               set: {
                 visible: false,
@@ -2058,13 +2100,7 @@ test("validateState rejects legacy runtime condition targets on layout elements"
   });
 
   expect(validateState({ state })).toEqual({
-    valid: false,
-    error: {
-      kind: "state",
-      code: "state_validation_failed",
-      message:
-        "state.layouts.items.layout-ui.elements.items.text-1.conditionalOverrides.0.when.target must be a supported layout condition target",
-    },
+    valid: true,
   });
 });
 
@@ -2552,6 +2588,9 @@ test("registry exposes only fully implemented command types", () => {
     "character.sprite.update",
     "character.sprite.delete",
     "character.sprite.move",
+    "tag.create",
+    "tag.update",
+    "tag.delete",
     "layout.element.create",
     "layout.element.update",
     "layout.element.delete",

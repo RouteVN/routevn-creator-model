@@ -1,0 +1,6 @@
+schemaVersion: 3
+type: animation.update
+payload:
+  animationId: item-a
+  data:
+    name: Animation Updated

@@ -3,6 +3,20 @@ export const createEmptyTestState = () => ({
   story: {
     initialSceneId: null,
   },
+  tags: {
+    images: {
+      items: {},
+      tree: [],
+    },
+    sounds: {
+      items: {},
+      tree: [],
+    },
+    videos: {
+      items: {},
+      tree: [],
+    },
+  },
   scenes: {
     items: {},
     tree: [],

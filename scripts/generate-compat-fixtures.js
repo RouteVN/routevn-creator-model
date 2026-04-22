@@ -1185,6 +1185,7 @@ const payloadFixtures = [
       thumbnailFileId: "thumb-image",
       width: 1920,
       height: 1080,
+      tagIds: ["tag-bg"],
     },
     minimalUpdateData: {
       name: "Image Updated",
@@ -1194,6 +1195,7 @@ const payloadFixtures = [
       thumbnailFileId: "thumb-image",
       width: 1280,
       height: 720,
+      tagIds: ["tag-bg"],
     },
   }),
   ...createFolderedPayloadSets({
@@ -1278,6 +1280,7 @@ const payloadFixtures = [
       fileId: "file-sound",
       waveformDataFileId: "waveform-sound",
       duration: 42.5,
+      tagIds: ["tag-ambience"],
     },
     minimalUpdateData: {
       duration: 42,
@@ -1286,6 +1289,7 @@ const payloadFixtures = [
       description: "Night ambience",
       waveformDataFileId: null,
       duration: 84,
+      tagIds: ["tag-ambience"],
     },
   }),
   ...createFolderedPayloadSets({
@@ -1306,6 +1310,7 @@ const payloadFixtures = [
       thumbnailFileId: "thumb-video",
       width: 1280,
       height: 720,
+      tagIds: ["tag-opening"],
     },
     minimalUpdateData: {
       width: 1280,
@@ -1315,6 +1320,7 @@ const payloadFixtures = [
       thumbnailFileId: "thumb-video",
       width: 1920,
       height: 1080,
+      tagIds: ["tag-opening"],
     },
   }),
   ...createFolderedPayloadSets({
@@ -1714,6 +1720,7 @@ const payloadFixtures = [
         fileId: "file-new-sprite",
         width: 512,
         height: 512,
+        tagIds: ["tag-smile"],
       },
     },
     {
@@ -1743,6 +1750,7 @@ const payloadFixtures = [
         name: "Smile Updated",
         width: 640,
         height: 640,
+        tagIds: ["tag-smile"],
       },
     },
   ),
@@ -1771,6 +1779,55 @@ const payloadFixtures = [
       parentId: "folder-default",
       position: "before",
       positionTargetId: "sprite-b",
+    },
+  ),
+  ...payloadSet(
+    "tag.create",
+    {
+      scopeKey: "images",
+      tagId: "tag-bg",
+      data: {
+        type: "tag",
+        name: "Background",
+      },
+    },
+    {
+      scopeKey: "characterSprites:character-hero",
+      tagId: "tag-smile",
+      data: {
+        type: "tag",
+        name: "Smile",
+        color: "#112233",
+      },
+    },
+  ),
+  ...payloadSet(
+    "tag.update",
+    {
+      scopeKey: "images",
+      tagId: "tag-bg",
+      data: {
+        name: "Backdrop",
+      },
+    },
+    {
+      scopeKey: "characterSprites:character-hero",
+      tagId: "tag-smile",
+      data: {
+        name: "Smile Updated",
+        color: null,
+      },
+    },
+  ),
+  ...payloadSet(
+    "tag.delete",
+    {
+      scopeKey: "images",
+      tagIds: ["tag-bg"],
+    },
+    {
+      scopeKey: "characterSprites:character-hero",
+      tagIds: ["tag-smile", "tag-angry"],
     },
   ),
   ...payloadSet(
@@ -2960,6 +3017,117 @@ const streamFixtures = [
       {
         type: "file.delete",
         payload: { fileIds: ["file-smile", "file-angry"] },
+      },
+    ],
+  },
+  {
+    fixtureName: "tag-crud",
+    initialState: createEmptyTestState(),
+    commands: [
+      { type: "project.create", payload: { state: createEmptyTestState() } },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-image",
+          data: {
+            mimeType: "image/png",
+            size: 256,
+            sha256: "file-image-sha256",
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-smile",
+          data: {
+            mimeType: "image/png",
+            size: 256,
+            sha256: "file-smile-sha256",
+          },
+        },
+      },
+      {
+        type: "character.create",
+        payload: {
+          characterId: "character-hero",
+          data: {
+            type: "character",
+            name: "Hero",
+            sprites: { items: {}, tree: [] },
+          },
+        },
+      },
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "images",
+          tagId: "tag-bg",
+          data: {
+            type: "tag",
+            name: "Background",
+          },
+        },
+      },
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "characterSprites:character-hero",
+          tagId: "tag-smile",
+          data: {
+            type: "tag",
+            name: "Smile",
+          },
+        },
+      },
+      {
+        type: "image.create",
+        payload: {
+          imageId: "image-a",
+          data: {
+            type: "image",
+            name: "Background",
+            fileId: "file-image",
+            tagIds: ["tag-bg"],
+          },
+        },
+      },
+      {
+        type: "character.sprite.create",
+        payload: {
+          characterId: "character-hero",
+          spriteId: "sprite-smile",
+          data: {
+            type: "image",
+            name: "Smile",
+            fileId: "file-smile",
+            tagIds: ["tag-smile"],
+          },
+        },
+      },
+      {
+        type: "tag.update",
+        payload: {
+          scopeKey: "images",
+          tagId: "tag-bg",
+          data: {
+            name: "Backdrop",
+            color: "#112233",
+          },
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "images",
+          tagIds: ["tag-bg"],
+        },
+      },
+      {
+        type: "character.delete",
+        payload: {
+          characterIds: ["character-hero"],
+        },
       },
     ],
   },

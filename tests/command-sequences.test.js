@@ -44,6 +44,20 @@ const withFiles = (state, files) => {
   return state;
 };
 
+const withTagScope = (state, scopeKey, tags) => {
+  state.tags[scopeKey] ??= {
+    items: {},
+    tree: [],
+  };
+
+  for (const tag of tags) {
+    state.tags[scopeKey].items[tag.id] = structuredClone(tag);
+    state.tags[scopeKey].tree.push({ id: tag.id });
+  }
+
+  return state;
+};
+
 const createBootstrapState = () => {
   const state = createEmptyTestState();
 
@@ -906,6 +920,76 @@ test("applies a sound and video command tape with intermediate state snapshots",
   expect(steps[5].state).toEqual(expected5);
   expect(steps[6].state).toEqual(expected6);
   expect(steps[7].state).toEqual(expected7);
+});
+
+test("tag.delete cascades assigned tag ids from resource items in the same scope", () => {
+  const steps = runCommandSequence({
+    initialState: withFiles(createEmptyTestState(), [
+      { id: "file-bg", type: "image", mimeType: "image/png" },
+    ]),
+    commands: [
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "images",
+          tagId: "tag-bg",
+          data: {
+            type: "tag",
+            name: "Background",
+          },
+        },
+      },
+      {
+        type: "image.create",
+        payload: {
+          imageId: "image-bg",
+          data: {
+            type: "image",
+            name: "Background",
+            fileId: "file-bg",
+            tagIds: ["tag-bg"],
+          },
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "images",
+          tagIds: ["tag-bg"],
+        },
+      },
+    ],
+  });
+
+  const expected0 = withFiles(createEmptyTestState(), [
+    { id: "file-bg", type: "image", mimeType: "image/png" },
+  ]);
+  expected0.tags.images.items["tag-bg"] = {
+    id: "tag-bg",
+    type: "tag",
+    name: "Background",
+  };
+  expected0.tags.images.tree = [{ id: "tag-bg" }];
+
+  const expected1 = cloneState(expected0);
+  expected1.images.items["image-bg"] = {
+    id: "image-bg",
+    type: "image",
+    name: "Background",
+    fileId: "file-bg",
+    tagIds: ["tag-bg"],
+  };
+  expected1.images.tree = [{ id: "image-bg", children: [] }];
+
+  const expected2 = cloneState(expected1);
+  expected2.tags.images.items = {};
+  expected2.tags.images.tree = [];
+  delete expected2.images.items["image-bg"].tagIds;
+
+  expect(steps).toHaveLength(3);
+  expect(steps[0].state).toEqual(expected0);
+  expect(steps[1].state).toEqual(expected1);
+  expect(steps[2].state).toEqual(expected2);
 });
 
 test("applies an animation command tape with intermediate state snapshots", () => {
@@ -1792,6 +1876,46 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expect(steps[19].state).toEqual(expected19);
   expect(steps[20].state).toEqual(expected20);
   expect(steps[21].state).toEqual(expected21);
+});
+
+test("character.delete removes the character sprite tag scope", () => {
+  const initialState = withTagScope(createEmptyTestState(), "characterSprites:character-hero", [
+    {
+      id: "tag-smile",
+      type: "tag",
+      name: "Smile",
+    },
+  ]);
+  initialState.characters.items["character-hero"] = {
+    id: "character-hero",
+    type: "character",
+    name: "Hero",
+    sprites: {
+      items: {},
+      tree: [],
+    },
+  };
+  initialState.characters.tree = [{ id: "character-hero", children: [] }];
+
+  const steps = runCommandSequence({
+    initialState,
+    commands: [
+      {
+        type: "character.delete",
+        payload: {
+          characterIds: ["character-hero"],
+        },
+      },
+    ],
+  });
+
+  const expected0 = cloneState(initialState);
+  delete expected0.characters.items["character-hero"];
+  expected0.characters.tree = [];
+  delete expected0.tags["characterSprites:character-hero"];
+
+  expect(steps).toHaveLength(1);
+  expect(steps[0].state).toEqual(expected0);
 });
 
 test("applies a font and color command tape with intermediate state snapshots", () => {

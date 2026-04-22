@@ -190,6 +190,49 @@ const upgradeSchema2PayloadFixture = (fixture) => {
   };
 };
 
+const upgradeSchema3StateFixture = (fixture) => {
+  return {
+    state: structuredClone(fixture.rawFixture.state),
+  };
+};
+
+const upgradeSchema3StreamFixture = (fixture) => {
+  return {
+    initialState: structuredClone(fixture.rawFixture.initialState),
+    commands: structuredClone(fixture.rawFixture.commands ?? []),
+    expectedFinalState:
+      fixture.rawFixture.expectedFinalState === undefined
+        ? undefined
+        : structuredClone(fixture.rawFixture.expectedFinalState),
+  };
+};
+
+const upgradeSchema3PayloadFixture = (fixture) => {
+  if (typeof fixture.rawFixture.type !== "string" || !fixture.rawFixture.type) {
+    throw new Error(
+      `compat payload fixture type must be a non-empty string: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  const pathCommandType = parseFixtureCommandType(fixture.fileUrl);
+  if (!pathCommandType) {
+    throw new Error(
+      `compat payload fixture path must include payload command type directory: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  if (fixture.rawFixture.type !== pathCommandType) {
+    throw new Error(
+      `compat payload fixture type ${fixture.rawFixture.type} must match directory ${pathCommandType}: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  return {
+    type: fixture.rawFixture.type,
+    payload: structuredClone(fixture.rawFixture.payload),
+  };
+};
+
 const upgradeFixtureForCurrentSchema = (fixture) => {
   switch (fixture.schemaVersion) {
     case 1:
@@ -219,6 +262,22 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
 
       if (fixture.kind === "payload") {
         return upgradeSchema2PayloadFixture(fixture);
+      }
+
+      throw new Error(
+        `unsupported compatibility fixture kind: ${fixture.kind}`,
+      );
+    case 3:
+      if (fixture.kind === "state") {
+        return upgradeSchema3StateFixture(fixture);
+      }
+
+      if (fixture.kind === "stream") {
+        return upgradeSchema3StreamFixture(fixture);
+      }
+
+      if (fixture.kind === "payload") {
+        return upgradeSchema3PayloadFixture(fixture);
       }
 
       throw new Error(

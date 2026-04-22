@@ -136,6 +136,20 @@ const withVideoFileRefs = (state) =>
     },
   ]);
 
+const withTagScope = (state, scopeKey, tags) => {
+  state.tags[scopeKey] ??= {
+    items: {},
+    tree: [],
+  };
+
+  for (const tag of tags) {
+    state.tags[scopeKey].items[tag.id] = clone(tag);
+    state.tags[scopeKey].tree.push({ id: tag.id });
+  }
+
+  return state;
+};
+
 const withFontFileRefs = (state) =>
   withFiles(state, [{ id: "file-font", type: "font", mimeType: "font/ttf" }]);
 
@@ -2008,6 +2022,150 @@ const directCases = [
           },
         }),
       ).toThrow("payload.parentId must reference a folder sprite item");
+    },
+  },
+  {
+    type: "tag.create",
+    runPositive: () => {
+      const state = createEmptyTestState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "tag.create",
+          payload: {
+            scopeKey: "images",
+            tagId: "tag-bg",
+            data: {
+              type: "tag",
+              name: "Background",
+              color: "#112233",
+            },
+          },
+        },
+      });
+
+      expect(result.state.tags.images.items["tag-bg"]).toEqual({
+        id: "tag-bg",
+        type: "tag",
+        name: "Background",
+        color: "#112233",
+      });
+      expect(result.state.tags.images.tree).toEqual([{ id: "tag-bg" }]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "tag.create",
+          payload: {
+            scopeKey: "images",
+            tagId: "",
+            data: {
+              type: "tag",
+              name: "Background",
+            },
+          },
+        }),
+      ).toThrow("payload.tagId must be a non-empty string");
+    },
+  },
+  {
+    type: "tag.update",
+    runPositive: () => {
+      const state = withTagScope(createEmptyTestState(), "images", [
+        {
+          id: "tag-bg",
+          type: "tag",
+          name: "Background",
+          color: "#112233",
+        },
+      ]);
+      const result = processCommand({
+        state,
+        command: {
+          type: "tag.update",
+          payload: {
+            scopeKey: "images",
+            tagId: "tag-bg",
+            data: {
+              name: "Backdrop",
+              color: null,
+            },
+          },
+        },
+      });
+
+      expect(result.state.tags.images.items["tag-bg"]).toEqual({
+        id: "tag-bg",
+        type: "tag",
+        name: "Backdrop",
+      });
+    },
+    runNegative: () => {
+      const state = createEmptyTestState();
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "tag.update",
+            payload: {
+              scopeKey: "images",
+              tagId: "missing-tag",
+              data: {
+                name: "Backdrop",
+              },
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.tagId must reference an existing tag in payload.scopeKey",
+      );
+    },
+  },
+  {
+    type: "tag.delete",
+    runPositive: () => {
+      const state = withTagScope(withImageFileRefs(createEmptyTestState()), "images", [
+        {
+          id: "tag-bg",
+          type: "tag",
+          name: "Background",
+        },
+      ]);
+      state.images.items["image-a"] = {
+        id: "image-a",
+        type: "image",
+        name: "Image A",
+        fileId: "file-image",
+        tagIds: ["tag-bg"],
+      };
+      state.images.tree = [createTreeNode("image-a")];
+
+      const result = processCommand({
+        state,
+        command: {
+          type: "tag.delete",
+          payload: {
+            scopeKey: "images",
+            tagIds: ["tag-bg"],
+          },
+        },
+      });
+
+      expect(result.state.tags.images.items).toEqual({});
+      expect(result.state.tags.images.tree).toEqual([]);
+      expect(result.state.images.items["image-a"].tagIds).toBeUndefined();
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "tag.delete",
+          payload: {
+            scopeKey: "images",
+            tagIds: [],
+          },
+        }),
+      ).toThrow("payload.tagIds must be a non-empty array");
     },
   },
   {

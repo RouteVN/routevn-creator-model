@@ -1,0 +1,7 @@
+schemaVersion: 3
+type: layout.create
+payload:
+  layoutId: folder-a
+  data:
+    type: folder
+    name: Folder A

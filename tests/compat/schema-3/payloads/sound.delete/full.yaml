@@ -1,0 +1,6 @@
+schemaVersion: 3
+type: sound.delete
+payload:
+  soundIds:
+    - item-a
+    - item-b
