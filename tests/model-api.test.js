@@ -837,6 +837,14 @@ test("processCommand materializes normalized tags root for legacy states", () =>
       items: {},
       tree: [],
     },
+    characters: {
+      items: {},
+      tree: [],
+    },
+    transforms: {
+      items: {},
+      tree: [],
+    },
   });
 });
 

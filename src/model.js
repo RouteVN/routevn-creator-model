@@ -44,12 +44,20 @@ const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
 });
-const TAG_SCOPE_BASE_KEYS = ["images", "sounds", "videos"];
+const TAG_SCOPE_BASE_KEYS = [
+  "images",
+  "sounds",
+  "videos",
+  "characters",
+  "transforms",
+];
 const CHARACTER_SPRITE_TAG_SCOPE_PREFIX = "characterSprites:";
 const createEmptyTagsState = () => ({
   images: createEmptyCollectionState(),
   sounds: createEmptyCollectionState(),
   videos: createEmptyCollectionState(),
+  characters: createEmptyCollectionState(),
+  transforms: createEmptyCollectionState(),
 });
 const isCharacterSpriteTagScopeKey = (value) =>
   isNonEmptyString(value) &&
@@ -2688,7 +2696,12 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
   }
 };
 
-const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
+const validateCharacterSpriteItems = ({
+  items,
+  path,
+  errorFactory,
+  allowTagIds = true,
+}) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
@@ -2710,7 +2723,7 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
-                "tagIds",
+                ...(allowTagIds ? ["tagIds"] : []),
                 "thumbnailFileId",
                 "fileId",
                 "width",
@@ -2753,15 +2766,17 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "image") {
-      {
-        const result = validateOptionalUniqueIdArray({
-          value: item.tagIds,
-          path: `${itemPath}.tagIds`,
-          errorFactory,
-          allowEmpty: false,
-        });
-        if (result?.valid === false) {
-          return result;
+      if (allowTagIds) {
+        {
+          const result = validateOptionalUniqueIdArray({
+            value: item.tagIds,
+            path: `${itemPath}.tagIds`,
+            errorFactory,
+            allowEmpty: false,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
         }
       }
 
@@ -3989,12 +4004,17 @@ const assignOptionalTagIds = ({ target, tagIds }) => {
 };
 
 const applyTagIdsUpdate = ({ currentItem, data }) => {
+  const nextData = structuredClone(data);
+  if (nextData.tagIds === undefined) {
+    delete nextData.tagIds;
+  }
+
   const nextItem = {
     ...structuredClone(currentItem),
-    ...structuredClone(data),
+    ...nextData,
   };
 
-  if (Object.hasOwn(data, "tagIds")) {
+  if (data.tagIds !== undefined) {
     if (Array.isArray(data.tagIds) && data.tagIds.length > 0) {
       nextItem.tagIds = structuredClone(data.tagIds);
     } else {
@@ -4049,6 +4069,24 @@ const stripDeletedTagIdsFromScopeItems = ({ state, scopeKey, deletedTagIds }) =>
   if (scopeKey === "videos") {
     for (const item of Object.values(state.videos.items)) {
       if (item?.type === "video") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "characters") {
+    for (const item of Object.values(state.characters.items)) {
+      if (item?.type === "character") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "transforms") {
+    for (const item of Object.values(state.transforms.items)) {
+      if (item?.type === "transform") {
         stripDeletedTagIdsFromItem({ item, deletedTagIds });
       }
     }
@@ -5611,6 +5649,22 @@ export const assertInvariants = ({ state }) => {
       }
     }
 
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: character.tagIds,
+        scopeKey: "characters",
+        path: "character.tagIds",
+        details: {
+          characterId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
     for (const [spriteId, sprite] of Object.entries(
       character.sprites?.items || {},
     )) {
@@ -5663,6 +5717,30 @@ export const assertInvariants = ({ state }) => {
       });
       if (!thumbnailResult.valid) {
         return thumbnailResult;
+      }
+    }
+  }
+
+  for (const [transformId, transform] of Object.entries(
+    state.transforms.items,
+  )) {
+    if (transform.type !== "transform") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: transform.tagIds,
+        scopeKey: "transforms",
+        path: "transform.tagIds",
+        details: {
+          transformId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
       }
     }
   }
@@ -7790,6 +7868,7 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "x",
               "y",
               "scaleX",
@@ -7821,6 +7900,17 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "transform") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     for (const key of [
       "x",
       "y",
@@ -8026,6 +8116,7 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "x",
         "y",
         "scaleX",
@@ -8061,6 +8152,17 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   for (const key of [
@@ -8599,6 +8701,7 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "shortcut",
               "fileId",
               "sprites",
@@ -8626,6 +8729,17 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "character") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (data.shortcut !== undefined && !isString(data.shortcut)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -8645,7 +8759,13 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
         const result = validateNestedCollection({
           collection: data.sprites,
           path: "payload.data.sprites",
-          itemValidator: validateCharacterSpriteItems,
+          itemValidator: ({ items, path, errorFactory }) =>
+            validateCharacterSpriteItems({
+              items,
+              path,
+              errorFactory,
+              allowTagIds: false,
+            }),
           treeValidator: validateGenericFolderOwnership,
           folderLabel: "folder sprite item",
           errorFactory,
@@ -8665,6 +8785,7 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "shortcut",
         "fileId",
       ],
@@ -8702,6 +8823,17 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.shortcut must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -14100,7 +14232,7 @@ const COMMAND_DEFINITIONS = [
 
       return nextItem;
     },
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -14120,28 +14252,57 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "transform item",
     createDataValidator: validateTransformCreateData,
     updateDataValidator: validateTransformUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.transformId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.description !== undefined
-        ? {
-            description: payload.data.description,
-          }
-        : {}),
-      ...(payload.data.type === "transform"
-        ? {
-            x: payload.data.x,
-            y: payload.data.y,
-            scaleX: payload.data.scaleX,
-            scaleY: payload.data.scaleY,
-            anchorX: payload.data.anchorX,
-            anchorY: payload.data.anchorY,
-            rotation: payload.data.rotation,
-          }
-        : {}),
-    }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.transformId,
+        type: payload.data.type,
+        name: payload.data.name,
+        ...(payload.data.description !== undefined
+          ? {
+              description: payload.data.description,
+            }
+          : {}),
+      };
+
+      if (payload.data.type !== "transform") {
+        return item;
+      }
+
+      item.x = payload.data.x;
+      item.y = payload.data.y;
+      item.scaleX = payload.data.scaleX;
+      item.scaleY = payload.data.scaleY;
+      item.anchorX = payload.data.anchorX;
+      item.anchorY = payload.data.anchorY;
+      item.rotation = payload.data.rotation;
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "transform") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "transforms",
+        path: "payload.data.tagIds",
+        details: {
+          transformId: payload.transformId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -14151,6 +14312,18 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder transform items cannot update transform fields",
         );
+      }
+
+      if (currentItem.type === "transform") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "transforms",
+          path: "payload.data.tagIds",
+          details: {
+            transformId: payload.transformId,
+          },
+        });
       }
     },
   }),
@@ -14178,7 +14351,7 @@ const COMMAND_DEFINITIONS = [
             value: payload.data.value,
           }),
     }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -14309,6 +14482,11 @@ const COMMAND_DEFINITIONS = [
         item.fileId = payload.data.fileId;
       }
 
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
       item.sprites =
         payload.data.sprites === undefined
           ? { items: {}, tree: [] }
@@ -14316,6 +14494,11 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "character") {
         return;
@@ -14326,6 +14509,21 @@ const COMMAND_DEFINITIONS = [
           state,
           data: payload.data,
           fields: ["fileId"],
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "characters",
+          path: "payload.data.tagIds",
           details: {
             characterId: payload.characterId,
           },
@@ -14409,6 +14607,16 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "characters",
+          path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+          },
+        });
       }
     },
     afterDelete: ({ state, deletedItemsById }) => {

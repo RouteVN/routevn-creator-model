@@ -2564,6 +2564,202 @@ const directCases = [
   },
 ];
 
+test(
+  "character.create payload rejects sprite tagIds during payload validation",
+  () => {
+    expectValidation(() =>
+      validatePayload({
+        type: "character.create",
+        payload: {
+          characterId: "character-hero",
+          data: {
+            type: "character",
+            name: "Hero",
+            sprites: {
+              items: {
+                "sprite-default": {
+                  id: "sprite-default",
+                  type: "image",
+                  name: "Default",
+                  fileId: "file-smile",
+                  tagIds: ["tag-smile"],
+                },
+              },
+              tree: [createTreeNode("sprite-default")],
+            },
+          },
+        },
+      }),
+    ).toThrow("payload.data.sprites.items.sprite-default.tagIds is not allowed");
+  },
+);
+
+const createImageTagUpdateState = () => {
+  const state = withTagScope(withImageFileRefs(createEmptyTestState()), "images", [
+    {
+      id: "tag-bg",
+      type: "tag",
+      name: "Background",
+    },
+  ]);
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-image",
+    tagIds: ["tag-bg"],
+  };
+  state.images.tree = [createTreeNode("image-a")];
+  return state;
+};
+
+const createSoundTagUpdateState = () => {
+  const state = withTagScope(withSoundFileRefs(createEmptyTestState()), "sounds", [
+    {
+      id: "tag-bgm",
+      type: "tag",
+      name: "BGM",
+    },
+  ]);
+  state.sounds.items["sound-a"] = {
+    id: "sound-a",
+    type: "sound",
+    name: "Sound A",
+    fileId: "file-sound",
+    tagIds: ["tag-bgm"],
+  };
+  state.sounds.tree = [createTreeNode("sound-a")];
+  return state;
+};
+
+const createVideoTagUpdateState = () => {
+  const state = withTagScope(withVideoFileRefs(createEmptyTestState()), "videos", [
+    {
+      id: "tag-cutscene",
+      type: "tag",
+      name: "Cutscene",
+    },
+  ]);
+  state.videos.items["video-a"] = {
+    id: "video-a",
+    type: "video",
+    name: "Video A",
+    fileId: "file-video",
+    thumbnailFileId: "thumb-video",
+    tagIds: ["tag-cutscene"],
+  };
+  state.videos.tree = [createTreeNode("video-a")];
+  return state;
+};
+
+const createCharacterSpriteTagUpdateState = () => {
+  const state = createCharacterBaseState();
+  withTagScope(state, "characterSprites:character-hero", [
+    {
+      id: "tag-smile",
+      type: "tag",
+      name: "Smile",
+    },
+  ]);
+  state.characters.items["character-hero"].sprites.items["sprite-a"].tagIds = [
+    "tag-smile",
+  ];
+  return state;
+};
+
+const undefinedTagIdUpdateCases = [
+  {
+    type: "image.update",
+    createState: createImageTagUpdateState,
+    command: {
+      type: "image.update",
+      payload: {
+        imageId: "image-a",
+        data: {
+          name: "Image Updated",
+          tagIds: undefined,
+        },
+      },
+    },
+    readItem: (state) => state.images.items["image-a"],
+    expectedName: "Image Updated",
+    expectedTagIds: ["tag-bg"],
+  },
+  {
+    type: "sound.update",
+    createState: createSoundTagUpdateState,
+    command: {
+      type: "sound.update",
+      payload: {
+        soundId: "sound-a",
+        data: {
+          name: "Sound Updated",
+          tagIds: undefined,
+        },
+      },
+    },
+    readItem: (state) => state.sounds.items["sound-a"],
+    expectedName: "Sound Updated",
+    expectedTagIds: ["tag-bgm"],
+  },
+  {
+    type: "video.update",
+    createState: createVideoTagUpdateState,
+    command: {
+      type: "video.update",
+      payload: {
+        videoId: "video-a",
+        data: {
+          name: "Video Updated",
+          tagIds: undefined,
+        },
+      },
+    },
+    readItem: (state) => state.videos.items["video-a"],
+    expectedName: "Video Updated",
+    expectedTagIds: ["tag-cutscene"],
+  },
+  {
+    type: "character.sprite.update",
+    createState: createCharacterSpriteTagUpdateState,
+    command: {
+      type: "character.sprite.update",
+      payload: {
+        characterId: "character-hero",
+        spriteId: "sprite-a",
+        data: {
+          name: "Smile Updated",
+          tagIds: undefined,
+        },
+      },
+    },
+    readItem: (state) =>
+      state.characters.items["character-hero"].sprites.items["sprite-a"],
+    expectedName: "Smile Updated",
+    expectedTagIds: ["tag-smile"],
+  },
+];
+
+for (const updateCase of undefinedTagIdUpdateCases) {
+  test(`${updateCase.type} ignores own undefined tagIds during updates`, () => {
+    const result = processCommand({
+      state: updateCase.createState(),
+      command: updateCase.command,
+    });
+
+    expect(result.valid).toBe(true);
+
+    const item = updateCase.readItem(result.state);
+    if (updateCase.expectedName !== undefined) {
+      expect(item.name).toBe(updateCase.expectedName);
+    }
+    if (updateCase.expectedDescription !== undefined) {
+      expect(item.description).toBe(updateCase.expectedDescription);
+    }
+    expect(item.tagIds).toEqual(updateCase.expectedTagIds);
+  });
+}
+
 test("direct command coverage stays aligned with the public command registry", () => {
   const coveredTypes = directCases.map((entry) => entry.type).sort();
   expect(coveredTypes).toEqual(listCommandTypes().slice().sort());

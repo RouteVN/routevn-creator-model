@@ -16,6 +16,14 @@ export const createEmptyTestState = () => ({
       items: {},
       tree: [],
     },
+    characters: {
+      items: {},
+      tree: [],
+    },
+    transforms: {
+      items: {},
+      tree: [],
+    },
   },
   scenes: {
     items: {},
