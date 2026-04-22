@@ -1,0 +1,11 @@
+schemaVersion: 3
+type: layout.update
+payload:
+  layoutId: item-a
+  data:
+    name: Dialogue Updated
+    description: Updated dialogue frame
+    thumbnailFileId: thumb-image
+    preview:
+      variables:
+        score: 7

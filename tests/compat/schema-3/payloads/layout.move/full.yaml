@@ -1,0 +1,7 @@
+schemaVersion: 3
+type: layout.move
+payload:
+  layoutId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

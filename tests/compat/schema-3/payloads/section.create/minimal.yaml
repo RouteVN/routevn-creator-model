@@ -1,0 +1,7 @@
+schemaVersion: 3
+type: section.create
+payload:
+  sectionId: section-c
+  sceneId: scene-a
+  data:
+    name: Section C

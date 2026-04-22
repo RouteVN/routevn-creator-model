@@ -1,0 +1,7 @@
+schemaVersion: 3
+type: font.update
+payload:
+  fontId: item-a
+  data:
+    description: Updated display family
+    fontFamily: Suit Alt

@@ -35,7 +35,7 @@ const COLLECTION_KEYS = [
   "layouts",
   "controls",
 ];
-const ROOT_KEYS = ["project", "story", ...COLLECTION_KEYS];
+const ROOT_KEYS = ["project", "story", "tags", ...COLLECTION_KEYS];
 const LINE_UPDATE_ACTIONS_PRESERVE_PATHS = ["dialogue.content"];
 const LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET = new Set(
   LINE_UPDATE_ACTIONS_PRESERVE_PATHS,
@@ -44,6 +44,55 @@ const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
 });
+const TAG_SCOPE_BASE_KEYS = [
+  "images",
+  "sounds",
+  "videos",
+  "characters",
+  "transforms",
+];
+const CHARACTER_SPRITE_TAG_SCOPE_PREFIX = "characterSprites:";
+const createEmptyTagsState = () => ({
+  images: createEmptyCollectionState(),
+  sounds: createEmptyCollectionState(),
+  videos: createEmptyCollectionState(),
+  characters: createEmptyCollectionState(),
+  transforms: createEmptyCollectionState(),
+});
+const isCharacterSpriteTagScopeKey = (value) =>
+  isNonEmptyString(value) &&
+  value.startsWith(CHARACTER_SPRITE_TAG_SCOPE_PREFIX) &&
+  value.length > CHARACTER_SPRITE_TAG_SCOPE_PREFIX.length;
+const getCharacterSpriteTagScopeCharacterId = (scopeKey) =>
+  isCharacterSpriteTagScopeKey(scopeKey)
+    ? scopeKey.slice(CHARACTER_SPRITE_TAG_SCOPE_PREFIX.length)
+    : undefined;
+const isBaseTagScopeKey = (scopeKey) => TAG_SCOPE_BASE_KEYS.includes(scopeKey);
+const normalizeTagsState = (tags) => {
+  if (tags === undefined) {
+    return createEmptyTagsState();
+  }
+
+  if (!isPlainObject(tags)) {
+    return tags;
+  }
+
+  const missingBaseScopeKeys = TAG_SCOPE_BASE_KEYS.filter(
+    (scopeKey) => tags[scopeKey] === undefined,
+  );
+  if (missingBaseScopeKeys.length === 0) {
+    return tags;
+  }
+
+  const nextTags = {
+    ...tags,
+  };
+  for (const scopeKey of missingBaseScopeKeys) {
+    nextTags[scopeKey] = createEmptyCollectionState();
+  }
+
+  return nextTags;
+};
 
 const normalizeStateCollections = (state) => {
   if (!isPlainObject(state)) {
@@ -55,8 +104,10 @@ const normalizeStateCollections = (state) => {
     "particles",
     "controls",
   ].filter((key) => state[key] === undefined);
+  const normalizedTags = normalizeTagsState(state.tags);
+  const hasNormalizedTags = normalizedTags !== state.tags;
 
-  if (missingCollectionKeys.length === 0) {
+  if (missingCollectionKeys.length === 0 && !hasNormalizedTags) {
     return state;
   }
 
@@ -67,6 +118,10 @@ const normalizeStateCollections = (state) => {
   missingCollectionKeys.forEach((key) => {
     nextState[key] = createEmptyCollectionState();
   });
+
+  if (hasNormalizedTags) {
+    nextState.tags = normalizedTags;
+  }
 
   return nextState;
 };
@@ -164,7 +219,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -268,6 +323,7 @@ const isVariableReferenceTarget = (state, variableId) => {
 };
 
 const LAYOUT_ITEM_TARGET_SET = new Set(["item.savedAt"]);
+const LAYOUT_DIALOGUE_TARGET_SET = new Set(["dialogue.characterId"]);
 const RUNTIME_TARGET_DOT_PATTERN = /^runtime\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
 const VARIABLE_TARGET_DOT_PATTERN = /^variables\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
 const VARIABLE_TARGET_BRACKET_PATTERN = /^variables\[(.+)\]$/;
@@ -280,6 +336,13 @@ const parseLayoutConditionTarget = (target) => {
   if (LAYOUT_ITEM_TARGET_SET.has(target)) {
     return {
       kind: "item",
+      target,
+    };
+  }
+
+  if (LAYOUT_DIALOGUE_TARGET_SET.has(target)) {
+    return {
+      kind: "dialogue",
       target,
     };
   }
@@ -340,7 +403,7 @@ const isLayoutConditionTarget = (state, target) => {
     return false;
   }
 
-  if (parsedTarget.kind === "runtime") {
+  if (parsedTarget.kind !== "variable") {
     return true;
   }
 
@@ -781,6 +844,7 @@ const validateImageItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "thumbnailFileId",
                 "fileId",
                 "width",
@@ -823,6 +887,18 @@ const validateImageItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "image") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (
         item.thumbnailFileId !== undefined &&
         !isNonEmptyString(item.thumbnailFileId)
@@ -1070,6 +1146,7 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "fileId",
                 "waveformDataFileId",
                 "duration",
@@ -1111,6 +1188,18 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "sound") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!isNonEmptyString(item.fileId)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -1161,6 +1250,7 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "fileId",
                 "thumbnailFileId",
                 "duration",
@@ -1204,6 +1294,18 @@ const validateVideoItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "video") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!isNonEmptyString(item.fileId)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -2085,6 +2187,7 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "x",
                 "y",
                 "scaleX",
@@ -2130,6 +2233,18 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "transform") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       for (const key of [
         "x",
         "y",
@@ -2594,7 +2709,12 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
   }
 };
 
-const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
+const validateCharacterSpriteItems = ({
+  items,
+  path,
+  errorFactory,
+  allowTagIds = true,
+}) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
@@ -2616,6 +2736,7 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                ...(allowTagIds ? ["tagIds"] : []),
                 "thumbnailFileId",
                 "fileId",
                 "width",
@@ -2658,6 +2779,20 @@ const validateCharacterSpriteItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "image") {
+      if (allowTagIds) {
+        {
+          const result = validateOptionalUniqueIdArray({
+            value: item.tagIds,
+            path: `${itemPath}.tagIds`,
+            errorFactory,
+            allowEmpty: false,
+          });
+          if (result?.valid === false) {
+            return result;
+          }
+        }
+      }
+
       if (
         item.thumbnailFileId !== undefined &&
         !isNonEmptyString(item.thumbnailFileId)
@@ -3453,6 +3588,7 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "shortcut",
                 "fileId",
                 "sprites",
@@ -3494,6 +3630,18 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "character") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (item.shortcut !== undefined && !isString(item.shortcut)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -3521,6 +3669,469 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
           return result;
         }
       }
+    }
+  }
+};
+
+const validateTagItems = ({ items, path, errorFactory }) => {
+  const seenNames = new Set();
+
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "tag") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'tag'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: ["id", "type", "name", "color"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.color !== undefined && !isHexColor(item.color)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.color must be a hex color when provided`,
+      );
+    }
+
+    const normalizedName = item.name.trim().toLowerCase();
+    if (seenNames.has(normalizedName)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be unique within its tag scope`,
+      );
+    }
+
+    seenNames.add(normalizedName);
+  }
+};
+
+const validateFlatTagTree = ({ nodes, path, errorFactory }) => {
+  const visitNodes = (entries, entryPath) => {
+    if (!Array.isArray(entries)) {
+      return VALID_RESULT;
+    }
+
+    for (const [index, node] of entries.entries()) {
+      if (Object.hasOwn(node, "children")) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${entryPath}[${index}].children is not allowed`,
+        );
+      }
+    }
+
+    return VALID_RESULT;
+  };
+
+  return visitNodes(nodes, path);
+};
+
+const validateTagCreateData = ({
+  data,
+  path = "payload.data",
+  errorFactory = createPayloadValidationError,
+}) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["type", "name", "color"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (data?.type !== "tag") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.type must be 'tag'`,
+    );
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.name must be a non-empty string`,
+    );
+  }
+
+  if (data.color !== undefined && !isHexColor(data.color)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.color must be a hex color when provided`,
+    );
+  }
+};
+
+const validateTagUpdateData = ({
+  data,
+  path = "payload.data",
+  errorFactory = createPayloadValidationError,
+}) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "color"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must include at least one field`,
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.name must be a non-empty string when provided`,
+    );
+  }
+
+  if (
+    data.color !== undefined &&
+    data.color !== null &&
+    !isHexColor(data.color)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.color must be a hex color or null when provided`,
+    );
+  }
+};
+
+const validateTagsRoot = ({ state, tags, path, errorFactory }) => {
+  if (!isPlainObject(tags)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  for (const scopeKey of Object.keys(tags)) {
+    if (!isBaseTagScopeKey(scopeKey) && !isCharacterSpriteTagScopeKey(scopeKey)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${scopeKey} is not allowed`,
+      );
+    }
+  }
+
+  for (const scopeKey of TAG_SCOPE_BASE_KEYS) {
+    if (!Object.hasOwn(tags, scopeKey)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${scopeKey} is required`,
+      );
+    }
+  }
+
+  for (const [scopeKey, collection] of Object.entries(tags)) {
+    {
+      const result = validateNestedCollection({
+        collection,
+        path: `${path}.${scopeKey}`,
+        itemValidator: validateTagItems,
+        treeValidator: validateFlatTagTree,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isCharacterSpriteTagScopeKey(scopeKey)) {
+      continue;
+    }
+
+    const characterId = getCharacterSpriteTagScopeCharacterId(scopeKey);
+    const character = state.characters?.items?.[characterId];
+    if (!isPlainObject(character) || character.type !== "character") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${scopeKey} must reference an existing character`,
+      );
+    }
+  }
+};
+
+const getTagScopeCollection = ({ state, scopeKey }) => state.tags?.[scopeKey];
+
+const validateTagScopeKey = ({ scopeKey, path, errorFactory }) => {
+  if (!isNonEmptyString(scopeKey)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty string`,
+    );
+  }
+
+  if (isBaseTagScopeKey(scopeKey) || isCharacterSpriteTagScopeKey(scopeKey)) {
+    return VALID_RESULT;
+  }
+
+  return invalidFromErrorFactory(
+    errorFactory,
+    `${path} must be a supported tag scope key`,
+  );
+};
+
+const validateTagScopeAgainstState = ({
+  state,
+  scopeKey,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  const scopeKeyResult = validateTagScopeKey({
+    scopeKey,
+    path,
+    errorFactory,
+  });
+  if (!scopeKeyResult.valid) {
+    return scopeKeyResult;
+  }
+
+  if (!isCharacterSpriteTagScopeKey(scopeKey)) {
+    return VALID_RESULT;
+  }
+
+  const characterId = getCharacterSpriteTagScopeCharacterId(scopeKey);
+  const character = state.characters?.items?.[characterId];
+  if (!isPlainObject(character) || character.type !== "character") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference an existing character sprite tag scope`,
+      {
+        ...details,
+        characterId,
+        scopeKey,
+      },
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateTagIdsAgainstScope = ({
+  state,
+  tagIds,
+  scopeKey,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (tagIds === undefined) {
+    return VALID_RESULT;
+  }
+
+  const scopeResult = validateTagScopeAgainstState({
+    state,
+    scopeKey,
+    path,
+    details,
+    errorFactory,
+  });
+  if (!scopeResult.valid) {
+    return scopeResult;
+  }
+
+  const collection = getTagScopeCollection({ state, scopeKey });
+  for (const [index, tagId] of tagIds.entries()) {
+    const tag = collection?.items?.[tagId];
+    if (!isPlainObject(tag) || tag.type !== "tag") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must reference an existing tag in scope '${scopeKey}'`,
+        {
+          ...details,
+          scopeKey,
+          tagId,
+        },
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateUniqueTagNameInScope = ({
+  collection,
+  name,
+  path,
+  excludeTagId,
+  errorFactory = createPreconditionValidationError,
+}) => {
+  const normalizedName = name.trim().toLowerCase();
+
+  for (const [tagId, tag] of Object.entries(collection?.items || {})) {
+    if (tagId === excludeTagId || tag?.type !== "tag") {
+      continue;
+    }
+
+    if (tag.name?.trim?.().toLowerCase?.() === normalizedName) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} must be unique within its tag scope`,
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const ensureTagScopeCollection = ({ state, scopeKey }) => {
+  state.tags ??= createEmptyTagsState();
+  state.tags[scopeKey] ??= createEmptyCollectionState();
+  return state.tags[scopeKey];
+};
+
+const assignOptionalTagIds = ({ target, tagIds }) => {
+  if (Array.isArray(tagIds) && tagIds.length > 0) {
+    target.tagIds = structuredClone(tagIds);
+  }
+};
+
+const applyTagIdsUpdate = ({ currentItem, data }) => {
+  const nextData = structuredClone(data);
+  if (nextData.tagIds === undefined) {
+    delete nextData.tagIds;
+  }
+
+  const nextItem = {
+    ...structuredClone(currentItem),
+    ...nextData,
+  };
+
+  if (data.tagIds !== undefined) {
+    if (Array.isArray(data.tagIds) && data.tagIds.length > 0) {
+      nextItem.tagIds = structuredClone(data.tagIds);
+    } else {
+      delete nextItem.tagIds;
+    }
+  }
+
+  return nextItem;
+};
+
+const stripDeletedTagIdsFromItem = ({ item, deletedTagIds }) => {
+  if (!Array.isArray(item?.tagIds) || item.tagIds.length === 0) {
+    return;
+  }
+
+  const remainingTagIds = item.tagIds.filter((tagId) => !deletedTagIds.has(tagId));
+  if (remainingTagIds.length === item.tagIds.length) {
+    return;
+  }
+
+  if (remainingTagIds.length === 0) {
+    delete item.tagIds;
+    return;
+  }
+
+  item.tagIds = remainingTagIds;
+};
+
+const stripDeletedTagIdsFromScopeItems = ({ state, scopeKey, deletedTagIds }) => {
+  if (deletedTagIds.size === 0) {
+    return;
+  }
+
+  if (scopeKey === "images") {
+    for (const item of Object.values(state.images.items)) {
+      if (item?.type === "image") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "sounds") {
+    for (const item of Object.values(state.sounds.items)) {
+      if (item?.type === "sound") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "videos") {
+    for (const item of Object.values(state.videos.items)) {
+      if (item?.type === "video") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "characters") {
+    for (const item of Object.values(state.characters.items)) {
+      if (item?.type === "character") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "transforms") {
+    for (const item of Object.values(state.transforms.items)) {
+      if (item?.type === "transform") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (!isCharacterSpriteTagScopeKey(scopeKey)) {
+    return;
+  }
+
+  const characterId = getCharacterSpriteTagScopeCharacterId(scopeKey);
+  const collection = getCharacterSpriteCollection({
+    state,
+    characterId,
+  });
+
+  for (const item of Object.values(collection?.items || {})) {
+    if (item?.type === "image") {
+      stripDeletedTagIdsFromItem({ item, deletedTagIds });
     }
   }
 };
@@ -4854,6 +5465,22 @@ export const assertInvariants = ({ state }) => {
         return result;
       }
     }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: image.tagIds,
+        scopeKey: "images",
+        path: "image.tagIds",
+        details: {
+          imageId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
   }
 
   for (const [spritesheetId, spritesheet] of Object.entries(
@@ -4926,6 +5553,22 @@ export const assertInvariants = ({ state }) => {
         return result;
       }
     }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: sound.tagIds,
+        scopeKey: "sounds",
+        path: "sound.tagIds",
+        details: {
+          soundId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
   }
 
   for (const [videoId, video] of Object.entries(state.videos.items)) {
@@ -4952,6 +5595,22 @@ export const assertInvariants = ({ state }) => {
         fileId: video.thumbnailFileId,
         path: "video.thumbnailFileId",
         details: { videoId, thumbnailFileId: video.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: video.tagIds,
+        scopeKey: "videos",
+        path: "video.tagIds",
+        details: {
+          videoId,
+        },
         errorFactory: createInvariantValidationError,
       });
       if (!result.valid) {
@@ -5016,6 +5675,22 @@ export const assertInvariants = ({ state }) => {
       }
     }
 
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: character.tagIds,
+        scopeKey: "characters",
+        path: "character.tagIds",
+        details: {
+          characterId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
     for (const [spriteId, sprite] of Object.entries(
       character.sprites?.items || {},
     )) {
@@ -5032,6 +5707,23 @@ export const assertInvariants = ({ state }) => {
       });
       if (!result.valid) {
         return result;
+      }
+
+      {
+        const tagResult = validateTagIdsAgainstScope({
+          state,
+          tagIds: sprite.tagIds,
+          scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${characterId}`,
+          path: "character.sprite.tagIds",
+          details: {
+            characterId,
+            spriteId,
+          },
+          errorFactory: createInvariantValidationError,
+        });
+        if (!tagResult.valid) {
+          return tagResult;
+        }
       }
 
       if (sprite.thumbnailFileId === undefined) {
@@ -5051,6 +5743,30 @@ export const assertInvariants = ({ state }) => {
       });
       if (!thumbnailResult.valid) {
         return thumbnailResult;
+      }
+    }
+  }
+
+  for (const [transformId, transform] of Object.entries(
+    state.transforms.items,
+  )) {
+    if (transform.type !== "transform") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: transform.tagIds,
+        scopeKey: "transforms",
+        path: "transform.tagIds",
+        details: {
+          transformId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
       }
     }
   }
@@ -5366,7 +6082,7 @@ export const assertInvariants = ({ state }) => {
               !isLayoutConditionTarget(state, rule.when.target)
             ) {
               return invalidInvariant(
-                `${ownerLabel} element conditionalOverrides when target must reference an existing variable or supported runtime condition`,
+                `${ownerLabel} element conditionalOverrides when target must reference an existing variable or supported layout condition`,
                 {
                   [ownerIdField]: ownerId,
                   elementId,
@@ -5509,6 +6225,18 @@ const runValidateState = ({ state }) => {
       return invalidState(
         "state.story.initialSceneId must be a non-empty string or null",
       );
+    }
+
+    {
+      const result = validateTagsRoot({
+        state: normalizedState,
+        tags: normalizedState.tags,
+        path: "state.tags",
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     for (const collectionKey of COLLECTION_KEYS) {
@@ -5702,6 +6430,46 @@ const validateRequiredUniqueIdArray = ({ value, path, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       `${path} must be a non-empty array`,
+    );
+  }
+
+  const seen = new Set();
+
+  for (const [index, entry] of value.entries()) {
+    if (!isNonEmptyString(entry)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must be a non-empty string`,
+      );
+    }
+
+    if (seen.has(entry)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must be unique`,
+      );
+    }
+
+    seen.add(entry);
+  }
+};
+
+const validateOptionalUniqueIdArray = ({
+  value,
+  path,
+  errorFactory,
+  allowEmpty = true,
+}) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      allowEmpty
+        ? `${path} must be an array when provided`
+        : `${path} must be a non-empty array when provided`,
     );
   }
 
@@ -5948,6 +6716,7 @@ const validateImageCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "thumbnailFileId",
               "fileId",
               "width",
@@ -5976,6 +6745,17 @@ const validateImageCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "image") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (
       data.thumbnailFileId !== undefined &&
       !isNonEmptyString(data.thumbnailFileId)
@@ -6016,6 +6796,7 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "thumbnailFileId",
         "fileId",
         "width",
@@ -6048,6 +6829,17 @@ const validateImageUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (
@@ -6314,6 +7106,7 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "fileId",
               "waveformDataFileId",
               "duration",
@@ -6341,6 +7134,17 @@ const validateSoundCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "sound") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6375,6 +7179,7 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "fileId",
         "waveformDataFileId",
         "duration",
@@ -6406,6 +7211,17 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -6459,6 +7275,7 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "fileId",
               "thumbnailFileId",
               "duration",
@@ -6488,6 +7305,17 @@ const validateVideoCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "video") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -6532,6 +7360,7 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "fileId",
         "thumbnailFileId",
         "duration",
@@ -6565,6 +7394,17 @@ const validateVideoUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -7054,6 +7894,7 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "x",
               "y",
               "scaleX",
@@ -7085,6 +7926,17 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "transform") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     for (const key of [
       "x",
       "y",
@@ -7290,6 +8142,7 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "x",
         "y",
         "scaleX",
@@ -7325,6 +8178,17 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   for (const key of [
@@ -7680,6 +8544,7 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "fileId",
               "thumbnailFileId",
               "width",
@@ -7708,6 +8573,17 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "image") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -7748,6 +8624,7 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "fileId",
         "thumbnailFileId",
         "width",
@@ -7773,6 +8650,17 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -7839,6 +8727,7 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "shortcut",
               "fileId",
               "sprites",
@@ -7866,6 +8755,17 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "character") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (data.shortcut !== undefined && !isString(data.shortcut)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -7885,7 +8785,13 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
         const result = validateNestedCollection({
           collection: data.sprites,
           path: "payload.data.sprites",
-          itemValidator: validateCharacterSpriteItems,
+          itemValidator: ({ items, path, errorFactory }) =>
+            validateCharacterSpriteItems({
+              items,
+              path,
+              errorFactory,
+              allowTagIds: false,
+            }),
           treeValidator: validateGenericFolderOwnership,
           folderLabel: "folder sprite item",
           errorFactory,
@@ -7905,6 +8811,7 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "shortcut",
         "fileId",
       ],
@@ -7942,6 +8849,17 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.shortcut must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -8616,7 +9534,7 @@ const validateVisualElementReferenceTargets = ({
       if (!isLayoutConditionTarget(state, rule?.when?.target)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${ownerLabel} element conditionalOverrides.${index}.when.target must reference an existing variable or supported runtime condition`,
+          `${ownerLabel} element conditionalOverrides.${index}.when.target must reference an existing variable or supported layout condition`,
           {
             [ownerIdField]: ownerId,
             elementId,
@@ -8790,6 +9708,7 @@ const createFolderedCollectionCommandDefinitions = ({
   validateCreateState = () => {},
   validateUpdateState = () => {},
   validateDeleteState = () => {},
+  afterDelete = () => {},
   includeUpdate = true,
 }) => {
   const existingMessage = `payload.${idField} must reference an existing ${itemLabel}`;
@@ -9037,6 +9956,7 @@ const createFolderedCollectionCommandDefinitions = ({
       },
       reduce: ({ state, payload }) => {
         const deletedIds = new Set();
+        const deletedItemsById = new Map();
 
         for (const itemId of payload[deleteArrayField]) {
           const removedNode = removeTreeNode({
@@ -9052,12 +9972,23 @@ const createFolderedCollectionCommandDefinitions = ({
             node: removedNode,
           })) {
             deletedIds.add(descendantId);
+            deletedItemsById.set(
+              descendantId,
+              state[collectionKey].items[descendantId],
+            );
           }
         }
 
         for (const itemId of deletedIds) {
           delete state[collectionKey].items[itemId];
         }
+
+        afterDelete({
+          state,
+          payload,
+          deletedIds,
+          deletedItemsById,
+        });
 
         return state;
       },
@@ -9389,7 +10320,8 @@ const COMMAND_DEFINITIONS = [
       }
     },
     validateAgainstState: () => {},
-    reduce: ({ payload }) => structuredClone(payload.state),
+    reduce: ({ payload }) =>
+      structuredClone(normalizeStateCollections(payload.state)),
   },
   ...createFolderedCollectionCommandDefinitions({
     familyName: "file",
@@ -10881,6 +11813,16 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "images",
+          path: "payload.data.tagIds",
+          details: {
+            imageId: payload.imageId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -10905,6 +11847,11 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.height !== undefined) {
           nextImage.height = payload.data.height;
         }
+
+        assignOptionalTagIds({
+          target: nextImage,
+          tagIds: payload.data.tagIds,
+        });
       }
 
       state.images.items[payload.imageId] = nextImage;
@@ -10966,7 +11913,8 @@ const COMMAND_DEFINITIONS = [
         (payload.data.fileId !== undefined ||
           payload.data.thumbnailFileId !== undefined ||
           payload.data.width !== undefined ||
-          payload.data.height !== undefined)
+          payload.data.height !== undefined ||
+          payload.data.tagIds !== undefined)
       ) {
         return invalidPrecondition(
           "folder image items cannot update file fields",
@@ -10985,14 +11933,24 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "images",
+          path: "payload.data.tagIds",
+          details: {
+            imageId: payload.imageId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
       const currentImage = state.images.items[payload.imageId];
-      state.images.items[payload.imageId] = {
-        ...structuredClone(currentImage),
-        ...structuredClone(payload.data),
-      };
+      state.images.items[payload.imageId] = applyTagIdsUpdate({
+        currentItem: currentImage,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -11298,6 +12256,16 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "sounds",
+          path: "payload.data.tagIds",
+          details: {
+            soundId: payload.soundId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -11319,6 +12287,11 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.duration !== undefined) {
           nextSound.duration = payload.data.duration;
         }
+
+        assignOptionalTagIds({
+          target: nextSound,
+          tagIds: payload.data.tagIds,
+        });
       }
 
       state.sounds.items[payload.soundId] = nextSound;
@@ -11379,7 +12352,8 @@ const COMMAND_DEFINITIONS = [
         currentSound.type === "folder" &&
         (payload.data.fileId !== undefined ||
           payload.data.waveformDataFileId !== undefined ||
-          payload.data.duration !== undefined)
+          payload.data.duration !== undefined ||
+          payload.data.tagIds !== undefined)
       ) {
         return invalidPrecondition(
           "folder sound items cannot update file fields",
@@ -11399,14 +12373,24 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "sounds",
+          path: "payload.data.tagIds",
+          details: {
+            soundId: payload.soundId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
       const currentSound = state.sounds.items[payload.soundId];
-      state.sounds.items[payload.soundId] = {
-        ...structuredClone(currentSound),
-        ...structuredClone(payload.data),
-      };
+      state.sounds.items[payload.soundId] = applyTagIdsUpdate({
+        currentItem: currentSound,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -11711,6 +12695,16 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "videos",
+          path: "payload.data.tagIds",
+          details: {
+            videoId: payload.videoId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -11736,6 +12730,11 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.height !== undefined) {
           nextVideo.height = payload.data.height;
         }
+
+        assignOptionalTagIds({
+          target: nextVideo,
+          tagIds: payload.data.tagIds,
+        });
       }
 
       state.videos.items[payload.videoId] = nextVideo;
@@ -11798,7 +12797,8 @@ const COMMAND_DEFINITIONS = [
           payload.data.thumbnailFileId !== undefined ||
           payload.data.duration !== undefined ||
           payload.data.width !== undefined ||
-          payload.data.height !== undefined)
+          payload.data.height !== undefined ||
+          payload.data.tagIds !== undefined)
       ) {
         return invalidPrecondition(
           "folder video items cannot update file fields",
@@ -11817,14 +12817,24 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "videos",
+          path: "payload.data.tagIds",
+          details: {
+            videoId: payload.videoId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
       const currentVideo = state.videos.items[payload.videoId];
-      state.videos.items[payload.videoId] = {
-        ...structuredClone(currentVideo),
-        ...structuredClone(payload.data),
-      };
+      state.videos.items[payload.videoId] = applyTagIdsUpdate({
+        currentItem: currentVideo,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -13248,7 +14258,7 @@ const COMMAND_DEFINITIONS = [
 
       return nextItem;
     },
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -13268,28 +14278,57 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "transform item",
     createDataValidator: validateTransformCreateData,
     updateDataValidator: validateTransformUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.transformId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.description !== undefined
-        ? {
-            description: payload.data.description,
-          }
-        : {}),
-      ...(payload.data.type === "transform"
-        ? {
-            x: payload.data.x,
-            y: payload.data.y,
-            scaleX: payload.data.scaleX,
-            scaleY: payload.data.scaleY,
-            anchorX: payload.data.anchorX,
-            anchorY: payload.data.anchorY,
-            rotation: payload.data.rotation,
-          }
-        : {}),
-    }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.transformId,
+        type: payload.data.type,
+        name: payload.data.name,
+        ...(payload.data.description !== undefined
+          ? {
+              description: payload.data.description,
+            }
+          : {}),
+      };
+
+      if (payload.data.type !== "transform") {
+        return item;
+      }
+
+      item.x = payload.data.x;
+      item.y = payload.data.y;
+      item.scaleX = payload.data.scaleX;
+      item.scaleY = payload.data.scaleY;
+      item.anchorX = payload.data.anchorX;
+      item.anchorY = payload.data.anchorY;
+      item.rotation = payload.data.rotation;
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "transform") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "transforms",
+        path: "payload.data.tagIds",
+        details: {
+          transformId: payload.transformId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -13299,6 +14338,18 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder transform items cannot update transform fields",
         );
+      }
+
+      if (currentItem.type === "transform") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "transforms",
+          path: "payload.data.tagIds",
+          details: {
+            transformId: payload.transformId,
+          },
+        });
       }
     },
   }),
@@ -13326,7 +14377,7 @@ const COMMAND_DEFINITIONS = [
             value: payload.data.value,
           }),
     }),
-    validateUpdateState: ({ payload, currentItem }) => {
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
         Object.keys(payload.data).some(
@@ -13457,6 +14508,11 @@ const COMMAND_DEFINITIONS = [
         item.fileId = payload.data.fileId;
       }
 
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
       item.sprites =
         payload.data.sprites === undefined
           ? { items: {}, tree: [] }
@@ -13464,6 +14520,11 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "character") {
         return;
@@ -13483,11 +14544,36 @@ const COMMAND_DEFINITIONS = [
         }
       }
 
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "characters",
+          path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
       for (const [spriteId, sprite] of Object.entries(
         payload.data.sprites?.items || {},
       )) {
         if (sprite.type !== "image") {
           continue;
+        }
+
+        if (sprite.tagIds !== undefined) {
+          return invalidPrecondition(
+            "payload.data.sprites.items.*.tagIds are not supported during character.create",
+            {
+              characterId: payload.characterId,
+              spriteId,
+            },
+          );
         }
 
         const result = validateFileReference({
@@ -13547,6 +14633,27 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "characters",
+          path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+      }
+    },
+    afterDelete: ({ state, deletedItemsById }) => {
+      for (const [characterId, item] of deletedItemsById.entries()) {
+        if (item?.type !== "character") {
+          continue;
+        }
+
+        delete state.tags[
+          `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${characterId}`
+        ];
       }
     },
   }),
@@ -13817,6 +14924,17 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${payload.characterId}`,
+          path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+            spriteId: payload.spriteId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -13825,10 +14943,15 @@ const COMMAND_DEFINITIONS = [
         characterId: payload.characterId,
       });
 
-      collection.items[payload.spriteId] = {
+      const nextSprite = {
         id: payload.spriteId,
         ...structuredClone(payload.data),
       };
+      if (payload.data.tagIds !== undefined && payload.data.tagIds.length === 0) {
+        delete nextSprite.tagIds;
+      }
+
+      collection.items[payload.spriteId] = nextSprite;
 
       insertTreeNode({
         tree: collection.tree,
@@ -13922,6 +15045,17 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${payload.characterId}`,
+          path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+            spriteId: payload.spriteId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -13931,10 +15065,10 @@ const COMMAND_DEFINITIONS = [
       });
       const currentItem = collection.items[payload.spriteId];
 
-      collection.items[payload.spriteId] = {
-        ...structuredClone(currentItem),
-        ...structuredClone(payload.data),
-      };
+      collection.items[payload.spriteId] = applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      });
 
       return state;
     },
@@ -14161,6 +15295,297 @@ const COMMAND_DEFINITIONS = [
         index: payload.index,
         position: payload.position,
         positionTargetId: payload.positionTargetId,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "tag.create",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["scopeKey", "tagId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateTagScopeKey({
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.tagId)) {
+        return invalidPayload("payload.tagId must be a non-empty string");
+      }
+
+      {
+        const result = validateTagCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      {
+        const result = validateTagScopeAgainstState({
+          state,
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      const collection = getTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      if (isPlainObject(collection?.items?.[payload.tagId])) {
+        return invalidPrecondition("payload.tagId must not already exist");
+      }
+
+      return validateUniqueTagNameInScope({
+        collection,
+        name: payload.data.name,
+        path: "payload.data.name",
+      });
+    },
+    reduce: ({ state, payload }) => {
+      const collection = ensureTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      const nextTag = {
+        id: payload.tagId,
+        type: "tag",
+        name: payload.data.name,
+      };
+
+      if (payload.data.color !== undefined) {
+        nextTag.color = payload.data.color;
+      }
+
+      collection.items[payload.tagId] = nextTag;
+      collection.tree.push({
+        id: payload.tagId,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "tag.update",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["scopeKey", "tagId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateTagScopeKey({
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.tagId)) {
+        return invalidPayload("payload.tagId must be a non-empty string");
+      }
+
+      {
+        const result = validateTagUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      {
+        const result = validateTagScopeAgainstState({
+          state,
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      const collection = getTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      const currentTag = collection?.items?.[payload.tagId];
+      if (!isPlainObject(currentTag) || currentTag.type !== "tag") {
+        return invalidPrecondition(
+          "payload.tagId must reference an existing tag in payload.scopeKey",
+        );
+      }
+
+      if (payload.data.name === undefined) {
+        return VALID_RESULT;
+      }
+
+      return validateUniqueTagNameInScope({
+        collection,
+        name: payload.data.name,
+        path: "payload.data.name",
+        excludeTagId: payload.tagId,
+      });
+    },
+    reduce: ({ state, payload }) => {
+      const collection = ensureTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      const currentTag = collection.items[payload.tagId];
+      const nextTag = {
+        ...structuredClone(currentTag),
+      };
+
+      if (payload.data.name !== undefined) {
+        nextTag.name = payload.data.name;
+      }
+
+      if (payload.data.color === null) {
+        delete nextTag.color;
+      } else if (payload.data.color !== undefined) {
+        nextTag.color = payload.data.color;
+      }
+
+      collection.items[payload.tagId] = nextTag;
+      return state;
+    },
+  },
+  {
+    type: "tag.delete",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["scopeKey", "tagIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateTagScopeKey({
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.tagIds,
+          path: "payload.tagIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      {
+        const result = validateTagScopeAgainstState({
+          state,
+          scopeKey: payload.scopeKey,
+          path: "payload.scopeKey",
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      const collection = getTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      for (const tagId of payload.tagIds) {
+        const tag = collection?.items?.[tagId];
+        if (!isPlainObject(tag) || tag.type !== "tag") {
+          return invalidPrecondition(
+            "payload.tagIds must reference existing tags in payload.scopeKey",
+            {
+              scopeKey: payload.scopeKey,
+              tagId,
+            },
+          );
+        }
+      }
+
+      return VALID_RESULT;
+    },
+    reduce: ({ state, payload }) => {
+      const collection = ensureTagScopeCollection({
+        state,
+        scopeKey: payload.scopeKey,
+      });
+      const deletedTagIds = new Set();
+
+      for (const tagId of payload.tagIds) {
+        const removedNode = removeTreeNode({
+          nodes: collection.tree,
+          nodeId: tagId,
+        });
+        if (!removedNode) {
+          continue;
+        }
+
+        for (const deletedTagId of collectTreeDescendantIds({
+          node: removedNode,
+        })) {
+          deletedTagIds.add(deletedTagId);
+        }
+      }
+
+      for (const tagId of deletedTagIds) {
+        delete collection.items[tagId];
+      }
+
+      stripDeletedTagIdsFromScopeItems({
+        state,
+        scopeKey: payload.scopeKey,
+        deletedTagIds,
       });
 
       return state;
@@ -15338,11 +16763,7 @@ export const validateAgainstState = ({ state, command }) => {
 export const processCommand = ({ state, command }) => {
   return captureValidation(() => {
     const normalizedState = normalizeStateCollections(state);
-    const shouldMaterializeNormalizedState =
-      typeof command?.type === "string" &&
-      (command.type.startsWith("control.") ||
-        command.type.startsWith("spritesheet.") ||
-        command.type.startsWith("particle."));
+    const shouldMaterializeNormalizedState = normalizedState !== state;
 
     const stateResult = validateState({ state: normalizedState });
     if (!stateResult.valid) {

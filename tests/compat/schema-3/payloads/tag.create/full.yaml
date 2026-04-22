@@ -1,0 +1,9 @@
+schemaVersion: 3
+type: tag.create
+payload:
+  scopeKey: characterSprites:character-hero
+  tagId: tag-smile
+  data:
+    type: tag
+    name: Smile
+    color: "#112233"

@@ -1,0 +1,9 @@
+schemaVersion: 3
+type: video.create
+payload:
+  videoId: item-a
+  data:
+    type: video
+    name: Video
+    fileId: file-video
+    thumbnailFileId: thumb-video
