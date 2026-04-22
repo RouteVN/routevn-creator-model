@@ -2187,6 +2187,7 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "x",
                 "y",
                 "scaleX",
@@ -2232,6 +2233,18 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "transform") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       for (const key of [
         "x",
         "y",
@@ -3575,6 +3588,7 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "shortcut",
                 "fileId",
                 "sprites",
@@ -3616,6 +3630,18 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "character") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (item.shortcut !== undefined && !isString(item.shortcut)) {
         return invalidFromErrorFactory(
           errorFactory,

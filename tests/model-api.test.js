@@ -789,6 +789,126 @@ test("processCommand persists thumbnailFileId on character sprites", () => {
   });
 });
 
+test("processCommand persists tagIds on transforms and characters", () => {
+  const state = createEmptyTestState();
+
+  state.tags.transforms.items["tag-camera"] = {
+    id: "tag-camera",
+    type: "tag",
+    name: "Camera",
+  };
+  state.tags.transforms.tree = [{ id: "tag-camera" }];
+
+  state.tags.characters.items["tag-hero"] = {
+    id: "tag-hero",
+    type: "tag",
+    name: "Hero",
+  };
+  state.tags.characters.tree = [{ id: "tag-hero" }];
+
+  const transformResult = processCommand({
+    state,
+    command: {
+      type: "transform.create",
+      payload: {
+        transformId: "transform-camera",
+        data: {
+          type: "transform",
+          name: "Camera",
+          x: 0,
+          y: 0,
+          scaleX: 1,
+          scaleY: 1,
+          anchorX: 0,
+          anchorY: 0,
+          rotation: 0,
+          tagIds: ["tag-camera"],
+        },
+      },
+    },
+  });
+
+  expect(transformResult.valid).toBe(true);
+  expect(transformResult.state.transforms.items["transform-camera"].tagIds).toEqual([
+    "tag-camera",
+  ]);
+  expect(validateState({ state: transformResult.state })).toEqual({
+    valid: true,
+  });
+
+  const characterResult = processCommand({
+    state: transformResult.state,
+    command: {
+      type: "character.create",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          type: "character",
+          name: "Hero",
+          tagIds: ["tag-hero"],
+        },
+      },
+    },
+  });
+
+  expect(characterResult.valid).toBe(true);
+  expect(characterResult.state.characters.items["character-hero"].tagIds).toEqual([
+    "tag-hero",
+  ]);
+  expect(validateState({ state: characterResult.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts tagged transforms and characters", () => {
+  const state = createEmptyTestState();
+
+  state.tags.transforms.items["tag-camera"] = {
+    id: "tag-camera",
+    type: "tag",
+    name: "Camera",
+  };
+  state.tags.transforms.tree = [{ id: "tag-camera" }];
+
+  state.tags.characters.items["tag-hero"] = {
+    id: "tag-hero",
+    type: "tag",
+    name: "Hero",
+  };
+  state.tags.characters.tree = [{ id: "tag-hero" }];
+
+  state.transforms.items["transform-camera"] = {
+    id: "transform-camera",
+    type: "transform",
+    name: "Camera",
+    x: 0,
+    y: 0,
+    scaleX: 1,
+    scaleY: 1,
+    anchorX: 0,
+    anchorY: 0,
+    rotation: 0,
+    tagIds: ["tag-camera"],
+  };
+  state.transforms.tree = [{ id: "transform-camera", children: [] }];
+
+  state.characters.items["character-hero"] = {
+    id: "character-hero",
+    type: "character",
+    name: "Hero",
+    tagIds: ["tag-hero"],
+    sprites: {
+      items: {},
+      tree: [],
+    },
+  };
+  state.characters.tree = [{ id: "character-hero", children: [] }];
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts legacy state without controls collection", () => {
   const state = createEmptyTestState();
   delete state.controls;
