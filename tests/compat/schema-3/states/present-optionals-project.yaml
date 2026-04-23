@@ -13,6 +13,32 @@ state:
     videos:
       items: {}
       tree: []
+    characters:
+      items:
+        tag-eyes:
+          id: tag-eyes
+          type: tag
+          name: Eyes
+        tag-mouth:
+          id: tag-mouth
+          type: tag
+          name: Mouth
+      tree:
+        - id: tag-eyes
+        - id: tag-mouth
+    characterSprites:character-hero:
+      items:
+        tag-eyes:
+          id: tag-eyes
+          type: tag
+          name: Eyes
+        tag-mouth:
+          id: tag-mouth
+          type: tag
+          name: Mouth
+      tree:
+        - id: tag-eyes
+        - id: tag-mouth
   scenes:
     items:
       scene-a:
@@ -303,6 +329,12 @@ state:
         id: character-hero
         type: character
         name: Hero
+        spriteGroups:
+          - id: group-face
+            name: Face
+            tags:
+              - tag-eyes
+              - tag-mouth
         sprites:
           items:
             folder-default:

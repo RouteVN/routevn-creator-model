@@ -49,7 +49,16 @@ const TAG_SCOPE_BASE_KEYS = [
   "sounds",
   "videos",
   "characters",
+  "fonts",
   "transforms",
+  "colors",
+  "textStyles",
+  "variables",
+  "layouts",
+  "controls",
+  "animations",
+  "particles",
+  "spritesheets",
 ];
 const CHARACTER_SPRITE_TAG_SCOPE_PREFIX = "characterSprites:";
 const createEmptyTagsState = () => ({
@@ -57,7 +66,16 @@ const createEmptyTagsState = () => ({
   sounds: createEmptyCollectionState(),
   videos: createEmptyCollectionState(),
   characters: createEmptyCollectionState(),
+  fonts: createEmptyCollectionState(),
   transforms: createEmptyCollectionState(),
+  colors: createEmptyCollectionState(),
+  textStyles: createEmptyCollectionState(),
+  variables: createEmptyCollectionState(),
+  layouts: createEmptyCollectionState(),
+  controls: createEmptyCollectionState(),
+  animations: createEmptyCollectionState(),
+  particles: createEmptyCollectionState(),
+  spritesheets: createEmptyCollectionState(),
 });
 const isCharacterSpriteTagScopeKey = (value) =>
   isNonEmptyString(value) &&
@@ -1024,6 +1042,7 @@ const validateSpritesheetItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "thumbnailFileId",
                 "fileId",
                 "sheetWidth",
@@ -1071,6 +1090,18 @@ const validateSpritesheetItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "spritesheet") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (
         item.thumbnailFileId !== undefined &&
         !isNonEmptyString(item.thumbnailFileId)
@@ -1970,7 +2001,7 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name", "description"]
-            : ["id", "type", "name", "description", "animation"],
+            : ["id", "type", "name", "description", "tagIds", "animation"],
         path: itemPath,
         errorFactory,
       });
@@ -2009,6 +2040,18 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
 
     if (item.type === "animation") {
       {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
         const result = validateAnimationDefinition({
           animation: item.animation,
           path: `${itemPath}.animation`,
@@ -2044,6 +2087,7 @@ const validateFontItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "fileId",
                 "fontFamily",
               ],
@@ -2084,6 +2128,18 @@ const validateFontItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "font") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!isNonEmptyString(item.fileId)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -2097,7 +2153,6 @@ const validateFontItems = ({ items, path, errorFactory }) => {
           `${itemPath}.fontFamily must be a non-empty string`,
         );
       }
-
     }
   }
 };
@@ -2119,7 +2174,7 @@ const validateColorItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name", "description"]
-            : ["id", "type", "name", "description", "hex"],
+            : ["id", "type", "name", "description", "tagIds", "hex"],
         path: itemPath,
         errorFactory,
       });
@@ -2156,11 +2211,25 @@ const validateColorItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (item.type === "color" && !isHexColor(item.hex)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${itemPath}.hex must be a #RRGGBB string`,
-      );
+    if (item.type === "color") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isHexColor(item.hex)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.hex must be a #RRGGBB string`,
+        );
+      }
     }
   }
 };
@@ -2321,6 +2390,7 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "width",
                 "height",
                 "seed",
@@ -2364,6 +2434,18 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
 
     if (item.type !== "particle") {
       continue;
+    }
+
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: item.tagIds,
+        path: `${itemPath}.tagIds`,
+        errorFactory,
+        allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     if (!isFiniteNumber(item.width) || item.width <= 0) {
@@ -2448,6 +2530,7 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "scope",
                 "default",
                 "value",
@@ -2489,6 +2572,18 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
     }
 
     if (variableType !== "folder") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!VARIABLE_SCOPE_KEYS.includes(item.scope)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -2544,6 +2639,7 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "fontId",
                 "colorId",
                 "fontSize",
@@ -2596,6 +2692,18 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "textStyle") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!isNonEmptyString(item.fontId)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -3589,6 +3697,7 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
                 "name",
                 "description",
                 "tagIds",
+                "spriteGroups",
                 "shortcut",
                 "fileId",
                 "sprites",
@@ -3636,6 +3745,19 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
           path: `${itemPath}.tagIds`,
           errorFactory,
           allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateCharacterSpriteGroups({
+          value: item.spriteGroups,
+          path: `${itemPath}.spriteGroups`,
+          errorFactory,
+          allowEmpty: false,
+          allowMissingId: true,
         });
         if (result?.valid === false) {
           return result;
@@ -3777,10 +3899,7 @@ const validateTagCreateData = ({
   }
 
   if (data?.type !== "tag") {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.type must be 'tag'`,
-    );
+    return invalidFromErrorFactory(errorFactory, `${path}.type must be 'tag'`);
   }
 
   if (!isNonEmptyString(data.name)) {
@@ -3847,7 +3966,10 @@ const validateTagsRoot = ({ state, tags, path, errorFactory }) => {
   }
 
   for (const scopeKey of Object.keys(tags)) {
-    if (!isBaseTagScopeKey(scopeKey) && !isCharacterSpriteTagScopeKey(scopeKey)) {
+    if (
+      !isBaseTagScopeKey(scopeKey) &&
+      !isCharacterSpriteTagScopeKey(scopeKey)
+    ) {
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.${scopeKey} is not allowed`,
@@ -3992,6 +4114,39 @@ const validateTagIdsAgainstScope = ({
   return VALID_RESULT;
 };
 
+const validateCharacterSpriteGroupsAgainstScope = ({
+  state,
+  spriteGroups,
+  scopeKey,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (spriteGroups === undefined) {
+    return VALID_RESULT;
+  }
+
+  for (const [index, spriteGroup] of spriteGroups.entries()) {
+    const result = validateTagIdsAgainstScope({
+      state,
+      tagIds: spriteGroup.tags,
+      scopeKey,
+      path: `${path}[${index}].tags`,
+      details: {
+        ...details,
+        spriteGroupIndex: index,
+        spriteGroupName: spriteGroup.name,
+      },
+      errorFactory,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 const validateUniqueTagNameInScope = ({
   collection,
   name,
@@ -4029,6 +4184,12 @@ const assignOptionalTagIds = ({ target, tagIds }) => {
   }
 };
 
+const assignOptionalCharacterSpriteGroups = ({ target, spriteGroups }) => {
+  if (Array.isArray(spriteGroups) && spriteGroups.length > 0) {
+    target.spriteGroups = structuredClone(spriteGroups);
+  }
+};
+
 const applyTagIdsUpdate = ({ currentItem, data }) => {
   const nextData = structuredClone(data);
   if (nextData.tagIds === undefined) {
@@ -4051,12 +4212,31 @@ const applyTagIdsUpdate = ({ currentItem, data }) => {
   return nextItem;
 };
 
+const applyCharacterUpdate = ({ currentItem, data }) => {
+  const nextItem = applyTagIdsUpdate({
+    currentItem,
+    data,
+  });
+
+  if (data.spriteGroups !== undefined) {
+    if (Array.isArray(data.spriteGroups) && data.spriteGroups.length > 0) {
+      nextItem.spriteGroups = structuredClone(data.spriteGroups);
+    } else {
+      delete nextItem.spriteGroups;
+    }
+  }
+
+  return nextItem;
+};
+
 const stripDeletedTagIdsFromItem = ({ item, deletedTagIds }) => {
   if (!Array.isArray(item?.tagIds) || item.tagIds.length === 0) {
     return;
   }
 
-  const remainingTagIds = item.tagIds.filter((tagId) => !deletedTagIds.has(tagId));
+  const remainingTagIds = item.tagIds.filter(
+    (tagId) => !deletedTagIds.has(tagId),
+  );
   if (remainingTagIds.length === item.tagIds.length) {
     return;
   }
@@ -4069,7 +4249,62 @@ const stripDeletedTagIdsFromItem = ({ item, deletedTagIds }) => {
   item.tagIds = remainingTagIds;
 };
 
-const stripDeletedTagIdsFromScopeItems = ({ state, scopeKey, deletedTagIds }) => {
+const stripDeletedTagIdsFromCharacterSpriteGroups = ({
+  item,
+  deletedTagIds,
+}) => {
+  if (!Array.isArray(item?.spriteGroups) || item.spriteGroups.length === 0) {
+    return;
+  }
+
+  const nextSpriteGroups = [];
+  let didChange = false;
+
+  for (const spriteGroup of item.spriteGroups) {
+    const currentTags = Array.isArray(spriteGroup?.tags)
+      ? spriteGroup.tags
+      : [];
+    const remainingTags = currentTags.filter(
+      (tagId) => !deletedTagIds.has(tagId),
+    );
+
+    if (remainingTags.length !== currentTags.length) {
+      didChange = true;
+    }
+
+    if (remainingTags.length === 0) {
+      didChange = true;
+      continue;
+    }
+
+    if (remainingTags.length === currentTags.length) {
+      nextSpriteGroups.push(spriteGroup);
+      continue;
+    }
+
+    nextSpriteGroups.push({
+      ...spriteGroup,
+      tags: remainingTags,
+    });
+  }
+
+  if (!didChange) {
+    return;
+  }
+
+  if (nextSpriteGroups.length === 0) {
+    delete item.spriteGroups;
+    return;
+  }
+
+  item.spriteGroups = nextSpriteGroups;
+};
+
+const stripDeletedTagIdsFromScopeItems = ({
+  state,
+  scopeKey,
+  deletedTagIds,
+}) => {
   if (deletedTagIds.size === 0) {
     return;
   }
@@ -4105,6 +4340,7 @@ const stripDeletedTagIdsFromScopeItems = ({ state, scopeKey, deletedTagIds }) =>
     for (const item of Object.values(state.characters.items)) {
       if (item?.type === "character") {
         stripDeletedTagIdsFromItem({ item, deletedTagIds });
+        stripDeletedTagIdsFromCharacterSpriteGroups({ item, deletedTagIds });
       }
     }
     return;
@@ -4119,15 +4355,104 @@ const stripDeletedTagIdsFromScopeItems = ({ state, scopeKey, deletedTagIds }) =>
     return;
   }
 
+  if (scopeKey === "fonts") {
+    for (const item of Object.values(state.fonts.items)) {
+      if (item?.type === "font") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "colors") {
+    for (const item of Object.values(state.colors.items)) {
+      if (item?.type === "color") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "textStyles") {
+    for (const item of Object.values(state.textStyles.items)) {
+      if (item?.type === "textStyle") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "variables") {
+    for (const item of Object.values(state.variables.items)) {
+      if (item?.type !== "folder") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "layouts") {
+    for (const item of Object.values(state.layouts.items)) {
+      if (item?.type === "layout") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "controls") {
+    for (const item of Object.values(state.controls.items)) {
+      if (item?.type === "control") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "animations") {
+    for (const item of Object.values(state.animations.items)) {
+      if (item?.type === "animation") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "particles") {
+    for (const item of Object.values(state.particles.items)) {
+      if (item?.type === "particle") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
+  if (scopeKey === "spritesheets") {
+    for (const item of Object.values(state.spritesheets.items)) {
+      if (item?.type === "spritesheet") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
   if (!isCharacterSpriteTagScopeKey(scopeKey)) {
     return;
   }
 
   const characterId = getCharacterSpriteTagScopeCharacterId(scopeKey);
+  const characterItem = state.characters?.items?.[characterId];
   const collection = getCharacterSpriteCollection({
     state,
     characterId,
   });
+
+  if (characterItem?.type === "character") {
+    stripDeletedTagIdsFromCharacterSpriteGroups({
+      item: characterItem,
+      deletedTagIds,
+    });
+  }
 
   for (const item of Object.values(collection?.items || {})) {
     if (item?.type === "image") {
@@ -4204,6 +4529,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "layoutType",
                 "isFragment",
                 "thumbnailFileId",
@@ -4268,6 +4594,18 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "layout") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
@@ -4323,6 +4661,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
                 "type",
                 "name",
                 "description",
+                "tagIds",
                 "thumbnailFileId",
                 "preview",
                 "elements",
@@ -4386,6 +4725,18 @@ const validateControlItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "control") {
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
+          errorFactory,
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       {
         const result = validateNestedCollection({
           collection: item.elements,
@@ -5501,6 +5852,22 @@ export const assertInvariants = ({ state }) => {
       return result;
     }
 
+    {
+      const tagResult = validateTagIdsAgainstScope({
+        state,
+        tagIds: spritesheet.tagIds,
+        scopeKey: "spritesheets",
+        path: "spritesheet.tagIds",
+        details: {
+          spritesheetId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!tagResult.valid) {
+        return tagResult;
+      }
+    }
+
     if (spritesheet.thumbnailFileId === undefined) {
       continue;
     }
@@ -5624,6 +5991,22 @@ export const assertInvariants = ({ state }) => {
       continue;
     }
 
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: font.tagIds,
+        scopeKey: "fonts",
+        path: "font.tagIds",
+        details: {
+          fontId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
     const result = validateFileReference({
       state,
       fileId: font.fileId,
@@ -5641,6 +6024,22 @@ export const assertInvariants = ({ state }) => {
   )) {
     if (animation.type !== "animation") {
       continue;
+    }
+
+    {
+      const tagResult = validateTagIdsAgainstScope({
+        state,
+        tagIds: animation.tagIds,
+        scopeKey: "animations",
+        path: "animation.tagIds",
+        details: {
+          animationId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!tagResult.valid) {
+        return tagResult;
+      }
     }
 
     const result = validateAnimationMaskImageReferences({
@@ -5681,6 +6080,22 @@ export const assertInvariants = ({ state }) => {
         tagIds: character.tagIds,
         scopeKey: "characters",
         path: "character.tagIds",
+        details: {
+          characterId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateCharacterSpriteGroupsAgainstScope({
+        state,
+        spriteGroups: character.spriteGroups,
+        scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${characterId}`,
+        path: "character.spriteGroups",
         details: {
           characterId,
         },
@@ -5771,25 +6186,153 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
-  for (const [layoutId, layout] of Object.entries(state.layouts.items)) {
-    if (layout.type !== "layout" || layout.thumbnailFileId === undefined) {
+  for (const [particleId, particle] of Object.entries(state.particles.items)) {
+    if (particle.type !== "particle") {
       continue;
     }
 
-    const result = validateFileReference({
-      state,
-      fileId: layout.thumbnailFileId,
-      path: "layout.thumbnailFileId",
-      details: { layoutId, thumbnailFileId: layout.thumbnailFileId },
-      errorFactory: createInvariantValidationError,
-    });
-    if (!result.valid) {
-      return result;
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: particle.tagIds,
+        scopeKey: "particles",
+        path: "particle.tagIds",
+        details: {
+          particleId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [colorId, color] of Object.entries(state.colors.items)) {
+    if (color.type !== "color") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: color.tagIds,
+        scopeKey: "colors",
+        path: "color.tagIds",
+        details: {
+          colorId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [textStyleId, textStyle] of Object.entries(
+    state.textStyles.items,
+  )) {
+    if (textStyle.type !== "textStyle") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: textStyle.tagIds,
+        scopeKey: "textStyles",
+        path: "textStyle.tagIds",
+        details: {
+          textStyleId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [layoutId, layout] of Object.entries(state.layouts.items)) {
+    if (layout.type !== "layout") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: layout.tagIds,
+        scopeKey: "layouts",
+        path: "layout.tagIds",
+        details: {
+          layoutId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (layout.thumbnailFileId !== undefined) {
+      const result = validateFileReference({
+        state,
+        fileId: layout.thumbnailFileId,
+        path: "layout.thumbnailFileId",
+        details: { layoutId, thumbnailFileId: layout.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [variableId, variable] of Object.entries(state.variables.items)) {
+    if (variable.type === "folder") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: variable.tagIds,
+        scopeKey: "variables",
+        path: "variable.tagIds",
+        details: {
+          variableId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
     }
   }
 
   for (const [controlId, control] of Object.entries(state.controls.items)) {
-    if (control.type !== "control" || control.thumbnailFileId === undefined) {
+    if (control.type !== "control") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: control.tagIds,
+        scopeKey: "controls",
+        path: "control.tagIds",
+        details: {
+          controlId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (control.thumbnailFileId === undefined) {
       continue;
     }
 
@@ -6494,6 +7037,97 @@ const validateOptionalUniqueIdArray = ({
   }
 };
 
+const validateCharacterSpriteGroups = ({
+  value,
+  path,
+  errorFactory,
+  allowEmpty = true,
+  allowMissingId = false,
+}) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      allowEmpty
+        ? `${path} must be an array when provided`
+        : `${path} must be a non-empty array when provided`,
+    );
+  }
+
+  const seenIds = new Set();
+
+  for (const [index, spriteGroup] of value.entries()) {
+    const itemPath = `${path}[${index}]`;
+
+    if (!isPlainObject(spriteGroup)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} must be an object`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: spriteGroup,
+        allowedKeys: ["id", "name", "tags"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (spriteGroup.id === undefined) {
+      if (!allowMissingId) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.id must be a non-empty string`,
+        );
+      }
+    } else {
+      if (!isNonEmptyString(spriteGroup.id)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.id must be a non-empty string`,
+        );
+      }
+
+      if (seenIds.has(spriteGroup.id)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.id must be unique within spriteGroups`,
+        );
+      }
+
+      seenIds.add(spriteGroup.id);
+    }
+
+    if (!isNonEmptyString(spriteGroup.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    {
+      const result = validateRequiredUniqueIdArray({
+        value: spriteGroup.tags,
+        path: `${itemPath}.tags`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 const validateSectionCreateData = ({ data, errorFactory }) => {
   {
     const result = validateExactKeys({
@@ -6899,6 +7533,7 @@ const validateSpritesheetCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "thumbnailFileId",
               "fileId",
               "sheetWidth",
@@ -6932,6 +7567,17 @@ const validateSpritesheetCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "spritesheet") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (
       data.thumbnailFileId !== undefined &&
       !isNonEmptyString(data.thumbnailFileId)
@@ -6991,6 +7637,7 @@ const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "thumbnailFileId",
         "fileId",
         "sheetWidth",
@@ -7028,6 +7675,17 @@ const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (
@@ -7467,13 +8125,7 @@ const validateFontCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : [
-              "type",
-              "name",
-              "description",
-              "fileId",
-              "fontFamily",
-            ],
+          : ["type", "name", "description", "tagIds", "fileId", "fontFamily"],
       path: "payload.data",
       errorFactory,
     });
@@ -7497,6 +8149,17 @@ const validateFontCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "font") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -7510,7 +8173,6 @@ const validateFontCreateData = ({ data, errorFactory }) => {
         "payload.data.fontFamily must be a non-empty string",
       );
     }
-
   }
 };
 
@@ -7518,12 +8180,7 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: [
-        "name",
-        "description",
-        "fileId",
-        "fontFamily",
-      ],
+      allowedKeys: ["name", "description", "tagIds", "fileId", "fontFamily"],
       path: "payload.data",
       errorFactory,
     });
@@ -7553,6 +8210,17 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
     );
   }
 
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -7566,7 +8234,6 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
       "payload.data.fontFamily must be a non-empty string when provided",
     );
   }
-
 };
 
 const validateFileCreateData = ({ data, errorFactory }) => {
@@ -7690,7 +8357,7 @@ const validateColorCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "hex"],
+          : ["type", "name", "description", "tagIds", "hex"],
       path: "payload.data",
       errorFactory,
     });
@@ -7713,11 +8380,24 @@ const validateColorCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type === "color" && !isHexColor(data.hex)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.hex must be a #RRGGBB string",
-    );
+  if (data.type === "color") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isHexColor(data.hex)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.hex must be a #RRGGBB string",
+      );
+    }
   }
 };
 
@@ -7725,7 +8405,7 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "hex"],
+      allowedKeys: ["name", "description", "tagIds", "hex"],
       path: "payload.data",
       errorFactory,
     });
@@ -7753,6 +8433,17 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.hex !== undefined && !isHexColor(data.hex)) {
@@ -7784,7 +8475,7 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "animation"],
+          : ["type", "name", "description", "tagIds", "animation"],
       path: "payload.data",
       errorFactory,
     });
@@ -7809,6 +8500,17 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
 
   if (data.type === "animation") {
     {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
       const result = validateAnimationDefinition({
         animation: data.animation,
         path: "payload.data.animation",
@@ -7825,7 +8527,7 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "animation"],
+      allowedKeys: ["name", "description", "tagIds", "animation"],
       path: "payload.data",
       errorFactory,
     });
@@ -7853,6 +8555,17 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.animation !== undefined) {
@@ -7981,6 +8694,7 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "width",
               "height",
               "seed",
@@ -8010,6 +8724,17 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
 
   if (data.type !== "particle") {
     return;
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (!isFiniteNumber(data.width) || data.width <= 0) {
@@ -8056,6 +8781,7 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "width",
         "height",
         "seed",
@@ -8088,6 +8814,17 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (
@@ -8230,7 +8967,15 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "scope", "default", "value"],
+          : [
+              "type",
+              "name",
+              "description",
+              "tagIds",
+              "scope",
+              "default",
+              "value",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -8254,6 +8999,18 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type !== "folder") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+        allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!VARIABLE_SCOPE_KEYS.includes(data.scope)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -8290,7 +9047,14 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "scope", "default", "value"],
+      allowedKeys: [
+        "name",
+        "description",
+        "tagIds",
+        "scope",
+        "default",
+        "value",
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -8326,6 +9090,18 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
       "payload.data.scope must be 'context', 'device', or 'account' when provided",
     );
   }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+      allowEmpty: false,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
 };
 
 const validateTextStyleCreateData = ({ data, errorFactory }) => {
@@ -8353,6 +9129,7 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "fontId",
               "colorId",
               "fontSize",
@@ -8392,6 +9169,17 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
 
   if (data.type === "textStyle") {
     {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
       const result = validateTextStyleItems({
         items: {
           draft: {
@@ -8416,6 +9204,7 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "fontId",
         "colorId",
         "fontSize",
@@ -8458,6 +9247,17 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   for (const key of ["fontId", "colorId", "strokeColorId"]) {
@@ -8728,6 +9528,7 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
               "name",
               "description",
               "tagIds",
+              "spriteGroups",
               "shortcut",
               "fileId",
               "sprites",
@@ -8759,6 +9560,17 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
       const result = validateOptionalUniqueIdArray({
         value: data.tagIds,
         path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateCharacterSpriteGroups({
+        value: data.spriteGroups,
+        path: "payload.data.spriteGroups",
         errorFactory,
       });
       if (result?.valid === false) {
@@ -8812,6 +9624,7 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
         "name",
         "description",
         "tagIds",
+        "spriteGroups",
         "shortcut",
         "fileId",
       ],
@@ -8862,13 +9675,23 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
     }
   }
 
+  {
+    const result = validateCharacterSpriteGroups({
+      value: data.spriteGroups,
+      path: "payload.data.spriteGroups",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.fileId must be a non-empty string when provided",
     );
   }
-
 };
 
 const validateLayoutCreateData = ({ data, errorFactory }) => {
@@ -8896,6 +9719,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "layoutType",
               "isFragment",
               "thumbnailFileId",
@@ -8946,6 +9770,17 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "layout") {
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -8982,6 +9817,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "layoutType",
         "isFragment",
         "thumbnailFileId",
@@ -9014,6 +9850,17 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (
@@ -9080,6 +9927,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
               "type",
               "name",
               "description",
+              "tagIds",
               "thumbnailFileId",
               "preview",
               "elements",
@@ -9130,6 +9978,18 @@ const validateControlCreateData = ({ data, errorFactory }) => {
 
   if (data.type === "control") {
     {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
+        errorFactory,
+        allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
       const result = validateNestedCollection({
         collection: data.elements,
         path: "payload.data.elements",
@@ -9162,6 +10022,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
       allowedKeys: [
         "name",
         "description",
+        "tagIds",
         "keyboard",
         "thumbnailFileId",
         "preview",
@@ -9221,6 +10082,18 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
       value: data.keyboard,
       path: "payload.data.keyboard",
       errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+      allowEmpty: false,
     });
     if (result?.valid === false) {
       return result;
@@ -10374,62 +11247,84 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "spritesheet item",
     createDataValidator: validateSpritesheetCreateData,
     updateDataValidator: validateSpritesheetUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.spritesheetId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.description !== undefined
-        ? {
-            description: payload.data.description,
-          }
-        : {}),
-      ...(payload.data.type === "spritesheet"
-        ? {
-            fileId: payload.data.fileId,
-            ...(payload.data.thumbnailFileId !== undefined
-              ? {
-                  thumbnailFileId: payload.data.thumbnailFileId,
-                }
-              : {}),
-            ...(payload.data.sheetWidth !== undefined
-              ? {
-                  sheetWidth: payload.data.sheetWidth,
-                }
-              : {}),
-            ...(payload.data.sheetHeight !== undefined
-              ? {
-                  sheetHeight: payload.data.sheetHeight,
-                }
-              : {}),
-            ...(payload.data.frameCount !== undefined
-              ? {
-                  frameCount: payload.data.frameCount,
-                }
-              : {}),
-            ...(payload.data.width !== undefined
-              ? {
-                  width: payload.data.width,
-                }
-              : {}),
-            ...(payload.data.height !== undefined
-              ? {
-                  height: payload.data.height,
-                }
-              : {}),
-            jsonData: structuredClone(payload.data.jsonData),
-            animations: structuredClone(payload.data.animations),
-          }
-        : {}),
-    }),
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.spritesheetId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      if (payload.data.type !== "spritesheet") {
+        return item;
+      }
+
+      item.fileId = payload.data.fileId;
+
+      if (payload.data.thumbnailFileId !== undefined) {
+        item.thumbnailFileId = payload.data.thumbnailFileId;
+      }
+
+      if (payload.data.sheetWidth !== undefined) {
+        item.sheetWidth = payload.data.sheetWidth;
+      }
+
+      if (payload.data.sheetHeight !== undefined) {
+        item.sheetHeight = payload.data.sheetHeight;
+      }
+
+      if (payload.data.frameCount !== undefined) {
+        item.frameCount = payload.data.frameCount;
+      }
+
+      if (payload.data.width !== undefined) {
+        item.width = payload.data.width;
+      }
+
+      if (payload.data.height !== undefined) {
+        item.height = payload.data.height;
+      }
+
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
+      item.jsonData = structuredClone(payload.data.jsonData);
+      item.animations = structuredClone(payload.data.animations);
+
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "spritesheet") {
         return;
       }
 
-      return validateReferencedFilesInData({
+      const fileResult = validateReferencedFilesInData({
         state,
         data: payload.data,
         fields: ["fileId", "thumbnailFileId"],
+        details: {
+          spritesheetId: payload.spritesheetId,
+        },
+      });
+      if (!fileResult.valid) {
+        return fileResult;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "spritesheets",
+        path: "payload.data.tagIds",
         details: {
           spritesheetId: payload.spritesheetId,
         },
@@ -10448,10 +11343,23 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type === "spritesheet") {
-        return validateReferencedFilesInData({
+        const fileResult = validateReferencedFilesInData({
           state,
           data: payload.data,
           fields: ["fileId", "thumbnailFileId"],
+          details: {
+            spritesheetId: payload.spritesheetId,
+          },
+        });
+        if (!fileResult.valid) {
+          return fileResult;
+        }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "spritesheets",
+          path: "payload.data.tagIds",
           details: {
             spritesheetId: payload.spritesheetId,
           },
@@ -13140,6 +14048,16 @@ const COMMAND_DEFINITIONS = [
         if (!result.valid) {
           return result;
         }
+
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "animations",
+          path: "payload.data.tagIds",
+          details: {
+            animationId: payload.animationId,
+          },
+        });
       }
     },
     reduce: ({ state, payload }) => {
@@ -13154,6 +14072,10 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (payload.data.type === "animation") {
+        assignOptionalTagIds({
+          target: nextAnimation,
+          tagIds: payload.data.tagIds,
+        });
         nextAnimation.animation = structuredClone(payload.data.animation);
       }
 
@@ -13213,32 +14135,45 @@ const COMMAND_DEFINITIONS = [
 
       if (
         currentAnimation.type === "folder" &&
-        payload.data.animation !== undefined
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder animation items cannot update animation fields",
         );
       }
 
-      if (payload.data.animation !== undefined) {
-        const result = validateAnimationMaskImageReferences({
+      if (currentAnimation.type === "animation") {
+        if (payload.data.animation !== undefined) {
+          const result = validateAnimationMaskImageReferences({
+            state,
+            animation: payload.data.animation,
+            path: "payload.data.animation",
+            details: { animationId: payload.animationId },
+            errorFactory: createPreconditionValidationError,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        return validateTagIdsAgainstScope({
           state,
-          animation: payload.data.animation,
-          path: "payload.data.animation",
+          tagIds: payload.data.tagIds,
+          scopeKey: "animations",
+          path: "payload.data.tagIds",
           details: { animationId: payload.animationId },
           errorFactory: createPreconditionValidationError,
         });
-        if (!result.valid) {
-          return result;
-        }
       }
     },
     reduce: ({ state, payload }) => {
       const currentAnimation = state.animations.items[payload.animationId];
-      state.animations.items[payload.animationId] = {
-        ...structuredClone(currentAnimation),
-        ...structuredClone(payload.data),
-      };
+      state.animations.items[payload.animationId] = applyTagIdsUpdate({
+        currentItem: currentAnimation,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -13532,6 +14467,21 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (payload.data.type === "font") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "fonts",
+            path: "payload.data.tagIds",
+            details: {
+              fontId: payload.fontId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -13557,6 +14507,10 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (payload.data.type === "font") {
+        assignOptionalTagIds({
+          target: nextFont,
+          tagIds: payload.data.tagIds,
+        });
         nextFont.fileId = payload.data.fileId;
         nextFont.fontFamily = payload.data.fontFamily;
       }
@@ -13617,7 +14571,8 @@ const COMMAND_DEFINITIONS = [
 
       if (
         currentFont.type === "folder" &&
-        (payload.data.fileId !== undefined ||
+        (payload.data.tagIds !== undefined ||
+          payload.data.fileId !== undefined ||
           payload.data.fontFamily !== undefined)
       ) {
         return invalidPrecondition(
@@ -13626,6 +14581,21 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentFont.type === "font") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "fonts",
+            path: "payload.data.tagIds",
+            details: {
+              fontId: payload.fontId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -13641,10 +14611,10 @@ const COMMAND_DEFINITIONS = [
     },
     reduce: ({ state, payload }) => {
       const currentFont = state.fonts.items[payload.fontId];
-      state.fonts.items[payload.fontId] = {
-        ...structuredClone(currentFont),
-        ...structuredClone(payload.data),
-      };
+      state.fonts.items[payload.fontId] = applyTagIdsUpdate({
+        currentItem: currentFont,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -13936,6 +14906,18 @@ const COMMAND_DEFINITIONS = [
           );
         }
       }
+
+      if (payload.data.type === "color") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "colors",
+          path: "payload.data.tagIds",
+          details: {
+            colorId: payload.colorId,
+          },
+        });
+      }
     },
     reduce: ({ state, payload }) => {
       const nextColor = {
@@ -13950,6 +14932,10 @@ const COMMAND_DEFINITIONS = [
 
       if (payload.data.type === "color") {
         nextColor.hex = payload.data.hex;
+        assignOptionalTagIds({
+          target: nextColor,
+          tagIds: payload.data.tagIds,
+        });
       }
 
       state.colors.items[payload.colorId] = nextColor;
@@ -14006,18 +14992,33 @@ const COMMAND_DEFINITIONS = [
         );
       }
 
-      if (currentColor.type === "folder" && payload.data.hex !== undefined) {
+      if (
+        currentColor.type === "folder" &&
+        (payload.data.tagIds !== undefined || payload.data.hex !== undefined)
+      ) {
         return invalidPrecondition(
           "folder color items cannot update color fields",
         );
       }
+
+      if (currentColor.type === "color") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "colors",
+          path: "payload.data.tagIds",
+          details: {
+            colorId: payload.colorId,
+          },
+        });
+      }
     },
     reduce: ({ state, payload }) => {
       const currentColor = state.colors.items[payload.colorId];
-      state.colors.items[payload.colorId] = {
-        ...structuredClone(currentColor),
-        ...structuredClone(payload.data),
-      };
+      state.colors.items[payload.colorId] = applyTagIdsUpdate({
+        currentItem: currentColor,
+        data: payload.data,
+      });
       return state;
     },
   },
@@ -14239,6 +15240,10 @@ const COMMAND_DEFINITIONS = [
       item.width = payload.data.width;
       item.height = payload.data.height;
       item.modules = structuredClone(payload.data.modules);
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
 
       if (payload.data.seed !== undefined && payload.data.seed !== null) {
         item.seed = payload.data.seed;
@@ -14247,10 +15252,10 @@ const COMMAND_DEFINITIONS = [
       return item;
     },
     updateItem: ({ currentItem, payload }) => {
-      const nextItem = {
-        ...structuredClone(currentItem),
-        ...structuredClone(payload.data),
-      };
+      const nextItem = applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      });
 
       if (payload.data.seed === null) {
         delete nextItem.seed;
@@ -14269,6 +15274,33 @@ const COMMAND_DEFINITIONS = [
           "folder particle items cannot update particle fields",
         );
       }
+
+      if (currentItem.type === "particle") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "particles",
+          path: "payload.data.tagIds",
+          details: {
+            particleId: payload.particleId,
+          },
+        });
+      }
+    },
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "particle") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "particles",
+        path: "payload.data.tagIds",
+        details: {
+          particleId: payload.particleId,
+        },
+      });
     },
   }),
   ...createFolderedCollectionCommandDefinitions({
@@ -14360,23 +15392,37 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "variable item",
     createDataValidator: validateVariableCreateData,
     updateDataValidator: validateVariableUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.variableId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.description !== undefined
-        ? {
-            description: payload.data.description,
-          }
-        : {}),
-      ...(payload.data.type === "folder"
-        ? {}
-        : {
-            scope: payload.data.scope,
-            default: payload.data.default,
-            value: payload.data.value,
-          }),
-    }),
+    createItem: ({ payload }) => {
+      const data = structuredClone(payload.data);
+      if (!Array.isArray(data.tagIds) || data.tagIds.length === 0) {
+        delete data.tagIds;
+      }
+
+      return {
+        id: payload.variableId,
+        ...data,
+      };
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type === "folder") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "variables",
+        path: "payload.data.tagIds",
+        details: {
+          variableId: payload.variableId,
+        },
+      });
+    },
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
@@ -14390,6 +15436,21 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type !== "folder") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "variables",
+            path: "payload.data.tagIds",
+            details: {
+              variableId: payload.variableId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         if (payload.data.default !== undefined) {
           {
             const result = validateVariableTypedValue({
@@ -14427,14 +15488,41 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "text style item",
     createDataValidator: validateTextStyleCreateData,
     updateDataValidator: validateTextStyleUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.textStyleId,
-      ...structuredClone(payload.data),
-    }),
+    createItem: ({ payload }) => {
+      const data = structuredClone(payload.data);
+      if (!Array.isArray(data.tagIds) || data.tagIds.length === 0) {
+        delete data.tagIds;
+      }
+
+      return {
+        id: payload.textStyleId,
+        ...data,
+      };
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       const data = payload.data;
       if (data.type !== "textStyle") {
         return;
+      }
+
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "textStyles",
+          path: "payload.data.tagIds",
+          details: {
+            textStyleId: payload.textStyleId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
 
       for (const field of ["fontId", "colorId", "strokeColorId"]) {
@@ -14461,6 +15549,23 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "folder text style items cannot update text style fields",
         );
+      }
+
+      if (currentItem.type === "textStyle") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "textStyles",
+            path: "payload.data.tagIds",
+            details: {
+              textStyleId: payload.textStyleId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
       }
 
       for (const field of ["fontId", "colorId", "strokeColorId"]) {
@@ -14512,6 +15617,10 @@ const COMMAND_DEFINITIONS = [
         target: item,
         tagIds: payload.data.tagIds,
       });
+      assignOptionalCharacterSpriteGroups({
+        target: item,
+        spriteGroups: payload.data.spriteGroups,
+      });
 
       item.sprites =
         payload.data.sprites === undefined
@@ -14521,7 +15630,7 @@ const COMMAND_DEFINITIONS = [
       return item;
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyCharacterUpdate({
         currentItem,
         data: payload.data,
       }),
@@ -14550,6 +15659,21 @@ const COMMAND_DEFINITIONS = [
           tagIds: payload.data.tagIds,
           scopeKey: "characters",
           path: "payload.data.tagIds",
+          details: {
+            characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateCharacterSpriteGroupsAgainstScope({
+          state,
+          spriteGroups: payload.data.spriteGroups,
+          scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${payload.characterId}`,
+          path: "payload.data.spriteGroups",
           details: {
             characterId: payload.characterId,
           },
@@ -14634,11 +15758,26 @@ const COMMAND_DEFINITIONS = [
           return result;
         }
 
-        return validateTagIdsAgainstScope({
+        {
+          const tagResult = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "characters",
+            path: "payload.data.tagIds",
+            details: {
+              characterId: payload.characterId,
+            },
+          });
+          if (!tagResult.valid) {
+            return tagResult;
+          }
+        }
+
+        return validateCharacterSpriteGroupsAgainstScope({
           state,
-          tagIds: payload.data.tagIds,
-          scopeKey: "characters",
-          path: "payload.data.tagIds",
+          spriteGroups: payload.data.spriteGroups,
+          scopeKey: `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${payload.characterId}`,
+          path: "payload.data.spriteGroups",
           details: {
             characterId: payload.characterId,
           },
@@ -14651,9 +15790,7 @@ const COMMAND_DEFINITIONS = [
           continue;
         }
 
-        delete state.tags[
-          `${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${characterId}`
-        ];
+        delete state.tags[`${CHARACTER_SPRITE_TAG_SCOPE_PREFIX}${characterId}`];
       }
     },
   }),
@@ -14675,6 +15812,12 @@ const COMMAND_DEFINITIONS = [
         : {}),
       ...(payload.data.type === "layout"
         ? {
+            ...(Array.isArray(payload.data.tagIds) &&
+            payload.data.tagIds.length > 0
+              ? {
+                  tagIds: structuredClone(payload.data.tagIds),
+                }
+              : {}),
             layoutType: payload.data.layoutType,
             isFragment: payload.data.isFragment,
             ...(payload.data.thumbnailFileId !== undefined
@@ -14691,9 +15834,29 @@ const COMMAND_DEFINITIONS = [
           }
         : {}),
     }),
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "layout") {
         return;
+      }
+
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "layouts",
+          path: "payload.data.tagIds",
+          details: {
+            layoutId: payload.layoutId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
 
       return validateReferencedFilesInData({
@@ -14718,6 +15881,21 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type === "layout") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "layouts",
+            path: "payload.data.tagIds",
+            details: {
+              layoutId: payload.layoutId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         return validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -14736,39 +15914,40 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "control item",
     createDataValidator: validateControlCreateData,
     updateDataValidator: validateControlUpdateData,
-    createItem: ({ payload }) => ({
-      id: payload.controlId,
-      type: payload.data.type,
-      name: payload.data.name,
-      ...(payload.data.description !== undefined
-        ? {
-            description: payload.data.description,
-          }
-        : {}),
-      ...(payload.data.type === "control"
-        ? {
-            ...(payload.data.thumbnailFileId !== undefined
-              ? {
-                  thumbnailFileId: payload.data.thumbnailFileId,
-                }
-              : {}),
-            ...(payload.data.preview !== undefined
-              ? {
-                  preview: structuredClone(payload.data.preview),
-                }
-              : {}),
-            elements: structuredClone(payload.data.elements),
-            ...(payload.data.keyboard !== undefined
-              ? {
-                  keyboard: structuredClone(payload.data.keyboard),
-                }
-              : {}),
-          }
-        : {}),
-    }),
+    createItem: ({ payload }) => {
+      const data = structuredClone(payload.data);
+      if (!Array.isArray(data.tagIds) || data.tagIds.length === 0) {
+        delete data.tagIds;
+      }
+
+      return {
+        id: payload.controlId,
+        ...data,
+      };
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "control") {
         return;
+      }
+
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "controls",
+          path: "payload.data.tagIds",
+          details: {
+            controlId: payload.controlId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
 
       return validateReferencedFilesInData({
@@ -14793,6 +15972,21 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type === "control") {
+        {
+          const result = validateTagIdsAgainstScope({
+            state,
+            tagIds: payload.data.tagIds,
+            scopeKey: "controls",
+            path: "payload.data.tagIds",
+            details: {
+              controlId: payload.controlId,
+            },
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
         return validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -14947,7 +16141,10 @@ const COMMAND_DEFINITIONS = [
         id: payload.spriteId,
         ...structuredClone(payload.data),
       };
-      if (payload.data.tagIds !== undefined && payload.data.tagIds.length === 0) {
+      if (
+        payload.data.tagIds !== undefined &&
+        payload.data.tagIds.length === 0
+      ) {
         delete nextSprite.tagIds;
       }
 

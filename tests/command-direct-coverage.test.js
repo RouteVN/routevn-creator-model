@@ -1281,11 +1281,9 @@ const directCases = [
       });
 
       const preserveState = createLineBaseState();
-      getSceneSection(
-        preserveState,
-        "scene-a",
-        "section-a",
-      ).lines.items["line-a"].actions = {
+      getSceneSection(preserveState, "scene-a", "section-a").lines.items[
+        "line-a"
+      ].actions = {
         dialogue: {
           content: [{ text: "Long text stays here" }],
           characterId: "character-a",
@@ -2125,13 +2123,17 @@ const directCases = [
   {
     type: "tag.delete",
     runPositive: () => {
-      const state = withTagScope(withImageFileRefs(createEmptyTestState()), "images", [
-        {
-          id: "tag-bg",
-          type: "tag",
-          name: "Background",
-        },
-      ]);
+      const state = withTagScope(
+        withImageFileRefs(createEmptyTestState()),
+        "images",
+        [
+          {
+            id: "tag-bg",
+            type: "tag",
+            name: "Background",
+          },
+        ],
+      );
       state.images.items["image-a"] = {
         id: "image-a",
         type: "image",
@@ -2564,44 +2566,201 @@ const directCases = [
   },
 ];
 
-test(
-  "character.create payload rejects sprite tagIds during payload validation",
-  () => {
-    expectValidation(() =>
-      validatePayload({
+test("character.create payload rejects sprite tagIds during payload validation", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "character.create",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          type: "character",
+          name: "Hero",
+          sprites: {
+            items: {
+              "sprite-default": {
+                id: "sprite-default",
+                type: "image",
+                name: "Default",
+                fileId: "file-smile",
+                tagIds: ["tag-smile"],
+              },
+            },
+            tree: [createTreeNode("sprite-default")],
+          },
+        },
+      },
+    }),
+  ).toThrow("payload.data.sprites.items.sprite-default.tagIds is not allowed");
+});
+
+test("character.create rejects spriteGroups before character sprite tags exist", () => {
+  const state = withTagScope(createEmptyTestState(), "characters", [
+    {
+      id: "tag-eyes",
+      type: "tag",
+      name: "Eyes",
+    },
+    {
+      id: "tag-mouth",
+      type: "tag",
+      name: "Mouth",
+    },
+  ]);
+
+  expectValidation(() =>
+    processCommand({
+      state,
+      command: {
         type: "character.create",
         payload: {
           characterId: "character-hero",
           data: {
             type: "character",
             name: "Hero",
-            sprites: {
-              items: {
-                "sprite-default": {
-                  id: "sprite-default",
-                  type: "image",
-                  name: "Default",
-                  fileId: "file-smile",
-                  tagIds: ["tag-smile"],
-                },
+            spriteGroups: [
+              {
+                id: "group-face",
+                name: "Face",
+                tags: ["tag-eyes", "tag-mouth"],
               },
-              tree: [createTreeNode("sprite-default")],
-            },
+            ],
           },
         },
-      }),
-    ).toThrow("payload.data.sprites.items.sprite-default.tagIds is not allowed");
-  },
-);
+      },
+    }),
+  ).toThrow(
+    "payload.data.spriteGroups[0].tags must reference an existing character sprite tag scope",
+  );
+});
 
-const createImageTagUpdateState = () => {
-  const state = withTagScope(withImageFileRefs(createEmptyTestState()), "images", [
+test("character.create rejects spriteGroups without ids in payload data", () => {
+  const state = withTagScope(createEmptyTestState(), "characters", [
     {
-      id: "tag-bg",
+      id: "tag-eyes",
       type: "tag",
-      name: "Background",
+      name: "Eyes",
     },
   ]);
+
+  expectValidation(() =>
+    processCommand({
+      state,
+      command: {
+        type: "character.create",
+        payload: {
+          characterId: "character-hero",
+          data: {
+            type: "character",
+            name: "Hero",
+            spriteGroups: [
+              {
+                name: "Face",
+                tags: ["tag-eyes"],
+              },
+            ],
+          },
+        },
+      },
+    }),
+  ).toThrow("payload.data.spriteGroups[0].id must be a non-empty string");
+});
+
+test("character.update clears spriteGroups when an empty array is provided", () => {
+  const state = createCharacterBaseState();
+  withTagScope(state, "characterSprites:character-hero", [
+    {
+      id: "tag-eyes",
+      type: "tag",
+      name: "Eyes",
+    },
+  ]);
+  state.characters.items["character-hero"].spriteGroups = [
+    {
+      id: "group-face",
+      name: "Face",
+      tags: ["tag-eyes"],
+    },
+  ];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "character.update",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          spriteGroups: [],
+        },
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(
+    result.state.characters.items["character-hero"].spriteGroups,
+  ).toBeUndefined();
+});
+
+test("tag.delete removes deleted character sprite group tags and drops empty groups", () => {
+  const state = createCharacterBaseState();
+  withTagScope(state, "characterSprites:character-hero", [
+    {
+      id: "tag-eyes",
+      type: "tag",
+      name: "Eyes",
+    },
+    {
+      id: "tag-mouth",
+      type: "tag",
+      name: "Mouth",
+    },
+  ]);
+  state.characters.items["character-hero"].spriteGroups = [
+    {
+      id: "group-face",
+      name: "Face",
+      tags: ["tag-eyes", "tag-mouth"],
+    },
+    {
+      id: "group-mouth",
+      name: "Mouth Only",
+      tags: ["tag-mouth"],
+    },
+  ];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "tag.delete",
+      payload: {
+        scopeKey: "characterSprites:character-hero",
+        tagIds: ["tag-mouth"],
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(result.state.characters.items["character-hero"].spriteGroups).toEqual([
+    {
+      id: "group-face",
+      name: "Face",
+      tags: ["tag-eyes"],
+    },
+  ]);
+});
+
+const createImageTagUpdateState = () => {
+  const state = withTagScope(
+    withImageFileRefs(createEmptyTestState()),
+    "images",
+    [
+      {
+        id: "tag-bg",
+        type: "tag",
+        name: "Background",
+      },
+    ],
+  );
   state.images.items["image-a"] = {
     id: "image-a",
     type: "image",
@@ -2614,13 +2773,17 @@ const createImageTagUpdateState = () => {
 };
 
 const createSoundTagUpdateState = () => {
-  const state = withTagScope(withSoundFileRefs(createEmptyTestState()), "sounds", [
-    {
-      id: "tag-bgm",
-      type: "tag",
-      name: "BGM",
-    },
-  ]);
+  const state = withTagScope(
+    withSoundFileRefs(createEmptyTestState()),
+    "sounds",
+    [
+      {
+        id: "tag-bgm",
+        type: "tag",
+        name: "BGM",
+      },
+    ],
+  );
   state.sounds.items["sound-a"] = {
     id: "sound-a",
     type: "sound",
@@ -2633,13 +2796,17 @@ const createSoundTagUpdateState = () => {
 };
 
 const createVideoTagUpdateState = () => {
-  const state = withTagScope(withVideoFileRefs(createEmptyTestState()), "videos", [
-    {
-      id: "tag-cutscene",
-      type: "tag",
-      name: "Cutscene",
-    },
-  ]);
+  const state = withTagScope(
+    withVideoFileRefs(createEmptyTestState()),
+    "videos",
+    [
+      {
+        id: "tag-cutscene",
+        type: "tag",
+        name: "Cutscene",
+      },
+    ],
+  );
   state.videos.items["video-a"] = {
     id: "video-a",
     type: "video",
