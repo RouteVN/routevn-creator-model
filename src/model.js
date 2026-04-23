@@ -3068,6 +3068,8 @@ const validateLayoutElementData = ({
     "imageId",
     "hoverImageId",
     "clickImageId",
+    "hoverSoundId",
+    "clickSoundId",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -3195,6 +3197,8 @@ const validateLayoutElementData = ({
     "imageId",
     "hoverImageId",
     "clickImageId",
+    "hoverSoundId",
+    "clickSoundId",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -3351,6 +3355,8 @@ const validateLayoutElementData = ({
             "imageId",
             "hoverImageId",
             "clickImageId",
+            "hoverSoundId",
+            "clickSoundId",
             "opacity",
             "anchorX",
             "anchorY",
@@ -3372,6 +3378,8 @@ const validateLayoutElementData = ({
         "imageId",
         "hoverImageId",
         "clickImageId",
+        "hoverSoundId",
+        "clickSoundId",
       ]) {
         if (
           rule.set[field] !== undefined &&
@@ -3608,6 +3616,8 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "imageId",
           "hoverImageId",
           "clickImageId",
+          "hoverSoundId",
+          "clickSoundId",
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
@@ -6395,6 +6405,30 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertSoundReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    field,
+    targetId,
+  }) => {
+    const sound = state.sounds.items[targetId];
+    if (!isPlainObject(sound) || sound.type === "folder") {
+      return invalidInvariant(
+        `${ownerLabel} element ${field} must reference an existing non-folder sound`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field,
+          targetId,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertVariableReference = ({
     ownerIdField,
     ownerId,
@@ -6571,6 +6605,22 @@ export const assertInvariants = ({ state }) => {
           }
         }
 
+        for (const field of ["hoverSoundId", "clickSoundId"]) {
+          if (element[field] !== undefined) {
+            const result = assertSoundReference({
+              ownerIdField,
+              ownerId,
+              ownerLabel,
+              elementId,
+              field,
+              targetId: element[field],
+            });
+            if (!result.valid) {
+              return result;
+            }
+          }
+        }
+
         for (const field of [
           "textStyleId",
           "hoverTextStyleId",
@@ -6598,6 +6648,22 @@ export const assertInvariants = ({ state }) => {
             index += 1
           ) {
             const rule = element.conditionalOverrides[index];
+
+            for (const field of ["hoverSoundId", "clickSoundId"]) {
+              if (rule?.set?.[field] !== undefined) {
+                const result = assertSoundReference({
+                  ownerIdField,
+                  ownerId,
+                  ownerLabel,
+                  elementId,
+                  field: `conditionalOverrides.${index}.set.${field}`,
+                  targetId: rule.set[field],
+                });
+                if (!result.valid) {
+                  return result;
+                }
+              }
+            }
 
             for (const field of [
               "textStyleId",
@@ -10243,6 +10309,38 @@ const validateVisualElementReferenceTargets = ({
     }
   }
 
+  if (data.hoverSoundId !== undefined) {
+    const sound = state.sounds.items[data.hoverSoundId];
+    if (!isPlainObject(sound) || sound.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element hoverSoundId must reference an existing non-folder sound`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "hoverSoundId",
+          targetId: data.hoverSoundId,
+        },
+      );
+    }
+  }
+
+  if (data.clickSoundId !== undefined) {
+    const sound = state.sounds.items[data.clickSoundId];
+    if (!isPlainObject(sound) || sound.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element clickSoundId must reference an existing non-folder sound`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "clickSoundId",
+          targetId: data.clickSoundId,
+        },
+      );
+    }
+  }
+
   if (data.thumbImageId !== undefined) {
     const image = state.images.items[data.thumbImageId];
     if (!isPlainObject(image) || image.type === "folder") {
@@ -10373,6 +10471,26 @@ const validateVisualElementReferenceTargets = ({
           return invalidFromErrorFactory(
             errorFactory,
             `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder text style`,
+            {
+              [ownerIdField]: ownerId,
+              elementId,
+              field: `conditionalOverrides.${index}.set.${field}`,
+              targetId: rule.set[field],
+            },
+          );
+        }
+      }
+
+      for (const field of ["hoverSoundId", "clickSoundId"]) {
+        if (rule?.set?.[field] === undefined) {
+          continue;
+        }
+
+        const sound = state.sounds.items[rule.set[field]];
+        if (!isPlainObject(sound) || sound.type === "folder") {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${ownerLabel} element conditionalOverrides.${index}.set.${field} must reference an existing non-folder sound`,
             {
               [ownerIdField]: ownerId,
               elementId,

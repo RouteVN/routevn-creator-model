@@ -45,6 +45,8 @@ Current authored rule shape:
     imageId?: string,
     hoverImageId?: string,
     clickImageId?: string,
+    hoverSoundId?: string,
+    clickSoundId?: string,
     opacity?: number,
     anchorX?: number,
     anchorY?: number,
@@ -80,6 +82,8 @@ Currently supported `set` keys are:
 - `imageId`
 - `hoverImageId`
 - `clickImageId`
+- `hoverSoundId`
+- `clickSoundId`
 - `opacity`
 - `anchorX`
 - `anchorY`
