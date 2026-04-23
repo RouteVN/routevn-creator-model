@@ -2749,6 +2749,58 @@ test("tag.delete removes deleted character sprite group tags and drops empty gro
   ]);
 });
 
+test("tag.delete in characters scope preserves sprite groups from character sprite scopes", () => {
+  const state = createCharacterBaseState();
+  withTagScope(state, "characters", [
+    {
+      id: "tag-eyes",
+      type: "tag",
+      name: "Eyes",
+    },
+  ]);
+  withTagScope(state, "characterSprites:character-hero", [
+    {
+      id: "tag-eyes",
+      type: "tag",
+      name: "Eyes",
+    },
+    {
+      id: "tag-mouth",
+      type: "tag",
+      name: "Mouth",
+    },
+  ]);
+  state.characters.items["character-hero"].tagIds = ["tag-eyes"];
+  state.characters.items["character-hero"].spriteGroups = [
+    {
+      id: "group-face",
+      name: "Face",
+      tags: ["tag-eyes", "tag-mouth"],
+    },
+  ];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "tag.delete",
+      payload: {
+        scopeKey: "characters",
+        tagIds: ["tag-eyes"],
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(result.state.characters.items["character-hero"].tagIds).toBeUndefined();
+  expect(result.state.characters.items["character-hero"].spriteGroups).toEqual([
+    {
+      id: "group-face",
+      name: "Face",
+      tags: ["tag-eyes", "tag-mouth"],
+    },
+  ]);
+});
+
 const createImageTagUpdateState = () => {
   const state = withTagScope(
     withImageFileRefs(createEmptyTestState()),
