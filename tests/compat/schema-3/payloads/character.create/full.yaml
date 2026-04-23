@@ -10,6 +10,12 @@ payload:
     name: Hero
     description: Main actor
     shortcut: "1"
+    spriteGroups:
+      - id: group-face
+        name: Face
+        tags:
+          - tag-eyes
+          - tag-mouth
     sprites:
       items: {}
       tree: []

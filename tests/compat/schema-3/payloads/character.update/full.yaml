@@ -5,3 +5,8 @@ payload:
   data:
     description: Lead actor
     shortcut: "2"
+    spriteGroups:
+      - id: group-eyes
+        name: Eyes
+        tags:
+          - tag-eyes

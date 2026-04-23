@@ -944,28 +944,7 @@ test("processCommand materializes normalized tags root for legacy states", () =>
   });
 
   expect(result.valid).toBe(true);
-  expect(result.state.tags).toEqual({
-    images: {
-      items: {},
-      tree: [],
-    },
-    sounds: {
-      items: {},
-      tree: [],
-    },
-    videos: {
-      items: {},
-      tree: [],
-    },
-    characters: {
-      items: {},
-      tree: [],
-    },
-    transforms: {
-      items: {},
-      tree: [],
-    },
-  });
+  expect(result.state.tags).toEqual(createEmptyTestState().tags);
 });
 
 test("validatePayload rejects unsupported animation easing values", () => {
