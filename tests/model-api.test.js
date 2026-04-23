@@ -1120,6 +1120,25 @@ test("validatePayload accepts layout element textStyle overrides", () => {
   });
 });
 
+test("validatePayload accepts layout element sound overrides", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          hoverSoundId: "sound-hover",
+          clickSoundId: "sound-click",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload accepts layout element revealEffect", () => {
   expect(
     validatePayload({
@@ -1968,6 +1987,29 @@ test("validateState accepts conditional text styles on layout elements", () => {
     children: [],
   });
 
+  state.files.items["file-sound-a"] = {
+    id: "file-sound-a",
+    type: "audio",
+    mimeType: "audio/mpeg",
+    size: 1,
+    sha256: "sound-a-sha256",
+  };
+  state.files.tree.push({
+    id: "file-sound-a",
+    children: [],
+  });
+
+  state.sounds.items["sound-a"] = {
+    id: "sound-a",
+    type: "sound",
+    name: "Sound A",
+    fileId: "file-sound-a",
+  };
+  state.sounds.tree.push({
+    id: "sound-a",
+    children: [],
+  });
+
   state.files.items["file-font-ui"] = {
     id: "file-font-ui",
     type: "font",
@@ -2054,6 +2096,8 @@ test("validateState accepts conditional text styles on layout elements", () => {
           rotation: 0,
           text: "Hello",
           textStyleId: "text-style-ui",
+          hoverSoundId: "sound-a",
+          clickSoundId: "sound-a",
           conditionalOverrides: [
             {
               when: {
@@ -2065,6 +2109,8 @@ test("validateState accepts conditional text styles on layout elements", () => {
                 textStyleId: "text-style-alert",
                 hoverTextStyleId: "text-style-alert",
                 clickTextStyleId: "text-style-alert",
+                hoverSoundId: "sound-a",
+                clickSoundId: "sound-a",
                 opacity: 0.5,
                 anchorX: 0.5,
                 anchorY: 1,
@@ -2468,6 +2514,93 @@ test("validateAgainstState accepts image creation without semantic file-kind che
             type: "image",
             name: "Image A",
             fileId: "file-audio",
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validateAgainstState accepts layout element sound overrides", () => {
+  const state = createEmptyTestState();
+
+  state.files.items["file-sound-a"] = {
+    id: "file-sound-a",
+    mimeType: "audio/mpeg",
+    size: 128,
+    sha256: "file-sound-a-sha256",
+  };
+  state.files.tree = [
+    {
+      id: "file-sound-a",
+      children: [],
+    },
+  ];
+
+  state.sounds.items["sound-a"] = {
+    id: "sound-a",
+    type: "sound",
+    name: "Sound A",
+    fileId: "file-sound-a",
+  };
+  state.sounds.tree = [
+    {
+      id: "sound-a",
+      children: [],
+    },
+  ];
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  expect(
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "text-1",
+          data: {
+            hoverSoundId: "sound-a",
+            clickSoundId: "sound-a",
           },
         },
       },
