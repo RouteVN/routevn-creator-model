@@ -21,7 +21,16 @@ const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
   "sounds",
   "videos",
   "characters",
+  "fonts",
   "transforms",
+  "colors",
+  "textStyles",
+  "variables",
+  "layouts",
+  "controls",
+  "animations",
+  "particles",
+  "spritesheets",
 ];
 
 const isPlainObject = (value) =>
