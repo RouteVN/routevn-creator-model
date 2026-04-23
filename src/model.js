@@ -4340,7 +4340,6 @@ const stripDeletedTagIdsFromScopeItems = ({
     for (const item of Object.values(state.characters.items)) {
       if (item?.type === "character") {
         stripDeletedTagIdsFromItem({ item, deletedTagIds });
-        stripDeletedTagIdsFromCharacterSpriteGroups({ item, deletedTagIds });
       }
     }
     return;
