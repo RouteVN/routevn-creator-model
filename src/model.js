@@ -2395,6 +2395,7 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
                 "height",
                 "seed",
                 "modules",
+                "thumbnailFileId",
               ],
         path: itemPath,
         errorFactory,
@@ -2466,6 +2467,16 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${itemPath}.seed must be a finite number when provided`,
+      );
+    }
+
+    if (
+      item.thumbnailFileId !== undefined &&
+      !isNonEmptyString(item.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
     }
 
@@ -6200,6 +6211,19 @@ export const assertInvariants = ({ state }) => {
       continue;
     }
 
+    if (particle.thumbnailFileId !== undefined) {
+      const result = validateFileReference({
+        state,
+        fileId: particle.thumbnailFileId,
+        path: "particle.thumbnailFileId",
+        details: { particleId, thumbnailFileId: particle.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
     {
       const result = validateTagIdsAgainstScope({
         state,
@@ -8764,6 +8788,7 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
               "height",
               "seed",
               "modules",
+              "thumbnailFileId",
             ],
       path: "payload.data",
       errorFactory,
@@ -8789,6 +8814,16 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
 
   if (data.type !== "particle") {
     return;
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
   }
 
   {
@@ -8851,6 +8886,7 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
         "height",
         "seed",
         "modules",
+        "thumbnailFileId",
       ],
       path: "payload.data",
       errorFactory,
@@ -8878,6 +8914,16 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
   }
 
@@ -11260,6 +11306,20 @@ const findReferencedFileUsage = ({ state, fileId }) => {
           characterId,
         };
       }
+    }
+  }
+
+  for (const [particleId, particle] of Object.entries(state.particles.items)) {
+    if (particle.type !== "particle") {
+      continue;
+    }
+
+    if (particle.thumbnailFileId === fileId) {
+      return {
+        kind: "particle",
+        field: "thumbnailFileId",
+        ownerId: particleId,
+      };
     }
   }
 
@@ -15366,6 +15426,10 @@ const COMMAND_DEFINITIONS = [
         item.seed = payload.data.seed;
       }
 
+      if (payload.data.thumbnailFileId !== undefined) {
+        item.thumbnailFileId = payload.data.thumbnailFileId;
+      }
+
       return item;
     },
     updateItem: ({ currentItem, payload }) => {
@@ -15393,6 +15457,18 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type === "particle") {
+        const fileResult = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId"],
+          details: {
+            particleId: payload.particleId,
+          },
+        });
+        if (!fileResult.valid) {
+          return fileResult;
+        }
+
         return validateTagIdsAgainstScope({
           state,
           tagIds: payload.data.tagIds,
@@ -15407,6 +15483,18 @@ const COMMAND_DEFINITIONS = [
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "particle") {
         return;
+      }
+
+      const fileResult = validateReferencedFilesInData({
+        state,
+        data: payload.data,
+        fields: ["thumbnailFileId"],
+        details: {
+          particleId: payload.particleId,
+        },
+      });
+      if (!fileResult.valid) {
+        return fileResult;
       }
 
       return validateTagIdsAgainstScope({
