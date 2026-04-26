@@ -26,5 +26,5 @@ payload:
           - 1
           - 2
           - 3
-        animationSpeed: 1
+        fps: 12
         loop: true
