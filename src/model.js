@@ -40,6 +40,7 @@ const LINE_UPDATE_ACTIONS_PRESERVE_PATHS = ["dialogue.content"];
 const LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET = new Set(
   LINE_UPDATE_ACTIONS_PRESERVE_PATHS,
 );
+const isPositiveFiniteNumber = (value) => isFiniteNumber(value) && value > 0;
 const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
@@ -973,7 +974,7 @@ const validateSpritesheetAnimationMap = ({
     {
       const result = validateAllowedKeys({
         value: animation,
-        allowedKeys: ["frames", "animationSpeed", "loop"],
+        allowedKeys: ["frames", "animationSpeed", "fps", "loop"],
         path: animationPath,
         errorFactory,
       });
@@ -1006,6 +1007,16 @@ const validateSpritesheetAnimationMap = ({
       return invalidFromErrorFactory(
         errorFactory,
         `${animationPath}.animationSpeed must be a finite number when provided`,
+      );
+    }
+
+    if (
+      animation.fps !== undefined &&
+      !isPositiveFiniteNumber(animation.fps)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${animationPath}.fps must be a positive finite number when provided`,
       );
     }
 

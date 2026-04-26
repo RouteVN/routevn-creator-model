@@ -1639,7 +1639,7 @@ const directCases = [
       animations: {
         idle: {
           frames: [0, 1, 2, 3],
-          animationSpeed: 1,
+          fps: 12,
           loop: true,
         },
       },
@@ -1647,6 +1647,13 @@ const directCases = [
     updateData: {
       name: "Hero Idle Updated",
       frameCount: 6,
+      animations: {
+        idle: {
+          frames: [0, 1, 2, 3, 4, 5],
+          fps: 15,
+          loop: true,
+        },
+      },
     },
     decorateState: withImageFileRefs,
   }),
@@ -2958,6 +2965,48 @@ const undefinedTagIdUpdateCases = [
     expectedTagIds: ["tag-smile"],
   },
 ];
+
+test("spritesheet animation fps must be positive when provided", () => {
+  const createPayload = {
+    spritesheetId: "spritesheet-a",
+    data: {
+      type: "spritesheet",
+      name: "Hero Idle",
+      fileId: "file-image",
+      jsonData: {
+        meta: {
+          image: "hero-idle.png",
+        },
+      },
+      animations: {
+        idle: {
+          frames: [0, 1],
+          fps: 12,
+        },
+      },
+    },
+  };
+
+  expectValidation(() =>
+    validatePayload({
+      type: "spritesheet.create",
+      payload: {
+        ...createPayload,
+        data: {
+          ...createPayload.data,
+          animations: {
+            idle: {
+              frames: [0, 1],
+              fps: 0,
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animations.idle.fps must be a positive finite number when provided",
+  );
+});
 
 for (const updateCase of undefinedTagIdUpdateCases) {
   test(`${updateCase.type} ignores own undefined tagIds during updates`, () => {
