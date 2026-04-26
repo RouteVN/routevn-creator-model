@@ -681,6 +681,122 @@ test("processCommand persists description, thumbnailFileId, and preview on layou
   });
 });
 
+test("validatePayload accepts thumbnailFileId on particles", () => {
+  expect(
+    validatePayload({
+      type: "particle.create",
+      payload: {
+        particleId: "particle-snow",
+        data: {
+          type: "particle",
+          name: "Snow",
+          width: 1280,
+          height: 720,
+          thumbnailFileId: "file-particle-thumb",
+          modules: {
+            emission: {},
+            appearance: {},
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "particle.update",
+      payload: {
+        particleId: "particle-snow",
+        data: {
+          thumbnailFileId: "file-particle-thumb",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand persists thumbnailFileId on particles", () => {
+  const state = createEmptyTestState();
+
+  addFileRecordToState(state, { fileId: "file-particle-thumb" });
+  addFileRecordToState(state, { fileId: "file-particle-updated-thumb" });
+
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "particle.create",
+      payload: {
+        particleId: "particle-snow",
+        data: {
+          type: "particle",
+          name: "Snow",
+          width: 1280,
+          height: 720,
+          thumbnailFileId: "file-particle-thumb",
+          modules: {
+            emission: {},
+            appearance: {},
+          },
+        },
+      },
+    },
+  });
+
+  expect(createResult.valid).toBe(true);
+  expect(
+    createResult.state.particles.items["particle-snow"].thumbnailFileId,
+  ).toBe("file-particle-thumb");
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "particle.update",
+      payload: {
+        particleId: "particle-snow",
+        data: {
+          thumbnailFileId: "file-particle-updated-thumb",
+        },
+      },
+    },
+  });
+
+  expect(updateResult.valid).toBe(true);
+  expect(
+    updateResult.state.particles.items["particle-snow"].thumbnailFileId,
+  ).toBe("file-particle-updated-thumb");
+  expect(validateState({ state: updateResult.state })).toEqual({
+    valid: true,
+  });
+  expect(
+    validateAgainstState({
+      state: updateResult.state,
+      command: {
+        type: "file.delete",
+        payload: {
+          fileIds: ["file-particle-updated-thumb"],
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "precondition",
+      code: "precondition_validation_failed",
+      message: "payload.fileIds cannot delete a referenced file",
+      details: {
+        fileId: "file-particle-updated-thumb",
+        referenceKind: "particle",
+        referenceField: "thumbnailFileId",
+        referenceOwnerId: "particle-snow",
+      },
+    },
+  });
+});
+
 test("processCommand persists thumbnailFileId on character sprites", () => {
   const state = createEmptyTestState();
 
@@ -829,9 +945,9 @@ test("processCommand persists tagIds on transforms and characters", () => {
   });
 
   expect(transformResult.valid).toBe(true);
-  expect(transformResult.state.transforms.items["transform-camera"].tagIds).toEqual([
-    "tag-camera",
-  ]);
+  expect(
+    transformResult.state.transforms.items["transform-camera"].tagIds,
+  ).toEqual(["tag-camera"]);
   expect(validateState({ state: transformResult.state })).toEqual({
     valid: true,
   });
@@ -852,9 +968,9 @@ test("processCommand persists tagIds on transforms and characters", () => {
   });
 
   expect(characterResult.valid).toBe(true);
-  expect(characterResult.state.characters.items["character-hero"].tagIds).toEqual([
-    "tag-hero",
-  ]);
+  expect(
+    characterResult.state.characters.items["character-hero"].tagIds,
+  ).toEqual(["tag-hero"]);
   expect(validateState({ state: characterResult.state })).toEqual({
     valid: true,
   });
@@ -1233,8 +1349,7 @@ test("validatePayload rejects unsupported line.update_actions preserve paths", (
   ).toEqual({
     valid: false,
     error: expect.objectContaining({
-      message:
-        "payload.preserve[0] must be one of: dialogue.content",
+      message: "payload.preserve[0] must be one of: dialogue.content",
     }),
   });
 });
