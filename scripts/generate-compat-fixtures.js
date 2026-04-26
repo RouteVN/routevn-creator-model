@@ -1236,7 +1236,7 @@ const payloadFixtures = [
       animations: {
         idle: {
           frames: [0, 1, 2, 3],
-          fps: 12,
+          animationSpeed: 1,
           loop: true,
         },
       },
@@ -1258,7 +1258,7 @@ const payloadFixtures = [
       animations: {
         idle: {
           frames: [0, 1, 2, 3, 4, 5],
-          fps: 15,
+          animationSpeed: 1.25,
           loop: true,
         },
       },
