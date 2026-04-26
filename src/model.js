@@ -211,6 +211,17 @@ const LAYOUT_TYPE_KEYS = [
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
+const CONTROL_KEYBOARD_KEYS = [
+  "enter",
+  "space",
+  "esc",
+  "ctrl",
+  "left",
+  "right",
+  "up",
+  "down",
+];
+const CONTROL_KEYBOARD_KEY_SET = new Set(CONTROL_KEYBOARD_KEYS);
 const LAYOUT_ELEMENT_BASE_TYPES = [
   "folder",
   "container",
@@ -1010,10 +1021,7 @@ const validateSpritesheetAnimationMap = ({
       );
     }
 
-    if (
-      animation.fps !== undefined &&
-      !isPositiveFiniteNumber(animation.fps)
-    ) {
+    if (animation.fps !== undefined && !isPositiveFiniteNumber(animation.fps)) {
       return invalidFromErrorFactory(
         errorFactory,
         `${animationPath}.fps must be a positive finite number when provided`,
@@ -4512,6 +4520,13 @@ const validateKeyboardMap = ({ value, path, errorFactory }) => {
       );
     }
 
+    if (!CONTROL_KEYBOARD_KEY_SET.has(key)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be one of: ${CONTROL_KEYBOARD_KEYS.map((value) => `'${value}'`).join(", ")}`,
+      );
+    }
+
     if (!isPlainObject(interaction)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -4697,6 +4712,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
                 "preview",
                 "elements",
                 "keyboard",
+                "keyup",
               ],
         path: itemPath,
         errorFactory,
@@ -4785,6 +4801,17 @@ const validateControlItems = ({ items, path, errorFactory }) => {
         const result = validateKeyboardMap({
           value: item.keyboard,
           path: `${itemPath}.keyboard`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateKeyboardMap({
+          value: item.keyup,
+          path: `${itemPath}.keyup`,
           errorFactory,
         });
         if (result?.valid === false) {
@@ -10054,6 +10081,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
               "preview",
               "elements",
               "keyboard",
+              "keyup",
             ],
       path: "payload.data",
       errorFactory,
@@ -10134,6 +10162,17 @@ const validateControlCreateData = ({ data, errorFactory }) => {
         return result;
       }
     }
+
+    {
+      const result = validateKeyboardMap({
+        value: data.keyup,
+        path: "payload.data.keyup",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -10146,6 +10185,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
         "description",
         "tagIds",
         "keyboard",
+        "keyup",
         "thumbnailFileId",
         "preview",
       ],
@@ -10203,6 +10243,17 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
     const result = validateKeyboardMap({
       value: data.keyboard,
       path: "payload.data.keyboard",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateKeyboardMap({
+      value: data.keyup,
+      path: "payload.data.keyup",
       errorFactory,
     });
     if (result?.valid === false) {

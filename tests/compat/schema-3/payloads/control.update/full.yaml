@@ -10,3 +10,13 @@ payload:
       choice:
         items:
           - content: Play
+    keyboard:
+      space:
+        payload:
+          actions:
+            toggleDialogueUI: {}
+    keyup:
+      space:
+        payload:
+          actions:
+            toggleSkipMode: {}

@@ -13,6 +13,39 @@ initialState:
     videos:
       items: {}
       tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
   scenes:
     items: {}
     tree: []
@@ -76,6 +109,39 @@ commands:
             items: {}
             tree: []
           videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
             items: {}
             tree: []
         scenes:
@@ -208,6 +274,16 @@ commands:
                 choice:
                   items:
                     - content: Continue
+              keyboard:
+                enter:
+                  payload:
+                    actions:
+                      nextLine: {}
+              keyup:
+                enter:
+                  payload:
+                    actions:
+                      toggleAutoMode: {}
               elements:
                 items:
                   container-root:
@@ -291,6 +367,16 @@ commands:
           choice:
             items:
               - content: Continue
+        keyboard:
+          space:
+            payload:
+              actions:
+                toggleDialogueUI: {}
+        keyup:
+          space:
+            payload:
+              actions:
+                toggleSkipMode: {}
   - type: control.element.create
     payload:
       controlId: control-alt

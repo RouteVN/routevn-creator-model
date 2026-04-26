@@ -222,12 +222,76 @@ test("validatePayload accepts keyboard data in control.update", () => {
               },
             },
           },
+          keyup: {
+            enter: {
+              payload: {
+                actions: {
+                  toggleAutoMode: {},
+                },
+              },
+            },
+            ctrl: {
+              payload: {
+                actions: {
+                  toggleSkipMode: {},
+                },
+              },
+            },
+          },
         },
       },
     }),
   ).toEqual({
     valid: true,
   });
+});
+
+test("validatePayload rejects unsupported control keyboard keys", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "control.update",
+      payload: {
+        controlId: "control-default",
+        data: {
+          keyboard: {
+            a: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.keyboard.a must be one of: 'enter', 'space', 'esc', 'ctrl', 'left', 'right', 'up', 'down'",
+  );
+});
+
+test("validatePayload rejects unsupported control keyup keys", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "control.update",
+      payload: {
+        controlId: "control-default",
+        data: {
+          keyup: {
+            a: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.keyup.a must be one of: 'enter', 'space', 'esc', 'ctrl', 'left', 'right', 'up', 'down'",
+  );
 });
 
 test("validatePayload accepts description, thumbnailFileId, and preview on layouts, controls, and character sprites", () => {
@@ -560,6 +624,15 @@ test("processCommand persists keyboard data on controls", () => {
               },
             },
           },
+          keyup: {
+            enter: {
+              payload: {
+                actions: {
+                  toggleAutoMode: {},
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -571,6 +644,15 @@ test("processCommand persists keyboard data on controls", () => {
       payload: {
         actions: {
           nextLine: {},
+        },
+      },
+    },
+  });
+  expect(result.state.controls.items["control-default"].keyup).toEqual({
+    enter: {
+      payload: {
+        actions: {
+          toggleAutoMode: {},
         },
       },
     },

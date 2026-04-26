@@ -15,6 +15,39 @@ payload:
       videos:
         items: {}
         tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      controls:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      particles:
+        items: {}
+        tree: []
+      spritesheets:
+        items: {}
+        tree: []
     scenes:
       items: {}
       tree: []
