@@ -13,6 +13,16 @@ payload:
     preview:
       runtime:
         autoMode: true
+    keyboard:
+      enter:
+        payload:
+          actions:
+            nextLine: {}
+    keyup:
+      enter:
+        payload:
+          actions:
+            toggleAutoMode: {}
     elements:
       items: {}
       tree: []

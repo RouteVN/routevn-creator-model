@@ -343,6 +343,24 @@ const createControlBaseState = () => {
         items: [{ content: "Continue" }],
       },
     },
+    keyboard: {
+      enter: {
+        payload: {
+          actions: {
+            nextLine: {},
+          },
+        },
+      },
+    },
+    keyup: {
+      enter: {
+        payload: {
+          actions: {
+            toggleAutoMode: {},
+          },
+        },
+      },
+    },
     elements: {
       items: {
         "container-root": {
@@ -1236,7 +1254,7 @@ const payloadFixtures = [
       animations: {
         idle: {
           frames: [0, 1, 2, 3],
-          animationSpeed: 1,
+          fps: 12,
           loop: true,
         },
       },
@@ -1258,7 +1276,7 @@ const payloadFixtures = [
       animations: {
         idle: {
           frames: [0, 1, 2, 3, 4, 5],
-          animationSpeed: 1.25,
+          fps: 15,
           loop: true,
         },
       },
@@ -1681,6 +1699,24 @@ const payloadFixtures = [
           autoMode: true,
         },
       },
+      keyboard: {
+        enter: {
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+      },
+      keyup: {
+        enter: {
+          payload: {
+            actions: {
+              toggleAutoMode: {},
+            },
+          },
+        },
+      },
       elements: createEmptyNestedCollection(),
     },
     minimalUpdateData: {
@@ -1693,6 +1729,24 @@ const payloadFixtures = [
       preview: {
         choice: {
           items: [{ content: "Play" }],
+        },
+      },
+      keyboard: {
+        space: {
+          payload: {
+            actions: {
+              toggleDialogueUI: {},
+            },
+          },
+        },
+      },
+      keyup: {
+        space: {
+          payload: {
+            actions: {
+              toggleSkipMode: {},
+            },
+          },
         },
       },
     },
@@ -3317,6 +3371,24 @@ const streamFixtures = [
             preview: {
               choice: {
                 items: [{ content: "Continue" }],
+              },
+            },
+            keyboard: {
+              space: {
+                payload: {
+                  actions: {
+                    toggleDialogueUI: {},
+                  },
+                },
+              },
+            },
+            keyup: {
+              space: {
+                payload: {
+                  actions: {
+                    toggleSkipMode: {},
+                  },
+                },
               },
             },
           },

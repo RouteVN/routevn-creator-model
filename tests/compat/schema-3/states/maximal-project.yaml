@@ -14,31 +14,38 @@ state:
       items: {}
       tree: []
     characters:
-      items:
-        tag-eyes:
-          id: tag-eyes
-          type: tag
-          name: Eyes
-        tag-mouth:
-          id: tag-mouth
-          type: tag
-          name: Mouth
-      tree:
-        - id: tag-eyes
-        - id: tag-mouth
-    characterSprites:character-hero:
-      items:
-        tag-eyes:
-          id: tag-eyes
-          type: tag
-          name: Eyes
-        tag-mouth:
-          id: tag-mouth
-          type: tag
-          name: Mouth
-      tree:
-        - id: tag-eyes
-        - id: tag-mouth
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
   scenes:
     items:
       scene-a:
@@ -329,16 +336,6 @@ state:
         id: character-hero
         type: character
         name: Hero
-        spriteGroups:
-          - id: group-face
-            name: Face
-            tags:
-              - tag-eyes
-              - tag-mouth
-          - id: group-eyes
-            name: Eyes
-            tags:
-              - tag-eyes
         sprites:
           items:
             folder-default:
@@ -524,6 +521,16 @@ state:
           choice:
             items:
               - content: Continue
+        keyboard:
+          enter:
+            payload:
+              actions:
+                nextLine: {}
+        keyup:
+          enter:
+            payload:
+              actions:
+                toggleAutoMode: {}
         elements:
           items:
             container-root:

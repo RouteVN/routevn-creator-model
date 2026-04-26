@@ -13,6 +13,39 @@ state:
     videos:
       items: {}
       tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
   scenes:
     items:
       scene-a:
@@ -488,6 +521,16 @@ state:
           choice:
             items:
               - content: Continue
+        keyboard:
+          enter:
+            payload:
+              actions:
+                nextLine: {}
+        keyup:
+          enter:
+            payload:
+              actions:
+                toggleAutoMode: {}
         elements:
           items:
             container-root:
