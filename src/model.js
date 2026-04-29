@@ -4399,7 +4399,9 @@ const applyVariableEnumMetadata = ({ item, data }) => {
 
   const enumEnabled =
     item.type === "string" &&
+    data.isEnum !== false &&
     (data.isEnum === true ||
+      data.enumValues !== undefined ||
       (data.isEnum === undefined && item.isEnum === true));
 
   if (!enumEnabled) {

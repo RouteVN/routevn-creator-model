@@ -1010,6 +1010,75 @@ test("processCommand persists normalized variable enum metadata", () => {
   });
 });
 
+test("processCommand enables variable enum metadata when enumValues are provided", () => {
+  const state = createEmptyTestState();
+
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "mood",
+        data: {
+          type: "string",
+          name: "Mood",
+          scope: "context",
+          enumValues: ["calm", "tense", "calm"],
+          default: "calm",
+          value: "calm",
+        },
+      },
+    },
+  });
+
+  expect(createResult.valid).toBe(true);
+  expect(createResult.state.variables.items.mood).toMatchObject({
+    isEnum: true,
+    enumValues: ["calm", "tense"],
+  });
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "status",
+        data: {
+          type: "string",
+          name: "Status",
+          scope: "context",
+          default: "draft",
+          value: "draft",
+        },
+      },
+    },
+  });
+
+  expect(updateResult.valid).toBe(true);
+
+  const enumUpdateResult = processCommand({
+    state: updateResult.state,
+    command: {
+      type: "variable.update",
+      payload: {
+        variableId: "status",
+        data: {
+          enumValues: ["draft", "ready", "ready"],
+        },
+      },
+    },
+  });
+
+  expect(enumUpdateResult.valid).toBe(true);
+  expect(enumUpdateResult.state.variables.items.status).toMatchObject({
+    isEnum: true,
+    enumValues: ["draft", "ready"],
+  });
+  expect(validateState({ state: enumUpdateResult.state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload accepts thumbnailFileId on particles", () => {
   expect(
     validatePayload({
