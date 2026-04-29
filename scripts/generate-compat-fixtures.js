@@ -622,6 +622,12 @@ const createRichCompatibilityState = () => {
       mimeType: "image/webp",
       size: 128,
     },
+    {
+      id: "thumb-animation-rich",
+      type: "image-thumbnail",
+      mimeType: "image/webp",
+      size: 128,
+    },
     { id: "file-sound-rich", type: "audio", mimeType: "audio/mp3", size: 1024 },
     {
       id: "waveform-sound-rich",
@@ -657,12 +663,14 @@ const createRichCompatibilityState = () => {
   state.transforms.tree = [createTreeNode("transform-rich")];
   state.variables.items["variable-rich"] = {
     id: "variable-rich",
-    type: "boolean",
-    name: "Has Seen Intro",
-    description: "Tracks whether the intro has played",
+    type: "string",
+    name: "Mood",
+    description: "Tracks the current dialogue mood",
     scope: "account",
-    default: false,
-    value: false,
+    isEnum: true,
+    enumValues: ["calm", "tense"],
+    default: "calm",
+    value: "calm",
   };
   state.variables.tree = [createTreeNode("variable-rich")];
   state.images.items["folder-art"] = {
@@ -756,6 +764,18 @@ const createRichCompatibilityState = () => {
     type: "animation",
     name: "Entrance Motion",
     description: "Entrance motion",
+    thumbnailFileId: "thumb-animation-rich",
+    preview: {
+      background: {
+        imageId: "image-rich",
+      },
+      outgoing: {
+        imageId: "image-rich",
+      },
+      incoming: {
+        imageId: "image-rich",
+      },
+    },
     animation: {
       type: "update",
       tween: {
@@ -1361,6 +1381,18 @@ const payloadFixtures = [
       type: "animation",
       name: "Entrance Motion",
       description: "Entrance motion",
+      thumbnailFileId: "thumb-animation",
+      preview: {
+        background: {
+          imageId: "image-background",
+        },
+        outgoing: {
+          imageId: "image-outgoing",
+        },
+        incoming: {
+          imageId: "image-incoming",
+        },
+      },
       animation: {
         type: "update",
         tween: {
@@ -1381,6 +1413,20 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       description: "Soft mask transition",
+      thumbnailFileId: "thumb-animation",
+      preview: {
+        background: {
+          imageId: "image-background",
+        },
+        outgoing: {
+          imageId: "image-outgoing",
+          transformId: "transform-outgoing",
+        },
+        incoming: {
+          imageId: "image-incoming",
+          transformId: "transform-incoming",
+        },
+      },
       animation: {
         type: "update",
         tween: {
@@ -1566,12 +1612,14 @@ const payloadFixtures = [
       value: 0,
     },
     fullCreateData: {
-      type: "boolean",
-      name: "Has Seen Intro",
-      description: "Tracks whether the intro has played",
+      type: "string",
+      name: "Mood",
+      description: "Tracks the current dialogue mood",
       scope: "account",
-      default: false,
-      value: false,
+      isEnum: true,
+      enumValues: ["calm", "tense"],
+      default: "calm",
+      value: "calm",
     },
     minimalUpdateData: {
       scope: "account",
@@ -1579,8 +1627,10 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       description: "Progress score",
-      default: 0,
-      value: 10,
+      isEnum: true,
+      enumValues: ["calm", "tense", "urgent"],
+      default: "tense",
+      value: "urgent",
     },
   }),
   ...createFolderedPayloadSets({
@@ -2804,25 +2854,34 @@ const streamFixtures = [
       {
         type: "variable.create",
         payload: {
-          variableId: "score",
+          variableId: "mood",
           parentId: "folder-variables",
           data: {
-            type: "number",
-            name: "Score",
+            type: "string",
+            name: "Mood",
             scope: "device",
-            default: 0,
-            value: 0,
+            isEnum: true,
+            enumValues: ["calm", "tense"],
+            default: "calm",
+            value: "calm",
           },
         },
       },
       {
         type: "variable.update",
-        payload: { variableId: "score", data: { scope: "account", value: 10 } },
+        payload: {
+          variableId: "mood",
+          data: {
+            scope: "account",
+            enumValues: ["calm", "tense", "urgent"],
+            value: "tense",
+          },
+        },
       },
       {
         type: "variable.move",
         payload: {
-          variableId: "score",
+          variableId: "mood",
           parentId: "folder-variables",
           position: "last",
         },
@@ -2868,7 +2927,7 @@ const streamFixtures = [
       },
       {
         type: "variable.delete",
-        payload: { variableIds: ["score", "folder-variables"] },
+        payload: { variableIds: ["mood", "folder-variables"] },
       },
       {
         type: "transform.delete",
@@ -2891,6 +2950,17 @@ const streamFixtures = [
     commands: [
       { type: "project.create", payload: { state: createEmptyTestState() } },
       {
+        type: "file.create",
+        payload: {
+          fileId: "thumb-animation",
+          data: {
+            mimeType: "image/webp",
+            size: 128,
+            sha256: "thumb-animation-sha256",
+          },
+        },
+      },
+      {
         type: "animation.create",
         payload: {
           animationId: "folder-motion",
@@ -2905,6 +2975,18 @@ const streamFixtures = [
           data: {
             type: "animation",
             name: "Entrance",
+            thumbnailFileId: "thumb-animation",
+            preview: {
+              background: {
+                imageId: "image-background",
+              },
+              outgoing: {
+                imageId: "image-outgoing",
+              },
+              incoming: {
+                imageId: "image-incoming",
+              },
+            },
             animation: {
               type: "update",
               tween: {
@@ -2925,6 +3007,19 @@ const streamFixtures = [
           animationId: "animation-a",
           data: {
             description: "Entrance motion",
+            preview: {
+              background: {
+                imageId: "image-background",
+              },
+              outgoing: {
+                imageId: "image-outgoing",
+                transformId: "transform-outgoing",
+              },
+              incoming: {
+                imageId: "image-incoming",
+                transformId: "transform-incoming",
+              },
+            },
             animation: {
               type: "update",
               tween: {
