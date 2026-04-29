@@ -893,6 +893,48 @@ test("processCommand persists description, thumbnailFileId, and preview on anima
   });
 });
 
+test("file.delete rejects animation thumbnail references", () => {
+  const state = createEmptyTestState();
+  addFileRecordToState(state, { fileId: "file-animation-thumb" });
+  state.animations.items["animation-default"] = {
+    id: "animation-default",
+    type: "animation",
+    name: "Default Animation",
+    thumbnailFileId: "file-animation-thumb",
+    animation: {
+      type: "update",
+      tween: {
+        x: {
+          keyframes: [],
+        },
+      },
+    },
+  };
+  state.animations.tree = [{ id: "animation-default", children: [] }];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "file.delete",
+      payload: {
+        fileIds: ["file-animation-thumb"],
+      },
+    },
+  });
+
+  expect(result.valid).toBe(false);
+  expect(result.error).toMatchObject({
+    kind: "precondition",
+    message: "payload.fileIds cannot delete a referenced file",
+    details: {
+      fileId: "file-animation-thumb",
+      referenceKind: "animation",
+      referenceField: "thumbnailFileId",
+      referenceOwnerId: "animation-default",
+    },
+  });
+});
+
 test("processCommand persists normalized variable enum metadata", () => {
   const state = createEmptyTestState();
 

@@ -165,6 +165,12 @@ state:
         mimeType: image/webp
         size: 128
         sha256: thumb-spritesheet-rich-sha256
+      thumb-animation-rich:
+        id: thumb-animation-rich
+        type: image-thumbnail
+        mimeType: image/webp
+        size: 128
+        sha256: thumb-animation-rich-sha256
       file-sound-rich:
         id: file-sound-rich
         type: audio
@@ -205,6 +211,8 @@ state:
       - id: file-spritesheet-rich
         children: []
       - id: thumb-spritesheet-rich
+        children: []
+      - id: thumb-animation-rich
         children: []
       - id: file-sound-rich
         children: []
@@ -315,6 +323,14 @@ state:
         type: animation
         name: Entrance Motion
         description: Entrance motion
+        thumbnailFileId: thumb-animation-rich
+        preview:
+          background:
+            imageId: image-rich
+          outgoing:
+            imageId: image-rich
+          incoming:
+            imageId: image-rich
         animation:
           type: update
           tween:
@@ -418,12 +434,16 @@ state:
     items:
       variable-rich:
         id: variable-rich
-        type: boolean
-        name: Has Seen Intro
-        description: Tracks whether the intro has played
+        type: string
+        name: Mood
+        description: Tracks the current dialogue mood
         scope: account
-        default: false
-        value: false
+        isEnum: true
+        enumValues:
+          - calm
+          - tense
+        default: calm
+        value: calm
     tree:
       - id: variable-rich
         children: []

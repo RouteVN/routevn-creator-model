@@ -4399,7 +4399,8 @@ const applyVariableEnumMetadata = ({ item, data }) => {
 
   const enumEnabled =
     item.type === "string" &&
-    (data.isEnum === true || (data.isEnum === undefined && item.isEnum === true));
+    (data.isEnum === true ||
+      (data.isEnum === undefined && item.isEnum === true));
 
   if (!enumEnabled) {
     delete item.isEnum;
@@ -11587,6 +11588,22 @@ const findReferencedFileUsage = ({ state, fileId }) => {
         kind: "font",
         field: "fileId",
         ownerId: fontId,
+      };
+    }
+  }
+
+  for (const [animationId, animation] of Object.entries(
+    state.animations.items,
+  )) {
+    if (animation.type !== "animation") {
+      continue;
+    }
+
+    if (animation.thumbnailFileId === fileId) {
+      return {
+        kind: "animation",
+        field: "thumbnailFileId",
+        ownerId: animationId,
       };
     }
   }

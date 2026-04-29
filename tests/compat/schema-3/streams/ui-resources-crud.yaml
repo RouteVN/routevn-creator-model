@@ -286,23 +286,31 @@ commands:
         name: Variables
   - type: variable.create
     payload:
-      variableId: score
+      variableId: mood
       parentId: folder-variables
       data:
-        type: number
-        name: Score
+        type: string
+        name: Mood
         scope: device
-        default: 0
-        value: 0
+        isEnum: true
+        enumValues:
+          - calm
+          - tense
+        default: calm
+        value: calm
   - type: variable.update
     payload:
-      variableId: score
+      variableId: mood
       data:
         scope: account
-        value: 10
+        enumValues:
+          - calm
+          - tense
+          - urgent
+        value: tense
   - type: variable.move
     payload:
-      variableId: score
+      variableId: mood
       parentId: folder-variables
       position: last
   - type: textStyle.create
@@ -341,7 +349,7 @@ commands:
   - type: variable.delete
     payload:
       variableIds:
-        - score
+        - mood
         - folder-variables
   - type: transform.delete
     payload:

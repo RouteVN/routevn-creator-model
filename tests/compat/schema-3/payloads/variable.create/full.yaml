@@ -6,9 +6,13 @@ payload:
   position: before
   positionTargetId: item-b
   data:
-    type: boolean
-    name: Has Seen Intro
-    description: Tracks whether the intro has played
+    type: string
+    name: Mood
+    description: Tracks the current dialogue mood
     scope: account
-    default: false
-    value: false
+    isEnum: true
+    enumValues:
+      - calm
+      - tense
+    default: calm
+    value: calm

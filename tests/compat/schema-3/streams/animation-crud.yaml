@@ -192,6 +192,13 @@ commands:
         controls:
           items: {}
           tree: []
+  - type: file.create
+    payload:
+      fileId: thumb-animation
+      data:
+        mimeType: image/webp
+        size: 128
+        sha256: thumb-animation-sha256
   - type: animation.create
     payload:
       animationId: folder-motion
@@ -205,6 +212,14 @@ commands:
       data:
         type: animation
         name: Entrance
+        thumbnailFileId: thumb-animation
+        preview:
+          background:
+            imageId: image-background
+          outgoing:
+            imageId: image-outgoing
+          incoming:
+            imageId: image-incoming
         animation:
           type: update
           tween:
@@ -217,6 +232,15 @@ commands:
       animationId: animation-a
       data:
         description: Entrance motion
+        preview:
+          background:
+            imageId: image-background
+          outgoing:
+            imageId: image-outgoing
+            transformId: transform-outgoing
+          incoming:
+            imageId: image-incoming
+            transformId: transform-incoming
         animation:
           type: update
           tween:
