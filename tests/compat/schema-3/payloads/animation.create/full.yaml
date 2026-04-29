@@ -9,6 +9,14 @@ payload:
     type: animation
     name: Entrance Motion
     description: Entrance motion
+    thumbnailFileId: thumb-animation
+    preview:
+      background:
+        imageId: image-background
+      outgoing:
+        imageId: image-outgoing
+      incoming:
+        imageId: image-incoming
     animation:
       type: update
       tween:

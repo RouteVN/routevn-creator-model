@@ -2020,7 +2020,16 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name", "description"]
-            : ["id", "type", "name", "description", "tagIds", "animation"],
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "tagIds",
+                "thumbnailFileId",
+                "preview",
+                "animation",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -2058,6 +2067,27 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "animation") {
+      if (
+        item.thumbnailFileId !== undefined &&
+        !isNonEmptyString(item.thumbnailFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
+        );
+      }
+
+      {
+        const result = validatePreviewObject({
+          value: item.preview,
+          path: `${itemPath}.preview`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       {
         const result = validateOptionalUniqueIdArray({
           value: item.tagIds,
@@ -2534,6 +2564,85 @@ const validateVariableTypedValue = ({
   }
 };
 
+const normalizeVariableEnumValues = (values = []) => {
+  const normalizedValues = Array.isArray(values) ? values : [];
+  const seen = new Set();
+  const result = [];
+
+  for (const value of normalizedValues) {
+    const stringValue = String(value ?? "").trim();
+    if (!stringValue || seen.has(stringValue)) {
+      continue;
+    }
+
+    seen.add(stringValue);
+    result.push(stringValue);
+  }
+
+  return result;
+};
+
+const validateVariableEnumValues = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!Array.isArray(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an array when provided`,
+    );
+  }
+
+  for (const [index, enumValue] of value.entries()) {
+    if (!isString(enumValue)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}[${index}] must be a string`,
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateVariableEnumMetadata = ({
+  data,
+  variableType,
+  path,
+  errorFactory,
+}) => {
+  if (data.isEnum !== undefined && typeof data.isEnum !== "boolean") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.isEnum must be a boolean when provided`,
+    );
+  }
+
+  {
+    const result = validateVariableEnumValues({
+      value: data.enumValues,
+      path: `${path}.enumValues`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (
+    variableType !== "string" &&
+    (data.isEnum !== undefined || data.enumValues !== undefined)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.isEnum and ${path}.enumValues are only supported for string variables`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
 const validateVariableItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -2564,6 +2673,8 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
                 "scope",
                 "default",
                 "value",
+                "isEnum",
+                "enumValues",
               ],
         path: itemPath,
         errorFactory,
@@ -2608,6 +2719,18 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
           path: `${itemPath}.tagIds`,
           errorFactory,
           allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateVariableEnumMetadata({
+          data: item,
+          variableType,
+          path: itemPath,
+          errorFactory,
         });
         if (result?.valid === false) {
           return result;
@@ -4267,6 +4390,44 @@ const applyCharacterUpdate = ({ currentItem, data }) => {
   }
 
   return nextItem;
+};
+
+const applyVariableEnumMetadata = ({ item, data }) => {
+  if (!isPlainObject(item)) {
+    return item;
+  }
+
+  const enumEnabled =
+    item.type === "string" &&
+    data.isEnum !== false &&
+    (data.isEnum === true ||
+      data.enumValues !== undefined ||
+      (data.isEnum === undefined && item.isEnum === true));
+
+  if (!enumEnabled) {
+    delete item.isEnum;
+    delete item.enumValues;
+    return item;
+  }
+
+  item.isEnum = true;
+  item.enumValues = normalizeVariableEnumValues(
+    data.enumValues ?? item.enumValues,
+  );
+
+  return item;
+};
+
+const applyVariableUpdate = ({ currentItem, data }) => {
+  const nextItem = applyTagIdsUpdate({
+    currentItem,
+    data,
+  });
+
+  return applyVariableEnumMetadata({
+    item: nextItem,
+    data,
+  });
 };
 
 const stripDeletedTagIdsFromItem = ({ item, deletedTagIds }) => {
@@ -6097,6 +6258,19 @@ export const assertInvariants = ({ state }) => {
       });
       if (!tagResult.valid) {
         return tagResult;
+      }
+    }
+
+    if (animation.thumbnailFileId !== undefined) {
+      const fileResult = validateFileReference({
+        state,
+        fileId: animation.thumbnailFileId,
+        path: "animation.thumbnailFileId",
+        details: { animationId, thumbnailFileId: animation.thumbnailFileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!fileResult.valid) {
+        return fileResult;
       }
     }
 
@@ -8602,7 +8776,15 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "tagIds", "animation"],
+          : [
+              "type",
+              "name",
+              "description",
+              "tagIds",
+              "thumbnailFileId",
+              "preview",
+              "animation",
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -8626,6 +8808,27 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "animation") {
+    if (
+      data.thumbnailFileId !== undefined &&
+      !isNonEmptyString(data.thumbnailFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.thumbnailFileId must be a non-empty string when provided",
+      );
+    }
+
+    {
+      const result = validatePreviewObject({
+        value: data.preview,
+        path: "payload.data.preview",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     {
       const result = validateOptionalUniqueIdArray({
         value: data.tagIds,
@@ -8654,7 +8857,14 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "tagIds", "animation"],
+      allowedKeys: [
+        "name",
+        "description",
+        "tagIds",
+        "thumbnailFileId",
+        "preview",
+        "animation",
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -8682,6 +8892,27 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  if (
+    data.thumbnailFileId !== undefined &&
+    !isNonEmptyString(data.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.thumbnailFileId must be a non-empty string when provided",
+    );
+  }
+
+  {
+    const result = validatePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -9124,6 +9355,8 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
               "scope",
               "default",
               "value",
+              "isEnum",
+              "enumValues",
             ],
       path: "payload.data",
       errorFactory,
@@ -9154,6 +9387,18 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
         path: "payload.data.tagIds",
         errorFactory,
         allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateVariableEnumMetadata({
+        data,
+        variableType: data.type,
+        path: "payload.data",
+        errorFactory,
       });
       if (result?.valid === false) {
         return result;
@@ -9203,6 +9448,8 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
         "scope",
         "default",
         "value",
+        "isEnum",
+        "enumValues",
       ],
       path: "payload.data",
       errorFactory,
@@ -9231,6 +9478,24 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  if (data.isEnum !== undefined && typeof data.isEnum !== "boolean") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.isEnum must be a boolean when provided",
+    );
+  }
+
+  {
+    const result = validateVariableEnumValues({
+      value: data.enumValues,
+      path: "payload.data.enumValues",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   if (data.scope !== undefined && !VARIABLE_SCOPE_KEYS.includes(data.scope)) {
@@ -11325,6 +11590,22 @@ const findReferencedFileUsage = ({ state, fileId }) => {
         kind: "font",
         field: "fileId",
         ownerId: fontId,
+      };
+    }
+  }
+
+  for (const [animationId, animation] of Object.entries(
+    state.animations.items,
+  )) {
+    if (animation.type !== "animation") {
+      continue;
+    }
+
+    if (animation.thumbnailFileId === fileId) {
+      return {
+        kind: "animation",
+        field: "thumbnailFileId",
+        ownerId: animationId,
       };
     }
   }
@@ -14288,6 +14569,16 @@ const COMMAND_DEFINITIONS = [
           return result;
         }
 
+        const fileResult = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId"],
+          details: { animationId: payload.animationId },
+        });
+        if (!fileResult.valid) {
+          return fileResult;
+        }
+
         return validateTagIdsAgainstScope({
           state,
           tagIds: payload.data.tagIds,
@@ -14315,6 +14606,12 @@ const COMMAND_DEFINITIONS = [
           target: nextAnimation,
           tagIds: payload.data.tagIds,
         });
+        if (payload.data.thumbnailFileId !== undefined) {
+          nextAnimation.thumbnailFileId = payload.data.thumbnailFileId;
+        }
+        if (payload.data.preview !== undefined) {
+          nextAnimation.preview = structuredClone(payload.data.preview);
+        }
         nextAnimation.animation = structuredClone(payload.data.animation);
       }
 
@@ -14395,6 +14692,16 @@ const COMMAND_DEFINITIONS = [
           if (!result.valid) {
             return result;
           }
+        }
+
+        const fileResult = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId"],
+          details: { animationId: payload.animationId },
+        });
+        if (!fileResult.valid) {
+          return fileResult;
         }
 
         return validateTagIdsAgainstScope({
@@ -15665,13 +15972,16 @@ const COMMAND_DEFINITIONS = [
         delete data.tagIds;
       }
 
-      return {
-        id: payload.variableId,
-        ...data,
-      };
+      return applyVariableEnumMetadata({
+        item: {
+          id: payload.variableId,
+          ...data,
+        },
+        data,
+      });
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyVariableUpdate({
         currentItem,
         data: payload.data,
       }),
@@ -15699,6 +16009,16 @@ const COMMAND_DEFINITIONS = [
       ) {
         return invalidPrecondition(
           "folder variable items cannot update variable fields",
+        );
+      }
+
+      if (
+        currentItem.type !== "string" &&
+        (payload.data.isEnum !== undefined ||
+          payload.data.enumValues !== undefined)
+      ) {
+        return invalidPrecondition(
+          "variable enum fields can only update string variables",
         );
       }
 

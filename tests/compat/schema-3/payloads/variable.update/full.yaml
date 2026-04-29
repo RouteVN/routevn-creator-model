@@ -4,5 +4,10 @@ payload:
   variableId: item-a
   data:
     description: Progress score
-    default: 0
-    value: 10
+    isEnum: true
+    enumValues:
+      - calm
+      - tense
+      - urgent
+    default: tense
+    value: urgent

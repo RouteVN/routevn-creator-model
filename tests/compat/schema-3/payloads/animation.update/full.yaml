@@ -4,6 +4,16 @@ payload:
   animationId: item-a
   data:
     description: Soft mask transition
+    thumbnailFileId: thumb-animation
+    preview:
+      background:
+        imageId: image-background
+      outgoing:
+        imageId: image-outgoing
+        transformId: transform-outgoing
+      incoming:
+        imageId: image-incoming
+        transformId: transform-incoming
     animation:
       type: update
       tween:

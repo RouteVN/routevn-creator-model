@@ -294,7 +294,71 @@ test("validatePayload rejects unsupported control keyup keys", () => {
   );
 });
 
-test("validatePayload accepts description, thumbnailFileId, and preview on layouts, controls, and character sprites", () => {
+test("validatePayload accepts description, thumbnailFileId, and preview on animations, layouts, controls, and character sprites", () => {
+  expect(
+    validatePayload({
+      type: "animation.create",
+      payload: {
+        animationId: "animation-thumb",
+        data: {
+          type: "animation",
+          name: "Thumbnail Animation",
+          description: "Saved animation preview",
+          thumbnailFileId: "file-thumb-animation",
+          preview: {
+            background: {
+              imageId: "image-background",
+            },
+            outgoing: {
+              imageId: "image-outgoing",
+            },
+            incoming: {
+              imageId: "image-incoming",
+            },
+          },
+          animation: {
+            type: "update",
+            tween: {
+              x: {
+                keyframes: [],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-thumb",
+        data: {
+          description: "Saved animation preview",
+          thumbnailFileId: "file-thumb-animation",
+          preview: {
+            background: {
+              imageId: "image-background",
+            },
+            outgoing: {
+              imageId: "image-outgoing",
+              transformId: "transform-outgoing",
+            },
+            incoming: {
+              imageId: "image-incoming",
+              transformId: "transform-incoming",
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
   expect(
     validatePayload({
       type: "layout.create",
@@ -662,11 +726,27 @@ test("processCommand persists keyboard data on controls", () => {
   });
 });
 
-test("processCommand persists description, thumbnailFileId, and preview on layouts and controls", () => {
+test("processCommand persists description, thumbnailFileId, and preview on animations, layouts, and controls", () => {
   const state = createEmptyTestState();
 
+  addFileRecordToState(state, { fileId: "file-animation-thumb" });
   addFileRecordToState(state, { fileId: "file-layout-thumb" });
   addFileRecordToState(state, { fileId: "file-control-thumb" });
+
+  state.animations.items["animation-default"] = {
+    id: "animation-default",
+    type: "animation",
+    name: "Default Animation",
+    animation: {
+      type: "update",
+      tween: {
+        x: {
+          keyframes: [],
+        },
+      },
+    },
+  };
+  state.animations.tree = [{ id: "animation-default", children: [] }];
 
   state.layouts.items["layout-default"] = {
     id: "layout-default",
@@ -691,8 +771,58 @@ test("processCommand persists description, thumbnailFileId, and preview on layou
   };
   state.controls.tree = [{ id: "control-default", children: [] }];
 
-  const layoutResult = processCommand({
+  const animationResult = processCommand({
     state,
+    command: {
+      type: "animation.update",
+      payload: {
+        animationId: "animation-default",
+        data: {
+          description: "Saved animation preview",
+          thumbnailFileId: "file-animation-thumb",
+          preview: {
+            background: {
+              imageId: "image-background",
+            },
+            outgoing: {
+              imageId: "image-outgoing",
+              transformId: "transform-outgoing",
+            },
+            incoming: {
+              imageId: "image-incoming",
+              transformId: "transform-incoming",
+            },
+          },
+        },
+      },
+    },
+  });
+
+  expect(animationResult.valid).toBe(true);
+  expect(
+    animationResult.state.animations.items["animation-default"].description,
+  ).toBe("Saved animation preview");
+  expect(
+    animationResult.state.animations.items["animation-default"].thumbnailFileId,
+  ).toBe("file-animation-thumb");
+  expect(
+    animationResult.state.animations.items["animation-default"].preview,
+  ).toEqual({
+    background: {
+      imageId: "image-background",
+    },
+    outgoing: {
+      imageId: "image-outgoing",
+      transformId: "transform-outgoing",
+    },
+    incoming: {
+      imageId: "image-incoming",
+      transformId: "transform-incoming",
+    },
+  });
+
+  const layoutResult = processCommand({
+    state: animationResult.state,
     command: {
       type: "layout.update",
       payload: {
@@ -759,6 +889,192 @@ test("processCommand persists description, thumbnailFileId, and preview on layou
     },
   );
   expect(validateState({ state: controlResult.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("file.delete rejects animation thumbnail references", () => {
+  const state = createEmptyTestState();
+  addFileRecordToState(state, { fileId: "file-animation-thumb" });
+  state.animations.items["animation-default"] = {
+    id: "animation-default",
+    type: "animation",
+    name: "Default Animation",
+    thumbnailFileId: "file-animation-thumb",
+    animation: {
+      type: "update",
+      tween: {
+        x: {
+          keyframes: [],
+        },
+      },
+    },
+  };
+  state.animations.tree = [{ id: "animation-default", children: [] }];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "file.delete",
+      payload: {
+        fileIds: ["file-animation-thumb"],
+      },
+    },
+  });
+
+  expect(result.valid).toBe(false);
+  expect(result.error).toMatchObject({
+    kind: "precondition",
+    message: "payload.fileIds cannot delete a referenced file",
+    details: {
+      fileId: "file-animation-thumb",
+      referenceKind: "animation",
+      referenceField: "thumbnailFileId",
+      referenceOwnerId: "animation-default",
+    },
+  });
+});
+
+test("processCommand persists normalized variable enum metadata", () => {
+  const state = createEmptyTestState();
+
+  expect(
+    validatePayload({
+      type: "variable.create",
+      payload: {
+        variableId: "mood",
+        data: {
+          type: "string",
+          name: "Mood",
+          scope: "context",
+          isEnum: true,
+          enumValues: ["happy", "sad"],
+          default: "happy",
+          value: "happy",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "mood",
+        data: {
+          type: "string",
+          name: "Mood",
+          scope: "context",
+          isEnum: true,
+          enumValues: ["happy", "sad", "happy", ""],
+          default: "happy",
+          value: "happy",
+        },
+      },
+    },
+  });
+
+  expect(createResult.valid).toBe(true);
+  expect(createResult.state.variables.items.mood).toMatchObject({
+    type: "string",
+    isEnum: true,
+    enumValues: ["happy", "sad"],
+    default: "happy",
+    value: "happy",
+  });
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "variable.update",
+      payload: {
+        variableId: "mood",
+        data: {
+          isEnum: false,
+          enumValues: [],
+          default: "",
+          value: "",
+        },
+      },
+    },
+  });
+
+  expect(updateResult.valid).toBe(true);
+  expect(updateResult.state.variables.items.mood.isEnum).toBeUndefined();
+  expect(updateResult.state.variables.items.mood.enumValues).toBeUndefined();
+  expect(validateState({ state: updateResult.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand enables variable enum metadata when enumValues are provided", () => {
+  const state = createEmptyTestState();
+
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "mood",
+        data: {
+          type: "string",
+          name: "Mood",
+          scope: "context",
+          enumValues: ["calm", "tense", "calm"],
+          default: "calm",
+          value: "calm",
+        },
+      },
+    },
+  });
+
+  expect(createResult.valid).toBe(true);
+  expect(createResult.state.variables.items.mood).toMatchObject({
+    isEnum: true,
+    enumValues: ["calm", "tense"],
+  });
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "status",
+        data: {
+          type: "string",
+          name: "Status",
+          scope: "context",
+          default: "draft",
+          value: "draft",
+        },
+      },
+    },
+  });
+
+  expect(updateResult.valid).toBe(true);
+
+  const enumUpdateResult = processCommand({
+    state: updateResult.state,
+    command: {
+      type: "variable.update",
+      payload: {
+        variableId: "status",
+        data: {
+          enumValues: ["draft", "ready", "ready"],
+        },
+      },
+    },
+  });
+
+  expect(enumUpdateResult.valid).toBe(true);
+  expect(enumUpdateResult.state.variables.items.status).toMatchObject({
+    isEnum: true,
+    enumValues: ["draft", "ready"],
+  });
+  expect(validateState({ state: enumUpdateResult.state })).toEqual({
     valid: true,
   });
 });
