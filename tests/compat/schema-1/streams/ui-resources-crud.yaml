@@ -191,7 +191,8 @@ commands:
       variableId: score
       parentId: folder-variables
       data:
-        type: number
+        type: variable
+        variableType: number
         name: Score
         scope: device
         default: 0

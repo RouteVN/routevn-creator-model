@@ -175,7 +175,8 @@ state:
     items:
       variable-main:
         id: variable-main
-        type: number
+        type: variable
+        variableType: number
         name: Score
         scope: device
         default: 0

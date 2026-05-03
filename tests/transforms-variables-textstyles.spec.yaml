@@ -176,7 +176,8 @@ in:
       payload:
         variableId: hasSeenIntro
         data:
-          type: boolean
+          type: variable
+          variableType: boolean
           name: Has Seen Intro
           description: Tracks whether the intro has played
           scope: account
@@ -224,7 +225,8 @@ out:
       items:
         hasSeenIntro:
           id: hasSeenIntro
-          type: boolean
+          type: variable
+          variableType: boolean
           name: Has Seen Intro
           description: Tracks whether the intro has played
           scope: account
@@ -446,7 +448,8 @@ in:
         items:
           score:
             id: score
-            type: number
+            type: variable
+            variableType: number
             name: Score
             scope: device
             default: 0

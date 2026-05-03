@@ -122,7 +122,8 @@ const createBenchmarkState = ({
     const variableId = `variable-${variableIndex}`;
     state.variables.items[variableId] = {
       id: variableId,
-      type: "number",
+      type: "variable",
+      variableType: "number",
       name: `Variable ${variableIndex}`,
       scope: "context",
       default: 0,

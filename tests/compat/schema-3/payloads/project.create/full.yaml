@@ -436,7 +436,8 @@ payload:
       items:
         variable-rich:
           id: variable-rich
-          type: string
+          type: variable
+          variableType: string
           name: Mood
           description: Tracks the current dialogue mood
           scope: account

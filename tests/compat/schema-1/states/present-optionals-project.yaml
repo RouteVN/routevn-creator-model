@@ -315,7 +315,8 @@ state:
     items:
       variable-rich:
         id: variable-rich
-        type: boolean
+        type: variable
+        variableType: boolean
         name: Has Seen Intro
         description: Tracks whether the intro has played
         scope: account

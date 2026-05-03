@@ -326,7 +326,8 @@ const createLayoutBaseState = () => {
   const state = withTextStyleRefs(createEmptyTestState());
   state.variables.items["variable-ui"] = {
     id: "variable-ui",
-    type: "number",
+    type: "variable",
+    variableType: "number",
     name: "UI Value",
     scope: "device",
     default: 50,
@@ -418,7 +419,8 @@ const createControlBaseState = () => {
   const state = withTextStyleRefs(createEmptyTestState());
   state.variables.items["variable-ui"] = {
     id: "variable-ui",
-    type: "number",
+    type: "variable",
+    variableType: "number",
     name: "UI Value",
     scope: "device",
     default: 50,
@@ -1773,7 +1775,8 @@ const directCases = [
     idField: "variableId",
     idsField: "variableIds",
     createData: {
-      type: "number",
+      type: "variable",
+      variableType: "number",
       name: "Score",
       scope: "device",
       default: 0,

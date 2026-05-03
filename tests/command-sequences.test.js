@@ -1470,7 +1470,8 @@ test("applies a ui resources and layout command tape with intermediate state sna
         payload: {
           variableId: "variable-score",
           data: {
-            type: "number",
+            type: "variable",
+            variableType: "number",
             name: "Score",
             description: "Tracks player score",
             scope: "device",
@@ -1775,7 +1776,8 @@ test("applies a ui resources and layout command tape with intermediate state sna
   expected15.variables.items = {
     "variable-score": {
       id: "variable-score",
-      type: "number",
+      type: "variable",
+      variableType: "number",
       name: "Score",
       description: "Tracks player score",
       scope: "device",
