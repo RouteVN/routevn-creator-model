@@ -1,0 +1,6 @@
+schemaVersion: 4
+type: line.update_actions
+payload:
+  lineId: line-a
+  data:
+    mood: tense

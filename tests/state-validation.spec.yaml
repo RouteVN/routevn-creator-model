@@ -756,7 +756,8 @@ in:
         items:
           score:
             id: score
-            type: number
+            type: variable
+            variableType: number
             name: Score
             scope: context
             default: nope

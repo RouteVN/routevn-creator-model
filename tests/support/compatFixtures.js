@@ -104,99 +104,161 @@ const toCompatibilityFixture = async (fileUrl, kind) => {
   };
 };
 
+const LEGACY_VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
+
+const upgradeVariableItemToSchema4 = (item) => {
+  const nextItem = structuredClone(item);
+
+  if (LEGACY_VARIABLE_TYPE_KEYS.includes(nextItem?.type)) {
+    nextItem.variableType = nextItem.type;
+    nextItem.type = "variable";
+  }
+
+  return nextItem;
+};
+
+const upgradeVariablesCollectionToSchema4 = (variables) => {
+  const nextVariables = structuredClone(
+    ensurePlainObject(variables, "state.variables must be an object"),
+  );
+  const items = ensurePlainObject(
+    nextVariables.items,
+    "state.variables.items must be an object",
+  );
+
+  for (const [variableId, item] of Object.entries(items)) {
+    items[variableId] = upgradeVariableItemToSchema4(item);
+  }
+
+  return nextVariables;
+};
+
+const upgradeStateToSchema4 = (state) => {
+  const nextState = structuredClone(state);
+
+  if (nextState.variables !== undefined) {
+    nextState.variables = upgradeVariablesCollectionToSchema4(
+      nextState.variables,
+    );
+  }
+
+  return nextState;
+};
+
+const upgradePayloadToSchema4 = ({ type, payload }) => {
+  const nextPayload = structuredClone(payload);
+
+  if (type === "project.create" && nextPayload.state !== undefined) {
+    nextPayload.state = upgradeStateToSchema4(nextPayload.state);
+  }
+
+  if (type === "variable.create" && nextPayload.data !== undefined) {
+    nextPayload.data = upgradeVariableItemToSchema4(nextPayload.data);
+  }
+
+  return nextPayload;
+};
+
+const upgradeCommandToSchema4 = (command) => {
+  const nextCommand = structuredClone(command);
+  nextCommand.payload = upgradePayloadToSchema4({
+    type: nextCommand.type,
+    payload: nextCommand.payload,
+  });
+  return nextCommand;
+};
+
+const upgradeStreamFixtureToSchema4 = (fixture) => {
+  return {
+    initialState: upgradeStateToSchema4(fixture.rawFixture.initialState),
+    commands: structuredClone(fixture.rawFixture.commands ?? []).map((command) =>
+      upgradeCommandToSchema4(command),
+    ),
+    expectedFinalState:
+      fixture.rawFixture.expectedFinalState === undefined
+        ? undefined
+        : upgradeStateToSchema4(fixture.rawFixture.expectedFinalState),
+  };
+};
+
+const upgradePayloadFixtureToSchema4 = (fixture) => {
+  if (typeof fixture.rawFixture.type !== "string" || !fixture.rawFixture.type) {
+    throw new Error(
+      `compat payload fixture type must be a non-empty string: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  const pathCommandType = parseFixtureCommandType(fixture.fileUrl);
+  if (!pathCommandType) {
+    throw new Error(
+      `compat payload fixture path must include payload command type directory: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  if (fixture.rawFixture.type !== pathCommandType) {
+    throw new Error(
+      `compat payload fixture type ${fixture.rawFixture.type} must match directory ${pathCommandType}: ${fixture.fileUrl.pathname}`,
+    );
+  }
+
+  return {
+    type: fixture.rawFixture.type,
+    payload: upgradePayloadToSchema4({
+      type: fixture.rawFixture.type,
+      payload: fixture.rawFixture.payload,
+    }),
+  };
+};
+
 const upgradeSchema1StateFixture = (fixture) => {
   return {
-    state: structuredClone(fixture.rawFixture.state),
+    state: upgradeStateToSchema4(fixture.rawFixture.state),
   };
 };
 
 const upgradeSchema1StreamFixture = (fixture) => {
-  return {
-    initialState: structuredClone(fixture.rawFixture.initialState),
-    commands: structuredClone(fixture.rawFixture.commands ?? []),
-    expectedFinalState:
-      fixture.rawFixture.expectedFinalState === undefined
-        ? undefined
-        : structuredClone(fixture.rawFixture.expectedFinalState),
-  };
+  return upgradeStreamFixtureToSchema4(fixture);
 };
 
 const upgradeSchema1PayloadFixture = (fixture) => {
-  if (typeof fixture.rawFixture.type !== "string" || !fixture.rawFixture.type) {
-    throw new Error(
-      `compat payload fixture type must be a non-empty string: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  const pathCommandType = parseFixtureCommandType(fixture.fileUrl);
-  if (!pathCommandType) {
-    throw new Error(
-      `compat payload fixture path must include payload command type directory: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  if (fixture.rawFixture.type !== pathCommandType) {
-    throw new Error(
-      `compat payload fixture type ${fixture.rawFixture.type} must match directory ${pathCommandType}: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  return {
-    type: fixture.rawFixture.type,
-    payload: structuredClone(fixture.rawFixture.payload),
-  };
+  return upgradePayloadFixtureToSchema4(fixture);
 };
 
 const upgradeSchema2StateFixture = (fixture) => {
   return {
-    state: structuredClone(fixture.rawFixture.state),
+    state: upgradeStateToSchema4(fixture.rawFixture.state),
   };
 };
 
 const upgradeSchema2StreamFixture = (fixture) => {
-  return {
-    initialState: structuredClone(fixture.rawFixture.initialState),
-    commands: structuredClone(fixture.rawFixture.commands ?? []),
-    expectedFinalState:
-      fixture.rawFixture.expectedFinalState === undefined
-        ? undefined
-        : structuredClone(fixture.rawFixture.expectedFinalState),
-  };
+  return upgradeStreamFixtureToSchema4(fixture);
 };
 
 const upgradeSchema2PayloadFixture = (fixture) => {
-  if (typeof fixture.rawFixture.type !== "string" || !fixture.rawFixture.type) {
-    throw new Error(
-      `compat payload fixture type must be a non-empty string: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  const pathCommandType = parseFixtureCommandType(fixture.fileUrl);
-  if (!pathCommandType) {
-    throw new Error(
-      `compat payload fixture path must include payload command type directory: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  if (fixture.rawFixture.type !== pathCommandType) {
-    throw new Error(
-      `compat payload fixture type ${fixture.rawFixture.type} must match directory ${pathCommandType}: ${fixture.fileUrl.pathname}`,
-    );
-  }
-
-  return {
-    type: fixture.rawFixture.type,
-    payload: structuredClone(fixture.rawFixture.payload),
-  };
+  return upgradePayloadFixtureToSchema4(fixture);
 };
 
 const upgradeSchema3StateFixture = (fixture) => {
+  return {
+    state: upgradeStateToSchema4(fixture.rawFixture.state),
+  };
+};
+
+const upgradeSchema3StreamFixture = (fixture) => {
+  return upgradeStreamFixtureToSchema4(fixture);
+};
+
+const upgradeSchema3PayloadFixture = (fixture) => {
+  return upgradePayloadFixtureToSchema4(fixture);
+};
+
+const upgradeSchema4StateFixture = (fixture) => {
   return {
     state: structuredClone(fixture.rawFixture.state),
   };
 };
 
-const upgradeSchema3StreamFixture = (fixture) => {
+const upgradeSchema4StreamFixture = (fixture) => {
   return {
     initialState: structuredClone(fixture.rawFixture.initialState),
     commands: structuredClone(fixture.rawFixture.commands ?? []),
@@ -207,7 +269,7 @@ const upgradeSchema3StreamFixture = (fixture) => {
   };
 };
 
-const upgradeSchema3PayloadFixture = (fixture) => {
+const upgradeSchema4PayloadFixture = (fixture) => {
   if (typeof fixture.rawFixture.type !== "string" || !fixture.rawFixture.type) {
     throw new Error(
       `compat payload fixture type must be a non-empty string: ${fixture.fileUrl.pathname}`,
@@ -278,6 +340,22 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
 
       if (fixture.kind === "payload") {
         return upgradeSchema3PayloadFixture(fixture);
+      }
+
+      throw new Error(
+        `unsupported compatibility fixture kind: ${fixture.kind}`,
+      );
+    case 4:
+      if (fixture.kind === "state") {
+        return upgradeSchema4StateFixture(fixture);
+      }
+
+      if (fixture.kind === "stream") {
+        return upgradeSchema4StreamFixture(fixture);
+      }
+
+      if (fixture.kind === "payload") {
+        return upgradeSchema4PayloadFixture(fixture);
       }
 
       throw new Error(

@@ -1,0 +1,6 @@
+schemaVersion: 4
+type: line.move
+payload:
+  lineId: line-a
+  toSectionId: section-b
+  position: last

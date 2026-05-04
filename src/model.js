@@ -249,7 +249,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2313,6 +2313,9 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
                 "anchorX",
                 "anchorY",
                 "rotation",
+                "thumbnailFileId",
+                "previewFileId",
+                "preview",
               ],
         path: itemPath,
         errorFactory,
@@ -2351,6 +2354,27 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "transform") {
+      for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
+        const fileId = item[fieldName];
+        if (fileId !== undefined && !isNonEmptyString(fileId)) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${itemPath}.${fieldName} must be a non-empty string when provided`,
+          );
+        }
+      }
+
+      {
+        const result = validateTransformPreviewObject({
+          value: item.preview,
+          path: `${itemPath}.preview`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
       {
         const result = validateOptionalUniqueIdArray({
           value: item.tagIds,
@@ -2646,15 +2670,13 @@ const validateVariableEnumMetadata = ({
 const validateVariableItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
-    const variableType = item?.type;
+    const itemType = item?.type;
+    const variableType = item?.variableType;
 
-    if (
-      variableType !== "folder" &&
-      !VARIABLE_TYPE_KEYS.includes(variableType)
-    ) {
+    if (itemType !== "folder" && itemType !== "variable") {
       return invalidFromErrorFactory(
         errorFactory,
-        `${itemPath}.type must be 'folder', 'string', 'number', or 'boolean'`,
+        `${itemPath}.type must be 'folder' or 'variable'`,
       );
     }
 
@@ -2662,11 +2684,12 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       const result = validateAllowedKeys({
         value: item,
         allowedKeys:
-          variableType === "folder"
+          itemType === "folder"
             ? ["id", "type", "name", "description"]
             : [
                 "id",
                 "type",
+                "variableType",
                 "name",
                 "description",
                 "tagIds",
@@ -2712,7 +2735,14 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (variableType !== "folder") {
+    if (itemType === "variable") {
+      if (!VARIABLE_TYPE_KEYS.includes(variableType)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.variableType must be 'string', 'number', or 'boolean'`,
+        );
+      }
+
       {
         const result = validateOptionalUniqueIdArray({
           value: item.tagIds,
@@ -4398,7 +4428,7 @@ const applyVariableEnumMetadata = ({ item, data }) => {
   }
 
   const enumEnabled =
-    item.type === "string" &&
+    item.variableType === "string" &&
     data.isEnum !== false &&
     (data.isEnum === true ||
       data.enumValues !== undefined ||
@@ -4709,6 +4739,78 @@ const validatePreviewObject = ({ value, path, errorFactory }) => {
       errorFactory,
       `${path} must be an object when provided`,
     );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateTransformPreviewSlot = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["imageId"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (value.imageId !== undefined && !isNonEmptyString(value.imageId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.imageId must be a non-empty string when provided`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["background", "target"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["background", "target"]) {
+    const result = validateTransformPreviewSlot({
+      value: value[key],
+      path: `${path}.${key}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   return VALID_RESULT;
@@ -5892,6 +5994,38 @@ const validateAnimationMaskImageReferences = ({
   return VALID_RESULT;
 };
 
+const validateTransformPreviewImageReferences = ({
+  state,
+  preview,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (!isPlainObject(preview)) {
+    return VALID_RESULT;
+  }
+
+  for (const slotKey of ["background", "target"]) {
+    const imageId = preview[slotKey]?.imageId;
+    const result = validateImageReference({
+      state,
+      imageId,
+      path: `${path}.${slotKey}.imageId`,
+      details: {
+        ...details,
+        slot: slotKey,
+        imageId,
+      },
+      errorFactory,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 export const assertInvariants = ({ state }) => {
   if (!isPlainObject(state)) {
     return invalidInvariant("state must be an object");
@@ -6399,6 +6533,42 @@ export const assertInvariants = ({ state }) => {
   )) {
     if (transform.type !== "transform") {
       continue;
+    }
+
+    for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
+      const fileId = transform[fieldName];
+      if (fileId === undefined) {
+        continue;
+      }
+
+      const fileResult = validateFileReference({
+        state,
+        fileId,
+        path: `transform.${fieldName}`,
+        details: {
+          transformId,
+          [fieldName]: fileId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!fileResult.valid) {
+        return fileResult;
+      }
+    }
+
+    {
+      const previewResult = validateTransformPreviewImageReferences({
+        state,
+        preview: transform.preview,
+        path: "transform.preview",
+        details: {
+          transformId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!previewResult.valid) {
+        return previewResult;
+      }
     }
 
     {
@@ -8973,6 +9143,9 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
               "anchorX",
               "anchorY",
               "rotation",
+              "thumbnailFileId",
+              "previewFileId",
+              "preview",
             ],
       path: "payload.data",
       errorFactory,
@@ -8997,6 +9170,27 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "transform") {
+    for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
+      const fileId = data[fieldName];
+      if (fileId !== undefined && !isNonEmptyString(fileId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `payload.data.${fieldName} must be a non-empty string when provided`,
+        );
+      }
+    }
+
+    {
+      const result = validateTransformPreviewObject({
+        value: data.preview,
+        path: "payload.data.preview",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
     {
       const result = validateOptionalUniqueIdArray({
         value: data.tagIds,
@@ -9267,6 +9461,9 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
         "anchorX",
         "anchorY",
         "rotation",
+        "thumbnailFileId",
+        "previewFileId",
+        "preview",
       ],
       path: "payload.data",
       errorFactory,
@@ -9295,6 +9492,27 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
+    const fileId = data[fieldName];
+    if (fileId !== undefined && !isNonEmptyString(fileId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `payload.data.${fieldName} must be a non-empty string when provided`,
+      );
+    }
+  }
+
+  {
+    const result = validateTransformPreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -9334,10 +9552,10 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type !== "folder" && !VARIABLE_TYPE_KEYS.includes(data.type)) {
+  if (data.type !== "folder" && data.type !== "variable") {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.type must be 'folder', 'string', 'number', or 'boolean'",
+      "payload.data.type must be 'folder' or 'variable'",
     );
   }
 
@@ -9349,6 +9567,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
           ? ["type", "name", "description"]
           : [
               "type",
+              "variableType",
               "name",
               "description",
               "tagIds",
@@ -9380,7 +9599,14 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type !== "folder") {
+  if (data.type === "variable") {
+    if (!VARIABLE_TYPE_KEYS.includes(data.variableType)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.variableType must be 'string', 'number', or 'boolean'",
+      );
+    }
+
     {
       const result = validateOptionalUniqueIdArray({
         value: data.tagIds,
@@ -9396,7 +9622,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     {
       const result = validateVariableEnumMetadata({
         data,
-        variableType: data.type,
+        variableType: data.variableType,
         path: "payload.data",
         errorFactory,
       });
@@ -9415,7 +9641,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     {
       const result = validateVariableTypedValue({
         value: data.default,
-        variableType: data.type,
+        variableType: data.variableType,
         path: "payload.data.default",
         errorFactory,
       });
@@ -9426,7 +9652,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     {
       const result = validateVariableTypedValue({
         value: data.value,
-        variableType: data.type,
+        variableType: data.variableType,
         path: "payload.data.value",
         errorFactory,
       });
@@ -11607,6 +11833,24 @@ const findReferencedFileUsage = ({ state, fileId }) => {
         field: "thumbnailFileId",
         ownerId: animationId,
       };
+    }
+  }
+
+  for (const [transformId, transform] of Object.entries(
+    state.transforms.items,
+  )) {
+    if (transform.type !== "transform") {
+      continue;
+    }
+
+    for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
+      if (transform[fieldName] === fileId) {
+        return {
+          kind: "transform",
+          field: fieldName,
+          ownerId: transformId,
+        };
+      }
     }
   }
 
@@ -15911,6 +16155,15 @@ const COMMAND_DEFINITIONS = [
         target: item,
         tagIds: payload.data.tagIds,
       });
+      if (payload.data.thumbnailFileId !== undefined) {
+        item.thumbnailFileId = payload.data.thumbnailFileId;
+      }
+      if (payload.data.previewFileId !== undefined) {
+        item.previewFileId = payload.data.previewFileId;
+      }
+      if (payload.data.preview !== undefined) {
+        item.preview = structuredClone(payload.data.preview);
+      }
 
       return item;
     },
@@ -15922,6 +16175,30 @@ const COMMAND_DEFINITIONS = [
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "transform") {
         return;
+      }
+
+      const fileResult = validateReferencedFilesInData({
+        state,
+        data: payload.data,
+        fields: ["thumbnailFileId", "previewFileId"],
+        details: {
+          transformId: payload.transformId,
+        },
+      });
+      if (!fileResult.valid) {
+        return fileResult;
+      }
+
+      const previewResult = validateTransformPreviewImageReferences({
+        state,
+        preview: payload.data.preview,
+        path: "payload.data.preview",
+        details: {
+          transformId: payload.transformId,
+        },
+      });
+      if (!previewResult.valid) {
+        return previewResult;
       }
 
       return validateTagIdsAgainstScope({
@@ -15947,6 +16224,30 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentItem.type === "transform") {
+        const fileResult = validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["thumbnailFileId", "previewFileId"],
+          details: {
+            transformId: payload.transformId,
+          },
+        });
+        if (!fileResult.valid) {
+          return fileResult;
+        }
+
+        const previewResult = validateTransformPreviewImageReferences({
+          state,
+          preview: payload.data.preview,
+          path: "payload.data.preview",
+          details: {
+            transformId: payload.transformId,
+          },
+        });
+        if (!previewResult.valid) {
+          return previewResult;
+        }
+
         return validateTagIdsAgainstScope({
           state,
           tagIds: payload.data.tagIds,
@@ -16013,7 +16314,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (
-        currentItem.type !== "string" &&
+        currentItem.variableType !== "string" &&
         (payload.data.isEnum !== undefined ||
           payload.data.enumValues !== undefined)
       ) {
@@ -16042,7 +16343,7 @@ const COMMAND_DEFINITIONS = [
           {
             const result = validateVariableTypedValue({
               value: payload.data.default,
-              variableType: currentItem.type,
+              variableType: currentItem.variableType,
               path: "payload.data.default",
               errorFactory: createPreconditionValidationError,
             });
@@ -16056,7 +16357,7 @@ const COMMAND_DEFINITIONS = [
           {
             const result = validateVariableTypedValue({
               value: payload.data.value,
-              variableType: currentItem.type,
+              variableType: currentItem.variableType,
               path: "payload.data.value",
               errorFactory: createPreconditionValidationError,
             });

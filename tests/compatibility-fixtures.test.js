@@ -72,6 +72,37 @@ test("compatibility schema archives stay contiguous", () => {
   );
 });
 
+test("archived variable fixtures upgrade legacy schema variable types", () => {
+  const fixture = payloadFixtures.find(
+    (candidate) =>
+      candidate.schemaVersion === 3 &&
+      candidate.type === "variable.create" &&
+      candidate.fixtureName === "minimal",
+  );
+
+  expect(fixture).toBeDefined();
+  expect(fixture.rawFixture.payload.data.type).toBe("number");
+  expect(fixture.payload.data).toMatchObject({
+    type: "variable",
+    variableType: "number",
+  });
+});
+
+test("current variable fixtures use the schema 4 variable discriminator", () => {
+  const fixture = payloadFixtures.find(
+    (candidate) =>
+      candidate.schemaVersion === SCHEMA_VERSION &&
+      candidate.type === "variable.create" &&
+      candidate.fixtureName === "minimal",
+  );
+
+  expect(fixture).toBeDefined();
+  expect(fixture.rawFixture.payload.data).toMatchObject({
+    type: "variable",
+    variableType: "number",
+  });
+});
+
 test("current schema payload fixture coverage stays aligned with command types", () => {
   const commandTypes = listCommandTypes().slice().sort();
   const coveredCommandTypes = Array.from(

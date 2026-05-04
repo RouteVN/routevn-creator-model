@@ -553,7 +553,8 @@ const createSparseCompatibilityState = () => {
   state.transforms.tree = [createTreeNode("transform-main")];
   state.variables.items["variable-main"] = {
     id: "variable-main",
-    type: "number",
+    type: "variable",
+    variableType: "number",
     name: "Score",
     scope: "device",
     default: 0,
@@ -663,7 +664,8 @@ const createRichCompatibilityState = () => {
   state.transforms.tree = [createTreeNode("transform-rich")];
   state.variables.items["variable-rich"] = {
     id: "variable-rich",
-    type: "string",
+    type: "variable",
+    variableType: "string",
     name: "Mood",
     description: "Tracks the current dialogue mood",
     scope: "account",
@@ -1605,14 +1607,16 @@ const payloadFixtures = [
     idField: "variableId",
     idsField: "variableIds",
     minimalCreateData: {
-      type: "number",
+      type: "variable",
+      variableType: "number",
       name: "Score",
       scope: "device",
       default: 0,
       value: 0,
     },
     fullCreateData: {
-      type: "string",
+      type: "variable",
+      variableType: "string",
       name: "Mood",
       description: "Tracks the current dialogue mood",
       scope: "account",
@@ -2857,7 +2861,8 @@ const streamFixtures = [
           variableId: "mood",
           parentId: "folder-variables",
           data: {
-            type: "string",
+            type: "variable",
+            variableType: "string",
             name: "Mood",
             scope: "device",
             isEnum: true,

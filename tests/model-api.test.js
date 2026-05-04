@@ -944,7 +944,8 @@ test("processCommand persists normalized variable enum metadata", () => {
       payload: {
         variableId: "mood",
         data: {
-          type: "string",
+          type: "variable",
+          variableType: "string",
           name: "Mood",
           scope: "context",
           isEnum: true,
@@ -965,7 +966,8 @@ test("processCommand persists normalized variable enum metadata", () => {
       payload: {
         variableId: "mood",
         data: {
-          type: "string",
+          type: "variable",
+          variableType: "string",
           name: "Mood",
           scope: "context",
           isEnum: true,
@@ -979,7 +981,8 @@ test("processCommand persists normalized variable enum metadata", () => {
 
   expect(createResult.valid).toBe(true);
   expect(createResult.state.variables.items.mood).toMatchObject({
-    type: "string",
+    type: "variable",
+    variableType: "string",
     isEnum: true,
     enumValues: ["happy", "sad"],
     default: "happy",
@@ -1010,6 +1013,30 @@ test("processCommand persists normalized variable enum metadata", () => {
   });
 });
 
+test("validatePayload rejects legacy variable primitive type discriminators", () => {
+  expect(
+    validatePayload({
+      type: "variable.create",
+      payload: {
+        variableId: "score",
+        data: {
+          type: "number",
+          name: "Score",
+          scope: "context",
+          default: 0,
+          value: 0,
+        },
+      },
+    }),
+  ).toMatchObject({
+    valid: false,
+    error: {
+      kind: "payload",
+      message: "payload.data.type must be 'folder' or 'variable'",
+    },
+  });
+});
+
 test("processCommand enables variable enum metadata when enumValues are provided", () => {
   const state = createEmptyTestState();
 
@@ -1020,7 +1047,8 @@ test("processCommand enables variable enum metadata when enumValues are provided
       payload: {
         variableId: "mood",
         data: {
-          type: "string",
+          type: "variable",
+          variableType: "string",
           name: "Mood",
           scope: "context",
           enumValues: ["calm", "tense", "calm"],
@@ -1044,7 +1072,8 @@ test("processCommand enables variable enum metadata when enumValues are provided
       payload: {
         variableId: "status",
         data: {
-          type: "string",
+          type: "variable",
+          variableType: "string",
           name: "Status",
           scope: "context",
           default: "draft",
@@ -2349,7 +2378,8 @@ test("validateState accepts layout slider variableId refs to project variables",
   const state = createEmptyTestState();
   state.variables.items["variable-ui"] = {
     id: "variable-ui",
-    type: "number",
+    type: "variable",
+    variableType: "number",
     name: "UI Value",
     scope: "device",
     default: 50,

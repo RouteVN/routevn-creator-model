@@ -1,0 +1,13 @@
+schemaVersion: 4
+type: particle.create
+payload:
+  particleId: item-a
+  data:
+    type: particle
+    name: Snow
+    width: 1280
+    height: 720
+    seed: 12345
+    modules:
+      emission: {}
+      appearance: {}

@@ -1,0 +1,7 @@
+schemaVersion: 4
+type: particle.create
+payload:
+  particleId: folder-a
+  data:
+    type: folder
+    name: Folder A
