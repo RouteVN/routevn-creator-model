@@ -6,8 +6,7 @@ payload:
   position: before
   positionTargetId: item-b
   data:
-    type: variable
-    variableType: string
+    type: string
     name: Mood
     description: Tracks the current dialogue mood
     scope: account

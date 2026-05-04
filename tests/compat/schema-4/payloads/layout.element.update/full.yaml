@@ -1,0 +1,7 @@
+schemaVersion: 4
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: text-a
+  data:
+    variableId: variable-rich

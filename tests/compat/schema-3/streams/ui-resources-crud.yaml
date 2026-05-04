@@ -289,8 +289,7 @@ commands:
       variableId: mood
       parentId: folder-variables
       data:
-        type: variable
-        variableType: string
+        type: string
         name: Mood
         scope: device
         isEnum: true

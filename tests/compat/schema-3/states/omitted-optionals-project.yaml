@@ -263,8 +263,7 @@ state:
     items:
       variable-main:
         id: variable-main
-        type: variable
-        variableType: number
+        type: number
         name: Score
         scope: device
         default: 0

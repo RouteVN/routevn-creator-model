@@ -3,8 +3,7 @@ type: variable.create
 payload:
   variableId: item-a
   data:
-    type: variable
-    variableType: number
+    type: number
     name: Score
     scope: device
     default: 0

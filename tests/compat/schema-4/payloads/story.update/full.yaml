@@ -1,0 +1,5 @@
+schemaVersion: 4
+type: story.update
+payload:
+  data:
+    initialSceneId: scene-b

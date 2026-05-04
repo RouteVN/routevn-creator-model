@@ -1,0 +1,280 @@
+schemaVersion: 4
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: file.create
+    payload:
+      fileId: file-smile
+      data:
+        mimeType: image/png
+        size: 256
+        sha256: file-smile-sha256
+  - type: file.create
+    payload:
+      fileId: file-angry
+      data:
+        mimeType: image/png
+        size: 256
+        sha256: file-angry-sha256
+  - type: character.create
+    payload:
+      characterId: folder-cast
+      data:
+        type: folder
+        name: Cast
+  - type: character.create
+    payload:
+      characterId: character-hero
+      parentId: folder-cast
+      data:
+        type: character
+        name: Hero
+        sprites:
+          items: {}
+          tree: []
+  - type: character.update
+    payload:
+      characterId: character-hero
+      data:
+        description: Lead actor
+  - type: character.sprite.create
+    payload:
+      characterId: character-hero
+      spriteId: folder-default
+      data:
+        type: folder
+        name: Default
+  - type: character.sprite.create
+    payload:
+      characterId: character-hero
+      spriteId: sprite-smile
+      parentId: folder-default
+      data:
+        type: image
+        name: Smile
+        fileId: file-smile
+        width: 512
+        height: 512
+  - type: character.sprite.update
+    payload:
+      characterId: character-hero
+      spriteId: sprite-smile
+      data:
+        name: Smile Updated
+  - type: character.sprite.move
+    payload:
+      characterId: character-hero
+      spriteId: sprite-smile
+      parentId: folder-default
+      position: last
+  - type: character.sprite.delete
+    payload:
+      characterId: character-hero
+      spriteIds:
+        - sprite-smile
+        - folder-default
+  - type: character.move
+    payload:
+      characterId: character-hero
+      parentId: folder-cast
+      position: last
+  - type: character.delete
+    payload:
+      characterIds:
+        - character-hero
+        - folder-cast
+  - type: file.delete
+    payload:
+      fileIds:
+        - file-smile
+        - file-angry

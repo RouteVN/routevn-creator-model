@@ -1013,6 +1013,30 @@ test("processCommand persists normalized variable enum metadata", () => {
   });
 });
 
+test("validatePayload rejects legacy variable primitive type discriminators", () => {
+  expect(
+    validatePayload({
+      type: "variable.create",
+      payload: {
+        variableId: "score",
+        data: {
+          type: "number",
+          name: "Score",
+          scope: "context",
+          default: 0,
+          value: 0,
+        },
+      },
+    }),
+  ).toMatchObject({
+    valid: false,
+    error: {
+      kind: "payload",
+      message: "payload.data.type must be 'folder' or 'variable'",
+    },
+  });
+});
+
 test("processCommand enables variable enum metadata when enumValues are provided", () => {
   const state = createEmptyTestState();
 

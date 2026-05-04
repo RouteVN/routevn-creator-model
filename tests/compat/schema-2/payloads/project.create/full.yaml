@@ -377,8 +377,7 @@ payload:
       items:
         variable-rich:
           id: variable-rich
-          type: variable
-          variableType: boolean
+          type: boolean
           name: Has Seen Intro
           description: Tracks whether the intro has played
           scope: account

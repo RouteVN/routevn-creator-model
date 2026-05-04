@@ -1,0 +1,14 @@
+schemaVersion: 4
+type: transform.create
+payload:
+  transformId: item-a
+  data:
+    type: transform
+    name: Camera
+    x: 0
+    "y": 0
+    scaleX: 1
+    scaleY: 1
+    anchorX: 0
+    anchorY: 0
+    rotation: 0

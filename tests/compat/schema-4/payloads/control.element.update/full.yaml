@@ -1,0 +1,7 @@
+schemaVersion: 4
+type: control.element.update
+payload:
+  controlId: control-default
+  elementId: text-a
+  data:
+    variableId: variable-rich

@@ -1,0 +1,18 @@
+schemaVersion: 4
+type: line.create
+payload:
+  sectionId: section-a
+  position: before
+  positionTargetId: line-a
+  lines:
+    - lineId: line-c
+      data:
+        actions:
+          dialogue:
+            mode: adv
+            content:
+              - text: Hello
+    - lineId: line-d
+      data:
+        actions:
+          say: next

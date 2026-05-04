@@ -6,8 +6,7 @@ payload:
   position: before
   positionTargetId: item-b
   data:
-    type: variable
-    variableType: boolean
+    type: boolean
     name: Has Seen Intro
     description: Tracks whether the intro has played
     scope: account

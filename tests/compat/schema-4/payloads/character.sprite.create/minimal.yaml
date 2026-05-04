@@ -1,0 +1,9 @@
+schemaVersion: 4
+type: character.sprite.create
+payload:
+  characterId: character-hero
+  spriteId: sprite-c
+  data:
+    type: image
+    name: New Sprite
+    fileId: file-new-sprite
