@@ -5,6 +5,7 @@ import {
   RUNTIME_FIELD_IDS,
   SCHEMA_VERSION,
   isRuntimeFieldId,
+  normalizeState,
   processCommand,
   replayCommands,
   validateAgainstState,
@@ -60,6 +61,7 @@ test("public api exports functions only", async () => {
   expect(typeof validateState).toBe("function");
   expect(typeof validatePayload).toBe("function");
   expect(typeof validateAgainstState).toBe("function");
+  expect(typeof normalizeState).toBe("function");
   expect(typeof processCommand).toBe("function");
   expect(typeof replayCommands).toBe("function");
 });
@@ -120,6 +122,232 @@ test("validation functions return valid results instead of throwing", () => {
       kind: "payload",
       code: "payload_validation_failed",
       message: "payload.data.title is not allowed",
+    },
+  });
+});
+
+test("project.create drops unsupported variable item types", () => {
+  const state = createEmptyTestState();
+  const projectState = createEmptyTestState();
+  projectState.variables.items = {
+    folderVariables: {
+      id: "folderVariables",
+      type: "folder",
+      name: "Variables",
+    },
+    score: {
+      id: "score",
+      type: "variable",
+      variableType: "number",
+      name: "Score",
+      scope: "context",
+      default: 0,
+      value: 0,
+    },
+    _textSpeed: {
+      id: "_textSpeed",
+      type: "number",
+      name: "Text Speed",
+      scope: "device",
+      default: 50,
+      value: 50,
+    },
+  };
+  projectState.variables.tree = [
+    {
+      id: "folderVariables",
+      children: [
+        {
+          id: "score",
+          children: [],
+        },
+        {
+          id: "_textSpeed",
+          children: [],
+        },
+      ],
+    },
+  ];
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "project.create",
+      payload: {
+        state: projectState,
+      },
+    },
+  });
+
+  expect(result).toMatchObject({
+    valid: true,
+    state: {
+      variables: {
+        items: {
+          folderVariables: {
+            id: "folderVariables",
+            type: "folder",
+            name: "Variables",
+          },
+          score: {
+            id: "score",
+            type: "variable",
+            variableType: "number",
+            name: "Score",
+            scope: "context",
+            default: 0,
+            value: 0,
+          },
+        },
+        tree: [
+          {
+            id: "folderVariables",
+            children: [
+              {
+                id: "score",
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+  expect(result.state.variables.items._textSpeed).toBeUndefined();
+  expect(projectState.variables.items._textSpeed).toBeDefined();
+});
+
+test("replayCommands drops unsupported variable item types from initial state", () => {
+  const state = createEmptyTestState();
+  state.variables.items = {
+    score: {
+      id: "score",
+      type: "variable",
+      variableType: "number",
+      name: "Score",
+      scope: "context",
+      default: 0,
+      value: 0,
+    },
+    _textSpeed: {
+      id: "_textSpeed",
+      type: "number",
+      name: "Text Speed",
+      scope: "device",
+      default: 50,
+      value: 50,
+    },
+  };
+  state.variables.tree = [
+    {
+      id: "score",
+      children: [],
+    },
+    {
+      id: "_textSpeed",
+      children: [],
+    },
+  ];
+
+  const result = replayCommands({
+    state,
+    commands: [],
+  });
+
+  expect(result).toEqual({
+    valid: true,
+    state: {
+      ...state,
+      variables: {
+        items: {
+          score: {
+            id: "score",
+            type: "variable",
+            variableType: "number",
+            name: "Score",
+            scope: "context",
+            default: 0,
+            value: 0,
+          },
+        },
+        tree: [
+          {
+            id: "score",
+            children: [],
+          },
+        ],
+      },
+    },
+  });
+  expect(state.variables.items._textSpeed).toBeDefined();
+});
+
+test("normalizeState drops unsupported variable item types", () => {
+  const state = createEmptyTestState();
+  state.variables.items = {
+    system: {
+      id: "system",
+      type: "folder",
+      name: "System",
+    },
+    _textSpeed: {
+      id: "_textSpeed",
+      type: "number",
+      name: "Text Speed",
+      scope: "device",
+      default: 50,
+      value: 50,
+    },
+  };
+  state.variables.tree = [
+    {
+      id: "system",
+      children: [
+        {
+          id: "_textSpeed",
+        },
+      ],
+    },
+  ];
+
+  const normalizedState = normalizeState({ state });
+
+  expect(normalizedState.variables).toEqual({
+    items: {
+      system: {
+        id: "system",
+        type: "folder",
+        name: "System",
+      },
+    },
+    tree: [
+      {
+        id: "system",
+        children: [],
+      },
+    ],
+  });
+  expect(state.variables.items._textSpeed).toBeDefined();
+});
+
+test("validateState still rejects supported variable items missing from the tree", () => {
+  const state = createEmptyTestState();
+  state.variables.items.score = {
+    id: "score",
+    type: "variable",
+    variableType: "number",
+    name: "Score",
+    scope: "context",
+    default: 0,
+    value: 0,
+  };
+
+  expect(validateState({ state })).toEqual({
+    valid: false,
+    error: {
+      kind: "state",
+      code: "state_validation_failed",
+      message: "state.variables.tree is missing item 'score'",
     },
   });
 });

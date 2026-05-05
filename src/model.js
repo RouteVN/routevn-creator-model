@@ -45,6 +45,7 @@ const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
 });
+const VALID_VARIABLE_ITEM_TYPES = new Set(["folder", "variable"]);
 const TAG_SCOPE_BASE_KEYS = [
   "images",
   "sounds",
@@ -113,6 +114,123 @@ const normalizeTagsState = (tags) => {
   return nextTags;
 };
 
+const filterVariableTreeNodes = ({ nodes, unsupportedItemIds }) => {
+  if (!Array.isArray(nodes)) {
+    return {
+      nodes,
+      changed: false,
+      removedIds: new Set(),
+    };
+  }
+
+  const filteredNodes = [];
+  const removedIds = new Set();
+  let changed = false;
+
+  for (const node of nodes) {
+    if (!isPlainObject(node)) {
+      filteredNodes.push(node);
+      continue;
+    }
+
+    if (unsupportedItemIds.has(node.id)) {
+      changed = true;
+      collectVariableTreeIds([node], removedIds);
+      continue;
+    }
+
+    const childrenResult = filterVariableTreeNodes({
+      nodes: node.children,
+      unsupportedItemIds,
+    });
+    for (const removedId of childrenResult.removedIds) {
+      removedIds.add(removedId);
+    }
+
+    if (childrenResult.changed) {
+      changed = true;
+      filteredNodes.push({
+        ...node,
+        children: childrenResult.nodes,
+      });
+      continue;
+    }
+
+    filteredNodes.push(node);
+  }
+
+  if (filteredNodes.length !== nodes.length) {
+    changed = true;
+  }
+
+  return {
+    nodes: changed ? filteredNodes : nodes,
+    changed,
+    removedIds,
+  };
+};
+
+const collectVariableTreeIds = (nodes, ids = new Set()) => {
+  if (!Array.isArray(nodes)) {
+    return ids;
+  }
+
+  for (const node of nodes) {
+    if (!isPlainObject(node) || !isNonEmptyString(node.id)) {
+      continue;
+    }
+
+    ids.add(node.id);
+    collectVariableTreeIds(node.children, ids);
+  }
+
+  return ids;
+};
+
+const normalizeVariablesCollection = (variables) => {
+  if (!isPlainObject(variables) || !isPlainObject(variables.items)) {
+    return variables;
+  }
+
+  const unsupportedItemIds = new Set();
+  const nextItems = {};
+  let didFilterItems = false;
+
+  for (const [itemId, item] of Object.entries(variables.items)) {
+    if (!VALID_VARIABLE_ITEM_TYPES.has(item?.type)) {
+      unsupportedItemIds.add(itemId);
+      didFilterItems = true;
+      continue;
+    }
+
+    nextItems[itemId] = item;
+  }
+
+  const treeResult = filterVariableTreeNodes({
+    nodes: variables.tree,
+    unsupportedItemIds,
+  });
+  const nextTree = treeResult.nodes;
+  const didFilterTree = treeResult.changed;
+
+  for (const removedId of treeResult.removedIds) {
+    if (Object.hasOwn(nextItems, removedId)) {
+      delete nextItems[removedId];
+      didFilterItems = true;
+    }
+  }
+
+  if (!didFilterItems && !didFilterTree) {
+    return variables;
+  }
+
+  return {
+    ...variables,
+    items: nextItems,
+    tree: nextTree,
+  };
+};
+
 const normalizeStateCollections = (state) => {
   if (!isPlainObject(state)) {
     return state;
@@ -125,8 +243,14 @@ const normalizeStateCollections = (state) => {
   ].filter((key) => state[key] === undefined);
   const normalizedTags = normalizeTagsState(state.tags);
   const hasNormalizedTags = normalizedTags !== state.tags;
+  const normalizedVariables = normalizeVariablesCollection(state.variables);
+  const hasNormalizedVariables = normalizedVariables !== state.variables;
 
-  if (missingCollectionKeys.length === 0 && !hasNormalizedTags) {
+  if (
+    missingCollectionKeys.length === 0 &&
+    !hasNormalizedTags &&
+    !hasNormalizedVariables
+  ) {
     return state;
   }
 
@@ -140,6 +264,9 @@ const normalizeStateCollections = (state) => {
 
   if (hasNormalizedTags) {
     nextState.tags = normalizedTags;
+  }
+  if (hasNormalizedVariables) {
+    nextState.variables = normalizedVariables;
   }
 
   return nextState;
@@ -7275,6 +7402,8 @@ const runValidateState = ({ state }) => {
 };
 
 export const validateState = ({ state }) => runValidateState({ state });
+
+export const normalizeState = ({ state }) => normalizeStateCollections(state);
 
 const validatePlacementFields = ({ payload, errorFactory }) => {
   if (

@@ -1,6 +1,7 @@
 export {
   replayCommands,
   SCHEMA_VERSION,
+  normalizeState,
   processCommand,
   validateAgainstState,
   validatePayload,
