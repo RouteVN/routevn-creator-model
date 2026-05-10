@@ -2274,15 +2274,46 @@ const directCases = [
             elementId: "text-a",
             data: {
               variableId: "variable-ui",
+              scrollUp: {
+                inheritToChildren: true,
+                payload: {
+                  actions: {
+                    nextLine: {},
+                  },
+                },
+              },
+              scrollDown: {
+                payload: {
+                  actions: {
+                    toggleDialogueUI: {},
+                  },
+                },
+              },
             },
           },
         },
       });
 
       expect(
-        result.state.layouts.items["layout-dialogue"].elements.items["text-a"]
-          .variableId,
-      ).toBe("variable-ui");
+        result.state.layouts.items["layout-dialogue"].elements.items["text-a"],
+      ).toMatchObject({
+        variableId: "variable-ui",
+        scrollUp: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          payload: {
+            actions: {
+              toggleDialogueUI: {},
+            },
+          },
+        },
+      });
     },
     runNegative: () => {
       expectValidation(() =>
@@ -2471,15 +2502,46 @@ const directCases = [
             elementId: "text-a",
             data: {
               variableId: "variable-ui",
+              scrollUp: {
+                payload: {
+                  actions: {
+                    nextLine: {},
+                  },
+                },
+              },
+              scrollDown: {
+                inheritToChildren: true,
+                payload: {
+                  actions: {
+                    toggleSkipMode: {},
+                  },
+                },
+              },
             },
           },
         },
       });
 
       expect(
-        result.state.controls.items["control-default"].elements.items["text-a"]
-          .variableId,
-      ).toBe("variable-ui");
+        result.state.controls.items["control-default"].elements.items["text-a"],
+      ).toMatchObject({
+        variableId: "variable-ui",
+        scrollUp: {
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              toggleSkipMode: {},
+            },
+          },
+        },
+      });
     },
     runNegative: () => {
       expectValidation(() =>
@@ -2801,7 +2863,9 @@ test("tag.delete in characters scope preserves sprite groups from character spri
   });
 
   expect(result.valid).toBe(true);
-  expect(result.state.characters.items["character-hero"].tagIds).toBeUndefined();
+  expect(
+    result.state.characters.items["character-hero"].tagIds,
+  ).toBeUndefined();
   expect(result.state.characters.items["character-hero"].spriteGroups).toEqual([
     {
       id: "group-face",

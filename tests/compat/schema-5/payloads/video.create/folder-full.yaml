@@ -1,0 +1,7 @@
+schemaVersion: 5
+type: video.create
+payload:
+  videoId: folder-a
+  data:
+    type: folder
+    name: Folder A

@@ -1870,6 +1870,70 @@ test("validatePayload accepts layout element rightClick interactions", () => {
   });
 });
 
+test("validatePayload accepts layout element scroll interactions", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          scrollUp: {
+            inheritToChildren: true,
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+          scrollDown: {
+            payload: {
+              actions: {
+                toggleDialogueUI: {},
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload accepts control element scroll interactions", () => {
+  expect(
+    validatePayload({
+      type: "control.element.update",
+      payload: {
+        controlId: "control-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          scrollUp: {
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+          scrollDown: {
+            inheritToChildren: true,
+            payload: {
+              actions: {
+                toggleSkipMode: {},
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
 test("validatePayload accepts layout element textStyle overrides", () => {
   expect(
     validatePayload({
@@ -2045,7 +2109,7 @@ test("validatePayload accepts confirm dialog container refs", () => {
   });
 });
 
-test("validateState accepts layout elements with rightClick interactions", () => {
+test("validateState accepts layout elements with rightClick and scroll interactions", () => {
   const state = createEmptyTestState();
 
   state.layouts.items["layout-ui"] = {
@@ -2075,6 +2139,21 @@ test("validateState accepts layout elements with rightClick interactions", () =>
                   sceneId: "scene-b",
                   sectionId: "section-b",
                 },
+              },
+            },
+          },
+          scrollUp: {
+            inheritToChildren: true,
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+          scrollDown: {
+            payload: {
+              actions: {
+                toggleDialogueUI: {},
               },
             },
           },

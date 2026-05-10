@@ -288,6 +288,21 @@ const createLayoutBaseState = () => {
           rotation: 0,
           gapX: 16,
           gapY: 12,
+          scrollUp: {
+            inheritToChildren: true,
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+          scrollDown: {
+            payload: {
+              actions: {
+                toggleDialogueUI: {},
+              },
+            },
+          },
         },
         "text-a": {
           id: "text-a",
@@ -378,6 +393,21 @@ const createControlBaseState = () => {
           rotation: 0,
           gapX: 16,
           gapY: 12,
+          scrollUp: {
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+          scrollDown: {
+            inheritToChildren: true,
+            payload: {
+              actions: {
+                toggleSkipMode: {},
+              },
+            },
+          },
         },
         "text-a": {
           id: "text-a",
@@ -1976,6 +2006,21 @@ const payloadFixtures = [
         text: "More",
         textStyleId: "text-style-ui",
         variableId: "variable-rich",
+        scrollUp: {
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              toggleDialogueUI: {},
+            },
+          },
+        },
       },
     },
     {
@@ -2082,6 +2127,21 @@ const payloadFixtures = [
       elementId: "text-a",
       data: {
         variableId: "variable-rich",
+        scrollUp: {
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              toggleDialogueUI: {},
+            },
+          },
+        },
       },
     },
   ),
@@ -2150,6 +2210,21 @@ const payloadFixtures = [
         text: "More",
         textStyleId: "text-style-ui",
         variableId: "variable-rich",
+        scrollUp: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          payload: {
+            actions: {
+              toggleSkipMode: {},
+            },
+          },
+        },
       },
     },
     {
@@ -2256,6 +2331,21 @@ const payloadFixtures = [
       elementId: "text-a",
       data: {
         variableId: "variable-rich",
+        scrollUp: {
+          inheritToChildren: true,
+          payload: {
+            actions: {
+              nextLine: {},
+            },
+          },
+        },
+        scrollDown: {
+          payload: {
+            actions: {
+              toggleSkipMode: {},
+            },
+          },
+        },
       },
     },
   ),
@@ -3398,7 +3488,23 @@ const streamFixtures = [
         payload: {
           layoutId: "layout-alt",
           elementId: "text-a",
-          data: { name: "Title Updated" },
+          data: {
+            name: "Title Updated",
+            scrollUp: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+            scrollDown: {
+              payload: {
+                actions: {
+                  toggleDialogueUI: {},
+                },
+              },
+            },
+          },
         },
       },
       {
@@ -3561,7 +3667,23 @@ const streamFixtures = [
         payload: {
           controlId: "control-alt",
           elementId: "text-a",
-          data: { name: "Title Updated" },
+          data: {
+            name: "Title Updated",
+            scrollUp: {
+              payload: {
+                actions: {
+                  nextLine: {},
+                },
+              },
+            },
+            scrollDown: {
+              payload: {
+                actions: {
+                  toggleSkipMode: {},
+                },
+              },
+            },
+          },
         },
       },
       {

@@ -1,0 +1,7 @@
+schemaVersion: 5
+type: animation.create
+payload:
+  animationId: folder-a
+  data:
+    type: folder
+    name: Folder A

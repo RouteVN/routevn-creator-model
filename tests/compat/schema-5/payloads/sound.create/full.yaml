@@ -1,0 +1,16 @@
+schemaVersion: 5
+type: sound.create
+payload:
+  soundId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: sound
+    name: Ambience
+    description: Night ambience
+    fileId: file-sound
+    waveformDataFileId: waveform-sound
+    duration: 42.5
+    tagIds:
+      - tag-ambience
