@@ -293,6 +293,7 @@ Currently implemented command types:
 - `layout.update`
 - `layout.delete`
 - `layout.move`
+- `layout.schema.upgrade`
 - `character.sprite.create`
 - `character.sprite.update`
 - `character.sprite.delete`

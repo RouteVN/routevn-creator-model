@@ -1841,6 +1841,40 @@ const directCases = [
       name: "Dialogue Updated",
     },
   }),
+  {
+    type: "layout.schema.upgrade",
+    runPositive: () => {
+      const state = createLayoutBaseState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "layout.schema.upgrade",
+          payload: {
+            layoutIds: ["layout-dialogue"],
+            targetSchemaVersion: 2,
+          },
+        },
+      });
+
+      const layout = result.state.layouts.items["layout-dialogue"];
+      expect(layout.layoutSchemaVersion).toBe(2);
+      expect(layout.elements.tree[0].children).toEqual([
+        createTreeNode("text-b"),
+        createTreeNode("text-a"),
+      ]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "layout.schema.upgrade",
+          payload: {
+            layoutIds: ["layout-dialogue"],
+            targetSchemaVersion: 3,
+          },
+        }),
+      ).toThrow("payload.targetSchemaVersion must be 2");
+    },
+  },
   ...createFolderedCommandCases({
     familyName: "control",
     collectionKey: "controls",

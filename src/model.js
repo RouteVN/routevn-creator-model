@@ -40,7 +40,12 @@ const LINE_UPDATE_ACTIONS_PRESERVE_PATHS = ["dialogue.content"];
 const LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET = new Set(
   LINE_UPDATE_ACTIONS_PRESERVE_PATHS,
 );
+const CURRENT_LAYOUT_SCHEMA_VERSION = 2;
 const isPositiveFiniteNumber = (value) => isFiniteNumber(value) && value > 0;
+const normalizeLayoutSchemaVersion = (value) =>
+  Number.isInteger(value) && value >= 1 ? value : 1;
+const isSupportedLayoutSchemaVersion = (value) =>
+  value === CURRENT_LAYOUT_SCHEMA_VERSION;
 const createEmptyCollectionState = () => ({
   items: {},
   tree: [],
@@ -4997,6 +5002,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "description",
                 "tagIds",
                 "layoutType",
+                "layoutSchemaVersion",
                 "isFragment",
                 "thumbnailFileId",
                 "preview",
@@ -5076,6 +5082,16 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'`,
+        );
+      }
+
+      if (
+        item.layoutSchemaVersion !== undefined &&
+        !isSupportedLayoutSchemaVersion(item.layoutSchemaVersion)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.layoutSchemaVersion must be ${CURRENT_LAYOUT_SCHEMA_VERSION} when provided`,
         );
       }
 
@@ -10520,6 +10536,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "description",
               "tagIds",
               "layoutType",
+              "layoutSchemaVersion",
               "isFragment",
               "thumbnailFileId",
               "preview",
@@ -10584,6 +10601,16 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'",
+      );
+    }
+
+    if (
+      data.layoutSchemaVersion !== undefined &&
+      !isSupportedLayoutSchemaVersion(data.layoutSchemaVersion)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `payload.data.layoutSchemaVersion must be ${CURRENT_LAYOUT_SCHEMA_VERSION} when provided`,
       );
     }
 
@@ -11392,6 +11419,32 @@ const createEmptyNestedCollection = () => ({
   items: {},
   tree: [],
 });
+
+const isDirectedLayoutContainer = (item) =>
+  item?.direction === "horizontal" || item?.direction === "vertical";
+
+const upgradeLayoutTreeOrder = ({ nodes, items, parentItem } = {}) => {
+  const sourceNodes = Array.isArray(nodes) ? nodes : [];
+  const orderedNodes = isDirectedLayoutContainer(parentItem)
+    ? sourceNodes
+    : [...sourceNodes].reverse();
+
+  return orderedNodes.map((node) => {
+    const nextNode = {
+      ...node,
+    };
+
+    if (Array.isArray(node?.children) && node.children.length > 0) {
+      nextNode.children = upgradeLayoutTreeOrder({
+        nodes: node.children,
+        items,
+        parentItem: items?.[node.id],
+      });
+    }
+
+    return nextNode;
+  });
+};
 
 const findSectionLocation = ({ state, sectionId }) => {
   for (const [sceneId, scene] of Object.entries(state.scenes.items)) {
@@ -16866,6 +16919,11 @@ const COMMAND_DEFINITIONS = [
                 }
               : {}),
             layoutType: payload.data.layoutType,
+            ...(payload.data.layoutSchemaVersion !== undefined
+              ? {
+                  layoutSchemaVersion: payload.data.layoutSchemaVersion,
+                }
+              : {}),
             isFragment: payload.data.isFragment,
             ...(payload.data.thumbnailFileId !== undefined
               ? {
@@ -16954,6 +17012,75 @@ const COMMAND_DEFINITIONS = [
       }
     },
   }),
+  {
+    type: "layout.schema.upgrade",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["layoutIds", "targetSchemaVersion"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.layoutIds,
+          path: "payload.layoutIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (payload.targetSchemaVersion !== CURRENT_LAYOUT_SCHEMA_VERSION) {
+        return invalidPayload(
+          `payload.targetSchemaVersion must be ${CURRENT_LAYOUT_SCHEMA_VERSION}`,
+        );
+      }
+
+      return VALID_RESULT;
+    },
+    validateAgainstState: ({ state, payload }) => {
+      for (const layoutId of payload.layoutIds) {
+        const layout = state.layouts.items[layoutId];
+        if (!isPlainObject(layout) || layout.type !== "layout") {
+          return invalidPrecondition(
+            "payload.layoutIds must reference existing layouts",
+            {
+              layoutId,
+            },
+          );
+        }
+      }
+
+      return VALID_RESULT;
+    },
+    reduce: ({ state, payload }) => {
+      for (const layoutId of payload.layoutIds) {
+        const layout = state.layouts.items[layoutId];
+        if (
+          normalizeLayoutSchemaVersion(layout.layoutSchemaVersion) >=
+          payload.targetSchemaVersion
+        ) {
+          continue;
+        }
+
+        layout.elements.tree = upgradeLayoutTreeOrder({
+          nodes: layout.elements.tree,
+          items: layout.elements.items,
+        });
+        layout.layoutSchemaVersion = payload.targetSchemaVersion;
+      }
+
+      return state;
+    },
+  },
   ...createFolderedCollectionCommandDefinitions({
     familyName: "control",
     collectionKey: "controls",

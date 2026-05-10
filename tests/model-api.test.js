@@ -3670,6 +3670,7 @@ test("registry exposes only fully implemented command types", () => {
     "layout.update",
     "layout.delete",
     "layout.move",
+    "layout.schema.upgrade",
     "control.create",
     "control.update",
     "control.delete",
