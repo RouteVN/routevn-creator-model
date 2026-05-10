@@ -376,7 +376,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3392,6 +3392,8 @@ const validateLayoutElementData = ({
     "hover",
     "click",
     "rightClick",
+    "scrollUp",
+    "scrollDown",
     "anchorToBottom",
     "thumbImageId",
     "barImageId",
@@ -3841,6 +3843,32 @@ const validateLayoutElementData = ({
     }
   }
 
+  if (data.scrollUp !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.scrollUp,
+        path: `${path}.scrollUp`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  if (data.scrollDown !== undefined) {
+    {
+      const result = validateLayoutElementInteraction({
+        interaction: data.scrollDown,
+        path: `${path}.scrollDown`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
   if (
     data.anchorToBottom !== undefined &&
     typeof data.anchorToBottom !== "boolean"
@@ -3940,6 +3968,8 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "hover",
           "click",
           "rightClick",
+          "scrollUp",
+          "scrollDown",
           "anchorToBottom",
           "thumbImageId",
           "barImageId",

@@ -1,0 +1,8 @@
+schemaVersion: 5
+type: layout.element.move
+payload:
+  layoutId: layout-dialogue
+  elementId: text-a
+  parentId: container-root
+  position: before
+  positionTargetId: text-b

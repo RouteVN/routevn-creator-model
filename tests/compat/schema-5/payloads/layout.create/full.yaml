@@ -1,0 +1,20 @@
+schemaVersion: 5
+type: layout.create
+payload:
+  layoutId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: layout
+    name: Dialogue
+    description: Main dialogue frame
+    layoutType: dialogue-adv
+    thumbnailFileId: thumb-image
+    preview:
+      backgroundImageId: image-preview-layout
+      runtime:
+        autoMode: true
+    elements:
+      items: {}
+      tree: []

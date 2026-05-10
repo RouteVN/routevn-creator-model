@@ -1,0 +1,7 @@
+schemaVersion: 5
+type: tag.update
+payload:
+  scopeKey: images
+  tagId: tag-bg
+  data:
+    name: Backdrop

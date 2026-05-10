@@ -1,0 +1,6 @@
+schemaVersion: 5
+type: scene.update
+payload:
+  sceneId: scene-a
+  data:
+    name: Intro Updated

@@ -171,8 +171,8 @@ const upgradeCommandToSchema4 = (command) => {
 const upgradeStreamFixtureToSchema4 = (fixture) => {
   return {
     initialState: upgradeStateToSchema4(fixture.rawFixture.initialState),
-    commands: structuredClone(fixture.rawFixture.commands ?? []).map((command) =>
-      upgradeCommandToSchema4(command),
+    commands: structuredClone(fixture.rawFixture.commands ?? []).map(
+      (command) => upgradeCommandToSchema4(command),
     ),
     expectedFinalState:
       fixture.rawFixture.expectedFinalState === undefined
@@ -346,6 +346,22 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
         `unsupported compatibility fixture kind: ${fixture.kind}`,
       );
     case 4:
+      if (fixture.kind === "state") {
+        return upgradeSchema4StateFixture(fixture);
+      }
+
+      if (fixture.kind === "stream") {
+        return upgradeSchema4StreamFixture(fixture);
+      }
+
+      if (fixture.kind === "payload") {
+        return upgradeSchema4PayloadFixture(fixture);
+      }
+
+      throw new Error(
+        `unsupported compatibility fixture kind: ${fixture.kind}`,
+      );
+    case 5:
       if (fixture.kind === "state") {
         return upgradeSchema4StateFixture(fixture);
       }

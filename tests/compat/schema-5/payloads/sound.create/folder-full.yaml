@@ -1,0 +1,7 @@
+schemaVersion: 5
+type: sound.create
+payload:
+  soundId: folder-a
+  data:
+    type: folder
+    name: Folder A
