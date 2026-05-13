@@ -936,6 +936,131 @@ out:
       items: {}
       tree: []
 ---
+case: animation.create stores target preview data
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: animation.create
+      payload:
+        animationId: animation-preview
+        data:
+          type: animation
+          name: Preview Motion
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+          animation:
+            type: update
+            tween:
+              alpha:
+                keyframes: []
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items:
+        animation-preview:
+          id: animation-preview
+          type: animation
+          name: Preview Motion
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+          animation:
+            type: update
+            tween:
+              alpha:
+                keyframes: []
+      tree:
+        - id: animation-preview
+          children: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
 case: animation.update stores target preview data
 in:
   - state:
@@ -1145,6 +1270,26 @@ in:
           target:
             imageId: image-target
             transformId: transform-target
+---
+case: animation.create accepts target preview data
+in:
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      data:
+        type: animation
+        name: Preview Motion
+        preview:
+          background:
+            imageId: image-background
+          target:
+            imageId: image-target
+            transformId: transform-target
+        animation:
+          type: update
+          tween:
+            alpha:
+              keyframes: []
 ---
 case: animation.update rejects unsupported preview slots
 in:

@@ -597,6 +597,86 @@ in:
         tree: []
 throws: state.animations.items.animation-a.animation.tween.skewX is not a supported update tween property
 ---
+case: validateState accepts valid animation preview slots
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          animation-update:
+            id: animation-update
+            type: animation
+            name: Fade
+            preview:
+              background:
+                imageId: image-background
+              target:
+                imageId: image-target
+                transformId: transform-target
+            animation:
+              type: update
+              tween:
+                alpha:
+                  keyframes: []
+          animation-transition:
+            id: animation-transition
+            type: animation
+            name: Slide
+            preview:
+              background:
+                imageId: image-background
+              outgoing:
+                imageId: image-outgoing
+                transformId: transform-outgoing
+              incoming:
+                imageId: image-incoming
+                transformId: transform-incoming
+            animation:
+              type: transition
+        tree:
+          - id: animation-update
+            children: []
+          - id: animation-transition
+            children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+---
 case: validateState rejects unsupported animation preview slots
 in:
   - state:
