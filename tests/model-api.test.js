@@ -537,11 +537,8 @@ test("validatePayload accepts description, thumbnailFileId, and preview on anima
             background: {
               imageId: "image-background",
             },
-            outgoing: {
-              imageId: "image-outgoing",
-            },
-            incoming: {
-              imageId: "image-incoming",
+            target: {
+              imageId: "image-target",
             },
           },
           animation: {
@@ -571,13 +568,9 @@ test("validatePayload accepts description, thumbnailFileId, and preview on anima
             background: {
               imageId: "image-background",
             },
-            outgoing: {
-              imageId: "image-outgoing",
-              transformId: "transform-outgoing",
-            },
-            incoming: {
-              imageId: "image-incoming",
-              transformId: "transform-incoming",
+            target: {
+              imageId: "image-target",
+              transformId: "transform-target",
             },
           },
         },
@@ -585,6 +578,54 @@ test("validatePayload accepts description, thumbnailFileId, and preview on anima
     }),
   ).toEqual({
     valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-thumb",
+        data: {
+          preview: {
+            target: {
+              imageId: "image-target",
+              transformId: "transform-target",
+              extra: "invalid",
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "payload",
+      code: "payload_validation_failed",
+      message: "payload.data.preview.target.extra is not allowed",
+    },
+  });
+
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-thumb",
+        data: {
+          preview: {
+            mystery: {
+              imageId: "image-target",
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: {
+      kind: "payload",
+      code: "payload_validation_failed",
+      message: "payload.data.preview.mystery is not allowed",
+    },
   });
 
   expect(
@@ -1012,13 +1053,9 @@ test("processCommand persists description, thumbnailFileId, and preview on anima
             background: {
               imageId: "image-background",
             },
-            outgoing: {
-              imageId: "image-outgoing",
-              transformId: "transform-outgoing",
-            },
-            incoming: {
-              imageId: "image-incoming",
-              transformId: "transform-incoming",
+            target: {
+              imageId: "image-target",
+              transformId: "transform-target",
             },
           },
         },
@@ -1039,13 +1076,9 @@ test("processCommand persists description, thumbnailFileId, and preview on anima
     background: {
       imageId: "image-background",
     },
-    outgoing: {
-      imageId: "image-outgoing",
-      transformId: "transform-outgoing",
-    },
-    incoming: {
-      imageId: "image-incoming",
-      transformId: "transform-incoming",
+    target: {
+      imageId: "image-target",
+      transformId: "transform-target",
     },
   });
 
