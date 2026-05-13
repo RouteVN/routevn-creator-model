@@ -936,6 +936,260 @@ out:
       items: {}
       tree: []
 ---
+case: animation.create stores target preview data
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: animation.create
+      payload:
+        animationId: animation-preview
+        data:
+          type: animation
+          name: Preview Motion
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+          animation:
+            type: update
+            tween:
+              alpha:
+                keyframes: []
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items:
+        animation-preview:
+          id: animation-preview
+          type: animation
+          name: Preview Motion
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+          animation:
+            type: update
+            tween:
+              alpha:
+                keyframes: []
+      tree:
+        - id: animation-preview
+          children: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
+case: animation.update stores target preview data
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          animation-a:
+            id: animation-a
+            type: animation
+            name: Fade In
+            animation:
+              type: update
+              tween:
+                alpha:
+                  keyframes: []
+        tree:
+          - id: animation-a
+            children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+    command:
+      type: animation.update
+      payload:
+        animationId: animation-a
+        data:
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items:
+        animation-a:
+          id: animation-a
+          type: animation
+          name: Fade In
+          preview:
+            background:
+              imageId: image-background
+            target:
+              imageId: image-target
+              transformId: transform-target
+          animation:
+            type: update
+            tween:
+              alpha:
+                keyframes: []
+      tree:
+        - id: animation-a
+          children: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+---
 suite: validatePayload
 exportName: validatePayload
 ---
@@ -1003,6 +1257,63 @@ in:
       data:
         animation:
           type: transition
+---
+case: animation.update accepts target preview data
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        preview:
+          background:
+            imageId: image-background
+          target:
+            imageId: image-target
+            transformId: transform-target
+---
+case: animation.create accepts target preview data
+in:
+  - type: animation.create
+    payload:
+      animationId: animation-a
+      data:
+        type: animation
+        name: Preview Motion
+        preview:
+          background:
+            imageId: image-background
+          target:
+            imageId: image-target
+            transformId: transform-target
+        animation:
+          type: update
+          tween:
+            alpha:
+              keyframes: []
+---
+case: animation.update rejects unsupported preview slots
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        preview:
+          mystery:
+            imageId: image-target
+throws: payload.data.preview.mystery is not allowed
+---
+case: animation.update rejects unsupported target preview fields
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        preview:
+          target:
+            imageId: image-target
+            transformId: transform-target
+            extra: invalid
+throws: payload.data.preview.target.extra is not allowed
 ---
 case: animation.create rejects update tween properties with both auto and keyframes
 in:

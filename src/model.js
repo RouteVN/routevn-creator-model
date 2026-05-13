@@ -2210,7 +2210,7 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
       }
 
       {
-        const result = validatePreviewObject({
+        const result = validateAnimationPreviewObject({
           value: item.preview,
           path: `${itemPath}.preview`,
           errorFactory,
@@ -4901,6 +4901,102 @@ const validatePreviewObject = ({ value, path, errorFactory }) => {
       errorFactory,
       `${path} must be an object when provided`,
     );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAnimationPreviewSlot = ({
+  value,
+  path,
+  allowTransform = false,
+  errorFactory,
+}) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: allowTransform ? ["imageId", "transformId"] : ["imageId"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (value.imageId !== undefined && !isNonEmptyString(value.imageId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.imageId must be a non-empty string when provided`,
+    );
+  }
+
+  if (value.transformId !== undefined && !isNonEmptyString(value.transformId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.transformId must be a non-empty string when provided`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAnimationPreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["background", "target", "outgoing", "incoming"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateAnimationPreviewSlot({
+      value: value.background,
+      path: `${path}.background`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["target", "outgoing", "incoming"]) {
+    const result = validateAnimationPreviewSlot({
+      value: value[key],
+      path: `${path}.${key}`,
+      allowTransform: true,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   return VALID_RESULT;
@@ -9164,7 +9260,7 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
     }
 
     {
-      const result = validatePreviewObject({
+      const result = validateAnimationPreviewObject({
         value: data.preview,
         path: "payload.data.preview",
         errorFactory,
@@ -9250,7 +9346,7 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
   }
 
   {
-    const result = validatePreviewObject({
+    const result = validateAnimationPreviewObject({
       value: data.preview,
       path: "payload.data.preview",
       errorFactory,
