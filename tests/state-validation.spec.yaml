@@ -597,6 +597,67 @@ in:
         tree: []
 throws: state.animations.items.animation-a.animation.tween.skewX is not a supported update tween property
 ---
+case: validateState rejects unsupported animation preview slots
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items:
+          animation-a:
+            id: animation-a
+            type: animation
+            name: Fade
+            preview:
+              mystery:
+                imageId: image-target
+            animation:
+              type: update
+              tween:
+                alpha:
+                  keyframes: []
+        tree:
+          - id: animation-a
+            children: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: state.animations.items.animation-a.preview.mystery is not allowed
+---
 case: validateState rejects invalid font item shape
 in:
   - state:
