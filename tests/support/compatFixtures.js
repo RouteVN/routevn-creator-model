@@ -362,6 +362,7 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
         `unsupported compatibility fixture kind: ${fixture.kind}`,
       );
     case 5:
+    case 6:
       if (fixture.kind === "state") {
         return upgradeSchema4StateFixture(fixture);
       }

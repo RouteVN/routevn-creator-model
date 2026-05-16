@@ -381,7 +381,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -13181,6 +13181,7 @@ const COMMAND_DEFINITIONS = [
           value: payload,
           allowedKeys: [
             "sectionId",
+            "sceneId",
             "parentId",
             "index",
             "position",
@@ -13196,6 +13197,12 @@ const COMMAND_DEFINITIONS = [
 
       if (!isNonEmptyString(payload.sectionId)) {
         return invalidPayload("payload.sectionId must be a non-empty string");
+      }
+
+      if (payload.sceneId !== undefined && !isNonEmptyString(payload.sceneId)) {
+        return invalidPayload(
+          "payload.sceneId must be a non-empty string when provided",
+        );
       }
 
       if (
@@ -13229,10 +13236,42 @@ const COMMAND_DEFINITIONS = [
         );
       }
 
+      const targetSceneId = payload.sceneId ?? location.sceneId;
+      const targetScene = state.scenes.items[targetSceneId];
+      if (!isPlainObject(targetScene)) {
+        return invalidPrecondition(
+          "payload.sceneId must reference an existing scene",
+        );
+      }
+
+      if (targetScene.type !== "scene") {
+        return invalidPrecondition(
+          "payload.sceneId must reference a non-folder scene",
+        );
+      }
+
+      const targetSections =
+        targetScene.sections ?? createEmptyNestedCollection();
       const sectionNode = findTreeNode({
         nodes: location.sections.tree,
         nodeId: payload.sectionId,
       });
+      const isCrossSceneMove = targetSceneId !== location.sceneId;
+
+      if (isCrossSceneMove) {
+        const sourceSectionCount = Object.keys(
+          location.sections?.items ?? {},
+        ).length;
+        const movedSectionCount = collectTreeDescendantIds({
+          node: sectionNode,
+        }).length;
+
+        if (sourceSectionCount <= movedSectionCount) {
+          return invalidPrecondition(
+            "payload.sectionId must not move the last section out of a scene",
+          );
+        }
+      }
 
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentLocation = findSectionLocation({
@@ -13245,9 +13284,9 @@ const COMMAND_DEFINITIONS = [
           );
         }
 
-        if (parentLocation.sceneId !== location.sceneId) {
+        if (parentLocation.sceneId !== targetSceneId) {
           return invalidPrecondition(
-            "payload.parentId must reference a section in the same scene",
+            "payload.parentId must reference a section in the target scene",
           );
         }
 
@@ -13281,14 +13320,14 @@ const COMMAND_DEFINITIONS = [
           );
         }
 
-        if (targetLocation.sceneId !== location.sceneId) {
+        if (targetLocation.sceneId !== targetSceneId) {
           return invalidPrecondition(
-            "payload.positionTargetId must reference a section in the same scene",
+            "payload.positionTargetId must reference a section in the target scene",
           );
         }
 
         const targetParentId = getNodeParentId({
-          tree: location.sections.tree,
+          tree: targetSections.tree,
           nodeId: payload.positionTargetId,
         });
 
@@ -13304,6 +13343,10 @@ const COMMAND_DEFINITIONS = [
         state,
         sectionId: payload.sectionId,
       });
+      const targetSceneId = payload.sceneId ?? location.sceneId;
+      const targetScene = state.scenes.items[targetSceneId];
+      targetScene.sections ??= createEmptyNestedCollection();
+      const targetSections = targetScene.sections;
       const sectionNodeResult = removeNodeOrResult({
         tree: location.sections.tree,
         nodeId: payload.sectionId,
@@ -13313,8 +13356,20 @@ const COMMAND_DEFINITIONS = [
         return sectionNodeResult;
       }
 
+      if (targetSections !== location.sections) {
+        const movedSectionIds = collectTreeDescendantIds({
+          node: sectionNodeResult.node,
+        });
+
+        for (const movedSectionId of movedSectionIds) {
+          targetSections.items[movedSectionId] =
+            location.sections.items[movedSectionId];
+          delete location.sections.items[movedSectionId];
+        }
+      }
+
       insertTreeNode({
-        tree: location.sections.tree,
+        tree: targetSections.tree,
         node: sectionNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,

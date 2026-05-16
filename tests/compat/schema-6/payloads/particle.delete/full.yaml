@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: particle.delete
+payload:
+  particleIds:
+    - item-a
+    - item-b

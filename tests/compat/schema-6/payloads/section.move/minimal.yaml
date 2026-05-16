@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: section.move
+payload:
+  sectionId: section-a
+  parentId: section-b
+  position: last

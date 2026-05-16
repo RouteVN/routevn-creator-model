@@ -1,0 +1,5 @@
+schemaVersion: 6
+type: color.delete
+payload:
+  colorIds:
+    - item-a

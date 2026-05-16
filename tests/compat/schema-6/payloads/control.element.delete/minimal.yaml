@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: control.element.delete
+payload:
+  controlId: control-default
+  elementIds:
+    - text-a

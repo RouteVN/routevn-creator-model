@@ -1,0 +1,24 @@
+schemaVersion: 6
+type: spritesheet.update
+payload:
+  spritesheetId: item-a
+  data:
+    description: Updated idle loop spritesheet
+    thumbnailFileId: thumb-image
+    frameCount: 6
+    width: 320
+    height: 256
+    jsonData:
+      meta:
+        image: hero-idle-updated.png
+    animations:
+      idle:
+        frames:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+        fps: 15
+        loop: true

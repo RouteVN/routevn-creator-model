@@ -1107,6 +1107,7 @@ const payloadFixtures = [
     },
     {
       sectionId: "section-a",
+      sceneId: "scene-b",
       parentId: "section-b",
       position: "before",
       positionTargetId: "section-other",
@@ -1764,6 +1765,17 @@ const payloadFixtures = [
       },
     },
   }),
+  ...payloadSet(
+    "layout.schema.upgrade",
+    {
+      layoutIds: ["layout-dialogue"],
+      targetSchemaVersion: 2,
+    },
+    {
+      layoutIds: ["layout-dialogue", "layout-menu"],
+      targetSchemaVersion: 2,
+    },
+  ),
   ...createFolderedPayloadSets({
     family: "control",
     idField: "controlId",

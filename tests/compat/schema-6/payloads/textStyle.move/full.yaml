@@ -1,0 +1,7 @@
+schemaVersion: 6
+type: textStyle.move
+payload:
+  textStyleId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

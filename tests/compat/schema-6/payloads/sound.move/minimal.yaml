@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: sound.move
+payload:
+  soundId: item-a
+  parentId: folder-a
+  position: last

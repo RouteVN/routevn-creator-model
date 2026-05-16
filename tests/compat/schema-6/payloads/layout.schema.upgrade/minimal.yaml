@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: layout.schema.upgrade
+payload:
+  layoutIds:
+    - layout-dialogue
+  targetSchemaVersion: 2
