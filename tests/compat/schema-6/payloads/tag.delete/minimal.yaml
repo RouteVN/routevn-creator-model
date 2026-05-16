@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: tag.delete
+payload:
+  scopeKey: images
+  tagIds:
+    - tag-bg

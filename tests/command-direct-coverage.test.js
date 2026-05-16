@@ -1087,6 +1087,30 @@ const directCases = [
           },
         }),
       ).toThrow("payload.sceneId must reference a non-folder scene");
+
+      const lastSectionState = createSectionBaseState();
+      delete lastSectionState.scenes.items["scene-a"].sections.items[
+        "section-b"
+      ];
+      lastSectionState.scenes.items["scene-a"].sections.tree = [
+        createTreeNode("section-a"),
+      ];
+
+      expectValidation(() =>
+        validateAgainstState({
+          state: lastSectionState,
+          command: {
+            type: "section.move",
+            payload: {
+              sectionId: "section-a",
+              sceneId: "scene-b",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.sectionId must not move the last section out of a scene",
+      );
     },
   },
   {
@@ -1177,6 +1201,37 @@ const directCases = [
       expect(result.state.scenes.items["scene-a"].sections.tree[0].id).toBe(
         "section-b",
       );
+
+      const crossSceneState = createLineBaseState();
+      const crossSceneResult = processCommand({
+        state: crossSceneState,
+        command: {
+          type: "section.move",
+          payload: {
+            sectionId: "section-a",
+            sceneId: "scene-b",
+            position: "after",
+            positionTargetId: "section-other",
+          },
+        },
+      });
+
+      expect(
+        crossSceneResult.state.scenes.items["scene-a"].sections.items[
+          "section-a"
+        ],
+      ).toBeUndefined();
+      expect(
+        crossSceneResult.state.scenes.items["scene-b"].sections.tree.map(
+          (node) => node.id,
+        ),
+      ).toEqual(["section-other", "section-a"]);
+      expect(
+        getSceneSection(crossSceneResult.state, "scene-b", "section-a").lines
+          .items["line-a"].actions,
+      ).toEqual({
+        say: "hello",
+      });
     },
     runNegative: () => {
       const state = createSectionBaseState();
@@ -1201,7 +1256,37 @@ const directCases = [
             },
           },
         }),
-      ).toThrow("payload.parentId must reference a section in the same scene");
+      ).toThrow(
+        "payload.parentId must reference a section in the target scene",
+      );
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "section.move",
+            payload: {
+              sectionId: "section-a",
+              sceneId: "missing-scene",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow("payload.sceneId must reference an existing scene");
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "section.move",
+            payload: {
+              sectionId: "section-a",
+              sceneId: "folder-scenes",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow("payload.sceneId must reference a non-folder scene");
     },
   },
   {

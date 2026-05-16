@@ -1,0 +1,10 @@
+schemaVersion: 6
+type: animation.update
+payload:
+  animationId: item-a
+  data:
+    animation:
+      type: update
+      tween:
+        x:
+          keyframes: []

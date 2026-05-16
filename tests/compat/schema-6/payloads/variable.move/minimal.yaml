@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: variable.move
+payload:
+  variableId: item-a
+  parentId: folder-a
+  position: last

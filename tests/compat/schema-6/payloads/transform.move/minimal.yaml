@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: transform.move
+payload:
+  transformId: item-a
+  parentId: folder-a
+  position: last

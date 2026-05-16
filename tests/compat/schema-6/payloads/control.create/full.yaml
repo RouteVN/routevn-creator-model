@@ -1,0 +1,28 @@
+schemaVersion: 6
+type: control.create
+payload:
+  controlId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: control
+    name: Default Control
+    description: Shared navigation control
+    thumbnailFileId: thumb-image
+    preview:
+      runtime:
+        autoMode: true
+    keyboard:
+      enter:
+        payload:
+          actions:
+            nextLine: {}
+    keyup:
+      enter:
+        payload:
+          actions:
+            toggleAutoMode: {}
+    elements:
+      items: {}
+      tree: []

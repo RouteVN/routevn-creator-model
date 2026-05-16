@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: spritesheet.move
+payload:
+  spritesheetId: item-a
+  parentId: folder-a
+  position: last

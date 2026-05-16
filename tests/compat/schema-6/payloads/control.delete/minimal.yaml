@@ -1,0 +1,5 @@
+schemaVersion: 6
+type: control.delete
+payload:
+  controlIds:
+    - item-a

@@ -1,0 +1,6 @@
+schemaVersion: 6
+type: file.delete
+payload:
+  fileIds:
+    - file-a
+    - file-b

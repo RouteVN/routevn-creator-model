@@ -1611,7 +1611,7 @@ in:
         sectionId: section-a1
         parentId: section-b1
         position: last
-throws: payload.parentId must reference a section in the same scene
+throws: payload.parentId must reference a section in the target scene
 ---
 case: line.create rejects position targets from another section
 in:

@@ -1,0 +1,5 @@
+schemaVersion: 6
+type: line.delete
+payload:
+  lineIds:
+    - line-a

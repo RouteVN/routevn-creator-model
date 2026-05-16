@@ -590,6 +590,140 @@ test("applies a scenes sections and lines command tape with intermediate state s
   expect(steps[7].state).toEqual(expected7);
 });
 
+test("moves a section subtree between scenes in a command tape", () => {
+  const steps = runCommandSequence({
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "project.create",
+        payload: {
+          state: createSceneSectionLineBootstrapState(),
+        },
+      },
+      {
+        type: "section.create",
+        payload: {
+          sectionId: "section-intro-a",
+          sceneId: "scene-intro",
+          data: {
+            name: "Setup",
+          },
+        },
+      },
+      {
+        type: "line.create",
+        payload: {
+          sectionId: "section-intro-a",
+          lines: [
+            {
+              lineId: "line-1",
+              data: {
+                actions: {
+                  say: "hello",
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        type: "section.create",
+        payload: {
+          sectionId: "section-intro-keeper",
+          sceneId: "scene-intro",
+          data: {
+            name: "Keep",
+          },
+        },
+      },
+      {
+        type: "section.move",
+        payload: {
+          sectionId: "section-intro-a",
+          sceneId: "scene-outro",
+          position: "last",
+        },
+      },
+    ],
+  });
+
+  const expected0 = createSceneSectionLineBootstrapState();
+
+  const expected1 = cloneState(expected0);
+  expected1.scenes.items["scene-intro"].sections = {
+    items: {
+      "section-intro-a": {
+        id: "section-intro-a",
+        name: "Setup",
+        lines: createEmptyNestedCollection(),
+      },
+    },
+    tree: [
+      {
+        id: "section-intro-a",
+        children: [],
+      },
+    ],
+  };
+
+  const expected2 = cloneState(expected1);
+  expected2.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ].lines = {
+    items: {
+      "line-1": {
+        id: "line-1",
+        actions: {
+          say: "hello",
+        },
+      },
+    },
+    tree: [
+      {
+        id: "line-1",
+      },
+    ],
+  };
+
+  const expected3 = cloneState(expected2);
+  expected3.scenes.items["scene-intro"].sections.items["section-intro-keeper"] =
+    {
+      id: "section-intro-keeper",
+      name: "Keep",
+      lines: createEmptyNestedCollection(),
+    };
+  expected3.scenes.items["scene-intro"].sections.tree.push({
+    id: "section-intro-keeper",
+    children: [],
+  });
+
+  const expected4 = cloneState(expected3);
+  expected4.scenes.items["scene-outro"].sections.items["section-intro-a"] =
+    expected4.scenes.items["scene-intro"].sections.items["section-intro-a"];
+  expected4.scenes.items["scene-outro"].sections.tree = [
+    {
+      id: "section-intro-a",
+      children: [],
+    },
+  ];
+  delete expected4.scenes.items["scene-intro"].sections.items[
+    "section-intro-a"
+  ];
+  expected4.scenes.items["scene-intro"].sections.tree = [
+    {
+      id: "section-intro-keeper",
+      children: [],
+    },
+  ];
+
+  expect(steps).toHaveLength(5);
+  expect(steps[0].state).toEqual(expected0);
+  expect(steps[1].state).toEqual(expected1);
+  expect(steps[2].state).toEqual(expected2);
+  expect(steps[3].state).toEqual(expected3);
+  expect(steps[4].state).toEqual(expected4);
+});
+
 test("applies an image command tape with intermediate state snapshots", () => {
   const steps = runCommandSequence({
     initialState: createEmptyTestState(),
@@ -1881,13 +2015,17 @@ test("applies a ui resources and layout command tape with intermediate state sna
 });
 
 test("character.delete removes the character sprite tag scope", () => {
-  const initialState = withTagScope(createEmptyTestState(), "characterSprites:character-hero", [
-    {
-      id: "tag-smile",
-      type: "tag",
-      name: "Smile",
-    },
-  ]);
+  const initialState = withTagScope(
+    createEmptyTestState(),
+    "characterSprites:character-hero",
+    [
+      {
+        id: "tag-smile",
+        type: "tag",
+        name: "Smile",
+      },
+    ],
+  );
   initialState.characters.items["character-hero"] = {
     id: "character-hero",
     type: "character",
