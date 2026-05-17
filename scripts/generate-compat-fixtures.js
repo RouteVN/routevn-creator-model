@@ -672,6 +672,19 @@ const createRichCompatibilityState = () => {
       mimeType: "image/jpeg",
     },
   ]);
+  state.scenes.items["scene-a"].sections.items["section-a"].lines.items[
+    "line-a"
+  ].actions.background = {
+    resourceId: "image-rich",
+    opacity: 0.75,
+    blur: {
+      x: 6,
+      y: 9,
+      quality: 3,
+      kernelSize: 9,
+      repeatEdgePixels: true,
+    },
+  };
   mergeCollections(state, createCharacterBaseState(), "characters");
   mergeCollections(state, createLayoutBaseState(), "layouts");
   mergeCollections(state, createControlBaseState(), "controls");
@@ -1141,6 +1154,17 @@ const payloadFixtures = [
                 mode: "adv",
                 content: [{ text: "Hello" }],
               },
+              background: {
+                resourceId: "image-rich",
+                opacity: 0.75,
+                blur: {
+                  x: 6,
+                  y: 9,
+                  quality: 3,
+                  kernelSize: 9,
+                  repeatEdgePixels: true,
+                },
+              },
             },
           },
         },
@@ -1170,6 +1194,17 @@ const payloadFixtures = [
         dialogue: {
           mode: "nvl",
           content: [{ text: "Replaced" }],
+        },
+        background: {
+          resourceId: "image-rich",
+          opacity: 0.5,
+          blur: {
+            x: 6,
+            y: 9,
+            quality: 3,
+            kernelSize: 9,
+            repeatEdgePixels: true,
+          },
         },
       },
     },
@@ -2508,6 +2543,17 @@ const streamFixtures = [
           lineId: "line-a",
           data: {
             mood: "tense",
+            background: {
+              resourceId: "image-rich",
+              opacity: 0.5,
+              blur: {
+                x: 6,
+                y: 9,
+                quality: 3,
+                kernelSize: 9,
+                repeatEdgePixels: true,
+              },
+            },
           },
         },
       },

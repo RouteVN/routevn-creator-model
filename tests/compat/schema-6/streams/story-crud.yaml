@@ -307,6 +307,15 @@ commands:
       lineId: line-a
       data:
         mood: tense
+        background:
+          resourceId: image-rich
+          opacity: 0.5
+          blur:
+            x: 6
+            "y": 9
+            quality: 3
+            kernelSize: 9
+            repeatEdgePixels: true
   - type: line.move
     payload:
       lineId: line-b
