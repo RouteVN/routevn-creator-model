@@ -2025,6 +2025,66 @@ test("validatePayload accepts layout element revealEffect", () => {
   });
 });
 
+test("validatePayload accepts sprite layout element blur", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "sprite-1",
+        data: {
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          blur: {
+            x: 6,
+            y: 9,
+            quality: 3,
+            kernelSize: 9,
+            repeatEdgePixels: true,
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload rejects unsupported sprite blur kernel sizes", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "sprite-1",
+        data: {
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          blur: {
+            kernelSize: 12,
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.blur.kernelSize must be one of 5, 7, 9, 11, 13, 15 when provided",
+  );
+});
+
 test("validatePayload accepts layout element fragment references", () => {
   expect(
     validatePayload({
@@ -2279,6 +2339,103 @@ test("validateState accepts layout elements with aspectRatioLock", () => {
   expect(validateState({ state })).toEqual({
     valid: true,
   });
+});
+
+test("validateState accepts sprite layout element blur", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          blur: {
+            x: 6,
+            y: 9,
+            quality: 3,
+            kernelSize: 9,
+            repeatEdgePixels: true,
+          },
+        },
+      },
+      tree: [
+        {
+          id: "sprite-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState rejects blur on non-sprite layout elements", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Text",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+          blur: {
+            x: 6,
+            y: 9,
+            quality: 3,
+            kernelSize: 9,
+            repeatEdgePixels: true,
+          },
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "state.layouts.items.layout-ui.elements.items.text-1.blur can only be provided for sprite elements",
+  );
 });
 
 test("layout element containers use gapX and gapY", () => {

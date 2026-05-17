@@ -17,6 +17,14 @@ const createEmptyNestedCollection = () => ({
   tree: [],
 });
 
+const createLayoutElementBlur = () => ({
+  x: 6,
+  y: 9,
+  quality: 3,
+  kernelSize: 9,
+  repeatEdgePixels: true,
+});
+
 const createFileItem = ({
   id,
   type = "image",
@@ -332,11 +340,25 @@ const createLayoutBaseState = () => {
           text: "World",
           textStyleId: "text-style-ui",
         },
+        "sprite-blur": {
+          id: "sprite-blur",
+          type: "sprite",
+          name: "Blurred Sprite",
+          x: 0,
+          y: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          blur: createLayoutElementBlur(),
+        },
       },
       tree: [
         createTreeNode("container-root", [
           createTreeNode("text-a"),
           createTreeNode("text-b"),
+          createTreeNode("sprite-blur"),
         ]),
       ],
     },
@@ -437,11 +459,25 @@ const createControlBaseState = () => {
           text: "World",
           textStyleId: "text-style-ui",
         },
+        "sprite-blur": {
+          id: "sprite-blur",
+          type: "sprite",
+          name: "Blurred Sprite",
+          x: 0,
+          y: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          blur: createLayoutElementBlur(),
+        },
       },
       tree: [
         createTreeNode("container-root", [
           createTreeNode("text-a"),
           createTreeNode("text-b"),
+          createTreeNode("sprite-blur"),
         ]),
       ],
     },
@@ -2122,6 +2158,7 @@ const payloadFixtures = [
           scaleY: 1,
           rotation: 0,
           imageId: "image-rich",
+          blur: createLayoutElementBlur(),
         },
       },
       "spritesheet-full": {
@@ -2188,6 +2225,15 @@ const payloadFixtures = [
               toggleDialogueUI: {},
             },
           },
+        },
+      },
+    },
+    {
+      "sprite-blur-full": {
+        layoutId: "layout-dialogue",
+        elementId: "sprite-blur",
+        data: {
+          blur: createLayoutElementBlur(),
         },
       },
     },
@@ -2326,6 +2372,7 @@ const payloadFixtures = [
           scaleY: 1,
           rotation: 0,
           imageId: "image-rich",
+          blur: createLayoutElementBlur(),
         },
       },
       "spritesheet-full": {
@@ -2392,6 +2439,15 @@ const payloadFixtures = [
               toggleSkipMode: {},
             },
           },
+        },
+      },
+    },
+    {
+      "sprite-blur-full": {
+        controlId: "control-default",
+        elementId: "sprite-blur",
+        data: {
+          blur: createLayoutElementBlur(),
         },
       },
     },
@@ -3542,6 +3598,26 @@ const streamFixtures = [
         },
       },
       {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-alt",
+          elementId: "sprite-blur",
+          parentId: "container-root",
+          data: {
+            type: "sprite",
+            name: "Blurred Sprite",
+            x: 0,
+            y: 60,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            blur: createLayoutElementBlur(),
+          },
+        },
+      },
+      {
         type: "layout.element.update",
         payload: {
           layoutId: "layout-alt",
@@ -3566,6 +3642,22 @@ const streamFixtures = [
         },
       },
       {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-alt",
+          elementId: "sprite-blur",
+          data: {
+            blur: {
+              x: 8,
+              y: 10,
+              quality: 4,
+              kernelSize: 11,
+              repeatEdgePixels: false,
+            },
+          },
+        },
+      },
+      {
         type: "layout.element.move",
         payload: {
           layoutId: "layout-alt",
@@ -3578,7 +3670,7 @@ const streamFixtures = [
         type: "layout.element.delete",
         payload: {
           layoutId: "layout-alt",
-          elementIds: ["text-a", "anim-a", "container-root"],
+          elementIds: ["text-a", "anim-a", "sprite-blur", "container-root"],
         },
       },
       {
@@ -3721,6 +3813,26 @@ const streamFixtures = [
         },
       },
       {
+        type: "control.element.create",
+        payload: {
+          controlId: "control-alt",
+          elementId: "sprite-blur",
+          parentId: "container-root",
+          data: {
+            type: "sprite",
+            name: "Blurred Sprite",
+            x: 0,
+            y: 60,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            blur: createLayoutElementBlur(),
+          },
+        },
+      },
+      {
         type: "control.element.update",
         payload: {
           controlId: "control-alt",
@@ -3745,6 +3857,22 @@ const streamFixtures = [
         },
       },
       {
+        type: "control.element.update",
+        payload: {
+          controlId: "control-alt",
+          elementId: "sprite-blur",
+          data: {
+            blur: {
+              x: 8,
+              y: 10,
+              quality: 4,
+              kernelSize: 11,
+              repeatEdgePixels: false,
+            },
+          },
+        },
+      },
+      {
         type: "control.element.move",
         payload: {
           controlId: "control-alt",
@@ -3757,7 +3885,7 @@ const streamFixtures = [
         type: "control.element.delete",
         payload: {
           controlId: "control-alt",
-          elementIds: ["text-a", "anim-a", "container-root"],
+          elementIds: ["text-a", "anim-a", "sprite-blur", "container-root"],
         },
       },
       {

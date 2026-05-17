@@ -586,6 +586,110 @@ test("layout.element.create accepts container elements with absolute direction",
   });
 });
 
+test("layout element commands persist sprite blur", () => {
+  const state = createLayoutBaseState();
+  withImageFileRefs(state);
+  state.images.items["image-a"] = {
+    id: "image-a",
+    type: "image",
+    name: "Image A",
+    fileId: "file-image",
+  };
+  state.images.tree = [createTreeNode("image-a")];
+
+  const blur = {
+    x: 6,
+    y: 9,
+    quality: 3,
+    kernelSize: 9,
+    repeatEdgePixels: true,
+  };
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "sprite-blur",
+        parentId: "container-root",
+        data: {
+          type: "sprite",
+          name: "Blurred Sprite",
+          x: 0,
+          y: 60,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          imageId: "image-a",
+          blur,
+        },
+      },
+    },
+  });
+
+  expect(
+    createResult.state.layouts.items["layout-dialogue"].elements.items[
+      "sprite-blur"
+    ].blur,
+  ).toEqual(blur);
+
+  const updatedBlur = {
+    x: 8,
+    y: 10,
+    quality: 4,
+    kernelSize: 11,
+    repeatEdgePixels: false,
+  };
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "sprite-blur",
+        data: {
+          blur: updatedBlur,
+        },
+      },
+    },
+  });
+
+  expect(
+    updateResult.state.layouts.items["layout-dialogue"].elements.items[
+      "sprite-blur"
+    ].blur,
+  ).toEqual(updatedBlur);
+});
+
+test("layout.element.update rejects blur on non-sprite elements", () => {
+  const state = createLayoutBaseState();
+  const blur = {
+    x: 6,
+    y: 9,
+    quality: 3,
+    kernelSize: 9,
+    repeatEdgePixels: true,
+  };
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-dialogue",
+          elementId: "text-a",
+          data: {
+            blur,
+          },
+        },
+      },
+    }),
+  ).toThrow("layout element blur can only be provided for sprite elements");
+});
+
 test("validateAgainstState rejects missing particle references in layout elements", () => {
   const state = createLayoutBaseState();
 

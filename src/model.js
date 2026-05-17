@@ -343,6 +343,7 @@ const LAYOUT_TYPE_KEYS = [
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
+const LAYOUT_ELEMENT_BLUR_KERNEL_SIZE_OPTIONS = [5, 7, 9, 11, 13, 15];
 const CONTROL_KEYBOARD_KEYS = [
   "enter",
   "space",
@@ -3348,6 +3349,56 @@ const validateLayoutElementInteraction = ({
   }
 };
 
+const validateLayoutElementBlur = ({ blur, path, errorFactory }) => {
+  if (!isPlainObject(blur)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: blur,
+      allowedKeys: ["x", "y", "quality", "kernelSize", "repeatEdgePixels"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["x", "y", "quality"]) {
+    if (blur[key] !== undefined && !isFiniteNumber(blur[key])) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number when provided`,
+      );
+    }
+  }
+
+  if (
+    blur.kernelSize !== undefined &&
+    !LAYOUT_ELEMENT_BLUR_KERNEL_SIZE_OPTIONS.includes(blur.kernelSize)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.kernelSize must be one of ${LAYOUT_ELEMENT_BLUR_KERNEL_SIZE_OPTIONS.join(", ")} when provided`,
+    );
+  }
+
+  if (
+    blur.repeatEdgePixels !== undefined &&
+    typeof blur.repeatEdgePixels !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.repeatEdgePixels must be a boolean when provided`,
+    );
+  }
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -3372,6 +3423,7 @@ const validateLayoutElementData = ({
     "scaleY",
     "rotation",
     "opacity",
+    "blur",
     "fill",
     "border",
     "text",
@@ -3504,6 +3556,26 @@ const validateLayoutElementData = ({
       errorFactory,
       `${path}.opacity must be a finite number between 0 and 1 when provided`,
     );
+  }
+
+  if (data.blur !== undefined) {
+    {
+      const result = validateLayoutElementBlur({
+        blur: data.blur,
+        path: `${path}.blur`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (data.type !== undefined && data.type !== "sprite") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.blur can only be provided for sprite elements`,
+      );
+    }
   }
 
   for (const key of [
@@ -3947,6 +4019,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "scaleY",
           "rotation",
           "opacity",
+          "blur",
           "fill",
           "border",
           "text",
@@ -11090,6 +11163,18 @@ const validateVisualElementReferenceTargets = ({
   state,
   errorFactory,
 }) => {
+  if (data.blur !== undefined && data.type !== "sprite") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element blur can only be provided for sprite elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "blur",
+      },
+    );
+  }
+
   if (
     data.type === "spritesheet-animation" ||
     data.resourceId !== undefined ||

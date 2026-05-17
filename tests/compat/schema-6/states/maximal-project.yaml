@@ -523,6 +523,23 @@ state:
               rotation: 0
               text: World
               textStyleId: text-style-ui
+            sprite-blur:
+              id: sprite-blur
+              type: sprite
+              name: Blurred Sprite
+              x: 0
+              "y": 60
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              blur:
+                x: 6
+                "y": 9
+                quality: 3
+                kernelSize: 9
+                repeatEdgePixels: true
             anim-idle:
               id: anim-idle
               type: spritesheet-animation
@@ -542,6 +559,8 @@ state:
                 - id: text-a
                   children: []
                 - id: text-b
+                  children: []
+                - id: sprite-blur
                   children: []
                 - id: anim-idle
                   children: []
@@ -623,6 +642,23 @@ state:
               rotation: 0
               text: World
               textStyleId: text-style-ui
+            sprite-blur:
+              id: sprite-blur
+              type: sprite
+              name: Blurred Sprite
+              x: 0
+              "y": 60
+              anchorX: 0
+              anchorY: 0
+              scaleX: 1
+              scaleY: 1
+              rotation: 0
+              blur:
+                x: 6
+                "y": 9
+                quality: 3
+                kernelSize: 9
+                repeatEdgePixels: true
             anim-idle:
               id: anim-idle
               type: spritesheet-animation
@@ -642,6 +678,8 @@ state:
                 - id: text-a
                   children: []
                 - id: text-b
+                  children: []
+                - id: sprite-blur
                   children: []
                 - id: anim-idle
                   children: []
