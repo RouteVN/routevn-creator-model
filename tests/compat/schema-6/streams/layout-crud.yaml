@@ -324,12 +324,31 @@ commands:
                     rotation: 0
                     text: World
                     textStyleId: text-style-ui
+                  sprite-blur:
+                    id: sprite-blur
+                    type: sprite
+                    name: Blurred Sprite
+                    x: 0
+                    "y": 60
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    blur:
+                      x: 6
+                      "y": 9
+                      quality: 3
+                      kernelSize: 9
+                      repeatEdgePixels: true
                 tree:
                   - id: container-root
                     children:
                       - id: text-a
                         children: []
                       - id: text-b
+                        children: []
+                      - id: sprite-blur
                         children: []
           tree:
             - id: layout-dialogue
@@ -417,6 +436,27 @@ commands:
         rotation: 0
         resourceId: spritesheet-ui
         animationName: idle
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: sprite-blur
+      parentId: container-root
+      data:
+        type: sprite
+        name: Blurred Sprite
+        x: 0
+        "y": 60
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        blur:
+          x: 6
+          "y": 9
+          quality: 3
+          kernelSize: 9
+          repeatEdgePixels: true
   - type: layout.element.update
     payload:
       layoutId: layout-alt
@@ -431,6 +471,17 @@ commands:
           payload:
             actions:
               toggleDialogueUI: {}
+  - type: layout.element.update
+    payload:
+      layoutId: layout-alt
+      elementId: sprite-blur
+      data:
+        blur:
+          x: 8
+          "y": 10
+          quality: 4
+          kernelSize: 11
+          repeatEdgePixels: false
   - type: layout.element.move
     payload:
       layoutId: layout-alt
@@ -443,6 +494,7 @@ commands:
       elementIds:
         - text-a
         - anim-a
+        - sprite-blur
         - container-root
   - type: layout.move
     payload:

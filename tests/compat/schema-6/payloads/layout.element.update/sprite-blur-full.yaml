@@ -1,0 +1,12 @@
+schemaVersion: 6
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: sprite-blur
+  data:
+    blur:
+      x: 6
+      "y": 9
+      quality: 3
+      kernelSize: 9
+      repeatEdgePixels: true
