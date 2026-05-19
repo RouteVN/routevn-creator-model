@@ -541,10 +541,10 @@ payload:
                   quality: 3
                   kernelSize: 9
                   repeatEdgePixels: true
-              choice-slot:
-                id: choice-slot
-                type: container-ref-choice-slot
-                name: Choice Slot
+              choice-single-item:
+                id: choice-single-item
+                type: container-ref-choice-single-item
+                name: Choice Single Item
                 x: 0
                 "y": 0
                 anchorX: 0
@@ -565,7 +565,7 @@ payload:
                     children: []
                   - id: sprite-blur
                     children: []
-                  - id: choice-slot
+                  - id: choice-single-item
                     children: []
       tree:
         - id: layout-dialogue
@@ -661,10 +661,10 @@ payload:
                   quality: 3
                   kernelSize: 9
                   repeatEdgePixels: true
-              choice-slot:
-                id: choice-slot
-                type: container-ref-choice-slot
-                name: Choice Slot
+              choice-single-item:
+                id: choice-single-item
+                type: container-ref-choice-single-item
+                name: Choice Single Item
                 x: 0
                 "y": 0
                 anchorX: 0
@@ -685,7 +685,7 @@ payload:
                     children: []
                   - id: sprite-blur
                     children: []
-                  - id: choice-slot
+                  - id: choice-single-item
                     children: []
       tree:
         - id: control-default

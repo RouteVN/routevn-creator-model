@@ -25,9 +25,9 @@ const createLayoutElementBlur = () => ({
   repeatEdgePixels: true,
 });
 
-const createChoiceSlotElementData = ({ choiceItemIndex = 0 } = {}) => ({
-  type: "container-ref-choice-slot",
-  name: "Choice Slot",
+const createChoiceSingleItemElementData = ({ choiceItemIndex = 0 } = {}) => ({
+  type: "container-ref-choice-single-item",
+  name: "Choice Single Item",
   x: 0,
   y: 0,
   anchorX: 0,
@@ -370,9 +370,9 @@ const createLayoutBaseState = () => {
           rotation: 0,
           blur: createLayoutElementBlur(),
         },
-        "choice-slot": {
-          id: "choice-slot",
-          ...createChoiceSlotElementData(),
+        "choice-single-item": {
+          id: "choice-single-item",
+          ...createChoiceSingleItemElementData(),
         },
       },
       tree: [
@@ -380,7 +380,7 @@ const createLayoutBaseState = () => {
           createTreeNode("text-a"),
           createTreeNode("text-b"),
           createTreeNode("sprite-blur"),
-          createTreeNode("choice-slot"),
+          createTreeNode("choice-single-item"),
         ]),
       ],
     },
@@ -494,9 +494,9 @@ const createControlBaseState = () => {
           rotation: 0,
           blur: createLayoutElementBlur(),
         },
-        "choice-slot": {
-          id: "choice-slot",
-          ...createChoiceSlotElementData(),
+        "choice-single-item": {
+          id: "choice-single-item",
+          ...createChoiceSingleItemElementData(),
         },
       },
       tree: [
@@ -504,7 +504,7 @@ const createControlBaseState = () => {
           createTreeNode("text-a"),
           createTreeNode("text-b"),
           createTreeNode("sprite-blur"),
-          createTreeNode("choice-slot"),
+          createTreeNode("choice-single-item"),
         ]),
       ],
     },
@@ -2222,11 +2222,11 @@ const payloadFixtures = [
           rotation: 0,
         },
       },
-      "choice-slot-full": {
+      "choice-single-item-full": {
         layoutId: "layout-dialogue",
-        elementId: "choice-slot-b",
+        elementId: "choice-single-item-b",
         parentId: "container-root",
-        data: createChoiceSlotElementData({ choiceItemIndex: 1 }),
+        data: createChoiceSingleItemElementData({ choiceItemIndex: 1 }),
       },
     },
   ),
@@ -2269,9 +2269,9 @@ const payloadFixtures = [
           blur: createLayoutElementBlur(),
         },
       },
-      "choice-slot-full": {
+      "choice-single-item-full": {
         layoutId: "layout-dialogue",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
           choiceItemIndex: 2,
         },
@@ -2449,11 +2449,11 @@ const payloadFixtures = [
           rotation: 0,
         },
       },
-      "choice-slot-full": {
+      "choice-single-item-full": {
         controlId: "control-default",
-        elementId: "choice-slot-b",
+        elementId: "choice-single-item-b",
         parentId: "container-root",
-        data: createChoiceSlotElementData({ choiceItemIndex: 1 }),
+        data: createChoiceSingleItemElementData({ choiceItemIndex: 1 }),
       },
     },
   ),
@@ -2496,9 +2496,9 @@ const payloadFixtures = [
           blur: createLayoutElementBlur(),
         },
       },
-      "choice-slot-full": {
+      "choice-single-item-full": {
         controlId: "control-default",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
           choiceItemIndex: 2,
         },
@@ -3674,9 +3674,9 @@ const streamFixtures = [
         type: "layout.element.create",
         payload: {
           layoutId: "layout-alt",
-          elementId: "choice-slot",
+          elementId: "choice-single-item",
           parentId: "container-root",
-          data: createChoiceSlotElementData({ choiceItemIndex: 0 }),
+          data: createChoiceSingleItemElementData({ choiceItemIndex: 0 }),
         },
       },
       {
@@ -3723,7 +3723,7 @@ const streamFixtures = [
         type: "layout.element.update",
         payload: {
           layoutId: "layout-alt",
-          elementId: "choice-slot",
+          elementId: "choice-single-item",
           data: {
             choiceItemIndex: 3,
           },
@@ -3746,7 +3746,7 @@ const streamFixtures = [
             "text-a",
             "anim-a",
             "sprite-blur",
-            "choice-slot",
+            "choice-single-item",
             "container-root",
           ],
         },
@@ -3914,9 +3914,9 @@ const streamFixtures = [
         type: "control.element.create",
         payload: {
           controlId: "control-alt",
-          elementId: "choice-slot",
+          elementId: "choice-single-item",
           parentId: "container-root",
-          data: createChoiceSlotElementData({ choiceItemIndex: 0 }),
+          data: createChoiceSingleItemElementData({ choiceItemIndex: 0 }),
         },
       },
       {
@@ -3963,7 +3963,7 @@ const streamFixtures = [
         type: "control.element.update",
         payload: {
           controlId: "control-alt",
-          elementId: "choice-slot",
+          elementId: "choice-single-item",
           data: {
             choiceItemIndex: 3,
           },
@@ -3986,7 +3986,7 @@ const streamFixtures = [
             "text-a",
             "anim-a",
             "sprite-blur",
-            "choice-slot",
+            "choice-single-item",
             "container-root",
           ],
         },

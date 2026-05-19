@@ -586,7 +586,7 @@ test("layout.element.create accepts container elements with absolute direction",
   });
 });
 
-test("layout element commands persist choice slot containers", () => {
+test("layout element commands persist choice single item containers", () => {
   const state = createLayoutBaseState();
   const createResult = processCommand({
     state,
@@ -594,11 +594,11 @@ test("layout element commands persist choice slot containers", () => {
       type: "layout.element.create",
       payload: {
         layoutId: "layout-dialogue",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         parentId: "container-root",
         data: {
-          type: "container-ref-choice-slot",
-          name: "Choice Slot",
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
           x: 0,
           y: 0,
           anchorX: 0,
@@ -618,11 +618,11 @@ test("layout element commands persist choice slot containers", () => {
 
   expect(
     createResult.state.layouts.items["layout-dialogue"].elements.items[
-      "choice-slot"
+      "choice-single-item"
     ],
   ).toMatchObject({
-    id: "choice-slot",
-    type: "container-ref-choice-slot",
+    id: "choice-single-item",
+    type: "container-ref-choice-single-item",
     choiceItemIndex: 0,
   });
 
@@ -632,7 +632,7 @@ test("layout element commands persist choice slot containers", () => {
       type: "layout.element.update",
       payload: {
         layoutId: "layout-dialogue",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
           choiceItemIndex: 2,
         },
@@ -642,7 +642,7 @@ test("layout element commands persist choice slot containers", () => {
 
   expect(
     updateResult.state.layouts.items["layout-dialogue"].elements.items[
-      "choice-slot"
+      "choice-single-item"
     ].choiceItemIndex,
   ).toBe(2);
 });

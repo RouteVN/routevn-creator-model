@@ -353,10 +353,10 @@ commands:
                       quality: 3
                       kernelSize: 9
                       repeatEdgePixels: true
-                  choice-slot:
-                    id: choice-slot
-                    type: container-ref-choice-slot
-                    name: Choice Slot
+                  choice-single-item:
+                    id: choice-single-item
+                    type: container-ref-choice-single-item
+                    name: Choice Single Item
                     x: 0
                     "y": 0
                     anchorX: 0
@@ -377,7 +377,7 @@ commands:
                         children: []
                       - id: sprite-blur
                         children: []
-                      - id: choice-slot
+                      - id: choice-single-item
                         children: []
           tree:
             - id: control-default
@@ -496,11 +496,11 @@ commands:
   - type: control.element.create
     payload:
       controlId: control-alt
-      elementId: choice-slot
+      elementId: choice-single-item
       parentId: container-root
       data:
-        type: container-ref-choice-slot
-        name: Choice Slot
+        type: container-ref-choice-single-item
+        name: Choice Single Item
         x: 0
         "y": 0
         anchorX: 0
@@ -540,7 +540,7 @@ commands:
   - type: control.element.update
     payload:
       controlId: control-alt
-      elementId: choice-slot
+      elementId: choice-single-item
       data:
         choiceItemIndex: 3
   - type: control.element.move
@@ -556,7 +556,7 @@ commands:
         - text-a
         - anim-a
         - sprite-blur
-        - choice-slot
+        - choice-single-item
         - container-root
   - type: control.move
     payload:

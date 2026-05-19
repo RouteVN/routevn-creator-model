@@ -2667,16 +2667,16 @@ test("layout element containers use gapX and gapY", () => {
   });
 });
 
-test("validatePayload accepts choice slot layout element containers", () => {
+test("validatePayload accepts choice single item layout element containers", () => {
   expect(
     validatePayload({
       type: "layout.element.create",
       payload: {
         layoutId: "layout-ui",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
-          type: "container-ref-choice-slot",
-          name: "Choice Slot",
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
           x: 0,
           y: 0,
           anchorX: 0,
@@ -2701,7 +2701,7 @@ test("validatePayload accepts choice slot layout element containers", () => {
       type: "layout.element.update",
       payload: {
         layoutId: "layout-ui",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
           choiceItemIndex: 1,
         },
@@ -2716,7 +2716,7 @@ test("validatePayload accepts choice slot layout element containers", () => {
       type: "layout.element.update",
       payload: {
         layoutId: "layout-ui",
-        elementId: "choice-slot",
+        elementId: "choice-single-item",
         data: {
           choiceItemIndex: 20,
         },
@@ -2727,7 +2727,7 @@ test("validatePayload accepts choice slot layout element containers", () => {
   );
 });
 
-test("validateState accepts choice slot layout element containers", () => {
+test("validateState accepts choice single item layout element containers", () => {
   const state = createEmptyTestState();
   state.layouts.items["layout-ui"] = {
     id: "layout-ui",
@@ -2736,10 +2736,10 @@ test("validateState accepts choice slot layout element containers", () => {
     layoutType: "choice",
     elements: {
       items: {
-        "choice-slot": {
-          id: "choice-slot",
-          type: "container-ref-choice-slot",
-          name: "Choice Slot",
+        "choice-single-item": {
+          id: "choice-single-item",
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
           x: 0,
           y: 0,
           anchorX: 0,
@@ -2753,7 +2753,7 @@ test("validateState accepts choice slot layout element containers", () => {
       },
       tree: [
         {
-          id: "choice-slot",
+          id: "choice-single-item",
           children: [],
         },
       ],

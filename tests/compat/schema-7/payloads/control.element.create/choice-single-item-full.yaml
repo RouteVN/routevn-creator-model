@@ -1,12 +1,12 @@
 schemaVersion: 7
-type: layout.element.create
+type: control.element.create
 payload:
-  layoutId: layout-dialogue
-  elementId: choice-slot-b
+  controlId: control-default
+  elementId: choice-single-item-b
   parentId: container-root
   data:
-    type: container-ref-choice-slot
-    name: Choice Slot
+    type: container-ref-choice-single-item
+    name: Choice Single Item
     x: 0
     "y": 0
     anchorX: 0
