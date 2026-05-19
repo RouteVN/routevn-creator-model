@@ -1,0 +1,9 @@
+schemaVersion: 7
+type: line.create
+payload:
+  sectionId: section-a
+  lines:
+    - lineId: line-c
+      data:
+        actions:
+          say: new

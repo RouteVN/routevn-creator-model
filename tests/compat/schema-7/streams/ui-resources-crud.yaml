@@ -1,0 +1,373 @@
+schemaVersion: 7
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: file.create
+    payload:
+      fileId: file-font
+      data:
+        mimeType: font/ttf
+        size: 2048
+        sha256: file-font-sha256
+  - type: font.create
+    payload:
+      fontId: folder-fonts
+      data:
+        type: folder
+        name: Fonts
+  - type: font.create
+    payload:
+      fontId: font-ui
+      parentId: folder-fonts
+      data:
+        type: font
+        name: UI Font
+        fileId: file-font
+        fontFamily: Suit
+  - type: font.update
+    payload:
+      fontId: font-ui
+      data:
+        description: Editorial serif family
+  - type: font.move
+    payload:
+      fontId: font-ui
+      parentId: folder-fonts
+      position: last
+  - type: color.create
+    payload:
+      colorId: folder-colors
+      data:
+        type: folder
+        name: Colors
+  - type: color.create
+    payload:
+      colorId: color-ui
+      parentId: folder-colors
+      data:
+        type: color
+        name: White
+        hex: "#ffffff"
+  - type: color.update
+    payload:
+      colorId: color-ui
+      data:
+        description: Core brand tone
+  - type: color.move
+    payload:
+      colorId: color-ui
+      parentId: folder-colors
+      position: last
+  - type: transform.create
+    payload:
+      transformId: folder-transforms
+      data:
+        type: folder
+        name: Transforms
+  - type: transform.create
+    payload:
+      transformId: transform-ui
+      parentId: folder-transforms
+      data:
+        type: transform
+        name: Camera
+        x: 0
+        "y": 0
+        scaleX: 1
+        scaleY: 1
+        anchorX: 0
+        anchorY: 0
+        rotation: 0
+  - type: transform.update
+    payload:
+      transformId: transform-ui
+      data:
+        description: Default framing transform
+  - type: transform.move
+    payload:
+      transformId: transform-ui
+      parentId: folder-transforms
+      position: last
+  - type: variable.create
+    payload:
+      variableId: folder-variables
+      data:
+        type: folder
+        name: Variables
+  - type: variable.create
+    payload:
+      variableId: mood
+      parentId: folder-variables
+      data:
+        type: variable
+        variableType: string
+        name: Mood
+        scope: device
+        isEnum: true
+        enumValues:
+          - calm
+          - tense
+        default: calm
+        value: calm
+  - type: variable.update
+    payload:
+      variableId: mood
+      data:
+        scope: account
+        enumValues:
+          - calm
+          - tense
+          - urgent
+        value: tense
+  - type: variable.move
+    payload:
+      variableId: mood
+      parentId: folder-variables
+      position: last
+  - type: textStyle.create
+    payload:
+      textStyleId: folder-styles
+      data:
+        type: folder
+        name: Styles
+  - type: textStyle.create
+    payload:
+      textStyleId: style-ui
+      parentId: folder-styles
+      data:
+        type: textStyle
+        name: Dialogue
+        fontId: font-ui
+        colorId: color-ui
+        fontSize: 32
+        lineHeight: 1.4
+        fontWeight: "700"
+  - type: textStyle.update
+    payload:
+      textStyleId: style-ui
+      data:
+        previewText: Preview
+  - type: textStyle.move
+    payload:
+      textStyleId: style-ui
+      parentId: folder-styles
+      position: last
+  - type: textStyle.delete
+    payload:
+      textStyleIds:
+        - style-ui
+        - folder-styles
+  - type: variable.delete
+    payload:
+      variableIds:
+        - mood
+        - folder-variables
+  - type: transform.delete
+    payload:
+      transformIds:
+        - transform-ui
+        - folder-transforms
+  - type: color.delete
+    payload:
+      colorIds:
+        - color-ui
+        - folder-colors
+  - type: font.delete
+    payload:
+      fontIds:
+        - font-ui
+        - folder-fonts
+  - type: file.delete
+    payload:
+      fileIds:
+        - file-font

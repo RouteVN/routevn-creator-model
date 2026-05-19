@@ -1,0 +1,7 @@
+schemaVersion: 7
+type: scene.move
+payload:
+  sceneId: scene-a
+  parentId: folder-scenes
+  position: before
+  positionTargetId: scene-b

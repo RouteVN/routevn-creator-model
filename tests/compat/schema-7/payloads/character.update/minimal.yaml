@@ -1,0 +1,6 @@
+schemaVersion: 7
+type: character.update
+payload:
+  characterId: item-a
+  data:
+    name: Hero Updated
