@@ -1,0 +1,9 @@
+schemaVersion: 7
+type: font.create
+payload:
+  fontId: item-a
+  data:
+    type: font
+    name: Font
+    fileId: file-font
+    fontFamily: Suit

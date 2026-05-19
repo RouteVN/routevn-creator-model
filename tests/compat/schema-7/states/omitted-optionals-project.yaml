@@ -1,0 +1,299 @@
+schemaVersion: 7
+state:
+  project:
+    resolution:
+      width: 1280
+      height: 720
+  story:
+    initialSceneId: scene-main
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items:
+      scene-main:
+        id: scene-main
+        type: scene
+        name: Main
+        sections:
+          items: {}
+          tree: []
+    tree:
+      - id: scene-main
+        children: []
+  files:
+    items:
+      file-image:
+        id: file-image
+        type: image
+        mimeType: image/png
+        size: 1
+        sha256: file-image-sha256
+      file-spritesheet:
+        id: file-spritesheet
+        type: image
+        mimeType: image/png
+        size: 1024
+        sha256: file-spritesheet-sha256
+      thumb-spritesheet:
+        id: thumb-spritesheet
+        type: image-thumbnail
+        mimeType: image/webp
+        size: 64
+        sha256: thumb-spritesheet-sha256
+      file-sound:
+        id: file-sound
+        type: audio
+        mimeType: audio/mpeg
+        size: 1
+        sha256: file-sound-sha256
+      file-video:
+        id: file-video
+        type: video
+        mimeType: video/mp4
+        size: 1
+        sha256: file-video-sha256
+      thumb-video:
+        id: thumb-video
+        type: video-thumbnail
+        mimeType: image/jpeg
+        size: 1
+        sha256: thumb-video-sha256
+      file-font:
+        id: file-font
+        type: font
+        mimeType: font/ttf
+        size: 1
+        sha256: file-font-sha256
+    tree:
+      - id: file-image
+        children: []
+      - id: file-spritesheet
+        children: []
+      - id: thumb-spritesheet
+        children: []
+      - id: file-sound
+        children: []
+      - id: file-video
+        children: []
+      - id: thumb-video
+        children: []
+      - id: file-font
+        children: []
+  images:
+    items:
+      image-main:
+        id: image-main
+        type: image
+        name: Main Image
+        fileId: file-image
+    tree:
+      - id: image-main
+        children: []
+  spritesheets:
+    items:
+      spritesheet-main:
+        id: spritesheet-main
+        type: spritesheet
+        name: Main Spritesheet
+        fileId: file-spritesheet
+        thumbnailFileId: thumb-spritesheet
+        sheetWidth: 512
+        sheetHeight: 256
+        frameCount: 2
+        width: 256
+        height: 256
+        jsonData:
+          meta:
+            image: main-spritesheet.png
+        animations:
+          default:
+            frames:
+              - 0
+              - 1
+            animationSpeed: 1
+            loop: true
+    tree:
+      - id: spritesheet-main
+        children: []
+  sounds:
+    items:
+      sound-main:
+        id: sound-main
+        type: sound
+        name: Main Sound
+        fileId: file-sound
+    tree:
+      - id: sound-main
+        children: []
+  videos:
+    items:
+      video-main:
+        id: video-main
+        type: video
+        name: Main Video
+        fileId: file-video
+        thumbnailFileId: thumb-video
+    tree:
+      - id: video-main
+        children: []
+  animations:
+    items:
+      animation-main:
+        id: animation-main
+        type: animation
+        name: Main Animation
+        animation:
+          type: update
+          tween:
+            x:
+              auto:
+                duration: 1000
+                easing: linear
+    tree:
+      - id: animation-main
+        children: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items:
+      character-main:
+        id: character-main
+        type: character
+        name: Hero
+        sprites:
+          items: {}
+          tree: []
+    tree:
+      - id: character-main
+        children: []
+  fonts:
+    items:
+      font-main:
+        id: font-main
+        type: font
+        name: Main Font
+        fileId: file-font
+        fontFamily: Suit
+    tree:
+      - id: font-main
+        children: []
+  transforms:
+    items:
+      transform-main:
+        id: transform-main
+        type: transform
+        name: Main Transform
+        x: 0
+        "y": 0
+        scaleX: 1
+        scaleY: 1
+        anchorX: 0
+        anchorY: 0
+        rotation: 0
+    tree:
+      - id: transform-main
+        children: []
+  colors:
+    items:
+      color-main:
+        id: color-main
+        type: color
+        name: Main Color
+        hex: "#112233"
+    tree:
+      - id: color-main
+        children: []
+  textStyles:
+    items:
+      text-style-main:
+        id: text-style-main
+        type: textStyle
+        name: Main Style
+        fontId: font-main
+        colorId: color-main
+        fontSize: 28
+        lineHeight: 1.4
+        fontWeight: "700"
+    tree:
+      - id: text-style-main
+        children: []
+  variables:
+    items:
+      variable-main:
+        id: variable-main
+        type: variable
+        variableType: number
+        name: Score
+        scope: device
+        default: 0
+        value: 0
+    tree:
+      - id: variable-main
+        children: []
+  layouts:
+    items:
+      layout-main:
+        id: layout-main
+        type: layout
+        name: Main Layout
+        layoutType: general
+        elements:
+          items: {}
+          tree: []
+    tree:
+      - id: layout-main
+        children: []
+  controls:
+    items:
+      control-main:
+        id: control-main
+        type: control
+        name: Main Control
+        elements:
+          items: {}
+          tree: []
+    tree:
+      - id: control-main
+        children: []

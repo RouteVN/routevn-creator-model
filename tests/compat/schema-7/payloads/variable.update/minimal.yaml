@@ -1,0 +1,7 @@
+schemaVersion: 7
+type: variable.update
+payload:
+  variableId: item-a
+  data:
+    scope: account
+    value: 10

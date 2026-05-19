@@ -1,0 +1,7 @@
+schemaVersion: 7
+type: character.sprite.move
+payload:
+  characterId: character-hero
+  spriteId: sprite-a
+  parentId: folder-default
+  position: last

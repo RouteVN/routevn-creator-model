@@ -1,0 +1,7 @@
+schemaVersion: 7
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: choice-single-item
+  data:
+    choiceItemIndex: 2

@@ -586,6 +586,67 @@ test("layout.element.create accepts container elements with absolute direction",
   });
 });
 
+test("layout element commands persist choice single item containers", () => {
+  const state = createLayoutBaseState();
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "choice-single-item",
+        parentId: "container-root",
+        data: {
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          direction: "absolute",
+          choiceItemIndex: 0,
+          click: {
+            inheritToChildren: true,
+          },
+        },
+      },
+    },
+  });
+
+  expect(
+    createResult.state.layouts.items["layout-dialogue"].elements.items[
+      "choice-single-item"
+    ],
+  ).toMatchObject({
+    id: "choice-single-item",
+    type: "container-ref-choice-single-item",
+    choiceItemIndex: 0,
+  });
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "choice-single-item",
+        data: {
+          choiceItemIndex: 2,
+        },
+      },
+    },
+  });
+
+  expect(
+    updateResult.state.layouts.items["layout-dialogue"].elements.items[
+      "choice-single-item"
+    ].choiceItemIndex,
+  ).toBe(2);
+});
+
 test("layout element commands persist sprite blur", () => {
   const state = createLayoutBaseState();
   withImageFileRefs(state);

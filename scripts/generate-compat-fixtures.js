@@ -25,6 +25,23 @@ const createLayoutElementBlur = () => ({
   repeatEdgePixels: true,
 });
 
+const createChoiceSingleItemElementData = ({ choiceItemIndex = 0 } = {}) => ({
+  type: "container-ref-choice-single-item",
+  name: "Choice Single Item",
+  x: 0,
+  y: 0,
+  anchorX: 0,
+  anchorY: 0,
+  scaleX: 1,
+  scaleY: 1,
+  rotation: 0,
+  direction: "absolute",
+  choiceItemIndex,
+  click: {
+    inheritToChildren: true,
+  },
+});
+
 const createFileItem = ({
   id,
   type = "image",
@@ -353,12 +370,17 @@ const createLayoutBaseState = () => {
           rotation: 0,
           blur: createLayoutElementBlur(),
         },
+        "choice-single-item": {
+          id: "choice-single-item",
+          ...createChoiceSingleItemElementData(),
+        },
       },
       tree: [
         createTreeNode("container-root", [
           createTreeNode("text-a"),
           createTreeNode("text-b"),
           createTreeNode("sprite-blur"),
+          createTreeNode("choice-single-item"),
         ]),
       ],
     },
@@ -472,12 +494,17 @@ const createControlBaseState = () => {
           rotation: 0,
           blur: createLayoutElementBlur(),
         },
+        "choice-single-item": {
+          id: "choice-single-item",
+          ...createChoiceSingleItemElementData(),
+        },
       },
       tree: [
         createTreeNode("container-root", [
           createTreeNode("text-a"),
           createTreeNode("text-b"),
           createTreeNode("sprite-blur"),
+          createTreeNode("choice-single-item"),
         ]),
       ],
     },
@@ -2195,6 +2222,12 @@ const payloadFixtures = [
           rotation: 0,
         },
       },
+      "choice-single-item-full": {
+        layoutId: "layout-dialogue",
+        elementId: "choice-single-item-b",
+        parentId: "container-root",
+        data: createChoiceSingleItemElementData({ choiceItemIndex: 1 }),
+      },
     },
   ),
   ...payloadSet(
@@ -2234,6 +2267,13 @@ const payloadFixtures = [
         elementId: "sprite-blur",
         data: {
           blur: createLayoutElementBlur(),
+        },
+      },
+      "choice-single-item-full": {
+        layoutId: "layout-dialogue",
+        elementId: "choice-single-item",
+        data: {
+          choiceItemIndex: 2,
         },
       },
     },
@@ -2409,6 +2449,12 @@ const payloadFixtures = [
           rotation: 0,
         },
       },
+      "choice-single-item-full": {
+        controlId: "control-default",
+        elementId: "choice-single-item-b",
+        parentId: "container-root",
+        data: createChoiceSingleItemElementData({ choiceItemIndex: 1 }),
+      },
     },
   ),
   ...payloadSet(
@@ -2448,6 +2494,13 @@ const payloadFixtures = [
         elementId: "sprite-blur",
         data: {
           blur: createLayoutElementBlur(),
+        },
+      },
+      "choice-single-item-full": {
+        controlId: "control-default",
+        elementId: "choice-single-item",
+        data: {
+          choiceItemIndex: 2,
         },
       },
     },
@@ -3618,6 +3671,15 @@ const streamFixtures = [
         },
       },
       {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-alt",
+          elementId: "choice-single-item",
+          parentId: "container-root",
+          data: createChoiceSingleItemElementData({ choiceItemIndex: 0 }),
+        },
+      },
+      {
         type: "layout.element.update",
         payload: {
           layoutId: "layout-alt",
@@ -3658,6 +3720,16 @@ const streamFixtures = [
         },
       },
       {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-alt",
+          elementId: "choice-single-item",
+          data: {
+            choiceItemIndex: 3,
+          },
+        },
+      },
+      {
         type: "layout.element.move",
         payload: {
           layoutId: "layout-alt",
@@ -3670,7 +3742,13 @@ const streamFixtures = [
         type: "layout.element.delete",
         payload: {
           layoutId: "layout-alt",
-          elementIds: ["text-a", "anim-a", "sprite-blur", "container-root"],
+          elementIds: [
+            "text-a",
+            "anim-a",
+            "sprite-blur",
+            "choice-single-item",
+            "container-root",
+          ],
         },
       },
       {
@@ -3833,6 +3911,15 @@ const streamFixtures = [
         },
       },
       {
+        type: "control.element.create",
+        payload: {
+          controlId: "control-alt",
+          elementId: "choice-single-item",
+          parentId: "container-root",
+          data: createChoiceSingleItemElementData({ choiceItemIndex: 0 }),
+        },
+      },
+      {
         type: "control.element.update",
         payload: {
           controlId: "control-alt",
@@ -3873,6 +3960,16 @@ const streamFixtures = [
         },
       },
       {
+        type: "control.element.update",
+        payload: {
+          controlId: "control-alt",
+          elementId: "choice-single-item",
+          data: {
+            choiceItemIndex: 3,
+          },
+        },
+      },
+      {
         type: "control.element.move",
         payload: {
           controlId: "control-alt",
@@ -3885,7 +3982,13 @@ const streamFixtures = [
         type: "control.element.delete",
         payload: {
           controlId: "control-alt",
-          elementIds: ["text-a", "anim-a", "sprite-blur", "container-root"],
+          elementIds: [
+            "text-a",
+            "anim-a",
+            "sprite-blur",
+            "choice-single-item",
+            "container-root",
+          ],
         },
       },
       {

@@ -1,0 +1,7 @@
+schemaVersion: 7
+type: control.element.update
+payload:
+  controlId: control-default
+  elementId: choice-single-item
+  data:
+    choiceItemIndex: 2

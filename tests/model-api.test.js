@@ -2667,6 +2667,108 @@ test("layout element containers use gapX and gapY", () => {
   });
 });
 
+test("validatePayload accepts choice single item layout element containers", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "choice-single-item",
+        data: {
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          direction: "absolute",
+          choiceItemIndex: 19,
+          click: {
+            inheritToChildren: true,
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "choice-single-item",
+        data: {
+          choiceItemIndex: 1,
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "choice-single-item",
+        data: {
+          choiceItemIndex: 20,
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.choiceItemIndex must be an integer between 0 and 19 when provided",
+  );
+});
+
+test("validateState accepts choice single item layout element containers", () => {
+  const state = createEmptyTestState();
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "choice",
+    elements: {
+      items: {
+        "choice-single-item": {
+          id: "choice-single-item",
+          type: "container-ref-choice-single-item",
+          name: "Choice Single Item",
+          x: 0,
+          y: 0,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          direction: "absolute",
+          choiceItemIndex: 0,
+        },
+      },
+      tree: [
+        {
+          id: "choice-single-item",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts layout elements with absolute direction", () => {
   const state = createEmptyTestState();
 

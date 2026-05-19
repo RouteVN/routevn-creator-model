@@ -385,17 +385,19 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "sprite-ref-save-load-slot-image",
   "fragment-ref",
   "container-ref-choice-item",
+  "container-ref-choice-single-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
   "container-ref-history-line",
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
   "container-ref-choice-item",
+  "container-ref-choice-single-item",
   "container-ref-save-load-slot",
   "container-ref-dialogue-line",
   "container-ref-history-line",
@@ -3489,6 +3491,7 @@ const validateLayoutElementData = ({
     "paginationMode",
     "paginationVariableId",
     "paginationSize",
+    "choiceItemIndex",
     "$when",
     "change",
   ];
@@ -3540,6 +3543,7 @@ const validateLayoutElementData = ({
     "max",
     "step",
     "paginationSize",
+    "choiceItemIndex",
     "opacity",
     "maxLength",
   ]) {
@@ -3549,6 +3553,18 @@ const validateLayoutElementData = ({
         `${path}.${key} must be a finite number when provided`,
       );
     }
+  }
+
+  if (
+    data.choiceItemIndex !== undefined &&
+    (!Number.isInteger(data.choiceItemIndex) ||
+      data.choiceItemIndex < 0 ||
+      data.choiceItemIndex > 19)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.choiceItemIndex must be an integer between 0 and 19 when provided`,
+    );
   }
 
   if (
@@ -4163,6 +4179,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "paginationMode",
           "paginationVariableId",
           "paginationSize",
+          "choiceItemIndex",
           "$when",
           "change",
         ],
