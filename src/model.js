@@ -347,6 +347,7 @@ const LAYOUT_TYPE_KEYS = [
   "dialogue-nvl",
   "choice",
   "history",
+  "input",
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
@@ -371,6 +372,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "spritesheet-animation",
   "text",
   "text-revealing",
+  "input",
   "slider",
   "text-ref-character-name",
   "text-revealing-ref-dialogue-content",
@@ -3447,6 +3449,13 @@ const validateLayoutElementData = ({
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
+    "field",
+    "value",
+    "placeholder",
+    "multiline",
+    "disabled",
+    "maxLength",
+    "padding",
     "conditionalOverrides",
     "direction",
     "gapX",
@@ -3458,6 +3467,13 @@ const validateLayoutElementData = ({
     "rightClick",
     "scrollUp",
     "scrollDown",
+    "submit",
+    "focusEvent",
+    "blurEvent",
+    "selectionChange",
+    "compositionStart",
+    "compositionUpdate",
+    "compositionEnd",
     "anchorToBottom",
     "thumbImageId",
     "barImageId",
@@ -3525,6 +3541,7 @@ const validateLayoutElementData = ({
     "step",
     "paginationSize",
     "opacity",
+    "maxLength",
   ]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
       return invalidFromErrorFactory(
@@ -3598,6 +3615,9 @@ const validateLayoutElementData = ({
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
+    "field",
+    "value",
+    "placeholder",
     "containerType",
     "variableId",
     "fragmentLayoutId",
@@ -3648,6 +3668,18 @@ const validateLayoutElementData = ({
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.particleId must be a non-empty string`,
+      );
+    }
+  }
+
+  if (data.type === "input") {
+    if (
+      (!allowPartial || data.field !== undefined) &&
+      !isNonEmptyString(data.field)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.field must be a non-empty string`,
       );
     }
   }
@@ -3953,6 +3985,27 @@ const validateLayoutElementData = ({
     }
   }
 
+  for (const key of [
+    "submit",
+    "focusEvent",
+    "blurEvent",
+    "selectionChange",
+    "compositionStart",
+    "compositionUpdate",
+    "compositionEnd",
+  ]) {
+    if (data[key] !== undefined) {
+      const result = validateLayoutElementInteraction({
+        interaction: data[key],
+        path: `${path}.${key}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
   if (
     data.anchorToBottom !== undefined &&
     typeof data.anchorToBottom !== "boolean"
@@ -3960,6 +4013,33 @@ const validateLayoutElementData = ({
     return invalidFromErrorFactory(
       errorFactory,
       `${path}.anchorToBottom must be a boolean when provided`,
+    );
+  }
+
+  for (const key of ["multiline", "disabled"]) {
+    if (data[key] !== undefined && typeof data[key] !== "boolean") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a boolean when provided`,
+      );
+    }
+  }
+
+  if (data.maxLength !== undefined && data.maxLength < 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.maxLength must be a finite number greater than or equal to 0 when provided`,
+    );
+  }
+
+  if (
+    data.padding !== undefined &&
+    !isFiniteNumber(data.padding) &&
+    !isPlainObject(data.padding)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.padding must be a finite number or object when provided`,
     );
   }
 
@@ -4044,6 +4124,13 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
+          "field",
+          "value",
+          "placeholder",
+          "multiline",
+          "disabled",
+          "maxLength",
+          "padding",
           "conditionalOverrides",
           "direction",
           "gapX",
@@ -4055,6 +4142,13 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "rightClick",
           "scrollUp",
           "scrollDown",
+          "submit",
+          "focusEvent",
+          "blurEvent",
+          "selectionChange",
+          "compositionStart",
+          "compositionUpdate",
+          "compositionEnd",
           "anchorToBottom",
           "thumbImageId",
           "barImageId",
@@ -5257,7 +5351,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       if (!LAYOUT_TYPE_KEYS.includes(item.layoutType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'`,
+          `${itemPath}.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', 'history', or 'input'`,
         );
       }
 
@@ -10776,7 +10870,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     if (!LAYOUT_TYPE_KEYS.includes(data.layoutType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history'",
+        "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', 'history', or 'input'",
       );
     }
 
@@ -10892,7 +10986,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
   ) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', or 'history' when provided",
+      "payload.data.layoutType must be 'general', 'save-load', 'confirmDialog', 'dialogue-adv', 'dialogue-nvl', 'choice', 'history', or 'input' when provided",
     );
   }
 
