@@ -283,11 +283,18 @@ const UPDATE_TWEEN_PROPERTY_KEYS = [
   "alpha",
   "x",
   "y",
+  "translateX",
+  "translateY",
   "scaleX",
   "scaleY",
   "rotation",
+  "blurX",
+  "blurY",
+  "uProgress",
 ];
 const TRANSITION_TWEEN_PROPERTY_KEYS = [
+  "x",
+  "y",
   "translateX",
   "translateY",
   "alpha",

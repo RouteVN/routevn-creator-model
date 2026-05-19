@@ -49,12 +49,19 @@ test("animation update and transition tween properties stay in sync with Route G
     "alpha",
     "x",
     "y",
+    "translateX",
+    "translateY",
     "scaleX",
     "scaleY",
     "rotation",
+    "blurX",
+    "blurY",
+    "uProgress",
   ]);
 
   expect(transitionTweenProperties).toEqual([
+    "x",
+    "y",
     "translateX",
     "translateY",
     "alpha",

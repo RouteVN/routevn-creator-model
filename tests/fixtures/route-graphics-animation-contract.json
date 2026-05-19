@@ -36,11 +36,18 @@
     "alpha",
     "x",
     "y",
+    "translateX",
+    "translateY",
     "scaleX",
     "scaleY",
-    "rotation"
+    "rotation",
+    "blurX",
+    "blurY",
+    "uProgress"
   ],
   "transitionTweenProperties": [
+    "x",
+    "y",
     "translateX",
     "translateY",
     "alpha",
