@@ -874,6 +874,149 @@ test("validatePayload accepts save-load layout type", () => {
   ).toEqual({
     valid: true,
   });
+
+  expect(
+    validatePayload({
+      type: "layout.create",
+      payload: {
+        layoutId: "layout-input",
+        data: {
+          type: "layout",
+          name: "Input Layout",
+          layoutType: "input",
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expect(
+    validatePayload({
+      type: "layout.update",
+      payload: {
+        layoutId: "layout-input",
+        data: {
+          layoutType: "input",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("processCommand persists input layouts and input element fields", () => {
+  const state = createEmptyTestState();
+
+  const createLayoutResult = processCommand({
+    state,
+    command: {
+      type: "layout.create",
+      payload: {
+        layoutId: "profile-form",
+        data: {
+          type: "layout",
+          name: "Profile Form",
+          layoutType: "input",
+          layoutSchemaVersion: 2,
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    },
+  });
+
+  expect(createLayoutResult.valid).toBe(true);
+
+  const createElementResult = processCommand({
+    state: createLayoutResult.state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "profile-form",
+        elementId: "name-input",
+        data: {
+          type: "input",
+          name: "Name Input",
+          field: "name",
+          placeholder: "Name",
+          value: "",
+          multiline: false,
+          disabled: false,
+          maxLength: 64,
+          padding: {
+            left: 12,
+            right: 12,
+          },
+          x: 510,
+          y: 230,
+          width: 330,
+          height: 52,
+          change: {
+            payload: {
+              actions: {
+                updateVariable: {
+                  operations: [],
+                },
+              },
+            },
+          },
+          submit: {
+            payload: {
+              actions: {
+                nextLine: {},
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  expect(createElementResult.valid).toBe(true);
+
+  const updateElementResult = processCommand({
+    state: createElementResult.state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "profile-form",
+        elementId: "name-input",
+        replace: false,
+        data: {
+          field: "code",
+        },
+      },
+    },
+  });
+
+  expect(updateElementResult.valid).toBe(true);
+  expect(
+    updateElementResult.state.layouts.items["profile-form"],
+  ).toMatchObject({
+    layoutType: "input",
+    elements: {
+      items: {
+        "name-input": {
+          type: "input",
+          field: "code",
+          placeholder: "Name",
+          maxLength: 64,
+          padding: {
+            left: 12,
+            right: 12,
+          },
+        },
+      },
+    },
+  });
 });
 
 test("validatePayload accepts isFragment on layouts", () => {
