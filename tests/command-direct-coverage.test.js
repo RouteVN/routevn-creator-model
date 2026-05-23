@@ -4,6 +4,7 @@ import {
   processCommand,
   validateAgainstState,
   validatePayload,
+  validateState,
 } from "../src/index.js";
 import { listCommandTypes } from "../src/model.js";
 import { createEmptyTestState } from "./support/createEmptyTestState.js";
@@ -584,6 +585,89 @@ test("layout.element.create accepts container elements with absolute direction",
     rotation: 0,
     direction: "absolute",
   });
+});
+
+test("layout element commands persist form submit roles", () => {
+  const state = createLayoutBaseState();
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "submit-button",
+        parentId: "container-root",
+        data: {
+          type: "rect",
+          name: "Submit Button",
+          x: 0,
+          y: 0,
+          width: 160,
+          height: 52,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          formRole: "submit",
+        },
+      },
+    },
+  });
+
+  expect(
+    createResult.state.layouts.items["layout-dialogue"].elements.items[
+      "submit-button"
+    ],
+  ).toMatchObject({
+    id: "submit-button",
+    type: "rect",
+    formRole: "submit",
+  });
+
+  const updateResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "submit-button",
+        data: {
+          formRole: "submit",
+        },
+      },
+    },
+  });
+
+  expect(
+    updateResult.state.layouts.items["layout-dialogue"].elements.items[
+      "submit-button"
+    ].formRole,
+  ).toBe("submit");
+});
+
+test("layout element validation rejects unsupported form roles", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-dialogue",
+        elementId: "submit-button",
+        data: {
+          formRole: "cancel",
+        },
+      },
+    }),
+  ).toThrow("payload.data.formRole must be 'submit' when provided");
+
+  const state = createLayoutBaseState();
+  state.layouts.items["layout-dialogue"].elements.items[
+    "container-root"
+  ].formRole = "cancel";
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "state.layouts.items.layout-dialogue.elements.items.container-root.formRole must be 'submit' when provided",
+  );
 });
 
 test("layout element commands persist choice single item containers", () => {

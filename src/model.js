@@ -3457,6 +3457,7 @@ const validateLayoutElementData = ({
     "multiline",
     "disabled",
     "maxLength",
+    "formRole",
     "padding",
     "conditionalOverrides",
     "direction",
@@ -3906,6 +3907,13 @@ const validateLayoutElementData = ({
     );
   }
 
+  if (data.formRole !== undefined && data.formRole !== "submit") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.formRole must be 'submit' when provided`,
+    );
+  }
+
   if (
     data.direction !== undefined &&
     data.direction !== "absolute" &&
@@ -4146,6 +4154,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "multiline",
           "disabled",
           "maxLength",
+          "formRole",
           "padding",
           "conditionalOverrides",
           "direction",
