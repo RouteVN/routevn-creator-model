@@ -1807,6 +1807,147 @@ test("processCommand persists tagIds on transforms and characters", () => {
   });
 });
 
+test("processCommand normalizes empty tagIds on variables and controls", () => {
+  const state = createEmptyTestState();
+
+  state.tags.variables.items["tag-variable"] = {
+    id: "tag-variable",
+    type: "tag",
+    name: "Variable",
+  };
+  state.tags.variables.tree = [{ id: "tag-variable" }];
+
+  state.tags.controls.items["tag-control"] = {
+    id: "tag-control",
+    type: "tag",
+    name: "Control",
+  };
+  state.tags.controls.tree = [{ id: "tag-control" }];
+
+  const variableCreateResult = processCommand({
+    state,
+    command: {
+      type: "variable.create",
+      payload: {
+        variableId: "variable-score",
+        data: {
+          type: "variable",
+          variableType: "number",
+          name: "Score",
+          scope: "context",
+          default: 0,
+          value: 0,
+          tagIds: [],
+        },
+      },
+    },
+  });
+
+  expect(variableCreateResult.valid).toBe(true);
+  expect(
+    variableCreateResult.state.variables.items["variable-score"].tagIds,
+  ).toBeUndefined();
+
+  const taggedVariableResult = processCommand({
+    state: variableCreateResult.state,
+    command: {
+      type: "variable.update",
+      payload: {
+        variableId: "variable-score",
+        data: {
+          tagIds: ["tag-variable"],
+        },
+      },
+    },
+  });
+
+  expect(taggedVariableResult.valid).toBe(true);
+  expect(
+    taggedVariableResult.state.variables.items["variable-score"].tagIds,
+  ).toEqual(["tag-variable"]);
+
+  const clearedVariableResult = processCommand({
+    state: taggedVariableResult.state,
+    command: {
+      type: "variable.update",
+      payload: {
+        variableId: "variable-score",
+        data: {
+          tagIds: [],
+        },
+      },
+    },
+  });
+
+  expect(clearedVariableResult.valid).toBe(true);
+  expect(
+    clearedVariableResult.state.variables.items["variable-score"].tagIds,
+  ).toBeUndefined();
+
+  const controlCreateResult = processCommand({
+    state: clearedVariableResult.state,
+    command: {
+      type: "control.create",
+      payload: {
+        controlId: "control-ui",
+        data: {
+          type: "control",
+          name: "UI",
+          tagIds: [],
+          elements: {
+            items: {},
+            tree: [],
+          },
+        },
+      },
+    },
+  });
+
+  expect(controlCreateResult.valid).toBe(true);
+  expect(
+    controlCreateResult.state.controls.items["control-ui"].tagIds,
+  ).toBeUndefined();
+
+  const taggedControlResult = processCommand({
+    state: controlCreateResult.state,
+    command: {
+      type: "control.update",
+      payload: {
+        controlId: "control-ui",
+        data: {
+          tagIds: ["tag-control"],
+        },
+      },
+    },
+  });
+
+  expect(taggedControlResult.valid).toBe(true);
+  expect(taggedControlResult.state.controls.items["control-ui"].tagIds).toEqual(
+    ["tag-control"],
+  );
+
+  const clearedControlResult = processCommand({
+    state: taggedControlResult.state,
+    command: {
+      type: "control.update",
+      payload: {
+        controlId: "control-ui",
+        data: {
+          tagIds: [],
+        },
+      },
+    },
+  });
+
+  expect(clearedControlResult.valid).toBe(true);
+  expect(
+    clearedControlResult.state.controls.items["control-ui"].tagIds,
+  ).toBeUndefined();
+  expect(validateState({ state: clearedControlResult.state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts tagged transforms and characters", () => {
   const state = createEmptyTestState();
 
