@@ -10083,7 +10083,6 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
         value: data.tagIds,
         path: "payload.data.tagIds",
         errorFactory,
-        allowEmpty: false,
       });
       if (result?.valid === false) {
         return result;
@@ -10207,7 +10206,6 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
       value: data.tagIds,
       path: "payload.data.tagIds",
       errorFactory,
-      allowEmpty: false,
     });
     if (result?.valid === false) {
       return result;
@@ -11105,7 +11103,6 @@ const validateControlCreateData = ({ data, errorFactory }) => {
         value: data.tagIds,
         path: "payload.data.tagIds",
         errorFactory,
-        allowEmpty: false,
       });
       if (result?.valid === false) {
         return result;
@@ -11239,7 +11236,6 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
       value: data.tagIds,
       path: "payload.data.tagIds",
       errorFactory,
-      allowEmpty: false,
     });
     if (result?.valid === false) {
       return result;
