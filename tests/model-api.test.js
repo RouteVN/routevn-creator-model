@@ -1807,6 +1807,162 @@ test("processCommand persists tagIds on transforms and characters", () => {
   });
 });
 
+test("processCommand persists and clears character nameVariableId", () => {
+  const state = createEmptyTestState();
+  state.variables.items.playerName = {
+    id: "playerName",
+    type: "variable",
+    variableType: "string",
+    name: "Player Name",
+    scope: "context",
+    default: "Guest",
+    value: "Guest",
+  };
+  state.variables.tree = [{ id: "playerName", children: [] }];
+
+  const createResult = processCommand({
+    state,
+    command: {
+      type: "character.create",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          type: "character",
+          name: "Hero",
+          nameVariableId: "playerName",
+        },
+      },
+    },
+  });
+
+  expect(createResult.valid).toBe(true);
+  expect(
+    createResult.state.characters.items["character-hero"].nameVariableId,
+  ).toBe("playerName");
+  expect(validateState({ state: createResult.state })).toEqual({
+    valid: true,
+  });
+
+  const clearResult = processCommand({
+    state: createResult.state,
+    command: {
+      type: "character.update",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          nameVariableId: "",
+        },
+      },
+    },
+  });
+
+  expect(clearResult.valid).toBe(true);
+  expect(
+    clearResult.state.characters.items["character-hero"].nameVariableId,
+  ).toBeUndefined();
+  expect(validateState({ state: clearResult.state })).toEqual({
+    valid: true,
+  });
+});
+
+test("character nameVariableId validation requires an existing string variable", () => {
+  const state = createEmptyTestState();
+  state.variables.items.score = {
+    id: "score",
+    type: "variable",
+    variableType: "number",
+    name: "Score",
+    scope: "context",
+    default: 0,
+    value: 0,
+  };
+  state.variables.tree = [{ id: "score", children: [] }];
+
+  expectValidation(() =>
+    validatePayload({
+      type: "character.create",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          type: "character",
+          name: "Hero",
+          nameVariableId: "",
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.nameVariableId must be a non-empty string when provided",
+  );
+
+  expect(
+    validatePayload({
+      type: "character.update",
+      payload: {
+        characterId: "character-hero",
+        data: {
+          nameVariableId: "",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "character.create",
+        payload: {
+          characterId: "character-hero",
+          data: {
+            type: "character",
+            name: "Hero",
+            nameVariableId: "missingVariable",
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.nameVariableId must reference an existing string variable",
+  );
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "character.create",
+        payload: {
+          characterId: "character-hero",
+          data: {
+            type: "character",
+            name: "Hero",
+            nameVariableId: "score",
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.nameVariableId must reference an existing string variable",
+  );
+
+  state.characters.items["character-hero"] = {
+    id: "character-hero",
+    type: "character",
+    name: "Hero",
+    nameVariableId: "score",
+    sprites: {
+      items: {},
+      tree: [],
+    },
+  };
+  state.characters.tree = [{ id: "character-hero", children: [] }];
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "character.nameVariableId must reference an existing string variable",
+  );
+});
+
 test("processCommand normalizes empty tagIds on variables and controls", () => {
   const state = createEmptyTestState();
 

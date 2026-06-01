@@ -496,6 +496,15 @@ const isVariableReferenceTarget = (state, variableId) => {
   return isPlainObject(variable) && variable.type !== "folder";
 };
 
+const isStringVariableReferenceTarget = (state, variableId) => {
+  const variable = state.variables.items[variableId];
+  return (
+    isPlainObject(variable) &&
+    variable.type === "variable" &&
+    variable.variableType === "string"
+  );
+};
+
 const LAYOUT_ITEM_TARGET_SET = new Set(["item.savedAt"]);
 const LAYOUT_DIALOGUE_TARGET_SET = new Set(["dialogue.characterId"]);
 const RUNTIME_TARGET_DOT_PATTERN = /^runtime\.([A-Za-z_$][A-Za-z0-9_$]*)$/;
@@ -4254,6 +4263,7 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
                 "tagIds",
                 "spriteGroups",
                 "shortcut",
+                "nameVariableId",
                 "fileId",
                 "sprites",
               ],
@@ -4323,6 +4333,16 @@ const validateCharacterItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.shortcut must be a string when provided`,
+        );
+      }
+
+      if (
+        item.nameVariableId !== undefined &&
+        !isNonEmptyString(item.nameVariableId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.nameVariableId must be a non-empty string when provided`,
         );
       }
 
@@ -4779,6 +4799,13 @@ const applyCharacterUpdate = ({ currentItem, data }) => {
     } else {
       delete nextItem.spriteGroups;
     }
+  }
+
+  if (
+    Object.hasOwn(data, "nameVariableId") &&
+    (data.nameVariableId === undefined || data.nameVariableId === "")
+  ) {
+    delete nextItem.nameVariableId;
   }
 
   return nextItem;
@@ -6495,6 +6522,28 @@ const validateTransformPreviewImageReferences = ({
   return VALID_RESULT;
 };
 
+const validateStringVariableReference = ({
+  state,
+  variableId,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  if (variableId === undefined || variableId === null || variableId === "") {
+    return VALID_RESULT;
+  }
+
+  if (!isStringVariableReferenceTarget(state, variableId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference an existing string variable`,
+      details,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
 export const assertInvariants = ({ state }) => {
   if (!isPlainObject(state)) {
     return invalidInvariant("state must be an object");
@@ -6902,6 +6951,19 @@ export const assertInvariants = ({ state }) => {
         fileId: character.fileId,
         path: "character.fileId",
         details: { characterId, fileId: character.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (character.nameVariableId !== undefined) {
+      const result = validateStringVariableReference({
+        state,
+        variableId: character.nameVariableId,
+        path: "character.nameVariableId",
+        details: { characterId, variableId: character.nameVariableId },
         errorFactory: createInvariantValidationError,
       });
       if (!result.valid) {
@@ -10639,6 +10701,7 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
               "tagIds",
               "spriteGroups",
               "shortcut",
+              "nameVariableId",
               "fileId",
               "sprites",
             ],
@@ -10694,6 +10757,16 @@ const validateCharacterCreateData = ({ data, errorFactory }) => {
       );
     }
 
+    if (
+      data.nameVariableId !== undefined &&
+      !isNonEmptyString(data.nameVariableId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.nameVariableId must be a non-empty string when provided",
+      );
+    }
+
     if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -10735,6 +10808,7 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
         "tagIds",
         "spriteGroups",
         "shortcut",
+        "nameVariableId",
         "fileId",
       ],
       path: "payload.data",
@@ -10770,6 +10844,17 @@ const validateCharacterUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.shortcut must be a string when provided",
+    );
+  }
+
+  if (
+    data.nameVariableId !== undefined &&
+    data.nameVariableId !== "" &&
+    !isNonEmptyString(data.nameVariableId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.nameVariableId must be a non-empty string when provided",
     );
   }
 
@@ -17072,6 +17157,10 @@ const COMMAND_DEFINITIONS = [
         item.fileId = payload.data.fileId;
       }
 
+      if (payload.data.nameVariableId !== undefined) {
+        item.nameVariableId = payload.data.nameVariableId;
+      }
+
       assignOptionalTagIds({
         target: item,
         tagIds: payload.data.tagIds,
@@ -17105,6 +17194,21 @@ const COMMAND_DEFINITIONS = [
           fields: ["fileId"],
           details: {
             characterId: payload.characterId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateStringVariableReference({
+          state,
+          variableId: payload.data.nameVariableId,
+          path: "payload.data.nameVariableId",
+          details: {
+            characterId: payload.characterId,
+            variableId: payload.data.nameVariableId,
           },
         });
         if (!result.valid) {
@@ -17215,6 +17319,21 @@ const COMMAND_DEFINITIONS = [
         });
         if (!result.valid) {
           return result;
+        }
+
+        if (Object.hasOwn(payload.data, "nameVariableId")) {
+          const variableResult = validateStringVariableReference({
+            state,
+            variableId: payload.data.nameVariableId,
+            path: "payload.data.nameVariableId",
+            details: {
+              characterId: payload.characterId,
+              variableId: payload.data.nameVariableId,
+            },
+          });
+          if (!variableResult.valid) {
+            return variableResult;
+          }
         }
 
         {
