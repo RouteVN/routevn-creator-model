@@ -1,0 +1,30 @@
+schemaVersion: 8
+type: animation.create
+payload:
+  animationId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: animation
+    name: Entrance Motion
+    description: Entrance motion
+    thumbnailFileId: thumb-animation
+    preview:
+      background:
+        imageId: image-background
+      outgoing:
+        imageId: image-outgoing
+      incoming:
+        imageId: image-incoming
+    animation:
+      type: update
+      tween:
+        x:
+          auto:
+            duration: 1000
+            easing: linear
+        alpha:
+          keyframes:
+            - duration: 100
+              value: 1

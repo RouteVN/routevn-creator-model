@@ -1,0 +1,6 @@
+schemaVersion: 8
+type: textStyle.update
+payload:
+  textStyleId: item-a
+  data:
+    previewText: Preview

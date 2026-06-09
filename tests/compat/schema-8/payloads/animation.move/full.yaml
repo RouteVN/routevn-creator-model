@@ -1,0 +1,7 @@
+schemaVersion: 8
+type: animation.move
+payload:
+  animationId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

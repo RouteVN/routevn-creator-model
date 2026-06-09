@@ -1,0 +1,16 @@
+schemaVersion: 8
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: text-a
+  data:
+    variableId: variable-rich
+    scrollUp:
+      payload:
+        actions:
+          nextLine: {}
+    scrollDown:
+      inheritToChildren: true
+      payload:
+        actions:
+          toggleDialogueUI: {}

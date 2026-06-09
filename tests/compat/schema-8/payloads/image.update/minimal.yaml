@@ -1,0 +1,6 @@
+schemaVersion: 8
+type: image.update
+payload:
+  imageId: item-a
+  data:
+    name: Image Updated

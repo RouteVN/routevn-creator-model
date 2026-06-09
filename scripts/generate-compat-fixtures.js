@@ -2276,6 +2276,30 @@ const payloadFixtures = [
           choiceItemIndex: 2,
         },
       },
+      "text-reveal-indicator-full": {
+        layoutId: "layout-dialogue",
+        elementId: "text-a",
+        data: {
+          indicator: {
+            revealing: {
+              kind: "image",
+              imageId: "image-rich",
+              width: 12,
+              height: 12,
+              offsetX: 16,
+              offsetY: -4,
+            },
+            complete: {
+              kind: "image",
+              imageId: "image-rich",
+              width: 14,
+              height: 14,
+              offsetX: 24,
+              offsetY: 3,
+            },
+          },
+        },
+      },
     },
   ),
   ...payloadSet(
