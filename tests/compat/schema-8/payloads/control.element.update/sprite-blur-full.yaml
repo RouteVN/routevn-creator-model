@@ -1,0 +1,12 @@
+schemaVersion: 8
+type: control.element.update
+payload:
+  controlId: control-default
+  elementId: sprite-blur
+  data:
+    blur:
+      x: 6
+      "y": 9
+      quality: 3
+      kernelSize: 9
+      repeatEdgePixels: true

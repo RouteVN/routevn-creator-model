@@ -1,0 +1,17 @@
+schemaVersion: 8
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: slider-body
+  data:
+    type: slider
+    name: Body Slider
+    x: 0
+    "y": 0
+    width: 300
+    height: 24
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0

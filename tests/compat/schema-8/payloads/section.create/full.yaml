@@ -1,0 +1,10 @@
+schemaVersion: 8
+type: section.create
+payload:
+  sectionId: section-c
+  sceneId: scene-a
+  parentId: section-a
+  position: before
+  positionTargetId: section-b
+  data:
+    name: Section C

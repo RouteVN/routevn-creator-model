@@ -1,0 +1,10 @@
+schemaVersion: 8
+type: character.create
+payload:
+  characterId: item-a
+  data:
+    type: character
+    name: Hero
+    sprites:
+      items: {}
+      tree: []

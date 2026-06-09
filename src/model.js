@@ -392,7 +392,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -403,6 +403,18 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "container-ref-history-line",
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
+];
+const LAYOUT_TEXT_CONTENT_ELEMENT_TYPES = [
+  "text",
+  "text-revealing",
+  "text-ref-character-name",
+  "text-revealing-ref-dialogue-content",
+  "text-ref-choice-item-content",
+  "text-ref-save-load-slot-date",
+  "text-ref-dialogue-line-character-name",
+  "text-ref-dialogue-line-content",
+  "text-ref-history-line-character-name",
+  "text-ref-history-line-content",
 ];
 const DOMAIN_ERROR_KIND_BY_NAME = {
   PayloadValidationError: "payload",
@@ -3419,6 +3431,255 @@ const validateLayoutElementBlur = ({ blur, path, errorFactory }) => {
   }
 };
 
+const LAYOUT_TEXT_REVEAL_INDICATOR_ELEMENT_TYPES = [
+  "text-revealing",
+  "text-revealing-ref-dialogue-content",
+];
+
+const validateLayoutTextRevealIndicatorVisual = ({
+  visual,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(visual)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: visual,
+      allowedKeys: [
+        "kind",
+        "imageId",
+        "resourceId",
+        "animationName",
+        "width",
+        "height",
+        "offsetX",
+        "offsetY",
+      ],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  const kind =
+    visual.kind === "spritesheet" ||
+    visual.resourceId !== undefined ||
+    visual.animationName !== undefined
+      ? "spritesheet"
+      : "image";
+
+  if (
+    visual.kind !== undefined &&
+    visual.kind !== "image" &&
+    visual.kind !== "spritesheet"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.kind must be 'image' or 'spritesheet' when provided`,
+    );
+  }
+
+  if (
+    kind === "image" &&
+    visual.imageId !== undefined &&
+    !isNonEmptyString(visual.imageId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.imageId must be a non-empty string when provided`,
+    );
+  }
+
+  if (kind === "spritesheet") {
+    if (!isNonEmptyString(visual.resourceId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.resourceId must be a non-empty string`,
+      );
+    }
+
+    if (!isNonEmptyString(visual.animationName)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.animationName must be a non-empty string`,
+      );
+    }
+  }
+
+  for (const key of ["width", "height"]) {
+    if (
+      visual[key] !== undefined &&
+      (!isFiniteNumber(visual[key]) || visual[key] <= 0)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number greater than 0 when provided`,
+      );
+    }
+  }
+
+  for (const key of ["offsetX", "offsetY"]) {
+    if (visual[key] !== undefined && !isFiniteNumber(visual[key])) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number when provided`,
+      );
+    }
+  }
+};
+
+const validateLayoutTextRevealIndicator = ({
+  indicator,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(indicator)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: indicator,
+      allowedKeys: ["revealing", "complete", "offsetX", "offsetY"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["revealing", "complete"]) {
+    if (indicator[key] !== undefined) {
+      const result = validateLayoutTextRevealIndicatorVisual({
+        visual: indicator[key],
+        path: `${path}.${key}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  for (const key of ["offsetX", "offsetY"]) {
+    if (indicator[key] !== undefined && !isFiniteNumber(indicator[key])) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number when provided`,
+      );
+    }
+  }
+};
+
+const validateLayoutTextContent = ({ content, path, errorFactory }) => {
+  if (!Array.isArray(content)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an array when provided`,
+    );
+  }
+
+  for (let index = 0; index < content.length; index += 1) {
+    const item = content[index];
+    const itemPath = `${path}[${index}]`;
+
+    if (!isPlainObject(item)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} must be an object`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: ["text", "reference"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    const hasText = Object.hasOwn(item, "text");
+    const hasReference = Object.hasOwn(item, "reference");
+
+    if (hasText === hasReference) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} must include exactly one of text or reference`,
+      );
+    }
+
+    if (hasText) {
+      if (!isString(item.text)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.text must be a string`,
+        );
+      }
+      continue;
+    }
+
+    if (!isPlainObject(item.reference)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.reference must be an object`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item.reference,
+        allowedKeys: ["resourceId"],
+        path: `${itemPath}.reference`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.reference.resourceId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.reference.resourceId must be a non-empty string`,
+      );
+    }
+  }
+};
+
+const getLayoutTextContentReferenceEntries = (content) => {
+  if (!Array.isArray(content)) {
+    return [];
+  }
+
+  const entries = [];
+  for (let index = 0; index < content.length; index += 1) {
+    const resourceId = content[index]?.reference?.resourceId;
+    if (resourceId !== undefined) {
+      entries.push({
+        index,
+        resourceId,
+      });
+    }
+  }
+  return entries;
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -3447,9 +3708,11 @@ const validateLayoutElementData = ({
     "fill",
     "border",
     "text",
+    "content",
     "textStyle",
     "displaySpeed",
     "revealEffect",
+    "indicator",
     "resourceId",
     "animationName",
     "imageId",
@@ -3624,6 +3887,52 @@ const validateLayoutElementData = ({
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.blur can only be provided for sprite elements`,
+      );
+    }
+  }
+
+  if (data.content !== undefined) {
+    {
+      const result = validateLayoutTextContent({
+        content: data.content,
+        path: `${path}.content`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (
+      data.type !== undefined &&
+      !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.content can only be provided for text elements`,
+      );
+    }
+  }
+
+  if (data.indicator !== undefined) {
+    {
+      const result = validateLayoutTextRevealIndicator({
+        indicator: data.indicator,
+        path: `${path}.indicator`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (
+      data.type !== undefined &&
+      !LAYOUT_TEXT_REVEAL_INDICATOR_ELEMENT_TYPES.includes(data.type)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.indicator can only be provided for text revealing elements`,
       );
     }
   }
@@ -4143,9 +4452,11 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "fill",
           "border",
           "text",
+          "content",
           "textStyle",
           "displaySpeed",
           "revealEffect",
+          "indicator",
           "resourceId",
           "animationName",
           "particleId",
@@ -7420,15 +7731,16 @@ export const assertInvariants = ({ state }) => {
     elementId,
     targetId,
     animationName,
+    fieldPrefix = "",
   }) => {
     const spritesheet = state.spritesheets?.items?.[targetId];
     if (!isPlainObject(spritesheet) || spritesheet.type === "folder") {
       return invalidInvariant(
-        `${ownerLabel} element resourceId must reference an existing non-folder spritesheet`,
+        `${ownerLabel} element ${fieldPrefix}resourceId must reference an existing non-folder spritesheet`,
         {
           [ownerIdField]: ownerId,
           elementId,
-          field: "resourceId",
+          field: `${fieldPrefix}resourceId`,
           targetId,
         },
       );
@@ -7439,11 +7751,11 @@ export const assertInvariants = ({ state }) => {
       !isPlainObject(spritesheet.animations?.[animationName])
     ) {
       return invalidInvariant(
-        `${ownerLabel} element animationName must reference an existing spritesheet animation`,
+        `${ownerLabel} element ${fieldPrefix}animationName must reference an existing spritesheet animation`,
         {
           [ownerIdField]: ownerId,
           elementId,
-          field: "animationName",
+          field: `${fieldPrefix}animationName`,
           targetId: animationName,
         },
       );
@@ -7535,6 +7847,43 @@ export const assertInvariants = ({ state }) => {
               elementId,
               field,
               targetId: element[field],
+            });
+            if (!result.valid) {
+              return result;
+            }
+          }
+        }
+
+        for (const stateName of ["revealing", "complete"]) {
+          const visual = element.indicator?.[stateName];
+          if (
+            visual?.kind === "spritesheet" ||
+            visual?.resourceId !== undefined ||
+            visual?.animationName !== undefined
+          ) {
+            const result = assertSpritesheetAnimationReference({
+              ownerIdField,
+              ownerId,
+              ownerLabel,
+              elementId,
+              targetId: visual.resourceId,
+              animationName: visual.animationName,
+              fieldPrefix: `indicator.${stateName}.`,
+            });
+            if (!result.valid) {
+              return result;
+            }
+            continue;
+          }
+
+          if (visual?.imageId !== undefined) {
+            const result = assertImageReference({
+              ownerIdField,
+              ownerId,
+              ownerLabel,
+              elementId,
+              field: `indicator.${stateName}.imageId`,
+              targetId: visual.imageId,
             });
             if (!result.valid) {
               return result;
@@ -7636,6 +7985,23 @@ export const assertInvariants = ({ state }) => {
                 },
               );
             }
+          }
+        }
+
+        for (const {
+          index,
+          resourceId,
+        } of getLayoutTextContentReferenceEntries(element.content)) {
+          if (!isVariableReferenceTarget(state, resourceId)) {
+            return invalidInvariant(
+              `${ownerLabel} element content.${index}.reference.resourceId must reference an existing non-folder variable`,
+              {
+                [ownerIdField]: ownerId,
+                elementId,
+                field: `content.${index}.reference.resourceId`,
+                targetId: resourceId,
+              },
+            );
           }
         }
 
@@ -11384,6 +11750,36 @@ const validateVisualElementReferenceTargets = ({
   }
 
   if (
+    data.indicator !== undefined &&
+    !LAYOUT_TEXT_REVEAL_INDICATOR_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element indicator can only be provided for text revealing elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "indicator",
+      },
+    );
+  }
+
+  if (
+    data.content !== undefined &&
+    !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element content can only be provided for text elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "content",
+      },
+    );
+  }
+
+  if (
     data.type === "spritesheet-animation" ||
     data.resourceId !== undefined ||
     data.animationName !== undefined
@@ -11478,6 +11874,66 @@ const validateVisualElementReferenceTargets = ({
           elementId,
           field: "clickImageId",
           targetId: data.clickImageId,
+        },
+      );
+    }
+  }
+
+  for (const stateName of ["revealing", "complete"]) {
+    const visual = data.indicator?.[stateName];
+    if (
+      visual?.kind === "spritesheet" ||
+      visual?.resourceId !== undefined ||
+      visual?.animationName !== undefined
+    ) {
+      const spritesheet = state.spritesheets?.items?.[visual.resourceId];
+      if (!isPlainObject(spritesheet) || spritesheet.type === "folder") {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element indicator.${stateName}.resourceId must reference an existing non-folder spritesheet`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `indicator.${stateName}.resourceId`,
+            targetId: visual.resourceId,
+          },
+        );
+      }
+
+      if (
+        !isNonEmptyString(visual.animationName) ||
+        !isPlainObject(spritesheet.animations?.[visual.animationName])
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element indicator.${stateName}.animationName must reference an existing spritesheet animation`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `indicator.${stateName}.animationName`,
+            targetId: visual.animationName,
+          },
+        );
+      }
+
+      continue;
+    }
+
+    const imageId = visual?.imageId;
+    if (imageId === undefined) {
+      continue;
+    }
+
+    const image = state.images.items[imageId];
+    if (!isPlainObject(image) || image.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element indicator.${stateName}.imageId must reference an existing non-folder image`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: `indicator.${stateName}.imageId`,
+          targetId: imageId,
         },
       );
     }
@@ -11707,6 +12163,23 @@ const validateVisualElementReferenceTargets = ({
           },
         );
       }
+    }
+  }
+
+  for (const { index, resourceId } of getLayoutTextContentReferenceEntries(
+    data.content,
+  )) {
+    if (!isVariableReferenceTarget(state, resourceId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element content.${index}.reference.resourceId must reference an existing non-folder variable`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: `content.${index}.reference.resourceId`,
+          targetId: resourceId,
+        },
+      );
     }
   }
 
@@ -17736,12 +18209,32 @@ const COMMAND_DEFINITIONS = [
             "payload.parentId must reference a folder sprite item",
           );
         }
+
+        const parentNode = findTreeNode({
+          nodes: collection.tree,
+          nodeId: parentId,
+        });
+        if (!parentNode) {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder sprite item in the tree",
+          );
+        }
       }
 
       if (payload.positionTargetId !== undefined) {
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
           return invalidPrecondition(
             "payload.positionTargetId must reference an existing sprite item",
+          );
+        }
+
+        const targetNode = findTreeNode({
+          nodes: collection.tree,
+          nodeId: payload.positionTargetId,
+        });
+        if (!targetNode) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing sprite item in the tree",
           );
         }
 
@@ -18076,12 +18569,27 @@ const COMMAND_DEFINITIONS = [
         nodes: collection.tree,
         nodeId: payload.spriteId,
       });
+      if (!currentNode) {
+        return invalidPrecondition(
+          "payload.spriteId must reference an existing sprite item in the tree",
+        );
+      }
 
       if (payload.parentId !== undefined && payload.parentId !== null) {
         const parentItem = collection.items[payload.parentId];
         if (!isPlainObject(parentItem) || parentItem.type !== "folder") {
           return invalidPrecondition(
             "payload.parentId must reference a folder sprite item",
+          );
+        }
+
+        const parentNode = findTreeNode({
+          nodes: collection.tree,
+          nodeId: payload.parentId,
+        });
+        if (!parentNode) {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder sprite item in the tree",
           );
         }
 
@@ -18108,6 +18616,16 @@ const COMMAND_DEFINITIONS = [
         if (!isPlainObject(collection.items[payload.positionTargetId])) {
           return invalidPrecondition(
             "payload.positionTargetId must reference an existing sprite item",
+          );
+        }
+
+        const targetNode = findTreeNode({
+          nodes: collection.tree,
+          nodeId: payload.positionTargetId,
+        });
+        if (!targetNode) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing sprite item in the tree",
           );
         }
 

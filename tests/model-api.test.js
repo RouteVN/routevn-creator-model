@@ -998,25 +998,114 @@ test("processCommand persists input layouts and input element fields", () => {
   });
 
   expect(updateElementResult.valid).toBe(true);
-  expect(
-    updateElementResult.state.layouts.items["profile-form"],
-  ).toMatchObject({
-    layoutType: "input",
-    elements: {
-      items: {
-        "name-input": {
-          type: "input",
-          field: "code",
-          placeholder: "Name",
-          maxLength: 64,
-          padding: {
-            left: 12,
-            right: 12,
+  expect(updateElementResult.state.layouts.items["profile-form"]).toMatchObject(
+    {
+      layoutType: "input",
+      elements: {
+        items: {
+          "name-input": {
+            type: "input",
+            field: "code",
+            placeholder: "Name",
+            maxLength: 64,
+            padding: {
+              left: 12,
+              right: 12,
+            },
           },
         },
       },
     },
+  );
+});
+
+test("processCommand persists layout text content arrays without legacy text fallback", () => {
+  const state = createEmptyTestState();
+  state.variables.items["player-name"] = {
+    id: "player-name",
+    type: "variable",
+    variableType: "string",
+    name: "Player Name",
+    scope: "context",
+    default: "Aki",
+    value: "Aki",
+  };
+  state.variables.tree.push({
+    id: "player-name",
+    children: [],
   });
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  const result = processCommand({
+    state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: true,
+        data: {
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          content: [
+            { text: "Hello " },
+            { reference: { resourceId: "player-name" } },
+          ],
+        },
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(
+    result.state.layouts.items["layout-ui"].elements.items["text-1"].content,
+  ).toEqual([{ text: "Hello " }, { reference: { resourceId: "player-name" } }]);
+  expect(
+    result.state.layouts.items["layout-ui"].elements.items["text-1"].text,
+  ).toBeUndefined();
 });
 
 test("validatePayload accepts isFragment on layouts", () => {
@@ -2465,6 +2554,103 @@ test("validatePayload accepts layout element revealEffect", () => {
   });
 });
 
+test("validatePayload accepts layout element text content arrays", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          content: [
+            { text: "Skipping " },
+            { reference: { resourceId: "player-name" } },
+            { text: " now" },
+          ],
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload rejects layout element text content strings", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          content: "Skipping ${variables.playerName}",
+        },
+      },
+    }),
+  ).toThrow("payload.data.content must be an array when provided");
+});
+
+test("validatePayload accepts layout element text reveal indicators", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          indicator: {
+            revealing: {
+              kind: "image",
+              imageId: "image-revealing",
+              width: 12,
+              height: 12,
+              offsetX: 16,
+              offsetY: -4,
+            },
+            complete: {
+              kind: "spritesheet",
+              resourceId: "spritesheet-indicator",
+              animationName: "blink",
+              width: 14,
+              height: 14,
+              offsetX: 24,
+              offsetY: 3,
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload rejects unsupported text reveal indicator visual kinds", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          indicator: {
+            revealing: {
+              kind: "video",
+              imageId: "image-revealing",
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.indicator.revealing.kind must be 'image' or 'spritesheet' when provided",
+  );
+});
+
 test("validatePayload accepts sprite layout element blur", () => {
   expect(
     validatePayload({
@@ -3253,6 +3439,193 @@ test("validateState accepts layout elements with revealEffect", () => {
   });
 });
 
+test("validateState accepts layout elements with text reveal indicators", () => {
+  const state = createEmptyTestState();
+  addFileRecordToState(state, {
+    fileId: "file-indicator-revealing",
+    mimeType: "image/png",
+  });
+  addFileRecordToState(state, {
+    fileId: "file-indicator-complete",
+    mimeType: "image/png",
+  });
+  addFileRecordToState(state, {
+    fileId: "file-indicator-spritesheet",
+    mimeType: "image/png",
+  });
+  state.images.items["image-revealing"] = {
+    id: "image-revealing",
+    type: "image",
+    name: "Revealing Indicator",
+    fileId: "file-indicator-revealing",
+  };
+  state.images.items["image-complete"] = {
+    id: "image-complete",
+    type: "image",
+    name: "Complete Indicator",
+    fileId: "file-indicator-complete",
+  };
+  state.images.tree.push(
+    {
+      id: "image-revealing",
+      children: [],
+    },
+    {
+      id: "image-complete",
+      children: [],
+    },
+  );
+  state.spritesheets.items["spritesheet-indicator"] = {
+    id: "spritesheet-indicator",
+    type: "spritesheet",
+    name: "Indicator Sheet",
+    fileId: "file-indicator-spritesheet",
+    jsonData: {
+      frames: {
+        "blink-0": {
+          frame: {
+            x: 0,
+            y: 0,
+            w: 14,
+            h: 14,
+          },
+        },
+      },
+    },
+    animations: {
+      blink: {
+        frames: [0],
+        fps: 12,
+        loop: true,
+      },
+    },
+  };
+  state.spritesheets.tree.push({
+    id: "spritesheet-indicator",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "dialogue-adv",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text-revealing-ref-dialogue-content",
+          name: "Dialogue",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          indicator: {
+            revealing: {
+              kind: "image",
+              imageId: "image-revealing",
+              width: 12,
+              height: 12,
+              offsetX: 16,
+              offsetY: -4,
+            },
+            complete: {
+              kind: "spritesheet",
+              resourceId: "spritesheet-indicator",
+              animationName: "blink",
+              width: 14,
+              height: 14,
+              offsetX: 24,
+              offsetY: 3,
+            },
+          },
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState rejects text reveal indicators on non-revealing layout elements", () => {
+  const state = createEmptyTestState();
+  addFileRecordToState(state, {
+    fileId: "file-indicator-revealing",
+    mimeType: "image/png",
+  });
+  state.images.items["image-revealing"] = {
+    id: "image-revealing",
+    type: "image",
+    name: "Revealing Indicator",
+    fileId: "file-indicator-revealing",
+  };
+  state.images.tree.push({
+    id: "image-revealing",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "dialogue-adv",
+    elements: {
+      items: {
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          indicator: {
+            revealing: {
+              imageId: "image-revealing",
+            },
+          },
+        },
+      },
+      tree: [
+        {
+          id: "sprite-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expectValidation(() => validateState({ state })).toThrow(
+    "state.layouts.items.layout-ui.elements.items.sprite-1.indicator can only be provided for text revealing elements",
+  );
+});
+
 test("validateState accepts history layout element references", () => {
   const state = createEmptyTestState();
 
@@ -3458,6 +3831,66 @@ test("validateState accepts layout slider variableId refs to project variables",
       tree: [
         {
           id: "slider-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout text content refs to project variables", () => {
+  const state = createEmptyTestState();
+  state.variables.items["player-name"] = {
+    id: "player-name",
+    type: "variable",
+    variableType: "string",
+    name: "Player Name",
+    scope: "context",
+    default: "Aki",
+    value: "Aki",
+  };
+  state.variables.tree.push({
+    id: "player-name",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          content: [
+            { text: "Hello " },
+            { reference: { resourceId: "player-name" } },
+          ],
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
           children: [],
         },
       ],
@@ -4190,6 +4623,209 @@ test("validateAgainstState accepts layout element sound overrides", () => {
   ).toEqual({
     valid: true,
   });
+});
+
+test("validateAgainstState rejects missing layout text content variable refs", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "text-1",
+          data: {
+            content: [
+              { text: "Hello " },
+              { reference: { resourceId: "missing-variable" } },
+            ],
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element content.1.reference.resourceId must reference an existing non-folder variable",
+  );
+});
+
+test("validateAgainstState rejects missing text reveal indicator image refs", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "dialogue-adv",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text-revealing-ref-dialogue-content",
+          name: "Dialogue",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "text-1",
+          data: {
+            indicator: {
+              revealing: {
+                imageId: "image-missing",
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element indicator.revealing.imageId must reference an existing non-folder image",
+  );
+});
+
+test("validateAgainstState rejects text reveal indicators on non-revealing layout elements", () => {
+  const state = createEmptyTestState();
+  addFileRecordToState(state, {
+    fileId: "file-indicator-revealing",
+    mimeType: "image/png",
+  });
+  state.images.items["image-revealing"] = {
+    id: "image-revealing",
+    type: "image",
+    name: "Revealing Indicator",
+    fileId: "file-indicator-revealing",
+  };
+  state.images.tree.push({
+    id: "image-revealing",
+    children: [],
+  });
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "dialogue-adv",
+    elements: {
+      items: {
+        "sprite-1": {
+          id: "sprite-1",
+          type: "sprite",
+          name: "Sprite",
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+        },
+      },
+      tree: [
+        {
+          id: "sprite-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "sprite-1",
+          data: {
+            indicator: {
+              revealing: {
+                imageId: "image-revealing",
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element indicator can only be provided for text revealing elements",
+  );
 });
 
 test("validateAgainstState rejects missing transition mask image refs", () => {

@@ -2276,6 +2276,32 @@ const directCases = [
           },
         }),
       ).toThrow("payload.spriteId must be a non-empty string");
+
+      const state = createCharacterBaseState();
+      state.characters.items["character-hero"].sprites.tree = [
+        createTreeNode("sprite-b"),
+      ];
+
+      expectValidation(() =>
+        validateAgainstState({
+          state,
+          command: {
+            type: "character.sprite.create",
+            payload: {
+              characterId: "character-hero",
+              spriteId: "sprite-c",
+              parentId: "folder-default",
+              data: {
+                type: "image",
+                name: "New Sprite",
+                fileId: "file-smile",
+              },
+            },
+          },
+        }),
+      ).toThrow(
+        "state.characters.items.character-hero.sprites.tree is missing item 'folder-default'",
+      );
     },
   },
   {
@@ -2398,6 +2424,52 @@ const directCases = [
           },
         }),
       ).toThrow("payload.parentId must reference a folder sprite item");
+
+      const missingTreeState = createCharacterBaseState();
+      missingTreeState.characters.items["character-hero"].sprites.tree = [
+        createTreeNode("folder-default"),
+        createTreeNode("sprite-b"),
+      ];
+
+      expectValidation(() =>
+        validateAgainstState({
+          state: missingTreeState,
+          command: {
+            type: "character.sprite.move",
+            payload: {
+              characterId: "character-hero",
+              spriteId: "sprite-a",
+              parentId: null,
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow(
+        "state.characters.items.character-hero.sprites.tree is missing item 'sprite-a'",
+      );
+
+      const missingParentTreeState = createCharacterBaseState();
+      missingParentTreeState.characters.items["character-hero"].sprites.tree = [
+        createTreeNode("sprite-a"),
+        createTreeNode("sprite-b"),
+      ];
+
+      expectValidation(() =>
+        validateAgainstState({
+          state: missingParentTreeState,
+          command: {
+            type: "character.sprite.move",
+            payload: {
+              characterId: "character-hero",
+              spriteId: "sprite-b",
+              parentId: "folder-default",
+              position: "last",
+            },
+          },
+        }),
+      ).toThrow(
+        "state.characters.items.character-hero.sprites.tree is missing item 'folder-default'",
+      );
     },
   },
   {
