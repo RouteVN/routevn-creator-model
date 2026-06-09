@@ -1,0 +1,7 @@
+schemaVersion: 8
+type: spritesheet.move
+payload:
+  spritesheetId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

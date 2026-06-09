@@ -392,7 +392,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3419,6 +3419,89 @@ const validateLayoutElementBlur = ({ blur, path, errorFactory }) => {
   }
 };
 
+const getLayoutTextContentReferenceResourceId = (item) => {
+  const resourceId = item?.reference?.resourceId;
+  return isNonEmptyString(resourceId) ? resourceId : undefined;
+};
+
+const validateLayoutTextContent = ({ content, path, errorFactory }) => {
+  if (!Array.isArray(content)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an array when provided`,
+    );
+  }
+
+  for (let index = 0; index < content.length; index += 1) {
+    const item = content[index];
+    const itemPath = `${path}[${index}]`;
+
+    if (!isPlainObject(item)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} must be an object`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys: ["text", "reference"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    const hasText = Object.hasOwn(item, "text");
+    const hasReference = Object.hasOwn(item, "reference");
+    if (hasText === hasReference) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} must include exactly one of text or reference`,
+      );
+    }
+
+    if (hasText) {
+      if (!isString(item.text)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.text must be a string`,
+        );
+      }
+      continue;
+    }
+
+    if (!isPlainObject(item.reference)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.reference must be an object`,
+      );
+    }
+
+    {
+      const result = validateExactKeys({
+        value: item.reference,
+        expectedKeys: ["resourceId"],
+        path: `${itemPath}.reference`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.reference.resourceId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.reference.resourceId must be a non-empty string`,
+      );
+    }
+  }
+};
+
 const validateLayoutElementData = ({
   data,
   path,
@@ -3447,6 +3530,7 @@ const validateLayoutElementData = ({
     "fill",
     "border",
     "text",
+    "content",
     "textStyle",
     "displaySpeed",
     "revealEffect",
@@ -3625,6 +3709,17 @@ const validateLayoutElementData = ({
         errorFactory,
         `${path}.blur can only be provided for sprite elements`,
       );
+    }
+  }
+
+  if (data.content !== undefined) {
+    const result = validateLayoutTextContent({
+      content: data.content,
+      path: `${path}.content`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
     }
   }
 
@@ -4143,6 +4238,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "fill",
           "border",
           "text",
+          "content",
           "textStyle",
           "displaySpeed",
           "revealEffect",
@@ -7387,6 +7483,39 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertLayoutTextContentReferences = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    content,
+  }) => {
+    if (!Array.isArray(content)) {
+      return VALID_RESULT;
+    }
+
+    for (let index = 0; index < content.length; index += 1) {
+      const targetId = getLayoutTextContentReferenceResourceId(content[index]);
+      if (targetId === undefined) {
+        continue;
+      }
+
+      if (!isVariableReferenceTarget(state, targetId)) {
+        return invalidInvariant(
+          `${ownerLabel} element content[${index}].reference.resourceId must reference an existing non-folder variable`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `content[${index}].reference.resourceId`,
+            targetId,
+          },
+        );
+      }
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertFragmentLayoutReference = ({
     ownerIdField,
     ownerId,
@@ -7646,6 +7775,19 @@ export const assertInvariants = ({ state }) => {
             ownerLabel,
             elementId,
             targetId: element.variableId,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        {
+          const result = assertLayoutTextContentReferences({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            content: element.content,
           });
           if (!result.valid) {
             return result;
@@ -11721,6 +11863,30 @@ const validateVisualElementReferenceTargets = ({
           variableId: data.variableId,
         },
       );
+    }
+  }
+
+  if (Array.isArray(data.content)) {
+    for (let index = 0; index < data.content.length; index += 1) {
+      const targetId = getLayoutTextContentReferenceResourceId(
+        data.content[index],
+      );
+      if (targetId === undefined) {
+        continue;
+      }
+
+      if (!isVariableReferenceTarget(state, targetId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${ownerLabel} element content[${index}].reference.resourceId must reference an existing non-folder variable`,
+          {
+            [ownerIdField]: ownerId,
+            elementId,
+            field: `content[${index}].reference.resourceId`,
+            targetId,
+          },
+        );
+      }
     }
   }
 

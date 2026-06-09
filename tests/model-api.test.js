@@ -1019,6 +1019,96 @@ test("processCommand persists input layouts and input element fields", () => {
   });
 });
 
+test("processCommand persists layout element rich text content", () => {
+  const state = createEmptyTestState();
+  state.variables.items["player-name"] = {
+    id: "player-name",
+    type: "variable",
+    variableType: "string",
+    name: "Player Name",
+    scope: "context",
+    default: "Aki",
+    value: "Aki",
+  };
+  state.variables.tree = [
+    {
+      id: "player-name",
+      children: [],
+    },
+  ];
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  const content = [
+    {
+      text: "Hello ",
+    },
+    {
+      reference: {
+        resourceId: "player-name",
+      },
+    },
+  ];
+  const result = processCommand({
+    state,
+    command: {
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          text: 'Hello ${variables["player-name"]}',
+          content,
+        },
+      },
+    },
+  });
+
+  expect(result.valid).toBe(true);
+  expect(
+    result.state.layouts.items["layout-ui"].elements.items["text-1"],
+  ).toMatchObject({
+    text: 'Hello ${variables["player-name"]}',
+    content,
+  });
+});
+
 test("validatePayload accepts isFragment on layouts", () => {
   expect(
     validatePayload({
@@ -2465,6 +2555,57 @@ test("validatePayload accepts layout element revealEffect", () => {
   });
 });
 
+test("validatePayload accepts layout element rich text content", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          text: 'Hello ${variables["player-name"]}',
+          content: [
+            {
+              text: "Hello ",
+            },
+            {
+              reference: {
+                resourceId: "player-name",
+              },
+            },
+          ],
+        },
+      },
+    }),
+  ).toEqual({
+    valid: true,
+  });
+});
+
+test("validatePayload rejects invalid layout element rich text content", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          content: [
+            {
+              text: "Hello",
+              reference: {
+                resourceId: "player-name",
+              },
+            },
+          ],
+        },
+      },
+    }),
+  ).toThrow("payload.data.content[0] must include exactly one of text or reference");
+});
+
 test("validatePayload accepts sprite layout element blur", () => {
   expect(
     validatePayload({
@@ -3233,6 +3374,74 @@ test("validateState accepts layout elements with revealEffect", () => {
           scaleY: 1,
           rotation: 0,
           revealEffect: "softWipe",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree.push({
+    id: "layout-ui",
+    children: [],
+  });
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
+test("validateState accepts layout elements with rich text content", () => {
+  const state = createEmptyTestState();
+  state.variables.items["player-name"] = {
+    id: "player-name",
+    type: "variable",
+    variableType: "string",
+    name: "Player Name",
+    scope: "context",
+    default: "Aki",
+    value: "Aki",
+  };
+  state.variables.tree = [
+    {
+      id: "player-name",
+      children: [],
+    },
+  ];
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: 'Hello ${variables["player-name"]}',
+          content: [
+            {
+              text: "Hello ",
+            },
+            {
+              reference: {
+                resourceId: "player-name",
+              },
+            },
+          ],
         },
       },
       tree: [
@@ -4190,6 +4399,71 @@ test("validateAgainstState accepts layout element sound overrides", () => {
   ).toEqual({
     valid: true,
   });
+});
+
+test("validateAgainstState rejects missing layout rich text content variable refs", () => {
+  const state = createEmptyTestState();
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "general",
+    elements: {
+      items: {
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 80,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          text: "Hello",
+        },
+      },
+      tree: [
+        {
+          id: "text-1",
+          children: [],
+        },
+      ],
+    },
+  };
+  state.layouts.tree = [
+    {
+      id: "layout-ui",
+      children: [],
+    },
+  ];
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "text-1",
+          data: {
+            content: [
+              {
+                reference: {
+                  resourceId: "missing-variable",
+                },
+              },
+            ],
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element content[0].reference.resourceId must reference an existing non-folder variable",
+  );
 });
 
 test("validateAgainstState rejects missing transition mask image refs", () => {

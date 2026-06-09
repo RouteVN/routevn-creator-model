@@ -907,6 +907,16 @@ const createCrossReferencedState = () => {
   const state = createRichCompatibilityState();
   state.layouts.items["layout-dialogue"].elements.items["text-a"].variableId =
     "variable-rich";
+  state.layouts.items["layout-dialogue"].elements.items["text-a"].text =
+    'Mood: ${variables["variable-rich"]}';
+  state.layouts.items["layout-dialogue"].elements.items["text-a"].content = [
+    { text: "Mood: " },
+    {
+      reference: {
+        resourceId: "variable-rich",
+      },
+    },
+  ];
   state.layouts.items["layout-dialogue"].elements.items["anim-idle"] = {
     id: "anim-idle",
     type: "spritesheet-animation",
@@ -2244,6 +2254,15 @@ const payloadFixtures = [
       elementId: "text-a",
       data: {
         variableId: "variable-rich",
+        text: 'Mood: ${variables["variable-rich"]}',
+        content: [
+          { text: "Mood: " },
+          {
+            reference: {
+              resourceId: "variable-rich",
+            },
+          },
+        ],
         scrollUp: {
           payload: {
             actions: {
