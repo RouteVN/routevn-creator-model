@@ -2628,6 +2628,28 @@ test("validatePayload accepts layout element text reveal indicators", () => {
   });
 });
 
+test("validatePayload rejects image text reveal indicators without imageId", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          indicator: {
+            revealing: {
+              kind: "image",
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.indicator.revealing.imageId must be a non-empty string",
+  );
+});
+
 test("validatePayload rejects unsupported text reveal indicator visual kinds", () => {
   expectValidation(() =>
     validatePayload({

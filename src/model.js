@@ -3487,14 +3487,10 @@ const validateLayoutTextRevealIndicatorVisual = ({
     );
   }
 
-  if (
-    kind === "image" &&
-    visual.imageId !== undefined &&
-    !isNonEmptyString(visual.imageId)
-  ) {
+  if (kind === "image" && !isNonEmptyString(visual.imageId)) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path}.imageId must be a non-empty string when provided`,
+      `${path}.imageId must be a non-empty string`,
     );
   }
 
