@@ -23,6 +23,7 @@ const COLLECTION_KEYS = [
   "images",
   "spritesheets",
   "sounds",
+  "voices",
   "videos",
   "animations",
   "particles",
@@ -245,6 +246,7 @@ const normalizeStateCollections = (state) => {
     "spritesheets",
     "particles",
     "controls",
+    "voices",
   ].filter((key) => state[key] === undefined);
   const normalizedTags = normalizeTagsState(state.tags);
   const hasNormalizedTags = normalizedTags !== state.tags;
@@ -1413,6 +1415,105 @@ const validateSoundItems = ({ items, path, errorFactory }) => {
         if (result?.valid === false) {
           return result;
         }
+      }
+
+      if (!isNonEmptyString(item.fileId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.fileId must be a non-empty string`,
+        );
+      }
+
+      if (
+        item.waveformDataFileId !== undefined &&
+        item.waveformDataFileId !== null &&
+        !isNonEmptyString(item.waveformDataFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.waveformDataFileId must be a non-empty string or null when provided`,
+        );
+      }
+
+      if (item.duration !== undefined && !isFiniteNumber(item.duration)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.duration must be a finite number`,
+        );
+      }
+    }
+  }
+};
+
+const validateVoiceItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "voice") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'voice'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "sceneId",
+                "fileId",
+                "waveformDataFileId",
+                "duration",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
+    if (item.type === "voice") {
+      if (!isNonEmptyString(item.sceneId)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.sceneId must be a non-empty string`,
+        );
       }
 
       if (!isNonEmptyString(item.fileId)) {
@@ -6411,6 +6512,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.voices") {
+    {
+      const result = validateVoiceItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.videos") {
     {
       const result = validateVideoItems({
@@ -6591,6 +6703,18 @@ const validateCollection = ({ collection, path }) => {
         nodes: collection.tree,
         items: collection.items,
         path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  } else if (path === "state.voices") {
+    {
+      const result = validateGenericFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+        folderLabel: "folder voice item",
       });
       if (result?.valid === false) {
         return result;
@@ -7108,6 +7232,55 @@ export const assertInvariants = ({ state }) => {
         details: {
           soundId,
         },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+  }
+
+  for (const [voiceId, voice] of Object.entries(state.voices.items)) {
+    if (voice.type !== "voice") {
+      continue;
+    }
+
+    if (!isPlainObject(sceneItems[voice.sceneId])) {
+      return invalidInvariant(
+        "voice.sceneId must reference an existing scene",
+        { voiceId, sceneId: voice.sceneId },
+      );
+    }
+
+    if (sceneItems[voice.sceneId].type === "folder") {
+      return invalidInvariant(
+        "voice.sceneId must reference a non-folder scene",
+        { voiceId, sceneId: voice.sceneId },
+      );
+    }
+
+    {
+      const result = validateFileReference({
+        state,
+        fileId: voice.fileId,
+        path: "voice.fileId",
+        details: { voiceId, fileId: voice.fileId },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (
+      voice.waveformDataFileId !== undefined &&
+      voice.waveformDataFileId !== null
+    ) {
+      const result = validateFileReference({
+        state,
+        fileId: voice.waveformDataFileId,
+        path: "voice.waveformDataFileId",
+        details: { voiceId, waveformDataFileId: voice.waveformDataFileId },
         errorFactory: createInvariantValidationError,
       });
       if (!result.valid) {
@@ -9246,6 +9419,167 @@ const validateSoundUpdateData = ({ data, errorFactory }) => {
     if (result?.valid === false) {
       return result;
     }
+  }
+
+  if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.fileId must be a non-empty string when provided",
+    );
+  }
+
+  if (
+    data.waveformDataFileId !== undefined &&
+    data.waveformDataFileId !== null &&
+    !isNonEmptyString(data.waveformDataFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.waveformDataFileId must be a non-empty string or null when provided",
+    );
+  }
+
+  if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.duration must be a finite number",
+    );
+  }
+};
+
+const validateVoiceCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "voice") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'voice'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : [
+              "type",
+              "name",
+              "description",
+              "sceneId",
+              "fileId",
+              "waveformDataFileId",
+              "duration",
+            ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.type === "voice") {
+    if (!isNonEmptyString(data.sceneId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.sceneId must be a non-empty string",
+      );
+    }
+
+    if (!isNonEmptyString(data.fileId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.fileId must be a non-empty string",
+      );
+    }
+
+    if (
+      data.waveformDataFileId !== undefined &&
+      data.waveformDataFileId !== null &&
+      !isNonEmptyString(data.waveformDataFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.waveformDataFileId must be a non-empty string or null when provided",
+      );
+    }
+
+    if (data.duration !== undefined && !isFiniteNumber(data.duration)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.duration must be a finite number",
+      );
+    }
+  }
+};
+
+const validateVoiceUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: [
+        "name",
+        "description",
+        "sceneId",
+        "fileId",
+        "waveformDataFileId",
+        "duration",
+      ],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.sceneId !== undefined && !isNonEmptyString(data.sceneId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.sceneId must be a non-empty string when provided",
+    );
   }
 
   if (data.fileId !== undefined && !isNonEmptyString(data.fileId)) {
@@ -12854,6 +13188,28 @@ const findReferencedFileUsage = ({ state, fileId }) => {
     }
   }
 
+  for (const [voiceId, voice] of Object.entries(state.voices.items)) {
+    if (voice.type !== "voice") {
+      continue;
+    }
+
+    if (voice.fileId === fileId) {
+      return {
+        kind: "voice",
+        field: "fileId",
+        ownerId: voiceId,
+      };
+    }
+
+    if (voice.waveformDataFileId === fileId) {
+      return {
+        kind: "voice",
+        field: "waveformDataFileId",
+        ownerId: voiceId,
+      };
+    }
+  }
+
   for (const [videoId, video] of Object.entries(state.videos.items)) {
     if (video.type !== "video") {
       continue;
@@ -15375,6 +15731,431 @@ const COMMAND_DEFINITIONS = [
       insertTreeNode({
         tree: state.sounds.tree,
         node: soundNodeResult.node,
+        parentId: payload.parentId ?? null,
+        index: payload.index,
+        position: payload.position,
+        positionTargetId: payload.positionTargetId,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "voice.create",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "voiceId",
+            "parentId",
+            "data",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.voiceId)) {
+        return invalidPayload("payload.voiceId must be a non-empty string");
+      }
+
+      if (
+        payload.parentId !== undefined &&
+        payload.parentId !== null &&
+        !isNonEmptyString(payload.parentId)
+      ) {
+        return invalidPayload(
+          "payload.parentId must be a non-empty string when provided",
+        );
+      }
+
+      {
+        const result = validateVoiceCreateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      if (isPlainObject(state.voices.items[payload.voiceId])) {
+        return invalidPrecondition("payload.voiceId must not already exist");
+      }
+
+      const parentId = payload.parentId ?? null;
+      if (parentId !== null) {
+        const parentVoice = state.voices.items[parentId];
+        if (!isPlainObject(parentVoice)) {
+          return invalidPrecondition(
+            "payload.parentId must reference an existing voice item",
+          );
+        }
+
+        if (parentVoice.type !== "folder") {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder voice item",
+          );
+        }
+      }
+
+      if (payload.positionTargetId !== undefined) {
+        if (!isPlainObject(state.voices.items[payload.positionTargetId])) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing voice item",
+          );
+        }
+
+        const targetParentId = getNodeParentId({
+          tree: state.voices.tree,
+          nodeId: payload.positionTargetId,
+        });
+
+        if (targetParentId !== parentId) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference a sibling under payload.parentId",
+          );
+        }
+      }
+
+      if (payload.data.type === "voice") {
+        const scene = state.scenes.items[payload.data.sceneId];
+        if (!isPlainObject(scene) || scene.type === "folder") {
+          return invalidPrecondition(
+            "payload.data.sceneId must reference an existing non-folder scene",
+          );
+        }
+
+        return validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "waveformDataFileId"],
+          nullableFields: ["waveformDataFileId"],
+          details: {
+            voiceId: payload.voiceId,
+          },
+        });
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const nextVoice = {
+        id: payload.voiceId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.description !== undefined) {
+        nextVoice.description = payload.data.description;
+      }
+
+      if (payload.data.type === "voice") {
+        nextVoice.sceneId = payload.data.sceneId;
+        nextVoice.fileId = payload.data.fileId;
+        if (payload.data.waveformDataFileId !== undefined) {
+          nextVoice.waveformDataFileId = payload.data.waveformDataFileId;
+        }
+        if (payload.data.duration !== undefined) {
+          nextVoice.duration = payload.data.duration;
+        }
+      }
+
+      state.voices.items[payload.voiceId] = nextVoice;
+
+      insertTreeNode({
+        tree: state.voices.tree,
+        node: {
+          id: payload.voiceId,
+          children: [],
+        },
+        parentId: payload.parentId ?? null,
+        index: payload.index,
+        position: payload.position,
+        positionTargetId: payload.positionTargetId,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "voice.update",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["voiceId", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.voiceId)) {
+        return invalidPayload("payload.voiceId must be a non-empty string");
+      }
+
+      {
+        const result = validateVoiceUpdateData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const currentVoice = state.voices.items[payload.voiceId];
+      if (!isPlainObject(currentVoice)) {
+        return invalidPrecondition(
+          "payload.voiceId must reference an existing voice item",
+        );
+      }
+
+      if (
+        currentVoice.type === "folder" &&
+        (payload.data.sceneId !== undefined ||
+          payload.data.fileId !== undefined ||
+          payload.data.waveformDataFileId !== undefined ||
+          payload.data.duration !== undefined)
+      ) {
+        return invalidPrecondition(
+          "folder voice items cannot update file fields",
+        );
+      }
+
+      if (currentVoice.type === "voice") {
+        if (payload.data.sceneId !== undefined) {
+          const scene = state.scenes.items[payload.data.sceneId];
+          if (!isPlainObject(scene) || scene.type === "folder") {
+            return invalidPrecondition(
+              "payload.data.sceneId must reference an existing non-folder scene",
+            );
+          }
+        }
+
+        return validateReferencedFilesInData({
+          state,
+          data: payload.data,
+          fields: ["fileId", "waveformDataFileId"],
+          nullableFields: ["waveformDataFileId"],
+          details: {
+            voiceId: payload.voiceId,
+          },
+        });
+      }
+    },
+    reduce: ({ state, payload }) => {
+      state.voices.items[payload.voiceId] = {
+        ...structuredClone(state.voices.items[payload.voiceId]),
+        ...structuredClone(payload.data),
+      };
+      return state;
+    },
+  },
+  {
+    type: "voice.delete",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["voiceIds"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.voiceIds,
+          path: "payload.voiceIds",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      for (const voiceId of payload.voiceIds) {
+        if (!isPlainObject(state.voices.items[voiceId])) {
+          return invalidPrecondition(
+            "payload.voiceIds must reference existing voice items",
+            { voiceId },
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const deletedVoiceIds = new Set();
+
+      for (const voiceId of payload.voiceIds) {
+        const removedNode = removeTreeNode({
+          nodes: state.voices.tree,
+          nodeId: voiceId,
+        });
+
+        if (!removedNode) {
+          continue;
+        }
+
+        for (const id of collectTreeDescendantIds({ node: removedNode })) {
+          deletedVoiceIds.add(id);
+        }
+      }
+
+      for (const voiceId of deletedVoiceIds) {
+        delete state.voices.items[voiceId];
+      }
+
+      return state;
+    },
+  },
+  {
+    type: "voice.move",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "voiceId",
+            "parentId",
+            "index",
+            "position",
+            "positionTargetId",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.voiceId)) {
+        return invalidPayload("payload.voiceId must be a non-empty string");
+      }
+
+      if (
+        payload.parentId !== undefined &&
+        payload.parentId !== null &&
+        !isNonEmptyString(payload.parentId)
+      ) {
+        return invalidPayload(
+          "payload.parentId must be a non-empty string when provided",
+        );
+      }
+
+      {
+        const result = validatePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const voice = state.voices.items[payload.voiceId];
+      if (!isPlainObject(voice)) {
+        return invalidPrecondition(
+          "payload.voiceId must reference an existing voice item",
+        );
+      }
+
+      const voiceNode = findTreeNode({
+        nodes: state.voices.tree,
+        nodeId: payload.voiceId,
+      });
+
+      if (payload.parentId !== undefined && payload.parentId !== null) {
+        const parentVoice = state.voices.items[payload.parentId];
+        if (!isPlainObject(parentVoice)) {
+          return invalidPrecondition(
+            "payload.parentId must reference an existing voice item",
+          );
+        }
+
+        if (parentVoice.type !== "folder") {
+          return invalidPrecondition(
+            "payload.parentId must reference a folder voice item",
+          );
+        }
+
+        const descendantIds = new Set(
+          collectTreeDescendantIds({
+            node: voiceNode,
+          }),
+        );
+
+        if (descendantIds.has(payload.parentId)) {
+          return invalidPrecondition(
+            "payload.parentId must not target the moved voice item or its descendants",
+          );
+        }
+      }
+
+      if (payload.positionTargetId !== undefined) {
+        if (payload.positionTargetId === payload.voiceId) {
+          return invalidPrecondition(
+            "payload.positionTargetId must not reference the moved voice item",
+          );
+        }
+
+        if (!isPlainObject(state.voices.items[payload.positionTargetId])) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference an existing voice item",
+          );
+        }
+
+        const targetParentId = getNodeParentId({
+          tree: state.voices.tree,
+          nodeId: payload.positionTargetId,
+        });
+
+        if (targetParentId !== (payload.parentId ?? null)) {
+          return invalidPrecondition(
+            "payload.positionTargetId must reference a sibling under payload.parentId",
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const voiceNodeResult = removeNodeOrResult({
+        tree: state.voices.tree,
+        nodeId: payload.voiceId,
+        errorMessage: "voice move target missing from tree",
+      });
+      if (!voiceNodeResult.valid) {
+        return voiceNodeResult;
+      }
+
+      insertTreeNode({
+        tree: state.voices.tree,
+        node: voiceNodeResult.node,
         parentId: payload.parentId ?? null,
         index: payload.index,
         position: payload.position,

@@ -2251,6 +2251,15 @@ test("validateState accepts legacy state without controls collection", () => {
   });
 });
 
+test("validateState accepts legacy state without voices collection", () => {
+  const state = createEmptyTestState();
+  delete state.voices;
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts legacy state without tags root", () => {
   const state = createEmptyTestState();
   delete state.tags;
@@ -5020,6 +5029,10 @@ test("registry exposes only fully implemented command types", () => {
     "sound.update",
     "sound.delete",
     "sound.move",
+    "voice.create",
+    "voice.update",
+    "voice.delete",
+    "voice.move",
     "video.create",
     "video.update",
     "video.delete",
