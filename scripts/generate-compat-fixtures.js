@@ -1462,6 +1462,34 @@ const payloadFixtures = [
     },
   }),
   ...createFolderedPayloadSets({
+    family: "voice",
+    idField: "voiceId",
+    idsField: "voiceIds",
+    minimalCreateData: {
+      type: "voice",
+      name: "Voice",
+      sceneId: "scene-a",
+      fileId: "file-voice",
+    },
+    fullCreateData: {
+      type: "voice",
+      name: "Narration",
+      description: "Opening narration",
+      sceneId: "scene-a",
+      fileId: "file-voice",
+      waveformDataFileId: "waveform-voice",
+      duration: 42.5,
+    },
+    minimalUpdateData: {
+      duration: 42,
+    },
+    fullUpdateData: {
+      description: "Opening narration",
+      waveformDataFileId: null,
+      duration: 84,
+    },
+  }),
+  ...createFolderedPayloadSets({
     family: "video",
     idField: "videoId",
     idsField: "videoIds",

@@ -307,6 +307,9 @@ payload:
           children:
             - id: sound-rich
               children: []
+    voices:
+      items: {}
+      tree: []
     videos:
       items:
         folder-video:

@@ -166,6 +166,9 @@ state:
     tree:
       - id: sound-main
         children: []
+  voices:
+    items: {}
+    tree: []
   videos:
     items:
       video-main:
