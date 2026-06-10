@@ -15,6 +15,7 @@ const OMITTABLE_EMPTY_COLLECTION_KEYS = [
   "controls",
   "particles",
   "spritesheets",
+  "voices",
 ];
 const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
   "images",
@@ -57,7 +58,9 @@ const stripOmittableEmptyRoots = (state) => {
     const tagScopeKeys = Object.keys(nextState.tags);
     if (
       tagScopeKeys.length === OMITTABLE_EMPTY_TAG_SCOPE_KEYS.length &&
-      OMITTABLE_EMPTY_TAG_SCOPE_KEYS.every((key) => tagScopeKeys.includes(key)) &&
+      OMITTABLE_EMPTY_TAG_SCOPE_KEYS.every((key) =>
+        tagScopeKeys.includes(key),
+      ) &&
       tagScopeKeys.every((key) => isEmptyCollectionState(nextState.tags[key]))
     ) {
       delete nextState.tags;

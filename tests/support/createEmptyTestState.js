@@ -81,6 +81,10 @@ export const createEmptyTestState = () => ({
     items: {},
     tree: [],
   },
+  voices: {
+    items: {},
+    tree: [],
+  },
   videos: {
     items: {},
     tree: [],

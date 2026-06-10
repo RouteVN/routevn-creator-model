@@ -127,6 +127,21 @@ const withSoundFileRefs = (state) =>
     { id: "file-sound", type: "audio", mimeType: "audio/mpeg" },
   ]);
 
+const withVoiceFileRefs = (state) => {
+  withFiles(state, [
+    { id: "file-voice", type: "audio", mimeType: "audio/mpeg" },
+  ]);
+  state.story.initialSceneId = "scene-a";
+  state.scenes.items["scene-a"] = {
+    id: "scene-a",
+    type: "scene",
+    name: "Intro",
+    sections: createEmptyNestedCollection(),
+  };
+  state.scenes.tree = [createTreeNode("scene-a")];
+  return state;
+};
+
 const withVideoFileRefs = (state) =>
   withFiles(state, [
     { id: "file-video", type: "video", mimeType: "video/mp4" },
@@ -1938,6 +1953,23 @@ const directCases = [
       duration: 42,
     },
     decorateState: withSoundFileRefs,
+  }),
+  ...createFolderedCommandCases({
+    familyName: "voice",
+    collectionKey: "voices",
+    idField: "voiceId",
+    idsField: "voiceIds",
+    createData: {
+      type: "voice",
+      name: "Voice",
+      sceneId: "scene-a",
+      fileId: "file-voice",
+      waveformDataFileId: null,
+    },
+    updateData: {
+      duration: 42,
+    },
+    decorateState: withVoiceFileRefs,
   }),
   ...createFolderedCommandCases({
     familyName: "video",
