@@ -394,7 +394,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3817,6 +3817,7 @@ const validateLayoutElementData = ({
     "clickImageId",
     "hoverSoundId",
     "clickSoundId",
+    "revealSoundId",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -4044,6 +4045,7 @@ const validateLayoutElementData = ({
     "clickImageId",
     "hoverSoundId",
     "clickSoundId",
+    "revealSoundId",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -4562,6 +4564,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "clickImageId",
           "hoverSoundId",
           "clickSoundId",
+          "revealSoundId",
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",
@@ -8060,7 +8063,7 @@ export const assertInvariants = ({ state }) => {
           }
         }
 
-        for (const field of ["hoverSoundId", "clickSoundId"]) {
+        for (const field of ["hoverSoundId", "clickSoundId", "revealSoundId"]) {
           if (element[field] !== undefined) {
             const result = assertSoundReference({
               ownerIdField,
@@ -12296,6 +12299,22 @@ const validateVisualElementReferenceTargets = ({
           elementId,
           field: "clickSoundId",
           targetId: data.clickSoundId,
+        },
+      );
+    }
+  }
+
+  if (data.revealSoundId !== undefined) {
+    const sound = state.sounds.items[data.revealSoundId];
+    if (!isPlainObject(sound) || sound.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element revealSoundId must reference an existing non-folder sound`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "revealSoundId",
+          targetId: data.revealSoundId,
         },
       );
     }

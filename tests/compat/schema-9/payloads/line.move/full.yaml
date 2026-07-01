@@ -1,0 +1,7 @@
+schemaVersion: 9
+type: line.move
+payload:
+  lineId: line-a
+  toSectionId: section-b
+  position: before
+  positionTargetId: line-other

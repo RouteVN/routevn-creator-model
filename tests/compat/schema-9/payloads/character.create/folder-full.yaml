@@ -1,0 +1,7 @@
+schemaVersion: 9
+type: character.create
+payload:
+  characterId: folder-a
+  data:
+    type: folder
+    name: Folder A
