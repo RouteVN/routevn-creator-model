@@ -1,0 +1,5 @@
+schemaVersion: 9
+type: font.delete
+payload:
+  fontIds:
+    - item-a

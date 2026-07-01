@@ -2537,6 +2537,7 @@ test("validatePayload accepts layout element sound overrides", () => {
         data: {
           hoverSoundId: "sound-hover",
           clickSoundId: "sound-click",
+          revealSoundId: "sound-reveal",
         },
       },
     }),
@@ -4144,6 +4145,7 @@ test("validateState accepts conditional text styles on layout elements", () => {
           textStyleId: "text-style-ui",
           hoverSoundId: "sound-a",
           clickSoundId: "sound-a",
+          revealSoundId: "sound-a",
           conditionalOverrides: [
             {
               when: {
@@ -4647,6 +4649,7 @@ test("validateAgainstState accepts layout element sound overrides", () => {
           data: {
             hoverSoundId: "sound-a",
             clickSoundId: "sound-a",
+            revealSoundId: "sound-a",
           },
         },
       },

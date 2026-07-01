@@ -1,0 +1,6 @@
+schemaVersion: 9
+type: voice.move
+payload:
+  voiceId: item-a
+  parentId: folder-a
+  position: last

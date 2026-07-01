@@ -1,0 +1,7 @@
+schemaVersion: 9
+type: variable.move
+payload:
+  variableId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

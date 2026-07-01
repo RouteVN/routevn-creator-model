@@ -1,0 +1,7 @@
+schemaVersion: 9
+type: file.move
+payload:
+  fileId: file-a
+  parentId: folder-a
+  position: before
+  positionTargetId: file-b
