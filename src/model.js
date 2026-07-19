@@ -353,6 +353,7 @@ const LAYOUT_TYPE_KEYS = [
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
+const LAYOUT_TEXT_REVEAL_SOUND_STOP_TIMING_KEYS = ["loopEnd", "immediate"];
 const LAYOUT_ELEMENT_BLUR_KERNEL_SIZE_OPTIONS = [5, 7, 9, 11, 13, 15];
 const CONTROL_KEYBOARD_KEYS = [
   "enter",
@@ -3885,6 +3886,7 @@ const validateLayoutElementData = ({
     "hoverSoundId",
     "clickSoundId",
     "revealSoundId",
+    "revealSoundStopTiming",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -4120,6 +4122,7 @@ const validateLayoutElementData = ({
     "hoverSoundId",
     "clickSoundId",
     "revealSoundId",
+    "revealSoundStopTiming",
     "textStyleId",
     "hoverTextStyleId",
     "clickTextStyleId",
@@ -4398,6 +4401,18 @@ const validateLayoutElementData = ({
     );
   }
 
+  if (
+    data.revealSoundStopTiming !== undefined &&
+    !LAYOUT_TEXT_REVEAL_SOUND_STOP_TIMING_KEYS.includes(
+      data.revealSoundStopTiming,
+    )
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.revealSoundStopTiming must be one of ${LAYOUT_TEXT_REVEAL_SOUND_STOP_TIMING_KEYS.join(", ")} when provided`,
+    );
+  }
+
   if (data.formRole !== undefined && data.formRole !== "submit") {
     return invalidFromErrorFactory(
       errorFactory,
@@ -4640,6 +4655,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "hoverSoundId",
           "clickSoundId",
           "revealSoundId",
+          "revealSoundStopTiming",
           "textStyleId",
           "hoverTextStyleId",
           "clickTextStyleId",

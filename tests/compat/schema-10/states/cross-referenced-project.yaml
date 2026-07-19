@@ -507,7 +507,7 @@ state:
                     toggleDialogueUI: {}
             text-a:
               id: text-a
-              type: text
+              type: text-revealing
               name: Title
               x: 0
               "y": 0
@@ -518,6 +518,8 @@ state:
               rotation: 0
               text: Hello
               textStyleId: text-style-ui
+              revealSoundId: sound-rich
+              revealSoundStopTiming: immediate
               variableId: variable-rich
             text-b:
               id: text-b

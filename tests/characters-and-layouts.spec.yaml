@@ -877,7 +877,7 @@ out:
         - id: layout-dialogue
           children: []
 ---
-case: layout.element.update applies revealEffect to a text-revealing element
+case: layout.element.update applies revealing configuration to a text-revealing element
 in:
   - state:
       project: {}
@@ -952,6 +952,7 @@ in:
         replace: false
         data:
           revealEffect: softWipe
+          revealSoundStopTiming: immediate
 out:
   state:
     project: {}
@@ -1014,6 +1015,7 @@ out:
                 scaleY: 1
                 rotation: 0
                 revealEffect: softWipe
+                revealSoundStopTiming: immediate
             tree:
               - id: text-dialogue
       tree:
@@ -1053,3 +1055,13 @@ in:
       data:
         revealEffect: sparkle
 throws: payload.data.revealEffect must be one of typewriter, softWipe, none when provided
+---
+case: layout.element.update rejects invalid revealSoundStopTiming
+in:
+  - type: layout.element.update
+    payload:
+      layoutId: layout-dialogue
+      elementId: text-title
+      data:
+        revealSoundStopTiming: later
+throws: payload.data.revealSoundStopTiming must be one of loopEnd, immediate when provided

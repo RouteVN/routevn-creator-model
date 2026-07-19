@@ -858,6 +858,11 @@ const createRichCompatibilityState = () => {
   state.sounds.tree = [
     createTreeNode("folder-audio", [createTreeNode("sound-rich")]),
   ];
+  const revealSoundElement =
+    state.layouts.items["layout-dialogue"].elements.items["text-a"];
+  revealSoundElement.type = "text-revealing";
+  revealSoundElement.revealSoundId = "sound-rich";
+  revealSoundElement.revealSoundStopTiming = "immediate";
   state.videos.items["folder-video"] = {
     id: "folder-video",
     type: "folder",
@@ -2343,6 +2348,7 @@ const payloadFixtures = [
         layoutId: "layout-dialogue",
         elementId: "text-a",
         data: {
+          revealSoundStopTiming: "immediate",
           indicator: {
             revealing: {
               kind: "image",
@@ -3730,7 +3736,7 @@ const streamFixtures = [
           elementId: "text-a",
           parentId: "container-root",
           data: {
-            type: "text",
+            type: "text-revealing",
             name: "Title",
             x: 0,
             y: 0,
@@ -3801,6 +3807,7 @@ const streamFixtures = [
           elementId: "text-a",
           data: {
             name: "Title Updated",
+            revealSoundStopTiming: "immediate",
             scrollUp: {
               payload: {
                 actions: {
