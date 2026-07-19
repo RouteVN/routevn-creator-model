@@ -1,0 +1,9 @@
+schemaVersion: 10
+type: transform.update
+payload:
+  transformId: item-a
+  data:
+    description: Updated framing
+    x: 320
+    "y": 240
+    rotation: 15

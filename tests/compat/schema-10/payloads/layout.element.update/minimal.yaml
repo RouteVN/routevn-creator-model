@@ -1,0 +1,7 @@
+schemaVersion: 10
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: text-a
+  data:
+    name: Title Updated

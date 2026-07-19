@@ -1,0 +1,17 @@
+schemaVersion: 10
+type: control.element.update
+payload:
+  controlId: control-default
+  elementId: text-a
+  data:
+    hidden: true
+    variableId: variable-rich
+    scrollUp:
+      inheritToChildren: true
+      payload:
+        actions:
+          nextLine: {}
+    scrollDown:
+      payload:
+        actions:
+          toggleSkipMode: {}

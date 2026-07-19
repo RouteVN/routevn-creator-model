@@ -1,0 +1,14 @@
+schemaVersion: 10
+type: animation.create
+payload:
+  animationId: item-a
+  data:
+    type: animation
+    name: Animation
+    animation:
+      type: update
+      tween:
+        x:
+          keyframes:
+            - duration: 100
+              value: 1

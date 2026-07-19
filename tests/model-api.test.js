@@ -2441,6 +2441,57 @@ test("validatePayload accepts layout element rightClick interactions", () => {
   });
 });
 
+test("validatePayload accepts boolean layout and control element hidden fields", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          hidden: true,
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
+
+  expect(
+    validatePayload({
+      type: "control.element.update",
+      payload: {
+        controlId: "control-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          hidden: false,
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
+});
+
+test("validatePayload rejects non-boolean layout element hidden fields", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "button-1",
+        replace: false,
+        data: {
+          hidden: "true",
+        },
+      },
+    }),
+  ).toMatchObject({
+    valid: false,
+    error: {
+      message: "payload.data.hidden must be a boolean when provided",
+    },
+  });
+});
+
 test("validatePayload accepts layout element scroll interactions", () => {
   expect(
     validatePayload({
