@@ -1,0 +1,5 @@
+schemaVersion: 10
+type: spritesheet.delete
+payload:
+  spritesheetIds:
+    - item-a

@@ -661,6 +661,55 @@ test("layout element commands persist form submit roles", () => {
   ).toBe("submit");
 });
 
+test("layout and control folder elements can update hidden", () => {
+  const cases = [
+    {
+      state: createLayoutBaseState(),
+      collectionKey: "layouts",
+      ownerId: "layout-dialogue",
+      ownerIdField: "layoutId",
+      commandType: "layout.element.update",
+    },
+    {
+      state: createControlBaseState(),
+      collectionKey: "controls",
+      ownerId: "control-default",
+      ownerIdField: "controlId",
+      commandType: "control.element.update",
+    },
+  ];
+
+  for (const testCase of cases) {
+    const elements =
+      testCase.state[testCase.collectionKey].items[testCase.ownerId].elements;
+    elements.items["folder-a"] = {
+      id: "folder-a",
+      type: "folder",
+      name: "Folder A",
+    };
+    elements.tree.push(createTreeNode("folder-a"));
+
+    const result = processCommand({
+      state: testCase.state,
+      command: {
+        type: testCase.commandType,
+        payload: {
+          [testCase.ownerIdField]: testCase.ownerId,
+          elementId: "folder-a",
+          data: {
+            hidden: true,
+          },
+        },
+      },
+    });
+
+    expect(
+      result.state[testCase.collectionKey].items[testCase.ownerId].elements
+        .items["folder-a"].hidden,
+    ).toBe(true);
+  }
+});
+
 test("layout element validation rejects unsupported form roles", () => {
   expectValidation(() =>
     validatePayload({
@@ -2745,6 +2794,7 @@ const directCases = [
             layoutId: "layout-dialogue",
             elementId: "text-a",
             data: {
+              hidden: true,
               variableId: "variable-ui",
               scrollUp: {
                 inheritToChildren: true,
@@ -2769,6 +2819,7 @@ const directCases = [
       expect(
         result.state.layouts.items["layout-dialogue"].elements.items["text-a"],
       ).toMatchObject({
+        hidden: true,
         variableId: "variable-ui",
         scrollUp: {
           inheritToChildren: true,
@@ -2973,6 +3024,7 @@ const directCases = [
             controlId: "control-default",
             elementId: "text-a",
             data: {
+              hidden: true,
               variableId: "variable-ui",
               scrollUp: {
                 payload: {
@@ -2997,6 +3049,7 @@ const directCases = [
       expect(
         result.state.controls.items["control-default"].elements.items["text-a"],
       ).toMatchObject({
+        hidden: true,
         variableId: "variable-ui",
         scrollUp: {
           payload: {

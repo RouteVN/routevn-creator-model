@@ -1,0 +1,6 @@
+schemaVersion: 10
+type: textStyle.delete
+payload:
+  textStyleIds:
+    - item-a
+    - item-b

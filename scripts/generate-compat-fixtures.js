@@ -347,6 +347,7 @@ const createLayoutBaseState = () => {
           id: "text-b",
           type: "text",
           name: "Subtitle",
+          hidden: true,
           x: 0,
           y: 20,
           anchorX: 0,
@@ -471,6 +472,7 @@ const createControlBaseState = () => {
           id: "text-b",
           type: "text",
           name: "Subtitle",
+          hidden: true,
           x: 0,
           y: 20,
           anchorX: 0,
@@ -2134,6 +2136,7 @@ const payloadFixtures = [
       data: {
         type: "text",
         name: "Body",
+        hidden: true,
         x: 0,
         y: 40,
         anchorX: 0,
@@ -2271,6 +2274,7 @@ const payloadFixtures = [
       layoutId: "layout-dialogue",
       elementId: "text-a",
       data: {
+        hidden: true,
         variableId: "variable-rich",
         scrollUp: {
           payload: {
@@ -2385,6 +2389,7 @@ const payloadFixtures = [
       data: {
         type: "text",
         name: "Body",
+        hidden: true,
         x: 0,
         y: 40,
         anchorX: 0,
@@ -2522,6 +2527,7 @@ const payloadFixtures = [
       controlId: "control-default",
       elementId: "text-a",
       data: {
+        hidden: true,
         variableId: "variable-rich",
         scrollUp: {
           inheritToChildren: true,

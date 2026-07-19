@@ -1,0 +1,6 @@
+schemaVersion: 10
+type: scene.delete
+payload:
+  sceneIds:
+    - scene-a
+    - scene-b

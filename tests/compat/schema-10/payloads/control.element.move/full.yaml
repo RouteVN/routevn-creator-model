@@ -1,0 +1,8 @@
+schemaVersion: 10
+type: control.element.move
+payload:
+  controlId: control-default
+  elementId: text-a
+  parentId: container-root
+  position: before
+  positionTargetId: text-b

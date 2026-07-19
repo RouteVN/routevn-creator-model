@@ -394,7 +394,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3800,6 +3800,7 @@ const validateLayoutElementData = ({
     "scaleX",
     "scaleY",
     "rotation",
+    "hidden",
     "opacity",
     "blur",
     "fill",
@@ -3895,6 +3896,13 @@ const validateLayoutElementData = ({
         `${path}.name must be a non-empty string`,
       );
     }
+  }
+
+  if (data.hidden !== undefined && typeof data.hidden !== "boolean") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.hidden must be a boolean when provided`,
+    );
   }
 
   for (const key of [
@@ -4546,6 +4554,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "scaleX",
           "scaleY",
           "rotation",
+          "hidden",
           "opacity",
           "blur",
           "fill",
@@ -20002,10 +20011,12 @@ const COMMAND_DEFINITIONS = [
 
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "hidden",
+        )
       ) {
         return invalidPrecondition(
-          "folder layout elements cannot update non-name fields",
+          "folder layout elements can only update name and hidden fields",
         );
       }
 
@@ -20361,10 +20372,12 @@ const COMMAND_DEFINITIONS = [
 
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "hidden",
+        )
       ) {
         return invalidPrecondition(
-          "folder control elements cannot update non-name fields",
+          "folder control elements can only update name and hidden fields",
         );
       }
 
