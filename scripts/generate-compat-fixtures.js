@@ -107,6 +107,13 @@ const withTextStyleRefs = (state) => {
     fontSize: 32,
     lineHeight: 1.4,
     fontWeight: "700",
+    shadow: {
+      colorId: "color-ui",
+      alpha: 0.75,
+      blur: 4,
+      offsetX: 2,
+      offsetY: 3,
+    },
   };
   state.textStyles.tree = [createTreeNode("text-style-ui")];
   return state;
@@ -1819,6 +1826,13 @@ const payloadFixtures = [
       lineHeight: 1.4,
       fontWeight: "700",
       previewText: "Hello",
+      shadow: {
+        colorId: "color-ui",
+        alpha: 0.75,
+        blur: 4,
+        offsetX: 2,
+        offsetY: 3,
+      },
     },
     minimalUpdateData: {
       previewText: "Preview",
@@ -1829,8 +1843,25 @@ const payloadFixtures = [
       lineHeight: 1.6,
       fontWeight: "600",
       previewText: "Preview",
+      shadow: {
+        colorId: "color-ui",
+        alpha: 0.6,
+        blur: 6,
+        offsetX: -2,
+        offsetY: 4,
+      },
     },
   }),
+  {
+    type: "textStyle.update",
+    fixtureName: "clear-shadow",
+    payload: {
+      textStyleId: "item-a",
+      data: {
+        clearShadow: true,
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "character",
     idField: "characterId",
@@ -3226,12 +3257,38 @@ const streamFixtures = [
             fontSize: 32,
             lineHeight: 1.4,
             fontWeight: "700",
+            shadow: {
+              colorId: "color-ui",
+              alpha: 0.75,
+              blur: 4,
+              offsetX: 2,
+              offsetY: 3,
+            },
           },
         },
       },
       {
         type: "textStyle.update",
-        payload: { textStyleId: "style-ui", data: { previewText: "Preview" } },
+        payload: {
+          textStyleId: "style-ui",
+          data: {
+            previewText: "Preview",
+            shadow: {
+              colorId: "color-ui",
+              alpha: 0.6,
+              blur: 6,
+              offsetX: -2,
+              offsetY: 4,
+            },
+          },
+        },
+      },
+      {
+        type: "textStyle.update",
+        payload: {
+          textStyleId: "style-ui",
+          data: { clearShadow: true },
+        },
       },
       {
         type: "textStyle.move",

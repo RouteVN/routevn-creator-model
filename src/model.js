@@ -3066,6 +3066,60 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
   }
 };
 
+const validateTextStyleShadow = ({ shadow, path, errorFactory }) => {
+  if (!isPlainObject(shadow)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: shadow,
+      allowedKeys: ["colorId", "alpha", "blur", "offsetX", "offsetY"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(shadow.colorId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.colorId must be a non-empty string`,
+    );
+  }
+
+  if (
+    shadow.alpha !== undefined &&
+    (!isFiniteNumber(shadow.alpha) || shadow.alpha < 0 || shadow.alpha > 1)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.alpha must be a finite number between 0 and 1 when provided`,
+    );
+  }
+
+  if (
+    shadow.blur !== undefined &&
+    (!isFiniteNumber(shadow.blur) || shadow.blur < 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.blur must be a non-negative finite number when provided`,
+    );
+  }
+
+  for (const key of ["offsetX", "offsetY"]) {
+    if (shadow[key] !== undefined && !isFiniteNumber(shadow[key])) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number when provided`,
+      );
+    }
+  }
+};
+
 const validateTextStyleItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -3103,6 +3157,7 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
                 "strokeColorId",
                 "strokeAlpha",
                 "strokeWidth",
+                "shadow",
               ],
         path: itemPath,
         errorFactory,
@@ -3261,6 +3316,17 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
           errorFactory,
           `${itemPath}.strokeWidth must be a finite number when provided`,
         );
+      }
+
+      if (item.shadow !== undefined) {
+        const result = validateTextStyleShadow({
+          shadow: item.shadow,
+          path: `${itemPath}.shadow`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
     }
   }
@@ -5207,6 +5273,22 @@ const applyTagIdsUpdate = ({ currentItem, data }) => {
   return nextItem;
 };
 
+const applyTextStyleUpdate = ({ currentItem, data }) => {
+  const nextData = structuredClone(data);
+  delete nextData.clearShadow;
+
+  const nextItem = applyTagIdsUpdate({
+    currentItem,
+    data: nextData,
+  });
+
+  if (data.clearShadow === true) {
+    delete nextItem.shadow;
+  }
+
+  return nextItem;
+};
+
 const applyCharacterUpdate = ({ currentItem, data }) => {
   const nextItem = applyTagIdsUpdate({
     currentItem,
@@ -7094,6 +7176,19 @@ export const assertInvariants = ({ state }) => {
           {
             textStyleId,
             strokeColorId: textStyle.strokeColorId,
+          },
+        );
+      }
+    }
+
+    if (textStyle.shadow !== undefined) {
+      const shadowColor = state.colors.items[textStyle.shadow.colorId];
+      if (!isPlainObject(shadowColor) || shadowColor.type === "folder") {
+        return invalidInvariant(
+          "textStyle.shadow.colorId must reference an existing non-folder color",
+          {
+            textStyleId,
+            colorId: textStyle.shadow.colorId,
           },
         );
       }
@@ -11023,6 +11118,7 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
               "strokeColorId",
               "strokeAlpha",
               "strokeWidth",
+              "shadow",
             ],
       path: "payload.data",
       errorFactory,
@@ -11098,6 +11194,8 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
         "strokeColorId",
         "strokeAlpha",
         "strokeWidth",
+        "shadow",
+        "clearShadow",
       ],
       path: "payload.data",
       errorFactory,
@@ -11164,6 +11262,31 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
         `payload.data.${key} must be a string when provided`,
       );
     }
+  }
+
+  if (data.shadow !== undefined) {
+    const result = validateTextStyleShadow({
+      shadow: data.shadow,
+      path: "payload.data.shadow",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (data.clearShadow !== undefined && data.clearShadow !== true) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.clearShadow must be true when provided",
+    );
+  }
+
+  if (data.shadow !== undefined && data.clearShadow === true) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.shadow and payload.data.clearShadow cannot both be provided",
+    );
   }
 
   if (data.breakWords !== undefined && typeof data.breakWords !== "boolean") {
@@ -18322,7 +18445,7 @@ const COMMAND_DEFINITIONS = [
       };
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyTextStyleUpdate({
         currentItem,
         data: payload.data,
       }),
@@ -18357,6 +18480,15 @@ const COMMAND_DEFINITIONS = [
         if (!isPlainObject(item) || item.type === "folder") {
           return invalidPrecondition(
             `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
+          );
+        }
+      }
+
+      if (data.shadow !== undefined) {
+        const shadowColor = state.colors.items[data.shadow.colorId];
+        if (!isPlainObject(shadowColor) || shadowColor.type === "folder") {
+          return invalidPrecondition(
+            "payload.data.shadow.colorId must reference an existing non-folder color",
           );
         }
       }
@@ -18400,6 +18532,15 @@ const COMMAND_DEFINITIONS = [
         if (!isPlainObject(item) || item.type === "folder") {
           return invalidPrecondition(
             `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
+          );
+        }
+      }
+
+      if (payload.data.shadow !== undefined) {
+        const shadowColor = state.colors.items[payload.data.shadow.colorId];
+        if (!isPlainObject(shadowColor) || shadowColor.type === "folder") {
+          return invalidPrecondition(
+            "payload.data.shadow.colorId must reference an existing non-folder color",
           );
         }
       }

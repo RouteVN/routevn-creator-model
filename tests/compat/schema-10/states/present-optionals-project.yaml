@@ -439,6 +439,12 @@ state:
         fontSize: 32
         lineHeight: 1.4
         fontWeight: "700"
+        shadow:
+          colorId: color-ui
+          alpha: 0.75
+          blur: 4
+          offsetX: 2
+          offsetY: 3
     tree:
       - id: text-style-ui
         children: []
