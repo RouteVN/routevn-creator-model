@@ -365,6 +365,20 @@ const createLayoutBaseState = () => {
           text: "World",
           textStyleId: "text-style-ui",
         },
+        "save-date": {
+          id: "save-date",
+          type: "text-ref-save-load-slot-date",
+          name: "Save Date",
+          x: 0,
+          y: 40,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          dateFormat: "DD/MM/YYYY",
+          textStyleId: "text-style-ui",
+        },
         "sprite-blur": {
           id: "sprite-blur",
           type: "sprite",
@@ -387,6 +401,7 @@ const createLayoutBaseState = () => {
         createTreeNode("container-root", [
           createTreeNode("text-a"),
           createTreeNode("text-b"),
+          createTreeNode("save-date"),
           createTreeNode("sprite-blur"),
           createTreeNode("choice-single-item"),
         ]),
@@ -2289,6 +2304,24 @@ const payloadFixtures = [
           rotation: 0,
         },
       },
+      "save-date-full": {
+        layoutId: "layout-dialogue",
+        elementId: "save-date-c",
+        parentId: "container-root",
+        data: {
+          type: "text-ref-save-load-slot-date",
+          name: "Save Date",
+          x: 0,
+          y: 40,
+          anchorX: 0,
+          anchorY: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotation: 0,
+          dateFormat: "MM/DD/YYYY",
+          textStyleId: "text-style-ui",
+        },
+      },
       "choice-single-item-full": {
         layoutId: "layout-dialogue",
         elementId: "choice-single-item-b",
@@ -2342,6 +2375,13 @@ const payloadFixtures = [
         elementId: "choice-single-item",
         data: {
           choiceItemIndex: 2,
+        },
+      },
+      "save-date-full": {
+        layoutId: "layout-dialogue",
+        elementId: "save-date",
+        data: {
+          dateFormat: "YYYY-MM-DD",
         },
       },
       "text-reveal-indicator-full": {
@@ -3733,6 +3773,27 @@ const streamFixtures = [
         type: "layout.element.create",
         payload: {
           layoutId: "layout-alt",
+          elementId: "save-date",
+          parentId: "container-root",
+          data: {
+            type: "text-ref-save-load-slot-date",
+            name: "Save Date",
+            x: 0,
+            y: 40,
+            anchorX: 0,
+            anchorY: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+            dateFormat: "DD/MM/YYYY",
+            textStyleId: "text-style-ui",
+          },
+        },
+      },
+      {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-alt",
           elementId: "text-a",
           parentId: "container-root",
           data: {
@@ -3829,6 +3890,16 @@ const streamFixtures = [
         type: "layout.element.update",
         payload: {
           layoutId: "layout-alt",
+          elementId: "save-date",
+          data: {
+            dateFormat: "YYYY年MM月DD日",
+          },
+        },
+      },
+      {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-alt",
           elementId: "sprite-blur",
           data: {
             blur: {
@@ -3866,6 +3937,7 @@ const streamFixtures = [
           layoutId: "layout-alt",
           elementIds: [
             "text-a",
+            "save-date",
             "anim-a",
             "sprite-blur",
             "choice-single-item",

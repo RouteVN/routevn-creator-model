@@ -536,6 +536,19 @@ payload:
                 rotation: 0
                 text: World
                 textStyleId: text-style-ui
+              save-date:
+                id: save-date
+                type: text-ref-save-load-slot-date
+                name: Save Date
+                x: 0
+                "y": 40
+                anchorX: 0
+                anchorY: 0
+                scaleX: 1
+                scaleY: 1
+                rotation: 0
+                dateFormat: DD/MM/YYYY
+                textStyleId: text-style-ui
               sprite-blur:
                 id: sprite-blur
                 type: sprite
@@ -574,6 +587,8 @@ payload:
                   - id: text-a
                     children: []
                   - id: text-b
+                    children: []
+                  - id: save-date
                     children: []
                   - id: sprite-blur
                     children: []
