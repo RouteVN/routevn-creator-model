@@ -438,7 +438,7 @@ commands:
       elementId: text-a
       parentId: container-root
       data:
-        type: text
+        type: text-revealing
         name: Title
         x: 0
         "y": 0
@@ -512,6 +512,7 @@ commands:
       elementId: text-a
       data:
         name: Title Updated
+        revealSoundStopTiming: immediate
         scrollUp:
           payload:
             actions:

@@ -4,6 +4,7 @@ payload:
   layoutId: layout-dialogue
   elementId: text-a
   data:
+    revealSoundStopTiming: immediate
     indicator:
       revealing:
         kind: image

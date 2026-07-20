@@ -2589,6 +2589,7 @@ test("validatePayload accepts layout element sound overrides", () => {
           hoverSoundId: "sound-hover",
           clickSoundId: "sound-click",
           revealSoundId: "sound-reveal",
+          revealSoundStopTiming: "immediate",
         },
       },
     }),
@@ -2612,6 +2613,28 @@ test("validatePayload accepts layout element revealEffect", () => {
     }),
   ).toEqual({
     valid: true,
+  });
+});
+
+test("validatePayload rejects invalid layout reveal sound stop timing", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        replace: false,
+        data: {
+          revealSoundStopTiming: "later",
+        },
+      },
+    }),
+  ).toEqual({
+    valid: false,
+    error: expect.objectContaining({
+      message:
+        "payload.data.revealSoundStopTiming must be one of loopEnd, immediate when provided",
+    }),
   });
 });
 

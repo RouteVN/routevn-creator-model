@@ -509,7 +509,7 @@ payload:
                       toggleDialogueUI: {}
               text-a:
                 id: text-a
-                type: text
+                type: text-revealing
                 name: Title
                 x: 0
                 "y": 0
@@ -520,6 +520,8 @@ payload:
                 rotation: 0
                 text: Hello
                 textStyleId: text-style-ui
+                revealSoundId: sound-rich
+                revealSoundStopTiming: immediate
               text-b:
                 id: text-b
                 type: text
