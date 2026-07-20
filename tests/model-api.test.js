@@ -2638,6 +2638,75 @@ test("validatePayload rejects invalid layout reveal sound stop timing", () => {
   });
 });
 
+test("validatePayload accepts preset save/load date formats", () => {
+  for (const dateFormat of [
+    "DD/MM/YYYY",
+    "MM/DD/YYYY",
+    "YYYY-MM-DD",
+    "DD MMM YYYY",
+    "YYYY年MM月DD日",
+  ]) {
+    expect(
+      validatePayload({
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "save-date",
+          data: {
+            type: "text-ref-save-load-slot-date",
+            name: "Save Date",
+            dateFormat,
+          },
+        },
+      }),
+    ).toEqual({ valid: true });
+  }
+});
+
+test("validatePayload rejects custom save/load date formats", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.update",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "save-date",
+        data: {
+          dateFormat: "MMM DD, YYYY",
+        },
+      },
+    }),
+  ).toMatchObject({
+    valid: false,
+    error: {
+      message:
+        "payload.data.dateFormat must be one of DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, DD MMM YYYY, YYYY年MM月DD日 when provided",
+    },
+  });
+});
+
+test("validatePayload rejects dateFormat on non-save/load date elements", () => {
+  expect(
+    validatePayload({
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-ui",
+        elementId: "text-1",
+        data: {
+          type: "text",
+          name: "Label",
+          dateFormat: "DD/MM/YYYY",
+        },
+      },
+    }),
+  ).toMatchObject({
+    valid: false,
+    error: {
+      message:
+        "payload.data.dateFormat can only be provided for save/load date elements",
+    },
+  });
+});
+
 test("validatePayload accepts layout element text content arrays", () => {
   expect(
     validatePayload({
@@ -3027,6 +3096,46 @@ test("validateState accepts layout elements with rightClick and scroll interacti
   expect(validateState({ state })).toEqual({
     valid: true,
   });
+});
+
+test("validateState enforces preset formats on save/load date elements", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "save-load",
+    elements: {
+      items: {
+        "save-date": {
+          id: "save-date",
+          type: "text-ref-save-load-slot-date",
+          name: "Save Date",
+          dateFormat: "YYYY-MM-DD",
+        },
+      },
+      tree: [{ id: "save-date", children: [] }],
+    },
+  };
+  state.layouts.tree.push({ id: "layout-ui", children: [] });
+
+  expect(validateState({ state })).toEqual({ valid: true });
+
+  const customFormatState = structuredClone(state);
+  customFormatState.layouts.items["layout-ui"].elements.items[
+    "save-date"
+  ].dateFormat = "MMM DD, YYYY";
+  expectValidation(() => validateState({ state: customFormatState })).toThrow(
+    "state.layouts.items.layout-ui.elements.items.save-date.dateFormat must be one of DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, DD MMM YYYY, YYYY年MM月DD日 when provided",
+  );
+
+  const wrongTypeState = structuredClone(state);
+  wrongTypeState.layouts.items["layout-ui"].elements.items["save-date"].type =
+    "text";
+  expectValidation(() => validateState({ state: wrongTypeState })).toThrow(
+    "state.layouts.items.layout-ui.elements.items.save-date.dateFormat can only be provided for save/load date elements",
+  );
 });
 
 test("validateState accepts layout elements with aspectRatioLock", () => {
@@ -4731,6 +4840,66 @@ test("validateAgainstState accepts layout element sound overrides", () => {
   ).toEqual({
     valid: true,
   });
+});
+
+test("validateAgainstState restricts partial dateFormat updates to save/load date elements", () => {
+  const state = createEmptyTestState();
+
+  state.layouts.items["layout-ui"] = {
+    id: "layout-ui",
+    type: "layout",
+    name: "UI",
+    layoutType: "save-load",
+    elements: {
+      items: {
+        "save-date": {
+          id: "save-date",
+          type: "text-ref-save-load-slot-date",
+          name: "Save Date",
+        },
+        "text-1": {
+          id: "text-1",
+          type: "text",
+          name: "Label",
+        },
+      },
+      tree: [
+        { id: "save-date", children: [] },
+        { id: "text-1", children: [] },
+      ],
+    },
+  };
+  state.layouts.tree.push({ id: "layout-ui", children: [] });
+
+  expect(
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "save-date",
+          data: { dateFormat: "MM/DD/YYYY" },
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
+
+  expectValidation(() =>
+    validateAgainstState({
+      state,
+      command: {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-ui",
+          elementId: "text-1",
+          data: { dateFormat: "MM/DD/YYYY" },
+        },
+      },
+    }),
+  ).toThrow(
+    "layout element dateFormat can only be provided for save/load date elements",
+  );
 });
 
 test("validateAgainstState rejects missing layout text content variable refs", () => {

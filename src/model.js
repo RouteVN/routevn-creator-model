@@ -395,6 +395,13 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
+const SAVE_LOAD_DATE_FORMATS = new Set([
+  "DD/MM/YYYY",
+  "MM/DD/YYYY",
+  "YYYY-MM-DD",
+  "DD MMM YYYY",
+  "YYYY年MM月DD日",
+]);
 export const SCHEMA_VERSION = 10;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
@@ -3874,6 +3881,7 @@ const validateLayoutElementData = ({
     "border",
     "text",
     "content",
+    "dateFormat",
     "textStyle",
     "displaySpeed",
     "revealEffect",
@@ -3964,6 +3972,27 @@ const validateLayoutElementData = ({
         `${path}.name must be a non-empty string`,
       );
     }
+  }
+
+  if (
+    data.dateFormat !== undefined &&
+    !SAVE_LOAD_DATE_FORMATS.has(data.dateFormat)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.dateFormat must be one of ${Array.from(SAVE_LOAD_DATE_FORMATS).join(", ")} when provided`,
+    );
+  }
+
+  if (
+    data.dateFormat !== undefined &&
+    data.type !== undefined &&
+    data.type !== "text-ref-save-load-slot-date"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.dateFormat can only be provided for save/load date elements`,
+    );
   }
 
   if (data.hidden !== undefined && typeof data.hidden !== "boolean") {
@@ -4642,6 +4671,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "border",
           "text",
           "content",
+          "dateFormat",
           "textStyle",
           "displaySpeed",
           "revealEffect",
@@ -12218,6 +12248,21 @@ const validateVisualElementReferenceTargets = ({
   state,
   errorFactory,
 }) => {
+  if (
+    data.dateFormat !== undefined &&
+    data.type !== "text-ref-save-load-slot-date"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element dateFormat can only be provided for save/load date elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "dateFormat",
+      },
+    );
+  }
+
   if (data.blur !== undefined && data.type !== "sprite") {
     return invalidFromErrorFactory(
       errorFactory,
