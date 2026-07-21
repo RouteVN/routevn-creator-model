@@ -96,6 +96,9 @@ in:
           description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
+          minWeight: 100
+          defaultWeight: 400
+          maxWeight: 900
 out:
   state:
     project: {}
@@ -157,6 +160,9 @@ out:
           description: Editorial serif family
           fileId: file-a
           fontFamily: Fraunces
+          minWeight: 100
+          defaultWeight: 400
+          maxWeight: 900
       tree:
         - id: folder-fonts
           children:
@@ -248,6 +254,9 @@ in:
         data:
           name: Display Serif
           description: Updated display family
+          minWeight: 600
+          defaultWeight: 600
+          maxWeight: 600
 out:
   state:
     project: {}
@@ -291,6 +300,9 @@ out:
           description: Updated display family
           fileId: file-a
           fontFamily: Fraunces
+          minWeight: 600
+          defaultWeight: 600
+          maxWeight: 600
       tree:
         - id: font-a
           children: []
@@ -505,7 +517,7 @@ in:
             id: color-b
             type: color
             name: Accent
-            hex: '#00ffaa'
+            hex: "#00ffaa"
         tree:
           - id: folder-brand
             children:
@@ -531,7 +543,7 @@ in:
           type: color
           name: Primary
           description: Core brand tone
-          hex: '#112233'
+          hex: "#112233"
 out:
   state:
     project: {}
@@ -574,13 +586,13 @@ out:
           id: color-b
           type: color
           name: Accent
-          hex: '#00ffaa'
+          hex: "#00ffaa"
         color-a:
           id: color-a
           type: color
           name: Primary
           description: Core brand tone
-          hex: '#112233'
+          hex: "#112233"
       tree:
         - id: folder-brand
           children:
@@ -637,7 +649,7 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: '#112233'
+            hex: "#112233"
         tree:
           - id: color-a
             children: []
@@ -657,7 +669,7 @@ in:
         data:
           name: Primary Dark
           description: Deeper emphasis tone
-          hex: '#223344'
+          hex: "#223344"
 out:
   state:
     project: {}
@@ -697,7 +709,7 @@ out:
           type: color
           name: Primary Dark
           description: Deeper emphasis tone
-          hex: '#223344'
+          hex: "#223344"
       tree:
         - id: color-a
           children: []
@@ -754,12 +766,12 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: '#112233'
+            hex: "#112233"
           color-b:
             id: color-b
             type: color
             name: Accent
-            hex: '#445566'
+            hex: "#445566"
         tree:
           - id: folder-brand
             children:
@@ -849,7 +861,7 @@ in:
         type: color
         name: Primary
         hex: red
-throws: 'payload.data.hex must be a #RRGGBB string'
+throws: "payload.data.hex must be a #RRGGBB string"
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -960,12 +972,12 @@ in:
             id: color-a
             type: color
             name: Primary
-            hex: '#112233'
+            hex: "#112233"
           color-b:
             id: color-b
             type: color
             name: Accent
-            hex: '#445566'
+            hex: "#445566"
         tree:
           - id: color-a
             children: []

@@ -42,6 +42,7 @@ const LINE_UPDATE_ACTIONS_PRESERVE_PATHS_SET = new Set(
   LINE_UPDATE_ACTIONS_PRESERVE_PATHS,
 );
 const CURRENT_LAYOUT_SCHEMA_VERSION = 2;
+const FONT_WEIGHT_KEYS = ["minWeight", "defaultWeight", "maxWeight"];
 const isPositiveFiniteNumber = (value) => isFiniteNumber(value) && value > 0;
 const normalizeLayoutSchemaVersion = (value) =>
   Number.isInteger(value) && value >= 1 ? value : 1;
@@ -2388,6 +2389,41 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
   }
 };
 
+const validateFontWeightFields = ({ value, path, errorFactory }) => {
+  const presentKeys = FONT_WEIGHT_KEYS.filter((key) =>
+    Object.hasOwn(value, key),
+  );
+  if (presentKeys.length === 0) {
+    return;
+  }
+
+  if (presentKeys.length !== FONT_WEIGHT_KEYS.length) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must include minWeight, defaultWeight, and maxWeight together`,
+    );
+  }
+
+  for (const key of FONT_WEIGHT_KEYS) {
+    if (!isFiniteNumber(value[key]) || value[key] < 1 || value[key] > 1000) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${key} must be a finite number between 1 and 1000`,
+      );
+    }
+  }
+
+  if (
+    value.minWeight > value.defaultWeight ||
+    value.defaultWeight > value.maxWeight
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must satisfy minWeight <= defaultWeight <= maxWeight`,
+    );
+  }
+};
+
 const validateFontItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -2413,6 +2449,7 @@ const validateFontItems = ({ items, path, errorFactory }) => {
                 "tagIds",
                 "fileId",
                 "fontFamily",
+                ...FONT_WEIGHT_KEYS,
               ],
         path: itemPath,
         errorFactory,
@@ -2475,6 +2512,17 @@ const validateFontItems = ({ items, path, errorFactory }) => {
           errorFactory,
           `${itemPath}.fontFamily must be a non-empty string`,
         );
+      }
+
+      {
+        const result = validateFontWeightFields({
+          value: item,
+          path: itemPath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
     }
   }
@@ -9978,7 +10026,15 @@ const validateFontCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "tagIds", "fileId", "fontFamily"],
+          : [
+              "type",
+              "name",
+              "description",
+              "tagIds",
+              "fileId",
+              "fontFamily",
+              ...FONT_WEIGHT_KEYS,
+            ],
       path: "payload.data",
       errorFactory,
     });
@@ -10026,6 +10082,17 @@ const validateFontCreateData = ({ data, errorFactory }) => {
         "payload.data.fontFamily must be a non-empty string",
       );
     }
+
+    {
+      const result = validateFontWeightFields({
+        value: data,
+        path: "payload.data",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 };
 
@@ -10033,7 +10100,14 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "tagIds", "fileId", "fontFamily"],
+      allowedKeys: [
+        "name",
+        "description",
+        "tagIds",
+        "fileId",
+        "fontFamily",
+        ...FONT_WEIGHT_KEYS,
+      ],
       path: "payload.data",
       errorFactory,
     });
@@ -10086,6 +10160,17 @@ const validateFontUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.fontFamily must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateFontWeightFields({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 };
 
@@ -17421,6 +17506,11 @@ const COMMAND_DEFINITIONS = [
         });
         nextFont.fileId = payload.data.fileId;
         nextFont.fontFamily = payload.data.fontFamily;
+        for (const key of FONT_WEIGHT_KEYS) {
+          if (payload.data[key] !== undefined) {
+            nextFont[key] = payload.data[key];
+          }
+        }
       }
 
       state.fonts.items[payload.fontId] = nextFont;
@@ -17481,7 +17571,8 @@ const COMMAND_DEFINITIONS = [
         currentFont.type === "folder" &&
         (payload.data.tagIds !== undefined ||
           payload.data.fileId !== undefined ||
-          payload.data.fontFamily !== undefined)
+          payload.data.fontFamily !== undefined ||
+          FONT_WEIGHT_KEYS.some((key) => payload.data[key] !== undefined))
       ) {
         return invalidPrecondition(
           "folder font items cannot update font fields",

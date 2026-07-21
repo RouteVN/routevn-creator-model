@@ -5,3 +5,6 @@ payload:
   data:
     description: Updated display family
     fontFamily: Suit Alt
+    minWeight: 600
+    defaultWeight: 600
+    maxWeight: 600

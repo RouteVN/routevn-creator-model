@@ -84,6 +84,9 @@ const withFontAndColorRefs = (state) => {
     name: "UI Font",
     fileId: "file-font-ui",
     fontFamily: "Suit",
+    minWeight: 100,
+    defaultWeight: 400,
+    maxWeight: 900,
   };
   state.fonts.tree = [createTreeNode("font-ui")];
   state.colors.items["color-ui"] = {
@@ -1664,6 +1667,9 @@ const payloadFixtures = [
       description: "Editorial serif family",
       fileId: "file-font",
       fontFamily: "Suit",
+      minWeight: 100,
+      defaultWeight: 400,
+      maxWeight: 900,
     },
     minimalUpdateData: {
       fontFamily: "Suit Alt",
@@ -1671,6 +1677,9 @@ const payloadFixtures = [
     fullUpdateData: {
       description: "Updated display family",
       fontFamily: "Suit Alt",
+      minWeight: 600,
+      defaultWeight: 600,
+      maxWeight: 600,
     },
   }),
   ...createFolderedPayloadSets({
@@ -3152,6 +3161,9 @@ const streamFixtures = [
             name: "UI Font",
             fileId: "file-font",
             fontFamily: "Suit",
+            minWeight: 100,
+            defaultWeight: 400,
+            maxWeight: 900,
           },
         },
       },
@@ -3159,7 +3171,12 @@ const streamFixtures = [
         type: "font.update",
         payload: {
           fontId: "font-ui",
-          data: { description: "Editorial serif family" },
+          data: {
+            description: "Editorial serif family",
+            minWeight: 600,
+            defaultWeight: 600,
+            maxWeight: 600,
+          },
         },
       },
       {

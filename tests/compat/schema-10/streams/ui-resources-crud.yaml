@@ -220,11 +220,17 @@ commands:
         name: UI Font
         fileId: file-font
         fontFamily: Suit
+        minWeight: 100
+        defaultWeight: 400
+        maxWeight: 900
   - type: font.update
     payload:
       fontId: font-ui
       data:
         description: Editorial serif family
+        minWeight: 600
+        defaultWeight: 600
+        maxWeight: 600
   - type: font.move
     payload:
       fontId: font-ui

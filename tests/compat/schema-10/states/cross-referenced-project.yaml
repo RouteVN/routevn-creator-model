@@ -398,6 +398,9 @@ state:
         name: UI Font
         fileId: file-font-ui
         fontFamily: Suit
+        minWeight: 100
+        defaultWeight: 400
+        maxWeight: 900
     tree:
       - id: font-ui
         children: []
