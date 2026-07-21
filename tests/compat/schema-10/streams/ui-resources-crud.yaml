@@ -339,7 +339,8 @@ commands:
       data:
         type: textStyle
         name: Dialogue
-        fontId: font-ui
+        fontId:
+          - font-ui
         colorId: color-ui
         fontSize: 32
         lineHeight: 1.4
@@ -354,6 +355,7 @@ commands:
     payload:
       textStyleId: style-ui
       data:
+        fontId: font-ui
         previewText: Preview
         shadow:
           colorId: color-ui

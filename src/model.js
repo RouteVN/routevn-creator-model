@@ -3264,11 +3264,15 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         }
       }
 
-      if (!isNonEmptyString(item.fontId)) {
-        return invalidFromErrorFactory(
+      {
+        const result = validateRequiredStringOrUniqueIdArray({
+          value: item.fontId,
+          path: `${itemPath}.fontId`,
           errorFactory,
-          `${itemPath}.fontId must be a non-empty string`,
-        );
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
       if (!isNonEmptyString(item.colorId)) {
@@ -7240,15 +7244,17 @@ export const assertInvariants = ({ state }) => {
       continue;
     }
 
-    const font = state.fonts.items[textStyle.fontId];
-    if (!isPlainObject(font) || font.type === "folder") {
-      return invalidInvariant(
-        "textStyle.fontId must reference an existing non-folder font",
-        {
-          textStyleId,
-          fontId: textStyle.fontId,
-        },
-      );
+    for (const fontId of toIdArray(textStyle.fontId)) {
+      const font = state.fonts.items[fontId];
+      if (!isPlainObject(font) || font.type === "folder") {
+        return invalidInvariant(
+          "textStyle.fontId must reference an existing non-folder font",
+          {
+            textStyleId,
+            fontId,
+          },
+        );
+      }
     }
 
     const color = state.colors.items[textStyle.colorId];
@@ -8736,6 +8742,27 @@ const validateRequiredUniqueIdArray = ({ value, path, errorFactory }) => {
     seen.add(entry);
   }
 };
+
+const validateRequiredStringOrUniqueIdArray = ({
+  value,
+  path,
+  errorFactory,
+}) => {
+  if (isNonEmptyString(value)) {
+    return VALID_RESULT;
+  }
+
+  if (!Array.isArray(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty string or a non-empty array of strings`,
+    );
+  }
+
+  return validateRequiredUniqueIdArray({ value, path, errorFactory });
+};
+
+const toIdArray = (value) => (Array.isArray(value) ? value : [value]);
 
 const validateOptionalUniqueIdArray = ({
   value,
@@ -11368,7 +11395,18 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
     }
   }
 
-  for (const key of ["fontId", "colorId", "strokeColorId"]) {
+  if (data.fontId !== undefined) {
+    const result = validateRequiredStringOrUniqueIdArray({
+      value: data.fontId,
+      path: "payload.data.fontId",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["colorId", "strokeColorId"]) {
     if (data[key] !== undefined && !isNonEmptyString(data[key])) {
       return invalidFromErrorFactory(
         errorFactory,
@@ -18622,16 +18660,24 @@ const COMMAND_DEFINITIONS = [
         }
       }
 
-      for (const field of ["fontId", "colorId", "strokeColorId"]) {
+      for (const fontId of toIdArray(data.fontId)) {
+        const item = state.fonts.items[fontId];
+        if (!isPlainObject(item) || item.type === "folder") {
+          return invalidPrecondition(
+            "payload.data.fontId must reference an existing non-folder font",
+          );
+        }
+      }
+
+      for (const field of ["colorId", "strokeColorId"]) {
         if (data[field] === undefined) {
           continue;
         }
 
-        const collectionKey = field === "fontId" ? "fonts" : "colors";
-        const item = state[collectionKey].items[data[field]];
+        const item = state.colors.items[data[field]];
         if (!isPlainObject(item) || item.type === "folder") {
           return invalidPrecondition(
-            `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
+            `payload.data.${field} must reference an existing non-folder color`,
           );
         }
       }
@@ -18674,16 +18720,26 @@ const COMMAND_DEFINITIONS = [
         }
       }
 
-      for (const field of ["fontId", "colorId", "strokeColorId"]) {
+      if (payload.data.fontId !== undefined) {
+        for (const fontId of toIdArray(payload.data.fontId)) {
+          const item = state.fonts.items[fontId];
+          if (!isPlainObject(item) || item.type === "folder") {
+            return invalidPrecondition(
+              "payload.data.fontId must reference an existing non-folder font",
+            );
+          }
+        }
+      }
+
+      for (const field of ["colorId", "strokeColorId"]) {
         if (payload.data[field] === undefined) {
           continue;
         }
 
-        const collectionKey = field === "fontId" ? "fonts" : "colors";
-        const item = state[collectionKey].items[payload.data[field]];
+        const item = state.colors.items[payload.data[field]];
         if (!isPlainObject(item) || item.type === "folder") {
           return invalidPrecondition(
-            `payload.data.${field} must reference an existing non-folder ${collectionKey.slice(0, -1)}`,
+            `payload.data.${field} must reference an existing non-folder color`,
           );
         }
       }

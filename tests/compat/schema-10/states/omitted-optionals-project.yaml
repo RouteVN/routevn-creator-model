@@ -254,7 +254,8 @@ state:
         id: text-style-main
         type: textStyle
         name: Main Style
-        fontId: font-main
+        fontId:
+          - font-main
         colorId: color-main
         fontSize: 28
         lineHeight: 1.4

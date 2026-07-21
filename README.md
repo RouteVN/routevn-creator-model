@@ -124,6 +124,17 @@ one is present, all three are required and must satisfy
 same value in all three fields; variable fonts store their `fvar` `wght` axis
 range and default.
 
+## Text Style Font References
+
+`textStyle.fontId` accepts either one font ID or a non-empty array of unique
+font IDs. Both forms are persisted as supplied, and every ID must reference an
+existing non-folder font:
+
+```js
+{ fontId: "font-primary" }
+{ fontId: ["font-primary", "font-fallback"] }
+```
+
 ## File Structure
 
 ```text

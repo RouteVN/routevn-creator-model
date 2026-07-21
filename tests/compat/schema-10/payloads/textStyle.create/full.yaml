@@ -9,7 +9,8 @@ payload:
     type: textStyle
     name: Dialogue
     description: Main spoken-line styling
-    fontId: font-ui
+    fontId:
+      - font-ui
     colorId: color-ui
     fontSize: 32
     lineHeight: 1.4

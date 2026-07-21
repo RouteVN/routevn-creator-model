@@ -105,7 +105,7 @@ const withTextStyleRefs = (state) => {
     id: "text-style-ui",
     type: "textStyle",
     name: "UI Style",
-    fontId: "font-ui",
+    fontId: ["font-ui"],
     colorId: "color-ui",
     fontSize: 32,
     lineHeight: 1.4,
@@ -685,7 +685,7 @@ const createSparseCompatibilityState = () => {
     id: "text-style-main",
     type: "textStyle",
     name: "Main Style",
-    fontId: "font-main",
+    fontId: ["font-main"],
     colorId: "color-main",
     fontSize: 28,
     lineHeight: 1.4,
@@ -1849,7 +1849,7 @@ const payloadFixtures = [
       type: "textStyle",
       name: "Dialogue",
       description: "Main spoken-line styling",
-      fontId: "font-ui",
+      fontId: ["font-ui"],
       colorId: "color-ui",
       fontSize: 32,
       lineHeight: 1.4,
@@ -1868,6 +1868,7 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       description: "Main spoken-line styling",
+      fontId: ["font-ui"],
       fontSize: 40,
       lineHeight: 1.6,
       fontWeight: "600",
@@ -3315,7 +3316,7 @@ const streamFixtures = [
           data: {
             type: "textStyle",
             name: "Dialogue",
-            fontId: "font-ui",
+            fontId: ["font-ui"],
             colorId: "color-ui",
             fontSize: 32,
             lineHeight: 1.4,
@@ -3335,6 +3336,7 @@ const streamFixtures = [
         payload: {
           textStyleId: "style-ui",
           data: {
+            fontId: "font-ui",
             previewText: "Preview",
             shadow: {
               colorId: "color-ui",
