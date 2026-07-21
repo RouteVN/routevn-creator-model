@@ -106,6 +106,35 @@ Design rules:
 - random ids across RouteVN should use `nanoid` with the RouteVN base58 variant;
   deterministic derived tokens such as partition hashes are a separate case
 
+## Font Weight Metadata
+
+Font resources may store extracted weight capabilities in three flat fields:
+
+```js
+{
+  minWeight: 100,
+  defaultWeight: 400,
+  maxWeight: 900,
+}
+```
+
+The fields are optional for compatibility with existing font resources. When
+one is present, all three are required and must satisfy
+`1 <= minWeight <= defaultWeight <= maxWeight <= 1000`. Static fonts store the
+same value in all three fields; variable fonts store their `fvar` `wght` axis
+range and default.
+
+## Text Style Font References
+
+`textStyle.fontId` accepts either one font ID or a non-empty array of unique
+font IDs. Both forms are persisted as supplied, and every ID must reference an
+existing non-folder font:
+
+```js
+{ fontId: "font-primary" }
+{ fontId: ["font-primary", "font-fallback"] }
+```
+
 ## File Structure
 
 ```text

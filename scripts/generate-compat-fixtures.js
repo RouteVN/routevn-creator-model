@@ -84,6 +84,9 @@ const withFontAndColorRefs = (state) => {
     name: "UI Font",
     fileId: "file-font-ui",
     fontFamily: "Suit",
+    minWeight: 100,
+    defaultWeight: 400,
+    maxWeight: 900,
   };
   state.fonts.tree = [createTreeNode("font-ui")];
   state.colors.items["color-ui"] = {
@@ -102,7 +105,7 @@ const withTextStyleRefs = (state) => {
     id: "text-style-ui",
     type: "textStyle",
     name: "UI Style",
-    fontId: "font-ui",
+    fontId: ["font-ui"],
     colorId: "color-ui",
     fontSize: 32,
     lineHeight: 1.4,
@@ -682,7 +685,7 @@ const createSparseCompatibilityState = () => {
     id: "text-style-main",
     type: "textStyle",
     name: "Main Style",
-    fontId: "font-main",
+    fontId: ["font-main"],
     colorId: "color-main",
     fontSize: 28,
     lineHeight: 1.4,
@@ -1664,6 +1667,9 @@ const payloadFixtures = [
       description: "Editorial serif family",
       fileId: "file-font",
       fontFamily: "Suit",
+      minWeight: 100,
+      defaultWeight: 400,
+      maxWeight: 900,
     },
     minimalUpdateData: {
       fontFamily: "Suit Alt",
@@ -1671,6 +1677,9 @@ const payloadFixtures = [
     fullUpdateData: {
       description: "Updated display family",
       fontFamily: "Suit Alt",
+      minWeight: 600,
+      defaultWeight: 600,
+      maxWeight: 600,
     },
   }),
   ...createFolderedPayloadSets({
@@ -1840,7 +1849,7 @@ const payloadFixtures = [
       type: "textStyle",
       name: "Dialogue",
       description: "Main spoken-line styling",
-      fontId: "font-ui",
+      fontId: ["font-ui"],
       colorId: "color-ui",
       fontSize: 32,
       lineHeight: 1.4,
@@ -1859,6 +1868,7 @@ const payloadFixtures = [
     },
     fullUpdateData: {
       description: "Main spoken-line styling",
+      fontId: ["font-ui"],
       fontSize: 40,
       lineHeight: 1.6,
       fontWeight: "600",
@@ -3152,6 +3162,9 @@ const streamFixtures = [
             name: "UI Font",
             fileId: "file-font",
             fontFamily: "Suit",
+            minWeight: 100,
+            defaultWeight: 400,
+            maxWeight: 900,
           },
         },
       },
@@ -3159,7 +3172,12 @@ const streamFixtures = [
         type: "font.update",
         payload: {
           fontId: "font-ui",
-          data: { description: "Editorial serif family" },
+          data: {
+            description: "Editorial serif family",
+            minWeight: 600,
+            defaultWeight: 600,
+            maxWeight: 600,
+          },
         },
       },
       {
@@ -3298,7 +3316,7 @@ const streamFixtures = [
           data: {
             type: "textStyle",
             name: "Dialogue",
-            fontId: "font-ui",
+            fontId: ["font-ui"],
             colorId: "color-ui",
             fontSize: 32,
             lineHeight: 1.4,
@@ -3318,6 +3336,7 @@ const streamFixtures = [
         payload: {
           textStyleId: "style-ui",
           data: {
+            fontId: "font-ui",
             previewText: "Preview",
             shadow: {
               colorId: "color-ui",

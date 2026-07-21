@@ -11,3 +11,6 @@ payload:
     description: Editorial serif family
     fileId: file-font
     fontFamily: Suit
+    minWeight: 100
+    defaultWeight: 400
+    maxWeight: 900

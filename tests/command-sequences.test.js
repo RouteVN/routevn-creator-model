@@ -2088,6 +2088,9 @@ test("applies a font and color command tape with intermediate state snapshots", 
             name: "Display",
             fileId: "file-font",
             fontFamily: "Fraunces",
+            minWeight: 100,
+            defaultWeight: 400,
+            maxWeight: 900,
           },
         },
       },
@@ -2097,6 +2100,9 @@ test("applies a font and color command tape with intermediate state snapshots", 
           fontId: "font-a",
           data: {
             fontFamily: "Fraunces Soft",
+            minWeight: 600,
+            defaultWeight: 600,
+            maxWeight: 600,
           },
         },
       },
@@ -2173,6 +2179,9 @@ test("applies a font and color command tape with intermediate state snapshots", 
     name: "Display",
     fileId: "file-font",
     fontFamily: "Fraunces",
+    minWeight: 100,
+    defaultWeight: 400,
+    maxWeight: 900,
   };
   expected2.fonts.tree = [
     {
@@ -2188,6 +2197,9 @@ test("applies a font and color command tape with intermediate state snapshots", 
 
   const expected3 = cloneState(expected2);
   expected3.fonts.items["font-a"].fontFamily = "Fraunces Soft";
+  expected3.fonts.items["font-a"].minWeight = 600;
+  expected3.fonts.items["font-a"].defaultWeight = 600;
+  expected3.fonts.items["font-a"].maxWeight = 600;
 
   const expected4 = cloneState(expected3);
   expected4.colors.items = {
