@@ -1,0 +1,20 @@
+schemaVersion: 11
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: choice-single-item-b
+  parentId: container-root
+  data:
+    type: container-ref-choice-single-item
+    name: Choice Single Item
+    x: 0
+    "y": 0
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    direction: absolute
+    choiceItemIndex: 1
+    click:
+      inheritToChildren: true

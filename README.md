@@ -135,6 +135,44 @@ existing non-folder font:
 { fontId: ["font-primary", "font-fallback"] }
 ```
 
+## Computed Variables
+
+Variables support read-only computed definitions for `string`, `number`,
+`boolean`, and `object` results. The presence of `computed` is the source
+discriminator; computed variables omit stored `scope`, `default`, and `value`
+fields:
+
+```js
+{
+  id: "hpPercent",
+  type: "variable",
+  variableType: "number",
+  name: "HP Percent",
+  computed: {
+    expr: {
+      round: [
+        {
+          mul: [
+            {
+              div: [
+                { var: "variables.hp" },
+                { var: "variables.maxHp" },
+              ],
+            },
+            100,
+          ],
+        },
+      ],
+    },
+  },
+}
+```
+
+Computed definitions may use a simple `expr` or literal `value`, or ordered
+`branches` with an explicit `default`. Validation enforces the Route Engine
+operator grammar, result types, concrete `variables.*`/`runtime.*` paths,
+declared variable references, and an acyclic computed dependency graph.
+
 ## File Structure
 
 ```text

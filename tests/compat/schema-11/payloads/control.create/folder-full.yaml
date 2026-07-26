@@ -1,0 +1,7 @@
+schemaVersion: 11
+type: control.create
+payload:
+  controlId: folder-a
+  data:
+    type: folder
+    name: Folder A

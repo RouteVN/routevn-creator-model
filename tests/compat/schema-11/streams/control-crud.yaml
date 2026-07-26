@@ -1,0 +1,587 @@
+schemaVersion: 11
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  voices:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items:
+            file-font-ui:
+              id: file-font-ui
+              type: font
+              mimeType: font/ttf
+              size: 1
+              sha256: file-font-ui-sha256
+            file-spritesheet-ui:
+              id: file-spritesheet-ui
+              type: image
+              mimeType: image/png
+              size: 1
+              sha256: file-spritesheet-ui-sha256
+            thumb-spritesheet-ui:
+              id: thumb-spritesheet-ui
+              type: image-thumbnail
+              mimeType: image/webp
+              size: 1
+              sha256: thumb-spritesheet-ui-sha256
+          tree:
+            - id: file-font-ui
+              children: []
+            - id: file-spritesheet-ui
+              children: []
+            - id: thumb-spritesheet-ui
+              children: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items:
+            spritesheet-ui:
+              id: spritesheet-ui
+              type: spritesheet
+              name: UI Spritesheet
+              fileId: file-spritesheet-ui
+              thumbnailFileId: thumb-spritesheet-ui
+              sheetWidth: 512
+              sheetHeight: 256
+              frameCount: 2
+              width: 256
+              height: 256
+              jsonData:
+                meta:
+                  image: ui-spritesheet.png
+              animations:
+                idle:
+                  frames:
+                    - 0
+                    - 1
+                  animationSpeed: 1
+                  loop: true
+          tree:
+            - id: spritesheet-ui
+              children: []
+        sounds:
+          items: {}
+          tree: []
+        voices:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items:
+            font-ui:
+              id: font-ui
+              type: font
+              name: UI Font
+              fileId: file-font-ui
+              fontFamily: Suit
+              minWeight: 100
+              defaultWeight: 400
+              maxWeight: 900
+          tree:
+            - id: font-ui
+              children: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items:
+            color-ui:
+              id: color-ui
+              type: color
+              name: White
+              hex: "#ffffff"
+          tree:
+            - id: color-ui
+              children: []
+        textStyles:
+          items:
+            text-style-ui:
+              id: text-style-ui
+              type: textStyle
+              name: UI Style
+              fontId:
+                - font-ui
+              colorId: color-ui
+              fontSize: 32
+              lineHeight: 1.4
+              fontWeight: "700"
+              shadow:
+                colorId: color-ui
+                alpha: 0.75
+                blur: 4
+                offsetX: 2
+                offsetY: 3
+          tree:
+            - id: text-style-ui
+              children: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items:
+            control-default:
+              id: control-default
+              type: control
+              name: Default Control
+              description: Shared navigation control
+              thumbnailFileId: thumb-spritesheet-ui
+              preview:
+                choice:
+                  items:
+                    - content: Continue
+              keyboard:
+                enter:
+                  payload:
+                    actions:
+                      nextLine: {}
+              keyup:
+                enter:
+                  payload:
+                    actions:
+                      toggleAutoMode: {}
+              elements:
+                items:
+                  container-root:
+                    id: container-root
+                    type: container
+                    name: Root
+                    x: 0
+                    "y": 0
+                    width: 100
+                    height: 100
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    gapX: 16
+                    gapY: 12
+                    scrollUp:
+                      payload:
+                        actions:
+                          nextLine: {}
+                    scrollDown:
+                      inheritToChildren: true
+                      payload:
+                        actions:
+                          toggleSkipMode: {}
+                  text-a:
+                    id: text-a
+                    type: text
+                    name: Title
+                    x: 0
+                    "y": 0
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    text: Hello
+                    textStyleId: text-style-ui
+                  text-b:
+                    id: text-b
+                    type: text
+                    name: Subtitle
+                    hidden: true
+                    x: 0
+                    "y": 20
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    text: World
+                    textStyleId: text-style-ui
+                  sprite-blur:
+                    id: sprite-blur
+                    type: sprite
+                    name: Blurred Sprite
+                    x: 0
+                    "y": 60
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    blur:
+                      x: 6
+                      "y": 9
+                      quality: 3
+                      kernelSize: 9
+                      repeatEdgePixels: true
+                  choice-single-item:
+                    id: choice-single-item
+                    type: container-ref-choice-single-item
+                    name: Choice Single Item
+                    x: 0
+                    "y": 0
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    direction: absolute
+                    choiceItemIndex: 0
+                    click:
+                      inheritToChildren: true
+                tree:
+                  - id: container-root
+                    children:
+                      - id: text-a
+                        children: []
+                      - id: text-b
+                        children: []
+                      - id: sprite-blur
+                        children: []
+                      - id: choice-single-item
+                        children: []
+          tree:
+            - id: control-default
+              children: []
+  - type: control.create
+    payload:
+      controlId: folder-controls
+      data:
+        type: folder
+        name: Controls
+  - type: control.create
+    payload:
+      controlId: control-alt
+      parentId: folder-controls
+      data:
+        type: control
+        name: Alt Control
+        description: Alternate navigation control
+        thumbnailFileId: thumb-spritesheet-ui
+        preview:
+          runtime:
+            autoMode: true
+        elements:
+          items: {}
+          tree: []
+  - type: control.update
+    payload:
+      controlId: control-alt
+      data:
+        name: Alt Control Updated
+        preview:
+          choice:
+            items:
+              - content: Continue
+        keyboard:
+          space:
+            payload:
+              actions:
+                toggleDialogueUI: {}
+        keyup:
+          space:
+            payload:
+              actions:
+                toggleSkipMode: {}
+  - type: control.element.create
+    payload:
+      controlId: control-alt
+      elementId: container-root
+      data:
+        type: container
+        name: Root
+        x: 0
+        "y": 0
+        width: 100
+        height: 100
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+  - type: control.element.create
+    payload:
+      controlId: control-alt
+      elementId: text-a
+      parentId: container-root
+      data:
+        type: text
+        name: Title
+        x: 0
+        "y": 0
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        text: Hello
+        textStyleId: text-style-ui
+  - type: control.element.create
+    payload:
+      controlId: control-alt
+      elementId: anim-a
+      parentId: container-root
+      data:
+        type: spritesheet-animation
+        name: Idle Loop
+        x: 0
+        "y": 80
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        resourceId: spritesheet-ui
+        animationName: idle
+  - type: control.element.create
+    payload:
+      controlId: control-alt
+      elementId: sprite-blur
+      parentId: container-root
+      data:
+        type: sprite
+        name: Blurred Sprite
+        x: 0
+        "y": 60
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        blur:
+          x: 6
+          "y": 9
+          quality: 3
+          kernelSize: 9
+          repeatEdgePixels: true
+  - type: control.element.create
+    payload:
+      controlId: control-alt
+      elementId: choice-single-item
+      parentId: container-root
+      data:
+        type: container-ref-choice-single-item
+        name: Choice Single Item
+        x: 0
+        "y": 0
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        direction: absolute
+        choiceItemIndex: 0
+        click:
+          inheritToChildren: true
+  - type: control.element.update
+    payload:
+      controlId: control-alt
+      elementId: text-a
+      data:
+        name: Title Updated
+        scrollUp:
+          payload:
+            actions:
+              nextLine: {}
+        scrollDown:
+          payload:
+            actions:
+              toggleSkipMode: {}
+  - type: control.element.update
+    payload:
+      controlId: control-alt
+      elementId: sprite-blur
+      data:
+        blur:
+          x: 8
+          "y": 10
+          quality: 4
+          kernelSize: 11
+          repeatEdgePixels: false
+  - type: control.element.update
+    payload:
+      controlId: control-alt
+      elementId: choice-single-item
+      data:
+        choiceItemIndex: 3
+  - type: control.element.move
+    payload:
+      controlId: control-alt
+      elementId: text-a
+      parentId: container-root
+      position: last
+  - type: control.element.delete
+    payload:
+      controlId: control-alt
+      elementIds:
+        - text-a
+        - anim-a
+        - sprite-blur
+        - choice-single-item
+        - container-root
+  - type: control.move
+    payload:
+      controlId: control-alt
+      parentId: folder-controls
+      position: last
+  - type: control.delete
+    payload:
+      controlIds:
+        - control-alt
+        - folder-controls
