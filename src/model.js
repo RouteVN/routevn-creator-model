@@ -3011,7 +3011,12 @@ const validComputedResult = (valueType) => ({
   valueType,
 });
 
-const validateComputedDataValue = ({ value, path, errorFactory }) => {
+const validateComputedDataValue = ({
+  value,
+  path,
+  errorFactory,
+  ancestors = new Set(),
+}) => {
   if (
     value === null ||
     typeof value === "string" ||
@@ -3031,41 +3036,263 @@ const validateComputedDataValue = ({ value, path, errorFactory }) => {
   }
 
   if (Array.isArray(value)) {
+    if (ancestors.has(value)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} must not contain cyclic data`,
+      );
+    }
+    ancestors.add(value);
+
     for (const [index, item] of value.entries()) {
       const result = validateComputedDataValue({
         value: item,
         path: `${path}[${index}]`,
         errorFactory,
+        ancestors,
       });
       if (result?.valid === false) {
         return result;
       }
     }
+    ancestors.delete(value);
     return VALID_RESULT;
   }
 
-  if (!isPlainObject(value)) {
+  if (
+    !isPlainObject(value) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(value))
+  ) {
     return invalidFromErrorFactory(
       errorFactory,
       `${path} must contain JSON-compatible data`,
     );
   }
 
+  if (ancestors.has(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must not contain cyclic data`,
+    );
+  }
+  ancestors.add(value);
+
   for (const [key, item] of Object.entries(value)) {
     const result = validateComputedDataValue({
       value: item,
       path: `${path}.${key}`,
       errorFactory,
+      ancestors,
     });
     if (result?.valid === false) {
       return result;
     }
   }
 
+  ancestors.delete(value);
   return VALID_RESULT;
 };
 
-const validateComputedReferencePath = ({ value, path, errorFactory }) => {
+const invalidComputedReferenceParseResult = Object.freeze({
+  valid: false,
+});
+
+const decodeComputedReferenceQuotedPart = (rawValue) => {
+  if (rawValue[0] === '"') {
+    try {
+      return {
+        valid: true,
+        value: JSON.parse(rawValue),
+      };
+    } catch {
+      return invalidComputedReferenceParseResult;
+    }
+  }
+
+  let value = "";
+  const escapedValues = {
+    "\\": "\\",
+    '"': '"',
+    "'": "'",
+    "/": "/",
+    n: "\n",
+    r: "\r",
+    t: "\t",
+    b: "\b",
+    f: "\f",
+  };
+
+  for (let index = 1; index < rawValue.length - 1; index += 1) {
+    const character = rawValue[index];
+    if (character !== "\\") {
+      if (character.charCodeAt(0) < 0x20) {
+        return invalidComputedReferenceParseResult;
+      }
+      value += character;
+      continue;
+    }
+
+    index += 1;
+    if (index >= rawValue.length - 1) {
+      return invalidComputedReferenceParseResult;
+    }
+
+    const escapedCharacter = rawValue[index];
+    if (escapedCharacter === "u") {
+      const hexValue = rawValue.slice(index + 1, index + 5);
+      if (hexValue.length !== 4 || !/^[0-9a-fA-F]{4}$/.test(hexValue)) {
+        return invalidComputedReferenceParseResult;
+      }
+      value += String.fromCharCode(Number.parseInt(hexValue, 16));
+      index += 4;
+      continue;
+    }
+
+    if (!Object.hasOwn(escapedValues, escapedCharacter)) {
+      return invalidComputedReferenceParseResult;
+    }
+    value += escapedValues[escapedCharacter];
+  }
+
+  return {
+    valid: true,
+    value,
+  };
+};
+
+const parseComputedReferencePath = (value) => {
+  if (
+    typeof value !== "string" ||
+    value.length === 0 ||
+    value.trim() !== value
+  ) {
+    return invalidComputedReferenceParseResult;
+  }
+
+  const parts = [];
+  let index = 0;
+
+  const readBarePart = () => {
+    const startIndex = index;
+    while (
+      index < value.length &&
+      value[index] !== "." &&
+      value[index] !== "[" &&
+      value[index] !== "]"
+    ) {
+      index += 1;
+    }
+
+    const part = value.slice(startIndex, index);
+    if (part.length === 0 || part.trim() !== part || /\s/.test(part)) {
+      return false;
+    }
+    parts.push(part);
+    return true;
+  };
+
+  const readBracketPart = () => {
+    index += 1;
+    while (index < value.length && /\s/.test(value[index])) {
+      index += 1;
+    }
+
+    const firstCharacter = value[index];
+    if (/\d/.test(firstCharacter ?? "")) {
+      const startIndex = index;
+      while (index < value.length && /\d/.test(value[index])) {
+        index += 1;
+      }
+      const rawPart = value.slice(startIndex, index);
+      while (index < value.length && /\s/.test(value[index])) {
+        index += 1;
+      }
+      if (
+        value[index] !== "]" ||
+        (rawPart.length > 1 && rawPart.startsWith("0"))
+      ) {
+        return false;
+      }
+      index += 1;
+      parts.push(rawPart);
+      return true;
+    }
+
+    if (firstCharacter !== '"' && firstCharacter !== "'") {
+      return false;
+    }
+
+    const quote = firstCharacter;
+    const startIndex = index;
+    index += 1;
+    let escaped = false;
+    while (index < value.length) {
+      const character = value[index];
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === quote) {
+        const decodedPart = decodeComputedReferenceQuotedPart(
+          value.slice(startIndex, index + 1),
+        );
+        if (!decodedPart.valid) {
+          return false;
+        }
+
+        index += 1;
+        while (index < value.length && /\s/.test(value[index])) {
+          index += 1;
+        }
+        if (value[index] !== "]") {
+          return false;
+        }
+        index += 1;
+        parts.push(decodedPart.value);
+        return true;
+      }
+      index += 1;
+    }
+
+    return false;
+  };
+
+  if (!readBarePart()) {
+    return invalidComputedReferenceParseResult;
+  }
+
+  while (index < value.length) {
+    if (value[index] === ".") {
+      index += 1;
+      if (!readBarePart()) {
+        return invalidComputedReferenceParseResult;
+      }
+      continue;
+    }
+
+    if (value[index] === "[") {
+      if (!readBracketPart()) {
+        return invalidComputedReferenceParseResult;
+      }
+      continue;
+    }
+
+    return invalidComputedReferenceParseResult;
+  }
+
+  return {
+    valid: true,
+    parts,
+  };
+};
+
+const validateComputedReferencePath = ({
+  value,
+  path,
+  errorFactory,
+  variables,
+  dependencies,
+}) => {
   if (!isNonEmptyString(value)) {
     return invalidFromErrorFactory(
       errorFactory,
@@ -3073,22 +3300,62 @@ const validateComputedReferencePath = ({ value, path, errorFactory }) => {
     );
   }
 
-  if (
-    !value.startsWith("variables.") &&
-    !value.startsWith("variables[") &&
-    !value.startsWith("runtime.") &&
-    !value.startsWith("runtime[")
-  ) {
+  const parsedPath = parseComputedReferencePath(value);
+  if (!parsedPath.valid) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} has an invalid reference path`,
+    );
+  }
+
+  const [root, referencedId, ...nestedPath] = parsedPath.parts;
+  if (root !== "variables" && root !== "runtime") {
     return invalidFromErrorFactory(
       errorFactory,
       `${path} must reference a concrete variables.* or runtime.* path`,
     );
   }
 
-  return VALID_RESULT;
+  if (!isNonEmptyString(referencedId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference a concrete ${root} member`,
+    );
+  }
+
+  if (root === "runtime" || variables === undefined) {
+    return validComputedResult(undefined);
+  }
+
+  const referencedVariable = Object.hasOwn(variables, referencedId)
+    ? variables[referencedId]
+    : undefined;
+  if (
+    !isPlainObject(referencedVariable) ||
+    referencedVariable.type !== "variable"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} references unknown variable '${referencedId}'`,
+    );
+  }
+
+  if (Object.hasOwn(referencedVariable, "computed")) {
+    dependencies?.add(referencedId);
+  }
+
+  return validComputedResult(
+    nestedPath.length === 0 ? referencedVariable.variableType : undefined,
+  );
 };
 
-const validateComputedExpression = ({ expression, path, errorFactory }) => {
+const validateComputedExpression = ({
+  expression,
+  path,
+  errorFactory,
+  variables,
+  dependencies,
+}) => {
   if (expression === null || typeof expression !== "object") {
     if (typeof expression === "number" && !Number.isFinite(expression)) {
       return invalidFromErrorFactory(
@@ -3120,8 +3387,10 @@ const validateComputedExpression = ({ expression, path, errorFactory }) => {
       value: operands,
       path: `${path}.var`,
       errorFactory,
+      variables,
+      dependencies,
     });
-    return result?.valid === false ? result : validComputedResult(undefined);
+    return result;
   }
 
   if (operator === "literal") {
@@ -3171,6 +3440,8 @@ const validateComputedExpression = ({ expression, path, errorFactory }) => {
       expression: operand,
       path: `${path}.${operator}[${index}]`,
       errorFactory,
+      variables,
+      dependencies,
     });
     if (result?.valid === false) {
       return result;
@@ -3199,8 +3470,15 @@ const validateComputedExpression = ({ expression, path, errorFactory }) => {
   return validComputedResult(undefined);
 };
 
-const validateComputedCondition = ({ condition, path, errorFactory }) => {
-  if (typeof condition === "string") {
+const validateComputedCondition = ({
+  condition,
+  path,
+  errorFactory,
+  variables,
+  dependencies,
+  isRoot = true,
+}) => {
+  if (isRoot && typeof condition === "string") {
     return invalidFromErrorFactory(
       errorFactory,
       `${path} string conditions are not supported`,
@@ -3238,8 +3516,10 @@ const validateComputedCondition = ({ condition, path, errorFactory }) => {
       value: operands,
       path: `${path}.var`,
       errorFactory,
+      variables,
+      dependencies,
     });
-    return result?.valid === false ? result : validComputedResult(undefined);
+    return result;
   }
   if (operator === "literal") {
     const result = validateComputedDataValue({
@@ -3262,6 +3542,9 @@ const validateComputedCondition = ({ condition, path, errorFactory }) => {
       condition: operands,
       path: `${path}.not`,
       errorFactory,
+      variables,
+      dependencies,
+      isRoot: false,
     });
     return result?.valid === false ? result : validComputedResult("boolean");
   }
@@ -3300,6 +3583,9 @@ const validateComputedCondition = ({ condition, path, errorFactory }) => {
       condition: operand,
       path: `${path}.${operator}[${index}]`,
       errorFactory,
+      variables,
+      dependencies,
+      isRoot: false,
     });
     if (result?.valid === false) {
       return result;
@@ -3329,6 +3615,8 @@ const validateComputedResultConfig = ({
   variableType,
   path,
   errorFactory,
+  variables,
+  dependencies,
   allowedKeys = ["expr", "value"],
 }) => {
   if (!isPlainObject(resultConfig)) {
@@ -3377,6 +3665,8 @@ const validateComputedResultConfig = ({
     expression: resultConfig.expr,
     path: `${path}.expr`,
     errorFactory,
+    variables,
+    dependencies,
   });
   if (expressionResult?.valid === false) {
     return expressionResult;
@@ -3398,6 +3688,8 @@ const validateVariableComputedConfig = ({
   variableType,
   path,
   errorFactory,
+  variables,
+  dependencies,
 }) => {
   if (!isPlainObject(computed)) {
     return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
@@ -3446,6 +3738,8 @@ const validateVariableComputedConfig = ({
         condition: branch.when,
         path: `${branchPath}.when`,
         errorFactory,
+        variables,
+        dependencies,
       });
       if (conditionResult?.valid === false) {
         return conditionResult;
@@ -3455,6 +3749,8 @@ const validateVariableComputedConfig = ({
         variableType,
         path: branchPath,
         errorFactory,
+        variables,
+        dependencies,
         allowedKeys: ["when", "expr", "value"],
       });
       if (branchResult?.valid === false) {
@@ -3467,6 +3763,8 @@ const validateVariableComputedConfig = ({
       variableType,
       path: `${path}.default`,
       errorFactory,
+      variables,
+      dependencies,
     });
   }
 
@@ -3475,7 +3773,100 @@ const validateVariableComputedConfig = ({
     variableType,
     path,
     errorFactory,
+    variables,
+    dependencies,
   });
+};
+
+const validateComputedVariableGraph = ({
+  items,
+  path,
+  errorFactory,
+}) => {
+  const dependencyGraph = new Map();
+
+  for (const [variableId, variable] of Object.entries(items)) {
+    if (
+      variable?.type !== "variable" ||
+      !Object.hasOwn(variable, "computed")
+    ) {
+      continue;
+    }
+
+    const dependencies = new Set();
+    const result = validateVariableComputedConfig({
+      computed: variable.computed,
+      variableType: variable.variableType,
+      path: `${path}.${variableId}.computed`,
+      errorFactory,
+      variables: items,
+      dependencies,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+    dependencyGraph.set(variableId, dependencies);
+  }
+
+  const visited = new Set();
+  for (const startVariableId of dependencyGraph.keys()) {
+    if (visited.has(startVariableId)) {
+      continue;
+    }
+
+    const frames = [
+      {
+        variableId: startVariableId,
+        dependencies: [...(dependencyGraph.get(startVariableId) ?? [])],
+        nextDependencyIndex: 0,
+      },
+    ];
+    const activeIndexes = new Map([[startVariableId, 0]]);
+
+    while (frames.length > 0) {
+      const frame = frames.at(-1);
+      if (frame.nextDependencyIndex >= frame.dependencies.length) {
+        frames.pop();
+        activeIndexes.delete(frame.variableId);
+        visited.add(frame.variableId);
+        continue;
+      }
+
+      const dependencyId = frame.dependencies[frame.nextDependencyIndex];
+      frame.nextDependencyIndex += 1;
+      if (visited.has(dependencyId)) {
+        continue;
+      }
+
+      const cycleStartIndex = activeIndexes.get(dependencyId);
+      if (cycleStartIndex !== undefined) {
+        const cycle = [
+          ...frames
+            .slice(cycleStartIndex)
+            .map(({ variableId }) => variableId),
+          dependencyId,
+        ].join(" -> ");
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path} contains computed variable cycle: ${cycle}`,
+        );
+      }
+
+      if (!dependencyGraph.has(dependencyId)) {
+        visited.add(dependencyId);
+        continue;
+      }
+
+      activeIndexes.set(dependencyId, frames.length);
+      frames.push({
+        variableId: dependencyId,
+        dependencies: [...(dependencyGraph.get(dependencyId) ?? [])],
+        nextDependencyIndex: 0,
+      });
+    }
+  }
+
+  return VALID_RESULT;
 };
 
 const validateVariableStoredOrComputedData = ({
@@ -3610,6 +4001,13 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
     const itemType = item?.type;
     const variableType = item?.variableType;
 
+    if (itemId === "__proto__") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath} uses reserved variable id '__proto__'`,
+      );
+    }
+
     if (itemType !== "folder" && itemType !== "variable") {
       return invalidFromErrorFactory(
         errorFactory,
@@ -3732,6 +4130,12 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       }
     }
   }
+
+  return validateComputedVariableGraph({
+    items,
+    path,
+    errorFactory,
+  });
 };
 
 const validateTextStyleShadow = ({ shadow, path, errorFactory }) => {
@@ -13657,6 +14061,7 @@ const createFolderedCollectionCommandDefinitions = ({
   validateDeleteState = () => {},
   afterDelete = () => {},
   includeUpdate = true,
+  reservedItemIds = [],
 }) => {
   const existingMessage = `payload.${idField} must reference an existing ${itemLabel}`;
   const duplicateMessage = `payload.${idField} must not already exist`;
@@ -13694,6 +14099,12 @@ const createFolderedCollectionCommandDefinitions = ({
         if (!isNonEmptyString(payload[idField])) {
           return invalidPayload(
             `payload.${idField} must be a non-empty string`,
+          );
+        }
+
+        if (reservedItemIds.includes(payload[idField])) {
+          return invalidPayload(
+            `payload.${idField} must not use reserved id '${payload[idField]}'`,
           );
         }
 
@@ -19133,6 +19544,7 @@ const COMMAND_DEFINITIONS = [
     itemLabel: "variable item",
     createDataValidator: validateVariableCreateData,
     updateDataValidator: validateVariableUpdateData,
+    reservedItemIds: ["__proto__"],
     createItem: ({ payload }) => {
       const data = structuredClone(payload.data);
       if (!Array.isArray(data.tagIds) || data.tagIds.length === 0) {
@@ -19157,7 +19569,7 @@ const COMMAND_DEFINITIONS = [
         return;
       }
 
-      return validateTagIdsAgainstScope({
+      const tagResult = validateTagIdsAgainstScope({
         state,
         tagIds: payload.data.tagIds,
         scopeKey: "variables",
@@ -19165,6 +19577,25 @@ const COMMAND_DEFINITIONS = [
         details: {
           variableId: payload.variableId,
         },
+      });
+      if (!tagResult.valid) {
+        return tagResult;
+      }
+
+      if (!Object.hasOwn(payload.data, "computed")) {
+        return VALID_RESULT;
+      }
+
+      return validateComputedVariableGraph({
+        items: {
+          ...state.variables.items,
+          [payload.variableId]: {
+            id: payload.variableId,
+            ...payload.data,
+          },
+        },
+        path: "state.variables.items",
+        errorFactory: createPreconditionValidationError,
       });
     },
     validateUpdateState: ({ state, payload, currentItem }) => {
@@ -19263,6 +19694,49 @@ const COMMAND_DEFINITIONS = [
           }
         }
       }
+
+      if (currentItemIsComputed && Object.hasOwn(payload.data, "computed")) {
+        return validateComputedVariableGraph({
+          items: {
+            ...state.variables.items,
+            [payload.variableId]: applyVariableUpdate({
+              currentItem,
+              data: payload.data,
+            }),
+          },
+          path: "state.variables.items",
+          errorFactory: createPreconditionValidationError,
+        });
+      }
+
+      return VALID_RESULT;
+    },
+    validateDeleteState: ({ state, payload }) => {
+      const deletedIds = new Set();
+      for (const variableId of payload.variableIds) {
+        const node = findTreeNode({
+          nodes: state.variables.tree,
+          nodeId: variableId,
+        });
+        if (!node) {
+          deletedIds.add(variableId);
+          continue;
+        }
+        for (const descendantId of collectTreeDescendantIds({ node })) {
+          deletedIds.add(descendantId);
+        }
+      }
+
+      const remainingItems = Object.fromEntries(
+        Object.entries(state.variables.items).filter(
+          ([variableId]) => !deletedIds.has(variableId),
+        ),
+      );
+      return validateComputedVariableGraph({
+        items: remainingItems,
+        path: "state.variables.items",
+        errorFactory: createPreconditionValidationError,
+      });
     },
   }),
   ...createFolderedCollectionCommandDefinitions({

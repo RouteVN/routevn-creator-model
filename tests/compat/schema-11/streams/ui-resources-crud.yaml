@@ -321,9 +321,39 @@ commands:
           - tense
           - urgent
         value: tense
+  - type: variable.create
+    payload:
+      variableId: mood-label
+      parentId: folder-variables
+      data:
+        type: variable
+        variableType: string
+        name: Mood Label
+        computed:
+          expr:
+            var: variables.mood
+  - type: variable.update
+    payload:
+      variableId: mood-label
+      data:
+        description: Readable mood label
+        computed:
+          branches:
+            - when:
+                eq:
+                  - var: variables.mood
+                  - tense
+              expr: Tense
+          default:
+            expr: Calm
   - type: variable.move
     payload:
       variableId: mood
+      parentId: folder-variables
+      position: last
+  - type: variable.move
+    payload:
+      variableId: mood-label
       parentId: folder-variables
       position: last
   - type: textStyle.create

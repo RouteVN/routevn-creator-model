@@ -807,7 +807,30 @@ const createRichCompatibilityState = () => {
     default: "calm",
     value: "calm",
   };
-  state.variables.tree = [createTreeNode("variable-rich")];
+  state.variables.items["variable-rich-label"] = {
+    id: "variable-rich-label",
+    type: "variable",
+    variableType: "string",
+    name: "Mood Label",
+    description: "Derived from the current dialogue mood",
+    computed: {
+      branches: [
+        {
+          when: {
+            eq: [{ var: 'variables["variable-rich"]' }, "tense"],
+          },
+          expr: "Tense",
+        },
+      ],
+      default: {
+        expr: { var: 'variables["variable-rich"]' },
+      },
+    },
+  };
+  state.variables.tree = [
+    createTreeNode("variable-rich"),
+    createTreeNode("variable-rich-label"),
+  ];
   state.images.items["folder-art"] = {
     id: "folder-art",
     type: "folder",
@@ -996,6 +1019,8 @@ const createFolderedPayloadSets = ({
   fullCreateData,
   minimalUpdateData,
   fullUpdateData,
+  createExtras = {},
+  updateExtras = {},
 }) => {
   const createType = `${family}.create`;
   const updateType = `${family}.update`;
@@ -1024,6 +1049,7 @@ const createFolderedPayloadSets = ({
             name: "Folder A",
           },
         },
+        ...createExtras,
       },
     ),
     ...payloadSet(
@@ -1036,6 +1062,7 @@ const createFolderedPayloadSets = ({
         [idField]: "item-a",
         data: fullUpdateData,
       },
+      updateExtras,
     ),
     ...payloadSet(
       deleteType,
@@ -1830,6 +1857,75 @@ const payloadFixtures = [
       enumValues: ["calm", "tense", "urgent"],
       default: "tense",
       value: "urgent",
+    },
+    createExtras: {
+      "computed-formula": {
+        variableId: "score-percent",
+        data: {
+          type: "variable",
+          variableType: "number",
+          name: "Score Percent",
+          computed: {
+            expr: {
+              round: [
+                {
+                  mul: [{ var: "variables.score" }, 100],
+                },
+              ],
+            },
+          },
+        },
+      },
+      "computed-conditional": {
+        variableId: "status-badge",
+        data: {
+          type: "variable",
+          variableType: "object",
+          name: "Status Badge",
+          computed: {
+            branches: [
+              {
+                when: {
+                  lte: [{ var: "variables.score" }, 0],
+                },
+                value: {
+                  text: "Empty",
+                  colorId: "gray",
+                },
+              },
+            ],
+            default: {
+              value: {
+                text: "Ready",
+                colorId: "green",
+              },
+            },
+          },
+        },
+      },
+      "computed-array": {
+        variableId: "score-thresholds",
+        data: {
+          type: "variable",
+          variableType: "object",
+          name: "Score Thresholds",
+          computed: {
+            value: [10, 50, 100],
+          },
+        },
+      },
+    },
+    updateExtras: {
+      "computed-formula": {
+        variableId: "score-percent",
+        data: {
+          computed: {
+            expr: {
+              clamp: [{ var: "variables.score" }, 0, 100],
+            },
+          },
+        },
+      },
     },
   }),
   ...createFolderedPayloadSets({
@@ -3294,9 +3390,54 @@ const streamFixtures = [
         },
       },
       {
+        type: "variable.create",
+        payload: {
+          variableId: "mood-label",
+          parentId: "folder-variables",
+          data: {
+            type: "variable",
+            variableType: "string",
+            name: "Mood Label",
+            computed: {
+              expr: { var: "variables.mood" },
+            },
+          },
+        },
+      },
+      {
+        type: "variable.update",
+        payload: {
+          variableId: "mood-label",
+          data: {
+            description: "Readable mood label",
+            computed: {
+              branches: [
+                {
+                  when: {
+                    eq: [{ var: "variables.mood" }, "tense"],
+                  },
+                  expr: "Tense",
+                },
+              ],
+              default: {
+                expr: "Calm",
+              },
+            },
+          },
+        },
+      },
+      {
         type: "variable.move",
         payload: {
           variableId: "mood",
+          parentId: "folder-variables",
+          position: "last",
+        },
+      },
+      {
+        type: "variable.move",
+        payload: {
+          variableId: "mood-label",
           parentId: "folder-variables",
           position: "last",
         },

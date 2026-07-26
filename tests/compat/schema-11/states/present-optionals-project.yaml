@@ -467,8 +467,26 @@ state:
           - tense
         default: calm
         value: calm
+      variable-rich-label:
+        id: variable-rich-label
+        type: variable
+        variableType: string
+        name: Mood Label
+        description: Derived from the current dialogue mood
+        computed:
+          branches:
+            - when:
+                eq:
+                  - var: variables["variable-rich"]
+                  - tense
+              expr: Tense
+          default:
+            expr:
+              var: variables["variable-rich"]
     tree:
       - id: variable-rich
+        children: []
+      - id: variable-rich-label
         children: []
   layouts:
     items:
