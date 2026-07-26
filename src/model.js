@@ -2918,6 +2918,14 @@ const validateVariableTypedValue = ({
       `${path} must be a non-null object or array`,
     );
   }
+
+  if (variableType === "object") {
+    return validateComputedDataValue({
+      value,
+      path,
+      errorFactory,
+    });
+  }
 };
 
 const COMPUTED_EXPRESSION_FIXED_OPERAND_COUNTS = Object.freeze({
@@ -3355,15 +3363,34 @@ const validateComputedExpression = ({
   errorFactory,
   variables,
   dependencies,
+  ancestors = new Set(),
 }) => {
-  if (expression === null || typeof expression !== "object") {
-    if (typeof expression === "number" && !Number.isFinite(expression)) {
+  if (expression === null) {
+    return validComputedResult("null");
+  }
+
+  if (typeof expression !== "object") {
+    if (typeof expression === "number") {
+      if (Number.isFinite(expression)) {
+        return validComputedResult("number");
+      }
       return invalidFromErrorFactory(
         errorFactory,
         `${path} must use finite numeric literals`,
       );
     }
-    return validComputedResult(getComputedValueType(expression));
+
+    if (
+      typeof expression === "string" ||
+      typeof expression === "boolean"
+    ) {
+      return validComputedResult(typeof expression);
+    }
+
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must use JSON-compatible primitive literals`,
+    );
   }
 
   if (Array.isArray(expression)) {
@@ -3372,6 +3399,15 @@ const validateComputedExpression = ({
       `${path} arrays must be wrapped in a literal operator or authored as value`,
     );
   }
+
+  if (ancestors.has(expression)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must not contain cyclic expression data`,
+    );
+  }
+  const nextAncestors = new Set(ancestors);
+  nextAncestors.add(expression);
 
   const entries = Object.entries(expression);
   if (entries.length !== 1) {
@@ -3442,6 +3478,7 @@ const validateComputedExpression = ({
       errorFactory,
       variables,
       dependencies,
+      ancestors: nextAncestors,
     });
     if (result?.valid === false) {
       return result;
@@ -3477,6 +3514,7 @@ const validateComputedCondition = ({
   variables,
   dependencies,
   isRoot = true,
+  ancestors = new Set(),
 }) => {
   if (isRoot && typeof condition === "string") {
     return invalidFromErrorFactory(
@@ -3485,14 +3523,32 @@ const validateComputedCondition = ({
     );
   }
 
-  if (condition === null || typeof condition !== "object") {
-    if (typeof condition === "number" && !Number.isFinite(condition)) {
+  if (condition === null) {
+    return validComputedResult("null");
+  }
+
+  if (typeof condition !== "object") {
+    if (typeof condition === "number") {
+      if (Number.isFinite(condition)) {
+        return validComputedResult("number");
+      }
       return invalidFromErrorFactory(
         errorFactory,
         `${path} must use finite numeric literals`,
       );
     }
-    return validComputedResult(getComputedValueType(condition));
+
+    if (
+      typeof condition === "string" ||
+      typeof condition === "boolean"
+    ) {
+      return validComputedResult(typeof condition);
+    }
+
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must use JSON-compatible primitive literals`,
+    );
   }
 
   if (Array.isArray(condition)) {
@@ -3501,6 +3557,15 @@ const validateComputedCondition = ({
       `${path} arrays must be wrapped in a condition operator or literal`,
     );
   }
+
+  if (ancestors.has(condition)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must not contain cyclic condition data`,
+    );
+  }
+  const nextAncestors = new Set(ancestors);
+  nextAncestors.add(condition);
 
   const entries = Object.entries(condition);
   if (entries.length !== 1) {
@@ -3545,6 +3610,7 @@ const validateComputedCondition = ({
       variables,
       dependencies,
       isRoot: false,
+      ancestors: nextAncestors,
     });
     return result?.valid === false ? result : validComputedResult("boolean");
   }
@@ -3586,6 +3652,7 @@ const validateComputedCondition = ({
       variables,
       dependencies,
       isRoot: false,
+      ancestors: nextAncestors,
     });
     if (result?.valid === false) {
       return result;

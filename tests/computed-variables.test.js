@@ -97,6 +97,23 @@ const expectInvalid = (result, message) => {
   });
 };
 
+const expectPublicApisToReject = (command) => {
+  let payloadResult;
+  expect(() => {
+    payloadResult = validatePayload(command);
+  }).not.toThrow();
+  expectInvalid(payloadResult);
+
+  let processResult;
+  expect(() => {
+    processResult = processCommand({
+      state: createEmptyTestState(),
+      command,
+    });
+  }).not.toThrow();
+  expectInvalid(processResult);
+};
+
 test("the package feature version matches the computed-variable schema line", () => {
   const [majorVersion, featureVersion] = packageJson.version
     .split(".")
@@ -350,6 +367,51 @@ describe("expression grammar", () => {
       ),
     );
   });
+
+  test.each([
+    ["undefined", undefined],
+    ["bigint", 1n],
+    ["function", () => true],
+    ["symbol", Symbol("unsupported")],
+  ])(
+    "rejects a nested %s primitive without throwing",
+    (_description, unsupportedValue) => {
+      expectPublicApisToReject(
+        createComputedCommand({
+          variableType: "boolean",
+          computed: {
+            expr: { eq: [unsupportedValue, unsupportedValue] },
+          },
+        }),
+      );
+    },
+  );
+
+  test("rejects cyclic operator expressions without throwing", () => {
+    const expr = { add: [1] };
+    expr.add.push(expr);
+
+    expectPublicApisToReject(
+      createComputedCommand({
+        computed: { expr },
+      }),
+    );
+  });
+
+  test("allows an acyclic expression node to be reused", () => {
+    const comparison = { eq: [1, 1] };
+
+    expect(
+      validatePayload(
+        createComputedCommand({
+          variableType: "boolean",
+          computed: {
+            expr: { and: [comparison, comparison] },
+          },
+        }),
+      ),
+    ).toEqual({ valid: true });
+  });
 });
 
 describe("condition grammar", () => {
@@ -466,6 +528,46 @@ describe("condition grammar", () => {
           },
         }),
       ),
+    );
+  });
+
+  test.each([
+    ["undefined", undefined],
+    ["bigint", 1n],
+    ["function", () => true],
+    ["symbol", Symbol("unsupported")],
+  ])(
+    "rejects a nested %s primitive without throwing",
+    (_description, unsupportedValue) => {
+      expectPublicApisToReject(
+        createComputedCommand({
+          variableType: "string",
+          computed: {
+            branches: [
+              {
+                when: { eq: [unsupportedValue, unsupportedValue] },
+                expr: "ready",
+              },
+            ],
+            default: { expr: "waiting" },
+          },
+        }),
+      );
+    },
+  );
+
+  test("rejects cyclic operator conditions without throwing", () => {
+    const when = { all: [true] };
+    when.all.push(when);
+
+    expectPublicApisToReject(
+      createComputedCommand({
+        variableType: "string",
+        computed: {
+          branches: [{ when, expr: "ready" }],
+          default: { expr: "waiting" },
+        },
+      }),
     );
   });
 
@@ -1145,6 +1247,29 @@ describe("state and payload invariants", () => {
           value: null,
         }),
       ),
+    );
+  });
+
+  test.each(
+    ["default", "value"].flatMap((field) => [
+      [`${field} with a nested function`, field, { nested: () => true }],
+      [
+        `${field} with a nested symbol`,
+        field,
+        { nested: Symbol("unsupported") },
+      ],
+      [`${field} with a nested WeakMap`, field, { nested: new WeakMap() }],
+    ]),
+  )("rejects %s without throwing", (_description, field, malformedValue) => {
+    expectPublicApisToReject(
+      createVariableCommand({
+        variableId: "payload",
+        variableType: "object",
+        scope: "context",
+        default: { serializable: true },
+        value: { serializable: true },
+        [field]: malformedValue,
+      }),
     );
   });
 
