@@ -1,0 +1,18 @@
+schemaVersion: 11
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: rect-body
+  data:
+    type: rect
+    name: Body Rect
+    x: 0
+    "y": 0
+    width: 100
+    height: 50
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    fill: "#112233"

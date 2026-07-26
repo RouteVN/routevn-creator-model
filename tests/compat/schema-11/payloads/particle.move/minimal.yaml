@@ -1,0 +1,6 @@
+schemaVersion: 11
+type: particle.move
+payload:
+  particleId: item-a
+  parentId: folder-a
+  position: last

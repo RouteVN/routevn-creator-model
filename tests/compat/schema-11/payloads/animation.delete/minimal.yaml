@@ -1,0 +1,5 @@
+schemaVersion: 11
+type: animation.delete
+payload:
+  animationIds:
+    - item-a

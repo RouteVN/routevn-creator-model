@@ -1,0 +1,19 @@
+schemaVersion: 11
+type: line.update_actions
+payload:
+  lineId: line-a
+  replace: true
+  data:
+    dialogue:
+      mode: nvl
+      content:
+        - text: Replaced
+    background:
+      resourceId: image-rich
+      opacity: 0.5
+      blur:
+        x: 6
+        "y": 9
+        quality: 3
+        kernelSize: 9
+        repeatEdgePixels: true

@@ -341,7 +341,7 @@ const ANIMATION_EASING_KEYS = [
   "easeInOutElastic",
 ];
 const VARIABLE_SCOPE_KEYS = ["context", "device", "account"];
-const VARIABLE_TYPE_KEYS = ["string", "number", "boolean"];
+const VARIABLE_TYPE_KEYS = ["string", "number", "boolean", "object"];
 const LAYOUT_TYPE_KEYS = [
   "general",
   "save-load",
@@ -403,7 +403,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2908,6 +2908,621 @@ const validateVariableTypedValue = ({
   if (variableType === "boolean" && typeof value !== "boolean") {
     return invalidFromErrorFactory(errorFactory, `${path} must be a boolean`);
   }
+
+  if (
+    variableType === "object" &&
+    (value === null || typeof value !== "object")
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-null object or array`,
+    );
+  }
+};
+
+const COMPUTED_EXPRESSION_FIXED_OPERAND_COUNTS = Object.freeze({
+  add: 2,
+  sub: 2,
+  mul: 2,
+  div: 2,
+  mod: 2,
+  neg: 1,
+  round: 1,
+  floor: 1,
+  ceil: 1,
+  min: 2,
+  max: 2,
+  clamp: 3,
+  eq: 2,
+  neq: 2,
+  gt: 2,
+  gte: 2,
+  lt: 2,
+  lte: 2,
+  in: 2,
+  not: 1,
+  length: 1,
+  includes: 2,
+});
+const COMPUTED_EXPRESSION_VARIADIC_OPERATORS = new Set([
+  "and",
+  "or",
+  "all",
+  "any",
+]);
+const COMPUTED_EXPRESSION_NUMERIC_OPERAND_OPERATORS = new Set([
+  "add",
+  "sub",
+  "mul",
+  "div",
+  "mod",
+  "neg",
+  "round",
+  "floor",
+  "ceil",
+  "min",
+  "max",
+  "clamp",
+]);
+const COMPUTED_EXPRESSION_NUMERIC_RESULT_OPERATORS = new Set([
+  ...COMPUTED_EXPRESSION_NUMERIC_OPERAND_OPERATORS,
+  "length",
+]);
+const COMPUTED_EXPRESSION_BOOLEAN_RESULT_OPERATORS = new Set([
+  "eq",
+  "neq",
+  "gt",
+  "gte",
+  "lt",
+  "lte",
+  "in",
+  "and",
+  "or",
+  "all",
+  "any",
+  "not",
+  "includes",
+]);
+const COMPUTED_CONDITION_FIXED_OPERAND_COUNTS = Object.freeze({
+  eq: 2,
+  neq: 2,
+  gt: 2,
+  gte: 2,
+  lt: 2,
+  lte: 2,
+  in: 2,
+  add: 2,
+  sub: 2,
+});
+const COMPUTED_CONDITION_VARIADIC_OPERATORS = new Set(["all", "any"]);
+
+const getComputedValueType = (value) => {
+  if (value === null) {
+    return "null";
+  }
+  if (typeof value === "object") {
+    return "object";
+  }
+  return typeof value;
+};
+
+const validComputedResult = (valueType) => ({
+  valid: true,
+  valueType,
+});
+
+const validateComputedDataValue = ({ value, path, errorFactory }) => {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean"
+  ) {
+    return VALID_RESULT;
+  }
+
+  if (typeof value === "number") {
+    if (Number.isFinite(value)) {
+      return VALID_RESULT;
+    }
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must use finite numeric values`,
+    );
+  }
+
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) {
+      const result = validateComputedDataValue({
+        value: item,
+        path: `${path}[${index}]`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain JSON-compatible data`,
+    );
+  }
+
+  for (const [key, item] of Object.entries(value)) {
+    const result = validateComputedDataValue({
+      value: item,
+      path: `${path}.${key}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateComputedReferencePath = ({ value, path, errorFactory }) => {
+  if (!isNonEmptyString(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty string path`,
+    );
+  }
+
+  if (
+    !value.startsWith("variables.") &&
+    !value.startsWith("variables[") &&
+    !value.startsWith("runtime.") &&
+    !value.startsWith("runtime[")
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must reference a concrete variables.* or runtime.* path`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateComputedExpression = ({ expression, path, errorFactory }) => {
+  if (expression === null || typeof expression !== "object") {
+    if (typeof expression === "number" && !Number.isFinite(expression)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} must use finite numeric literals`,
+      );
+    }
+    return validComputedResult(getComputedValueType(expression));
+  }
+
+  if (Array.isArray(expression)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} arrays must be wrapped in a literal operator or authored as value`,
+    );
+  }
+
+  const entries = Object.entries(expression);
+  if (entries.length !== 1) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain exactly one expression operator`,
+    );
+  }
+
+  const [[operator, operands]] = entries;
+  if (operator === "var") {
+    const result = validateComputedReferencePath({
+      value: operands,
+      path: `${path}.var`,
+      errorFactory,
+    });
+    return result?.valid === false ? result : validComputedResult(undefined);
+  }
+
+  if (operator === "literal") {
+    const result = validateComputedDataValue({
+      value: operands,
+      path: `${path}.literal`,
+      errorFactory,
+    });
+    return result?.valid === false
+      ? result
+      : validComputedResult(getComputedValueType(operands));
+  }
+
+  const fixedOperandCount = COMPUTED_EXPRESSION_FIXED_OPERAND_COUNTS[operator];
+  const isVariadic = COMPUTED_EXPRESSION_VARIADIC_OPERATORS.has(operator);
+  if (fixedOperandCount === undefined && !isVariadic) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} contains unsupported expression operator '${operator}'`,
+    );
+  }
+
+  if (!Array.isArray(operands)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} must be an operand array`,
+    );
+  }
+
+  if (
+    (fixedOperandCount !== undefined &&
+      operands.length !== fixedOperandCount) ||
+    (isVariadic && operands.length === 0)
+  ) {
+    const operandRequirement = isVariadic
+      ? "at least one operand"
+      : `exactly ${fixedOperandCount} operands`;
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} requires ${operandRequirement}`,
+    );
+  }
+
+  const operandTypes = [];
+  for (const [index, operand] of operands.entries()) {
+    const result = validateComputedExpression({
+      expression: operand,
+      path: `${path}.${operator}[${index}]`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+    operandTypes.push(result.valueType);
+  }
+
+  if (
+    COMPUTED_EXPRESSION_NUMERIC_OPERAND_OPERATORS.has(operator) &&
+    operandTypes.some(
+      (operandType) => operandType !== undefined && operandType !== "number",
+    )
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} requires numeric operands`,
+    );
+  }
+
+  if (COMPUTED_EXPRESSION_NUMERIC_RESULT_OPERATORS.has(operator)) {
+    return validComputedResult("number");
+  }
+  if (COMPUTED_EXPRESSION_BOOLEAN_RESULT_OPERATORS.has(operator)) {
+    return validComputedResult("boolean");
+  }
+  return validComputedResult(undefined);
+};
+
+const validateComputedCondition = ({ condition, path, errorFactory }) => {
+  if (typeof condition === "string") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} string conditions are not supported`,
+    );
+  }
+
+  if (condition === null || typeof condition !== "object") {
+    if (typeof condition === "number" && !Number.isFinite(condition)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} must use finite numeric literals`,
+      );
+    }
+    return validComputedResult(getComputedValueType(condition));
+  }
+
+  if (Array.isArray(condition)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} arrays must be wrapped in a condition operator or literal`,
+    );
+  }
+
+  const entries = Object.entries(condition);
+  if (entries.length !== 1) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain exactly one condition operator`,
+    );
+  }
+
+  const [[operator, operands]] = entries;
+  if (operator === "var") {
+    const result = validateComputedReferencePath({
+      value: operands,
+      path: `${path}.var`,
+      errorFactory,
+    });
+    return result?.valid === false ? result : validComputedResult(undefined);
+  }
+  if (operator === "literal") {
+    const result = validateComputedDataValue({
+      value: operands,
+      path: `${path}.literal`,
+      errorFactory,
+    });
+    return result?.valid === false
+      ? result
+      : validComputedResult(getComputedValueType(operands));
+  }
+  if (operator === "call") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} function calls are not supported`,
+    );
+  }
+  if (operator === "not") {
+    const result = validateComputedCondition({
+      condition: operands,
+      path: `${path}.not`,
+      errorFactory,
+    });
+    return result?.valid === false ? result : validComputedResult("boolean");
+  }
+
+  const fixedOperandCount = COMPUTED_CONDITION_FIXED_OPERAND_COUNTS[operator];
+  const isVariadic = COMPUTED_CONDITION_VARIADIC_OPERATORS.has(operator);
+  if (fixedOperandCount === undefined && !isVariadic) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} contains unsupported condition operator '${operator}'`,
+    );
+  }
+  if (!Array.isArray(operands)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} must be an operand array`,
+    );
+  }
+  if (
+    (fixedOperandCount !== undefined &&
+      operands.length !== fixedOperandCount) ||
+    (isVariadic && operands.length === 0)
+  ) {
+    const operandRequirement = isVariadic
+      ? "at least one operand"
+      : `exactly ${fixedOperandCount} operands`;
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} requires ${operandRequirement}`,
+    );
+  }
+
+  const operandTypes = [];
+  for (const [index, operand] of operands.entries()) {
+    const result = validateComputedCondition({
+      condition: operand,
+      path: `${path}.${operator}[${index}]`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+    operandTypes.push(result.valueType);
+  }
+
+  if (
+    (operator === "add" || operator === "sub") &&
+    operandTypes.some(
+      (operandType) => operandType !== undefined && operandType !== "number",
+    )
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.${operator} requires numeric operands`,
+    );
+  }
+
+  return validComputedResult(
+    operator === "add" || operator === "sub" ? "number" : "boolean",
+  );
+};
+
+const validateComputedResultConfig = ({
+  resultConfig,
+  variableType,
+  path,
+  errorFactory,
+  allowedKeys = ["expr", "value"],
+}) => {
+  if (!isPlainObject(resultConfig)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: resultConfig,
+      allowedKeys,
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  const hasExpression = Object.hasOwn(resultConfig, "expr");
+  const hasValue = Object.hasOwn(resultConfig, "value");
+  if (hasExpression === hasValue) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain exactly one of expr or value`,
+    );
+  }
+
+  if (hasValue) {
+    const dataResult = validateComputedDataValue({
+      value: resultConfig.value,
+      path: `${path}.value`,
+      errorFactory,
+    });
+    if (dataResult?.valid === false) {
+      return dataResult;
+    }
+    return validateVariableTypedValue({
+      value: resultConfig.value,
+      variableType,
+      path: `${path}.value`,
+      errorFactory,
+    });
+  }
+
+  const expressionResult = validateComputedExpression({
+    expression: resultConfig.expr,
+    path: `${path}.expr`,
+    errorFactory,
+  });
+  if (expressionResult?.valid === false) {
+    return expressionResult;
+  }
+  if (
+    expressionResult.valueType !== undefined &&
+    expressionResult.valueType !== variableType
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.expr must resolve to ${variableType}`,
+    );
+  }
+  return VALID_RESULT;
+};
+
+const validateVariableComputedConfig = ({
+  computed,
+  variableType,
+  path,
+  errorFactory,
+}) => {
+  if (!isPlainObject(computed)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  if (Object.hasOwn(computed, "branches")) {
+    {
+      const result = validateAllowedKeys({
+        value: computed,
+        allowedKeys: ["branches", "default"],
+        path,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+    if (!Array.isArray(computed.branches) || computed.branches.length === 0) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.branches must be a non-empty array`,
+      );
+    }
+    if (!isPlainObject(computed.default)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.default must be an object`,
+      );
+    }
+
+    for (const [index, branch] of computed.branches.entries()) {
+      const branchPath = `${path}.branches[${index}]`;
+      if (!isPlainObject(branch)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${branchPath} must be an object`,
+        );
+      }
+      if (!Object.hasOwn(branch, "when")) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${branchPath}.when is required`,
+        );
+      }
+      const conditionResult = validateComputedCondition({
+        condition: branch.when,
+        path: `${branchPath}.when`,
+        errorFactory,
+      });
+      if (conditionResult?.valid === false) {
+        return conditionResult;
+      }
+      const branchResult = validateComputedResultConfig({
+        resultConfig: branch,
+        variableType,
+        path: branchPath,
+        errorFactory,
+        allowedKeys: ["when", "expr", "value"],
+      });
+      if (branchResult?.valid === false) {
+        return branchResult;
+      }
+    }
+
+    return validateComputedResultConfig({
+      resultConfig: computed.default,
+      variableType,
+      path: `${path}.default`,
+      errorFactory,
+    });
+  }
+
+  return validateComputedResultConfig({
+    resultConfig: computed,
+    variableType,
+    path,
+    errorFactory,
+  });
+};
+
+const validateVariableStoredOrComputedData = ({
+  data,
+  variableType,
+  path,
+  errorFactory,
+}) => {
+  const isComputed = Object.hasOwn(data, "computed");
+  if (isComputed) {
+    if (Object.hasOwn(data, "default") || Object.hasOwn(data, "value")) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} computed variables must not contain default or value`,
+      );
+    }
+    if (data.isEnum !== undefined || data.enumValues !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path} computed variables must not contain enum metadata`,
+      );
+    }
+    return validateVariableComputedConfig({
+      computed: data.computed,
+      variableType,
+      path: `${path}.computed`,
+      errorFactory,
+    });
+  }
+
+  {
+    const result = validateVariableTypedValue({
+      value: data.default,
+      variableType,
+      path: `${path}.default`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+  return validateVariableTypedValue({
+    value: data.value,
+    variableType,
+    path: `${path}.value`,
+    errorFactory,
+  });
 };
 
 const normalizeVariableEnumValues = (values = []) => {
@@ -3020,6 +3635,7 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
                 "value",
                 "isEnum",
                 "enumValues",
+                "computed",
               ],
         path: itemPath,
         errorFactory,
@@ -3061,7 +3677,7 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       if (!VARIABLE_TYPE_KEYS.includes(variableType)) {
         return invalidFromErrorFactory(
           errorFactory,
-          `${itemPath}.variableType must be 'string', 'number', or 'boolean'`,
+          `${itemPath}.variableType must be 'string', 'number', 'boolean', or 'object'`,
         );
       }
 
@@ -3089,7 +3705,14 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
         }
       }
 
-      if (!VARIABLE_SCOPE_KEYS.includes(item.scope)) {
+      if (item.computed !== undefined) {
+        if (item.scope !== undefined) {
+          return invalidFromErrorFactory(
+            errorFactory,
+            `${itemPath}.scope must be omitted for computed variables`,
+          );
+        }
+      } else if (!VARIABLE_SCOPE_KEYS.includes(item.scope)) {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.scope must be 'context', 'device', or 'account'`,
@@ -3097,21 +3720,10 @@ const validateVariableItems = ({ items, path, errorFactory }) => {
       }
 
       {
-        const result = validateVariableTypedValue({
-          value: item.default,
+        const result = validateVariableStoredOrComputedData({
+          data: item,
           variableType,
-          path: `${itemPath}.default`,
-          errorFactory,
-        });
-        if (result?.valid === false) {
-          return result;
-        }
-      }
-      {
-        const result = validateVariableTypedValue({
-          value: item.value,
-          variableType,
-          path: `${itemPath}.value`,
+          path: itemPath,
           errorFactory,
         });
         if (result?.valid === false) {
@@ -11070,6 +11682,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
               "value",
               "isEnum",
               "enumValues",
+              "computed",
             ],
       path: "payload.data",
       errorFactory,
@@ -11097,7 +11710,7 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     if (!VARIABLE_TYPE_KEYS.includes(data.variableType)) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.data.variableType must be 'string', 'number', or 'boolean'",
+        "payload.data.variableType must be 'string', 'number', 'boolean', or 'object'",
       );
     }
 
@@ -11124,7 +11737,14 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
       }
     }
 
-    if (!VARIABLE_SCOPE_KEYS.includes(data.scope)) {
+    if (data.computed !== undefined) {
+      if (data.scope !== undefined) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          "payload.data.scope must be omitted for computed variables",
+        );
+      }
+    } else if (!VARIABLE_SCOPE_KEYS.includes(data.scope)) {
       return invalidFromErrorFactory(
         errorFactory,
         "payload.data.scope must be 'context', 'device', or 'account'",
@@ -11132,21 +11752,10 @@ const validateVariableCreateData = ({ data, errorFactory }) => {
     }
 
     {
-      const result = validateVariableTypedValue({
-        value: data.default,
+      const result = validateVariableStoredOrComputedData({
+        data,
         variableType: data.variableType,
-        path: "payload.data.default",
-        errorFactory,
-      });
-      if (result?.valid === false) {
-        return result;
-      }
-    }
-    {
-      const result = validateVariableTypedValue({
-        value: data.value,
-        variableType: data.variableType,
-        path: "payload.data.value",
+        path: "payload.data",
         errorFactory,
       });
       if (result?.valid === false) {
@@ -11169,6 +11778,7 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
         "value",
         "isEnum",
         "enumValues",
+        "computed",
       ],
       path: "payload.data",
       errorFactory,
@@ -11214,6 +11824,15 @@ const validateVariableUpdateData = ({ data, errorFactory }) => {
     });
     if (result?.valid === false) {
       return result;
+    }
+  }
+
+  if (data.computed !== undefined) {
+    if (!isPlainObject(data.computed)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.computed must be an object when provided",
+      );
     }
   }
 
@@ -18568,6 +19187,36 @@ const COMMAND_DEFINITIONS = [
         return invalidPrecondition(
           "variable enum fields can only update string variables",
         );
+      }
+
+      const currentItemIsComputed = Object.hasOwn(currentItem, "computed");
+      if (
+        currentItemIsComputed &&
+        ["scope", "default", "value", "isEnum", "enumValues"].some((key) =>
+          Object.hasOwn(payload.data, key),
+        )
+      ) {
+        return invalidPrecondition(
+          "computed variables cannot update scope, stored value, or enum fields",
+        );
+      }
+
+      if (!currentItemIsComputed && Object.hasOwn(payload.data, "computed")) {
+        return invalidPrecondition(
+          "stored variables cannot be converted to computed variables",
+        );
+      }
+
+      if (currentItemIsComputed && Object.hasOwn(payload.data, "computed")) {
+        const result = validateVariableComputedConfig({
+          computed: payload.data.computed,
+          variableType: currentItem.variableType,
+          path: "payload.data.computed",
+          errorFactory: createPreconditionValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
       if (currentItem.type !== "folder") {

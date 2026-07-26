@@ -1,0 +1,24 @@
+schemaVersion: 11
+type: textStyle.create
+payload:
+  textStyleId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: textStyle
+    name: Dialogue
+    description: Main spoken-line styling
+    fontId:
+      - font-ui
+    colorId: color-ui
+    fontSize: 32
+    lineHeight: 1.4
+    fontWeight: "700"
+    previewText: Hello
+    shadow:
+      colorId: color-ui
+      alpha: 0.75
+      blur: 4
+      offsetX: 2
+      offsetY: 3

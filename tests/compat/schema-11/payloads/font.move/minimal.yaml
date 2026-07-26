@@ -1,0 +1,6 @@
+schemaVersion: 11
+type: font.move
+payload:
+  fontId: item-a
+  parentId: folder-a
+  position: last
