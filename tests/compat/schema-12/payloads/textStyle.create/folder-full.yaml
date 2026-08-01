@@ -1,0 +1,7 @@
+schemaVersion: 12
+type: textStyle.create
+payload:
+  textStyleId: folder-a
+  data:
+    type: folder
+    name: Folder A

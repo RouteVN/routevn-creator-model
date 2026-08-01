@@ -120,7 +120,7 @@ test("the package feature version matches the computed-variable schema line", ()
     .map(Number);
 
   expect(majorVersion).toBe(1);
-  expect(SCHEMA_VERSION).toBe(11);
+  expect(SCHEMA_VERSION).toBe(12);
   expect(featureVersion).toBe(SCHEMA_VERSION);
 });
 
@@ -180,22 +180,25 @@ test.each([
   ["object", { value: { text: "Ready" } }],
   ["object", { value: ["ready", 42, true] }],
   ["object", { expr: { literal: { text: "Ready" } } }],
-])("simple computed definitions support %s results %#", (variableType, computed) => {
-  const command = createComputedCommand({
-    variableId: `result-${variableType}`,
-    variableType,
-    computed,
-  });
-  const result = processCommand({
-    state: createEmptyTestState(),
-    command,
-  });
+])(
+  "simple computed definitions support %s results %#",
+  (variableType, computed) => {
+    const command = createComputedCommand({
+      variableId: `result-${variableType}`,
+      variableType,
+      computed,
+    });
+    const result = processCommand({
+      state: createEmptyTestState(),
+      command,
+    });
 
-  expect(result.valid).toBe(true);
-  expect(result.state.variables.items[`result-${variableType}`].computed).toEqual(
-    computed,
-  );
-});
+    expect(result.valid).toBe(true);
+    expect(
+      result.state.variables.items[`result-${variableType}`].computed,
+    ).toEqual(computed);
+  },
+);
 
 test.each([
   ["string", { expr: "down" }, { expr: "healthy" }],
@@ -672,16 +675,19 @@ describe("computed result and branch shapes", () => {
     ["number", "1"],
     ["boolean", 1],
     ["object", null],
-  ])("rejects %s results with incompatible expression %#", (variableType, expr) => {
-    expectInvalid(
-      validatePayload(
-        createComputedCommand({
-          variableType,
-          computed: { expr },
-        }),
-      ),
-    );
-  });
+  ])(
+    "rejects %s results with incompatible expression %#",
+    (variableType, expr) => {
+      expectInvalid(
+        validatePayload(
+          createComputedCommand({
+            variableType,
+            computed: { expr },
+          }),
+        ),
+      );
+    },
+  );
 
   test.each([
     ["string", 1],
@@ -993,7 +999,9 @@ describe("dependency graph validation", () => {
   ];
 
   test.each(cycleCases)("rejects a cycle hidden in %s", (_label, variables) => {
-    expectInvalid(validateState({ state: createStateWithVariables(variables) }));
+    expectInvalid(
+      validateState({ state: createStateWithVariables(variables) }),
+    );
   });
 
   test("accepts declaration-order-independent acyclic computed chains", () => {
@@ -1163,7 +1171,9 @@ describe("computed variable command lifecycle", () => {
       command: createComputedCommand({
         variableId: "doubleScore",
         computed: {
-          expr: { add: [{ var: "variables.score" }, { var: "variables.score" }] },
+          expr: {
+            add: [{ var: "variables.score" }, { var: "variables.score" }],
+          },
         },
       }),
     });

@@ -1,0 +1,10 @@
+schemaVersion: 12
+type: sound.update
+payload:
+  soundId: item-a
+  data:
+    description: Night ambience
+    waveformDataFileId: null
+    duration: 84
+    tagIds:
+      - tag-ambience

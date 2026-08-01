@@ -403,7 +403,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -1680,7 +1680,7 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
     {
       const result = validateAllowedKeys({
         value: keyframe,
-        allowedKeys: ["value", "duration", "easing", "relative"],
+        allowedKeys: ["value", "duration", "delay", "easing", "relative"],
         path: keyframePath,
         errorFactory,
       });
@@ -1714,6 +1714,16 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${keyframePath}.duration must be a finite number >= 1`,
+      );
+    }
+
+    if (
+      keyframe.delay !== undefined &&
+      (!isFiniteNumber(keyframe.delay) || keyframe.delay < 0)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.delay must be a finite number >= 0 when provided`,
       );
     }
 
@@ -3380,10 +3390,7 @@ const validateComputedExpression = ({
       );
     }
 
-    if (
-      typeof expression === "string" ||
-      typeof expression === "boolean"
-    ) {
+    if (typeof expression === "string" || typeof expression === "boolean") {
       return validComputedResult(typeof expression);
     }
 
@@ -3538,10 +3545,7 @@ const validateComputedCondition = ({
       );
     }
 
-    if (
-      typeof condition === "string" ||
-      typeof condition === "boolean"
-    ) {
+    if (typeof condition === "string" || typeof condition === "boolean") {
       return validComputedResult(typeof condition);
     }
 
@@ -3845,18 +3849,11 @@ const validateVariableComputedConfig = ({
   });
 };
 
-const validateComputedVariableGraph = ({
-  items,
-  path,
-  errorFactory,
-}) => {
+const validateComputedVariableGraph = ({ items, path, errorFactory }) => {
   const dependencyGraph = new Map();
 
   for (const [variableId, variable] of Object.entries(items)) {
-    if (
-      variable?.type !== "variable" ||
-      !Object.hasOwn(variable, "computed")
-    ) {
+    if (variable?.type !== "variable" || !Object.hasOwn(variable, "computed")) {
       continue;
     }
 
@@ -3908,9 +3905,7 @@ const validateComputedVariableGraph = ({
       const cycleStartIndex = activeIndexes.get(dependencyId);
       if (cycleStartIndex !== undefined) {
         const cycle = [
-          ...frames
-            .slice(cycleStartIndex)
-            .map(({ variableId }) => variableId),
+          ...frames.slice(cycleStartIndex).map(({ variableId }) => variableId),
           dependencyId,
         ].join(" -> ");
         return invalidFromErrorFactory(

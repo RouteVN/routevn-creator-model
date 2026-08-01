@@ -1,0 +1,15 @@
+schemaVersion: 12
+type: voice.create
+payload:
+  voiceId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: voice
+    name: Narration
+    description: Opening narration
+    sceneId: scene-a
+    fileId: file-voice
+    waveformDataFileId: waveform-voice
+    duration: 42.5

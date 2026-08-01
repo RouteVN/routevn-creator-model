@@ -1,0 +1,6 @@
+schemaVersion: 12
+type: character.move
+payload:
+  characterId: item-a
+  parentId: folder-a
+  position: last

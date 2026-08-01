@@ -949,7 +949,7 @@ const createRichCompatibilityState = () => {
           },
         },
         alpha: {
-          keyframes: [],
+          keyframes: [{ duration: 100, delay: 25, value: 1 }],
         },
       },
     },
@@ -1621,7 +1621,7 @@ const payloadFixtures = [
             },
           },
           alpha: {
-            keyframes: [{ duration: 100, value: 1 }],
+            keyframes: [{ duration: 100, delay: 25, value: 1 }],
           },
         },
       },
@@ -1655,7 +1655,7 @@ const payloadFixtures = [
             },
           },
           alpha: {
-            keyframes: [{ duration: 100, value: 0.6 }],
+            keyframes: [{ duration: 100, delay: 25, value: 0.6 }],
           },
         },
       },
@@ -3613,7 +3613,7 @@ const streamFixtures = [
                   },
                 },
                 alpha: {
-                  keyframes: [{ duration: 100, value: 1 }],
+                  keyframes: [{ duration: 100, delay: 25, value: 1 }],
                 },
               },
             },

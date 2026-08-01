@@ -1,0 +1,9 @@
+schemaVersion: 12
+type: particle.update
+payload:
+  particleId: item-a
+  data:
+    description: Updated snowfall overlay
+    width: 1440
+    height: 900
+    seed: 67890

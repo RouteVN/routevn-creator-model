@@ -1,0 +1,28 @@
+schemaVersion: 12
+type: animation.update
+payload:
+  animationId: item-a
+  data:
+    description: Soft mask transition
+    thumbnailFileId: thumb-animation
+    preview:
+      background:
+        imageId: image-background
+      outgoing:
+        imageId: image-outgoing
+        transformId: transform-outgoing
+      incoming:
+        imageId: image-incoming
+        transformId: transform-incoming
+    animation:
+      type: update
+      tween:
+        x:
+          auto:
+            duration: 1200
+            easing: easeOutQuad
+        alpha:
+          keyframes:
+            - duration: 100
+              delay: 25
+              value: 0.6

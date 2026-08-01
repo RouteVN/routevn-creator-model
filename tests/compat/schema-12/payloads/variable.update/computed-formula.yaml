@@ -1,0 +1,11 @@
+schemaVersion: 12
+type: variable.update
+payload:
+  variableId: score-percent
+  data:
+    computed:
+      expr:
+        clamp:
+          - var: variables.score
+          - 0
+          - 100

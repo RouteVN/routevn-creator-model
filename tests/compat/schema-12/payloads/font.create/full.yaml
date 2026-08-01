@@ -1,0 +1,16 @@
+schemaVersion: 12
+type: font.create
+payload:
+  fontId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: font
+    name: Font
+    description: Editorial serif family
+    fileId: file-font
+    fontFamily: Suit
+    minWeight: 100
+    defaultWeight: 400
+    maxWeight: 900

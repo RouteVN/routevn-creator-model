@@ -1,0 +1,8 @@
+schemaVersion: 12
+type: image.create
+payload:
+  imageId: item-a
+  data:
+    type: image
+    name: Image
+    fileId: file-image
