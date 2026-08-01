@@ -1,0 +1,8 @@
+schemaVersion: 12
+type: file.create
+payload:
+  fileId: file-a
+  data:
+    mimeType: image/png
+    size: 128
+    sha256: file-a-sha256

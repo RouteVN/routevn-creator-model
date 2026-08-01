@@ -93,6 +93,7 @@ in:
                 initialValue: 960
                 keyframes:
                   - duration: 300
+                    delay: 100
                     value: -120
                     easing: linear
                     relative: true
@@ -148,6 +149,7 @@ out:
                 initialValue: 960
                 keyframes:
                   - duration: 300
+                    delay: 100
                     value: -120
                     easing: linear
                     relative: true
@@ -1226,6 +1228,39 @@ in:
                   value: 50
                   easing: easeInWhatever
 throws: payload.data.animation.tween.x.keyframes[0].easing must be a supported Route Graphics easing
+---
+case: animation.update accepts transition keyframe delays
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: transition
+          prev:
+            tween:
+              alpha:
+                keyframes:
+                  - duration: 700
+                    delay: 300
+                    value: 0
+                    easing: linear
+---
+case: animation.update rejects negative keyframe delays
+in:
+  - type: animation.update
+    payload:
+      animationId: animation-a
+      data:
+        animation:
+          type: update
+          tween:
+            alpha:
+              keyframes:
+                - duration: 700
+                  delay: -1
+                  value: 0
+throws: payload.data.animation.tween.alpha.keyframes[0].delay must be a finite number >= 0 when provided
 ---
 case: animation.update accepts empty update tween keyframes arrays
 in:

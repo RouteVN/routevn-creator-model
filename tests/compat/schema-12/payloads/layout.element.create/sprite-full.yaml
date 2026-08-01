@@ -1,0 +1,22 @@
+schemaVersion: 12
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: sprite-body
+  data:
+    type: sprite
+    name: Body Sprite
+    x: 0
+    "y": 0
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    imageId: image-rich
+    blur:
+      x: 6
+      "y": 9
+      quality: 3
+      kernelSize: 9
+      repeatEdgePixels: true

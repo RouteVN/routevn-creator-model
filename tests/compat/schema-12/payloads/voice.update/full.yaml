@@ -1,0 +1,8 @@
+schemaVersion: 12
+type: voice.update
+payload:
+  voiceId: item-a
+  data:
+    description: Opening narration
+    waveformDataFileId: null
+    duration: 84

@@ -1162,6 +1162,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
                   keyframes: [
                     {
                       duration: 300,
+                      delay: 100,
                       value: -120,
                       easing: "linear",
                       relative: true,
@@ -1260,6 +1261,7 @@ test("applies an animation command tape with intermediate state snapshots", () =
           keyframes: [
             {
               duration: 300,
+              delay: 100,
               value: -120,
               easing: "linear",
               relative: true,

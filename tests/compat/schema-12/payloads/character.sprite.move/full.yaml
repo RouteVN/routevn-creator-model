@@ -1,0 +1,8 @@
+schemaVersion: 12
+type: character.sprite.move
+payload:
+  characterId: character-hero
+  spriteId: sprite-a
+  parentId: folder-default
+  position: before
+  positionTargetId: sprite-b
