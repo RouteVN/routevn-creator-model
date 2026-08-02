@@ -159,4 +159,36 @@ test("animation mask variants from Route Graphics remain accepted", () => {
       },
     }),
   ).toEqual({ valid: true });
+
+  expect(
+    validatePayload({
+      type: "animation.create",
+      payload: {
+        animationId: "animation-mask-array",
+        data: {
+          type: "animation",
+          name: "Delayed Mask Array",
+          animation: {
+            type: "transition",
+            mask: [
+              {
+                kind: "single",
+                texture: "mask-a",
+                delay: 200,
+                progress: {
+                  initialValue: 0,
+                  keyframes: [{ duration: 900, value: 1 }],
+                },
+              },
+              {
+                kind: "single",
+                texture: "mask-b",
+                delay: 600,
+              },
+            ],
+          },
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
 });

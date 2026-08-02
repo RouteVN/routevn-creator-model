@@ -2389,6 +2389,52 @@ test("validatePayload rejects invalid transition mask textures", () => {
   );
 });
 
+test("validatePayload rejects empty transition mask arrays", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "transition",
+            mask: [],
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.mask must be a non-empty array when provided",
+  );
+});
+
+test("validatePayload rejects invalid transition mask delays", () => {
+  for (const delay of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+    expectValidation(() =>
+      validatePayload({
+        type: "animation.update",
+        payload: {
+          animationId: "animation-a",
+          data: {
+            animation: {
+              type: "transition",
+              mask: [
+                {
+                  kind: "single",
+                  texture: "mask-a",
+                  delay,
+                },
+              ],
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "payload.data.animation.mask[0].delay must be a non-negative safe integer when provided",
+    );
+  }
+});
+
 test("validatePayload accepts editor transition mask fields", () => {
   expect(
     validatePayload({
@@ -2401,6 +2447,7 @@ test("validatePayload accepts editor transition mask fields", () => {
             mask: {
               kind: "sequence",
               imageIds: ["image-a", "image-b"],
+              delay: 250,
               channel: "red",
               invert: false,
               softness: 0.08,
@@ -5153,7 +5200,7 @@ test("validateAgainstState rejects missing transition mask image refs", () => {
   );
 });
 
-test("validateState rejects transition mask image refs to missing images", () => {
+test("validateState rejects transition mask array image refs to missing images", () => {
   const state = createEmptyTestState();
 
   state.animations.items["animation-a"] = {
@@ -5162,10 +5209,17 @@ test("validateState rejects transition mask image refs to missing images", () =>
     name: "Animation A",
     animation: {
       type: "transition",
-      mask: {
-        kind: "single",
-        imageId: "image-missing",
-      },
+      mask: [
+        {
+          kind: "single",
+          texture: "mask-a",
+        },
+        {
+          kind: "single",
+          imageId: "image-missing",
+          delay: 500,
+        },
+      ],
     },
   };
   state.animations.tree = [
@@ -5176,7 +5230,7 @@ test("validateState rejects transition mask image refs to missing images", () =>
   ];
 
   expectValidation(() => validateState({ state })).toThrow(
-    "animation.mask.imageId must reference an existing non-folder image",
+    "animation.mask[1].imageId must reference an existing non-folder image",
   );
 });
 
