@@ -294,6 +294,10 @@ Current animation update tween properties support either:
 - `keyframes`
 - `auto: { duration, easing }`
 
+Transition animation `mask` accepts one mask object or a non-empty ordered
+array. Each mask may define a non-negative safe-integer `delay` in
+milliseconds.
+
 ## Current Scope
 
 Currently implemented command types:

@@ -1930,6 +1930,7 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
         "softness",
         "invert",
         "sample",
+        "delay",
         "progress",
         "progressDuration",
         "progressEasing",
@@ -2108,6 +2109,16 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
     );
   }
 
+  if (
+    mask.delay !== undefined &&
+    (!Number.isSafeInteger(mask.delay) || mask.delay < 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.delay must be a non-negative safe integer when provided`,
+    );
+  }
+
   if (mask.progress !== undefined) {
     {
       const result = validateTweenProperty({
@@ -2168,6 +2179,30 @@ const validateMaskDefinition = ({ mask, path, errorFactory }) => {
       errorFactory,
       `${path}.items is required when ${path}.kind is 'composite'`,
     );
+  }
+};
+
+const validateAnimationMasks = ({ mask, path, errorFactory }) => {
+  if (!Array.isArray(mask)) {
+    return validateMaskDefinition({ mask, path, errorFactory });
+  }
+
+  if (mask.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty array when provided`,
+    );
+  }
+
+  for (const [index, maskDefinition] of mask.entries()) {
+    const result = validateMaskDefinition({
+      mask: maskDefinition,
+      path: `${path}[${index}]`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 };
 
@@ -2276,7 +2311,7 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
 
   if (animation.mask !== undefined) {
     {
-      const result = validateMaskDefinition({
+      const result = validateAnimationMasks({
         mask: animation.mask,
         path: `${path}.mask`,
         errorFactory,
@@ -8119,71 +8154,88 @@ const validateAnimationMaskImageReferences = ({
   details = {},
   errorFactory = createPreconditionValidationError,
 }) => {
-  if (
-    !isPlainObject(animation) ||
-    animation.type !== "transition" ||
-    !isPlainObject(animation.mask)
-  ) {
+  if (!isPlainObject(animation) || animation.type !== "transition") {
     return VALID_RESULT;
   }
 
-  const { mask } = animation;
+  const maskDefinitions = Array.isArray(animation.mask)
+    ? animation.mask.map((mask, index) => ({
+        mask,
+        path: `${path}.mask[${index}]`,
+        fieldPrefix: `mask[${index}].`,
+      }))
+    : isPlainObject(animation.mask)
+      ? [
+          {
+            mask: animation.mask,
+            path: `${path}.mask`,
+            fieldPrefix: "",
+          },
+        ]
+      : [];
 
-  if (mask.imageId !== undefined) {
-    const result = validateImageReference({
-      state,
-      imageId: mask.imageId,
-      path: `${path}.mask.imageId`,
-      details: {
-        ...details,
-        field: "imageId",
+  for (const maskDefinition of maskDefinitions) {
+    const { mask, path: maskPath, fieldPrefix } = maskDefinition;
+    if (!isPlainObject(mask)) {
+      continue;
+    }
+
+    if (mask.imageId !== undefined) {
+      const result = validateImageReference({
+        state,
         imageId: mask.imageId,
-      },
-      errorFactory,
-    });
-    if (!result.valid) {
-      return result;
-    }
-  }
-
-  if (Array.isArray(mask.imageIds)) {
-    for (const [index, imageId] of mask.imageIds.entries()) {
-      const result = validateImageReference({
-        state,
-        imageId,
-        path: `${path}.mask.imageIds[${index}]`,
+        path: `${maskPath}.imageId`,
         details: {
           ...details,
-          field: `imageIds[${index}]`,
+          field: `${fieldPrefix}imageId`,
+          imageId: mask.imageId,
+        },
+        errorFactory,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    if (Array.isArray(mask.imageIds)) {
+      for (const [index, imageId] of mask.imageIds.entries()) {
+        const result = validateImageReference({
+          state,
           imageId,
-        },
-        errorFactory,
-      });
-      if (!result.valid) {
-        return result;
+          path: `${maskPath}.imageIds[${index}]`,
+          details: {
+            ...details,
+            field: `${fieldPrefix}imageIds[${index}]`,
+            imageId,
+          },
+          errorFactory,
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     }
-  }
 
-  if (Array.isArray(mask.items)) {
-    for (const [index, item] of mask.items.entries()) {
-      if (item?.imageId === undefined) {
-        continue;
-      }
+    if (Array.isArray(mask.items)) {
+      for (const [index, item] of mask.items.entries()) {
+        if (item?.imageId === undefined) {
+          continue;
+        }
 
-      const result = validateImageReference({
-        state,
-        imageId: item.imageId,
-        path: `${path}.mask.items[${index}].imageId`,
-        details: {
-          ...details,
-          field: `items[${index}].imageId`,
+        const result = validateImageReference({
+          state,
           imageId: item.imageId,
-        },
-        errorFactory,
-      });
-      if (!result.valid) {
-        return result;
+          path: `${maskPath}.items[${index}].imageId`,
+          details: {
+            ...details,
+            field: `${fieldPrefix}items[${index}].imageId`,
+            imageId: item.imageId,
+          },
+          errorFactory,
+        });
+        if (!result.valid) {
+          return result;
+        }
       }
     }
   }

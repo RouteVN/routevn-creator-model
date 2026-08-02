@@ -182,7 +182,7 @@ out:
       items: {}
       tree: []
 ---
-case: animation.update replaces an existing animation with a transition mask definition
+case: animation.update replaces an existing animation with delayed transition mask definitions
 in:
   - state:
       project: {}
@@ -253,16 +253,21 @@ in:
           animation:
             type: transition
             mask:
-              kind: single
-              texture: masks/spiral-07.png
-              channel: red
-              softness: 0.08
-              progress:
-                initialValue: 0
-                keyframes:
-                  - duration: 900
-                    value: 1
-                    easing: linear
+              - kind: single
+                texture: masks/spiral-07.png
+                channel: red
+                softness: 0.08
+                delay: 200
+                progress:
+                  initialValue: 0
+                  keyframes:
+                    - duration: 900
+                      value: 1
+                      easing: linear
+              - kind: single
+                texture: masks/radial-02.png
+                channel: alpha
+                delay: 600
 out:
   state:
     project: {}
@@ -293,16 +298,21 @@ out:
           animation:
             type: transition
             mask:
-              kind: single
-              texture: masks/spiral-07.png
-              channel: red
-              softness: 0.08
-              progress:
-                initialValue: 0
-                keyframes:
-                  - duration: 900
-                    value: 1
-                    easing: linear
+              - kind: single
+                texture: masks/spiral-07.png
+                channel: red
+                softness: 0.08
+                delay: 200
+                progress:
+                  initialValue: 0
+                  keyframes:
+                    - duration: 900
+                      value: 1
+                      easing: linear
+              - kind: single
+                texture: masks/radial-02.png
+                channel: alpha
+                delay: 600
       tree:
         - id: animation-a
           children: []
