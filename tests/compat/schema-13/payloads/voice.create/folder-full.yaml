@@ -1,7 +1,0 @@
-schemaVersion: 13
-type: voice.create
-payload:
-  voiceId: folder-a
-  data:
-    type: folder
-    name: Folder A

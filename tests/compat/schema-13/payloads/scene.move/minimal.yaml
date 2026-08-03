@@ -1,6 +1,0 @@
-schemaVersion: 13
-type: scene.move
-payload:
-  sceneId: scene-a
-  parentId: folder-scenes
-  position: last

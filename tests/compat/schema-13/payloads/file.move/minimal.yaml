@@ -1,6 +1,0 @@
-schemaVersion: 13
-type: file.move
-payload:
-  fileId: file-a
-  parentId: folder-a
-  position: last

@@ -1,6 +1,0 @@
-schemaVersion: 13
-type: video.move
-payload:
-  videoId: item-a
-  parentId: folder-a
-  position: last

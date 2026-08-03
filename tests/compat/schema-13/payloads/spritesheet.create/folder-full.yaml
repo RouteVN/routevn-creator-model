@@ -1,7 +1,0 @@
-schemaVersion: 13
-type: spritesheet.create
-payload:
-  spritesheetId: folder-a
-  data:
-    type: folder
-    name: Folder A

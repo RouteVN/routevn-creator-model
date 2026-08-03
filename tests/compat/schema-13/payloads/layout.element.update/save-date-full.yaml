@@ -1,7 +1,0 @@
-schemaVersion: 13
-type: layout.element.update
-payload:
-  layoutId: layout-dialogue
-  elementId: save-date
-  data:
-    dateFormat: YYYY-MM-DD

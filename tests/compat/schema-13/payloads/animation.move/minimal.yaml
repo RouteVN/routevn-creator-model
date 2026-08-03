@@ -1,6 +1,0 @@
-schemaVersion: 13
-type: animation.move
-payload:
-  animationId: item-a
-  parentId: folder-a
-  position: last
