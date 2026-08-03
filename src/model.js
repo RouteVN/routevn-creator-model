@@ -3836,6 +3836,15 @@ const validateComputedExamples = ({ examples, path, errorFactory }) => {
         `${examplePath}.input is required`,
       );
     }
+    if (
+      !isPlainObject(example.input) ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(example.input))
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.input must be an object`,
+      );
+    }
     {
       const result = validateAllowedKeys({
         value: example.input,

@@ -286,6 +286,26 @@ test.each([
 });
 
 test.each([
+  ["Date", new Date()],
+  ["Map", new Map()],
+  ["WeakMap", new WeakMap()],
+  ["Promise", Promise.resolve()],
+])("rejects a %s computed example input", (_label, input) => {
+  const command = createComputedCommand({
+    computed: {
+      expr: 1,
+      examples: [{ id: "example", input }],
+    },
+  });
+
+  expectInvalid(
+    validatePayload(command),
+    "payload.data.computed.examples[0].input must be an object",
+  );
+  expectPublicApisToReject(command);
+});
+
+test.each([
   ["string", { expr: "ready" }],
   ["number", { expr: 42 }],
   ["boolean", { expr: true }],
