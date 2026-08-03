@@ -3789,6 +3789,99 @@ const validateComputedResultConfig = ({
   return VALID_RESULT;
 };
 
+const validateComputedExamples = ({ examples, path, errorFactory }) => {
+  if (!Array.isArray(examples)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an array`);
+  }
+
+  const exampleIds = new Set();
+  for (const [index, example] of examples.entries()) {
+    const examplePath = `${path}[${index}]`;
+    {
+      const result = validateAllowedKeys({
+        value: example,
+        allowedKeys: ["id", "name", "input"],
+        path: examplePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(example.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.id must be a non-empty string`,
+      );
+    }
+    if (exampleIds.has(example.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.id must be unique within examples`,
+      );
+    }
+    exampleIds.add(example.id);
+
+    if (Object.hasOwn(example, "name") && !isNonEmptyString(example.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.name must be a non-empty string`,
+      );
+    }
+
+    if (!Object.hasOwn(example, "input")) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.input is required`,
+      );
+    }
+    if (
+      !isPlainObject(example.input) ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(example.input))
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${examplePath}.input must be an object`,
+      );
+    }
+    {
+      const result = validateAllowedKeys({
+        value: example.input,
+        allowedKeys: ["variables", "runtime"],
+        path: `${examplePath}.input`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    for (const namespace of ["variables", "runtime"]) {
+      if (!Object.hasOwn(example.input, namespace)) {
+        continue;
+      }
+      const namespacePath = `${examplePath}.input.${namespace}`;
+      if (!isPlainObject(example.input[namespace])) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${namespacePath} must be an object`,
+        );
+      }
+      const result = validateComputedDataValue({
+        value: example.input[namespace],
+        path: namespacePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 const validateVariableComputedConfig = ({
   computed,
   variableType,
@@ -3801,11 +3894,22 @@ const validateVariableComputedConfig = ({
     return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
   }
 
+  if (Object.hasOwn(computed, "examples")) {
+    const result = validateComputedExamples({
+      examples: computed.examples,
+      path: `${path}.examples`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
   if (Object.hasOwn(computed, "branches")) {
     {
       const result = validateAllowedKeys({
         value: computed,
-        allowedKeys: ["branches", "default"],
+        allowedKeys: ["branches", "default", "examples"],
         path,
         errorFactory,
       });
@@ -3881,6 +3985,7 @@ const validateVariableComputedConfig = ({
     errorFactory,
     variables,
     dependencies,
+    allowedKeys: ["expr", "value", "examples"],
   });
 };
 

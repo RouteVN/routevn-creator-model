@@ -825,6 +825,17 @@ const createRichCompatibilityState = () => {
       default: {
         expr: { var: 'variables["variable-rich"]' },
       },
+      examples: [
+        {
+          id: "example-tense",
+          name: "Tense",
+          input: {
+            variables: {
+              "variable-rich": "tense",
+            },
+          },
+        },
+      ],
     },
   };
   state.variables.tree = [
@@ -1873,6 +1884,17 @@ const payloadFixtures = [
                 },
               ],
             },
+            examples: [
+              {
+                id: "example-half-score",
+                name: "Half score",
+                input: {
+                  variables: {
+                    score: 0.5,
+                  },
+                },
+              },
+            ],
           },
         },
       },
@@ -1923,6 +1945,17 @@ const payloadFixtures = [
             expr: {
               clamp: [{ var: "variables.score" }, 0, 100],
             },
+            examples: [
+              {
+                id: "example-over-maximum",
+                name: "Over maximum",
+                input: {
+                  variables: {
+                    score: 120,
+                  },
+                },
+              },
+            ],
           },
         },
       },
@@ -3400,6 +3433,17 @@ const streamFixtures = [
             name: "Mood Label",
             computed: {
               expr: { var: "variables.mood" },
+              examples: [
+                {
+                  id: "example-calm",
+                  name: "Calm",
+                  input: {
+                    variables: {
+                      mood: "calm",
+                    },
+                  },
+                },
+              ],
             },
           },
         },
@@ -3422,6 +3466,17 @@ const streamFixtures = [
               default: {
                 expr: "Calm",
               },
+              examples: [
+                {
+                  id: "example-tense",
+                  name: "Tense",
+                  input: {
+                    variables: {
+                      mood: "tense",
+                    },
+                  },
+                },
+              ],
             },
           },
         },
