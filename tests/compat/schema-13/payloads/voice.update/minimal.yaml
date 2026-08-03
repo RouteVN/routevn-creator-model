@@ -1,0 +1,6 @@
+schemaVersion: 13
+type: voice.update
+payload:
+  voiceId: item-a
+  data:
+    duration: 42

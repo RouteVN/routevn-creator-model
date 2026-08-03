@@ -1,0 +1,8 @@
+schemaVersion: 13
+type: section.move
+payload:
+  sectionId: section-a
+  sceneId: scene-b
+  parentId: section-b
+  position: before
+  positionTargetId: section-other

@@ -173,6 +173,40 @@ Computed definitions may use a simple `expr` or literal `value`, or ordered
 operator grammar, result types, concrete `variables.*`/`runtime.*` paths,
 declared variable references, and an acyclic computed dependency graph.
 
+Computed definitions may also store examples. Example inputs mirror the
+evaluation context, while calculated results remain derived and are not
+persisted:
+
+```js
+{
+  computed: {
+    expr: {
+      mul: [
+        {
+          div: [
+            { var: "variables.hp" },
+            { var: "variables.maxHp" },
+          ],
+        },
+        100,
+      ],
+    },
+    examples: [
+      {
+        id: "example-low-health",
+        name: "Low health",
+        input: {
+          variables: {
+            hp: 40,
+            maxHp: 80,
+          },
+        },
+      },
+    ],
+  },
+}
+```
+
 ## File Structure
 
 ```text

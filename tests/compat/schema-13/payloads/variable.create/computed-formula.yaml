@@ -1,0 +1,20 @@
+schemaVersion: 13
+type: variable.create
+payload:
+  variableId: score-percent
+  data:
+    type: variable
+    variableType: number
+    name: Score Percent
+    computed:
+      expr:
+        round:
+          - mul:
+              - var: variables.score
+              - 100
+      examples:
+        - id: example-half-score
+          name: Half score
+          input:
+            variables:
+              score: 0.5

@@ -1,0 +1,12 @@
+schemaVersion: 13
+type: color.create
+payload:
+  colorId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: color
+    name: Color
+    description: Core brand tone
+    hex: "#112233"

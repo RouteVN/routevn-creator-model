@@ -120,7 +120,7 @@ test("the package feature version matches the computed-variable schema line", ()
     .map(Number);
 
   expect(majorVersion).toBe(1);
-  expect(SCHEMA_VERSION).toBe(12);
+  expect(SCHEMA_VERSION).toBe(13);
   expect(featureVersion).toBe(SCHEMA_VERSION);
 });
 
@@ -171,6 +171,118 @@ test("variable.create persists a computed expression without stored fields", () 
   expect(result.state.variables.items.hpPercent).not.toHaveProperty("value");
   expect(result.state.variables.items.hpPercent).not.toHaveProperty("scope");
   expect(validateState({ state: result.state })).toEqual({ valid: true });
+});
+
+test("computed definitions persist examples without derived results", () => {
+  const hpResult = createStoredVariable({
+    state: createEmptyTestState(),
+    variableId: "hp",
+    value: 40,
+  });
+  const maxHpResult = createStoredVariable({
+    state: hpResult.state,
+    variableId: "maxHp",
+    value: 80,
+  });
+  const examples = [
+    {
+      id: "example-low-health",
+      name: "Low health",
+      input: {
+        variables: {
+          hp: 40,
+          maxHp: 80,
+          player: { status: "poisoned" },
+        },
+        runtime: { locale: "en" },
+      },
+    },
+    {
+      id: "example-full-health",
+      name: "Full health",
+      input: {
+        variables: { hp: 100, maxHp: 100 },
+      },
+    },
+  ];
+  const command = createComputedCommand({
+    variableId: "hpPercent",
+    computed: {
+      expr: {
+        mul: [
+          {
+            div: [{ var: "variables.hp" }, { var: "variables.maxHp" }],
+          },
+          100,
+        ],
+      },
+      examples,
+    },
+  });
+
+  expect(validateAgainstState({ state: maxHpResult.state, command })).toEqual({
+    valid: true,
+  });
+  const result = processCommand({ state: maxHpResult.state, command });
+
+  expect(result.valid).toBe(true);
+  expect(result.state.variables.items.hpPercent.computed.examples).toEqual(
+    examples,
+  );
+  expect(
+    result.state.variables.items.hpPercent.computed.examples[0],
+  ).not.toHaveProperty("result");
+  expect(validateState({ state: result.state })).toEqual({ valid: true });
+});
+
+test.each([
+  [
+    "an object instead of an array",
+    {},
+    "payload.data.computed.examples must be an array",
+  ],
+  [
+    "a missing id",
+    [{ input: { variables: {} } }],
+    "payload.data.computed.examples[0].id must be a non-empty string",
+  ],
+  [
+    "duplicate ids",
+    [
+      { id: "same", input: {} },
+      { id: "same", input: {} },
+    ],
+    "payload.data.computed.examples[1].id must be unique within examples",
+  ],
+  [
+    "an empty name",
+    [{ id: "example", name: "", input: {} }],
+    "payload.data.computed.examples[0].name must be a non-empty string",
+  ],
+  [
+    "a missing input",
+    [{ id: "example" }],
+    "payload.data.computed.examples[0].input is required",
+  ],
+  [
+    "an array variables namespace",
+    [{ id: "example", input: { variables: [] } }],
+    "payload.data.computed.examples[0].input.variables must be an object",
+  ],
+  [
+    "a persisted result",
+    [{ id: "example", input: {}, result: 50 }],
+    "payload.data.computed.examples[0].result is not allowed",
+  ],
+])("rejects computed examples with %s", (_label, examples, message) => {
+  expectInvalid(
+    validatePayload(
+      createComputedCommand({
+        computed: { expr: 1, examples },
+      }),
+    ),
+    message,
+  );
 });
 
 test.each([
