@@ -26,6 +26,7 @@ const COLLECTION_KEYS = [
   "voices",
   "videos",
   "animations",
+  "audioEffects",
   "particles",
   "characters",
   "fonts",
@@ -66,6 +67,7 @@ const TAG_SCOPE_BASE_KEYS = [
   "layouts",
   "controls",
   "animations",
+  "audioEffects",
   "particles",
   "spritesheets",
 ];
@@ -83,6 +85,7 @@ const createEmptyTagsState = () => ({
   layouts: createEmptyCollectionState(),
   controls: createEmptyCollectionState(),
   animations: createEmptyCollectionState(),
+  audioEffects: createEmptyCollectionState(),
   particles: createEmptyCollectionState(),
   spritesheets: createEmptyCollectionState(),
 });
@@ -248,6 +251,7 @@ const normalizeStateCollections = (state) => {
     "particles",
     "controls",
     "voices",
+    "audioEffects",
   ].filter((key) => state[key] === undefined);
   const normalizedTags = normalizeTagsState(state.tags);
   const hasNormalizedTags = normalizedTags !== state.tags;
@@ -403,7 +407,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2429,6 +2433,459 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
         if (result?.valid === false) {
           return result;
         }
+      }
+    }
+  }
+};
+
+const AUDIO_EFFECT_TWEEN_PROPERTY_KEYS = ["volume", "pan", "playbackRate"];
+
+const validateAudioEffectTiming = ({ value, path, errorFactory }) => {
+  if (!isFiniteNumber(value) || value < 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a finite number greater than or equal to 0`,
+    );
+  }
+};
+
+const validateAudioEffectEasing = ({ value, path, errorFactory }) => {
+  if (value !== undefined && !ANIMATION_EASING_KEYS.includes(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a supported Route Graphics easing when provided`,
+    );
+  }
+};
+
+const validateAudioEffectFade = ({ fade, path, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: fade,
+      allowedKeys: ["duration", "delay", "easing"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!Object.hasOwn(fade, "duration")) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.duration is required`,
+    );
+  }
+
+  {
+    const result = validateAudioEffectTiming({
+      value: fade.duration,
+      path: `${path}.duration`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (fade.delay !== undefined) {
+    const result = validateAudioEffectTiming({
+      value: fade.delay,
+      path: `${path}.delay`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateAudioEffectEasing({
+    value: fade.easing,
+    path: `${path}.easing`,
+    errorFactory,
+  });
+};
+
+const isAudioEffectAbsoluteValueInRange = ({ property, value }) => {
+  if (property === "volume") {
+    return value >= 0 && value <= 100;
+  }
+
+  if (property === "pan") {
+    return value >= -1 && value <= 1;
+  }
+
+  return value >= 0;
+};
+
+const describeAudioEffectAbsoluteRange = (property) => {
+  if (property === "volume") {
+    return "between 0 and 100";
+  }
+
+  if (property === "pan") {
+    return "between -1 and 1";
+  }
+
+  return "greater than or equal to 0";
+};
+
+const validateAudioEffectKeyframe = ({
+  keyframe,
+  property,
+  path,
+  errorFactory,
+}) => {
+  {
+    const result = validateAllowedKeys({
+      value: keyframe,
+      allowedKeys: [
+        "startValue",
+        "value",
+        "duration",
+        "delay",
+        "easing",
+        "relative",
+      ],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const requiredKey of ["value", "duration"]) {
+    if (!Object.hasOwn(keyframe, requiredKey)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${requiredKey} is required`,
+      );
+    }
+  }
+
+  if (keyframe.value !== "target" && !isFiniteNumber(keyframe.value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.value must be a finite number or 'target'`,
+    );
+  }
+
+  if (
+    keyframe.startValue !== undefined &&
+    !isFiniteNumber(keyframe.startValue)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.startValue must be a finite number when provided`,
+    );
+  }
+
+  {
+    const result = validateAudioEffectTiming({
+      value: keyframe.duration,
+      path: `${path}.duration`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (keyframe.delay !== undefined) {
+    const result = validateAudioEffectTiming({
+      value: keyframe.delay,
+      path: `${path}.delay`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateAudioEffectEasing({
+      value: keyframe.easing,
+      path: `${path}.easing`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (
+    keyframe.relative !== undefined &&
+    typeof keyframe.relative !== "boolean"
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.relative must be a boolean when provided`,
+    );
+  }
+
+  if (keyframe.relative === true) {
+    return;
+  }
+
+  for (const field of ["startValue", "value"]) {
+    const value = keyframe[field];
+    if (
+      isFiniteNumber(value) &&
+      !isAudioEffectAbsoluteValueInRange({ property, value })
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${field} must be ${describeAudioEffectAbsoluteRange(property)} for an absolute ${property} keyframe`,
+      );
+    }
+  }
+};
+
+const validateAudioEffectTweenProperty = ({
+  config,
+  property,
+  path,
+  errorFactory,
+}) => {
+  {
+    const result = validateExactKeys({
+      value: config,
+      expectedKeys: ["keyframes"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!Array.isArray(config.keyframes) || config.keyframes.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes must be a non-empty array`,
+    );
+  }
+
+  for (const [index, keyframe] of config.keyframes.entries()) {
+    const result = validateAudioEffectKeyframe({
+      keyframe,
+      property,
+      path: `${path}.keyframes[${index}]`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  const finalKeyframe = config.keyframes.at(-1);
+  if (finalKeyframe.value !== "target" || finalKeyframe.relative === true) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.keyframes final keyframe must use the absolute value 'target'`,
+    );
+  }
+};
+
+const validateAudioEffectUpdateTween = ({ tween, path, errorFactory }) => {
+  if (!isPlainObject(tween)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  const propertyNames = Object.keys(tween);
+  if (propertyNames.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain at least one audio property`,
+    );
+  }
+
+  for (const property of propertyNames) {
+    if (!AUDIO_EFFECT_TWEEN_PROPERTY_KEYS.includes(property)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${property} is not a supported audio effect property`,
+      );
+    }
+
+    const result = validateAudioEffectTweenProperty({
+      config: tween[property],
+      property,
+      path: `${path}.${property}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+};
+
+const validateAudioEffectDefinition = ({ audioEffect, path, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: audioEffect,
+      allowedKeys: ["type", "tween", "prev", "next"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (audioEffect.type !== "update" && audioEffect.type !== "transition") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.type must be 'update' or 'transition'`,
+    );
+  }
+
+  if (audioEffect.type === "update") {
+    if (audioEffect.prev !== undefined || audioEffect.next !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.update audio effects cannot define prev or next`,
+      );
+    }
+
+    if (audioEffect.tween === undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.tween is required when ${path}.type is 'update'`,
+      );
+    }
+
+    return validateAudioEffectUpdateTween({
+      tween: audioEffect.tween,
+      path: `${path}.tween`,
+      errorFactory,
+    });
+  }
+
+  if (audioEffect.tween !== undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.transition audio effects cannot define tween`,
+    );
+  }
+
+  if (audioEffect.prev === undefined && audioEffect.next === undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must define prev or next when ${path}.type is 'transition'`,
+    );
+  }
+
+  for (const side of ["prev", "next"]) {
+    if (audioEffect[side] === undefined) {
+      continue;
+    }
+
+    {
+      const result = validateExactKeys({
+        value: audioEffect[side],
+        expectedKeys: ["fade"],
+        path: `${path}.${side}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectFade({
+        fade: audioEffect[side].fade,
+        path: `${path}.${side}.fade`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateAudioEffectItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "audioEffect") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'audioEffect'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : ["id", "type", "name", "description", "tagIds", "audioEffect"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
+    if (item.type !== "audioEffect") {
+      continue;
+    }
+
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: item.tagIds,
+        path: `${itemPath}.tagIds`,
+        errorFactory,
+        allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectDefinition({
+        audioEffect: item.audioEffect,
+        path: `${itemPath}.audioEffect`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
       }
     }
   }
@@ -6855,6 +7312,15 @@ const stripDeletedTagIdsFromScopeItems = ({
     return;
   }
 
+  if (scopeKey === "audioEffects") {
+    for (const item of Object.values(state.audioEffects.items)) {
+      if (item?.type === "audioEffect") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
   if (scopeKey === "particles") {
     for (const item of Object.values(state.particles.items)) {
       if (item?.type === "particle") {
@@ -7955,6 +8421,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.audioEffects") {
+    {
+      const result = validateAudioEffectItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.fonts") {
     {
       const result = validateFontItems({
@@ -8176,6 +8653,7 @@ const validateCollection = ({ collection, path }) => {
     }
   } else if (
     path === "state.files" ||
+    path === "state.audioEffects" ||
     path === "state.particles" ||
     path === "state.transforms" ||
     path === "state.variables" ||
@@ -9653,6 +10131,28 @@ export const assertInvariants = ({ state }) => {
       ownerIdField: "layoutId",
       ownerLabel: "layout",
       ownerType: "layout",
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  for (const [audioEffectId, audioEffect] of Object.entries(
+    state.audioEffects.items,
+  )) {
+    if (audioEffect.type !== "audioEffect") {
+      continue;
+    }
+
+    const result = validateTagIdsAgainstScope({
+      state,
+      tagIds: audioEffect.tagIds,
+      scopeKey: "audioEffects",
+      path: "audioEffect.tagIds",
+      details: {
+        audioEffectId,
+      },
+      errorFactory: createInvariantValidationError,
     });
     if (!result.valid) {
       return result;
@@ -11836,6 +12336,126 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
         return result;
       }
     }
+  }
+};
+
+const validateAudioEffectCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "audioEffect") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'audioEffect'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "tagIds", "audioEffect"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.type !== "audioEffect") {
+    return;
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateAudioEffectDefinition({
+    audioEffect: data.audioEffect,
+    path: "payload.data.audioEffect",
+    errorFactory,
+  });
+};
+
+const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "description", "tagIds", "audioEffect"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (data.audioEffect !== undefined) {
+    return validateAudioEffectDefinition({
+      audioEffect: data.audioEffect,
+      path: "payload.data.audioEffect",
+      errorFactory,
+    });
   }
 };
 
@@ -18650,6 +19270,82 @@ const COMMAND_DEFINITIONS = [
       return state;
     },
   },
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "audioEffect",
+    collectionKey: "audioEffects",
+    idField: "audioEffectId",
+    itemLabel: "audio effect item",
+    createDataValidator: validateAudioEffectCreateData,
+    updateDataValidator: validateAudioEffectUpdateData,
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.audioEffectId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      if (payload.data.type !== "audioEffect") {
+        return item;
+      }
+
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+      item.audioEffect = structuredClone(payload.data.audioEffect);
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "audioEffect") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "audioEffects",
+        path: "payload.data.tagIds",
+        details: {
+          audioEffectId: payload.audioEffectId,
+        },
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
+      ) {
+        return invalidPrecondition(
+          "folder audio effect items cannot update audio effect fields",
+        );
+      }
+
+      if (currentItem.type !== "audioEffect") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "audioEffects",
+        path: "payload.data.tagIds",
+        details: {
+          audioEffectId: payload.audioEffectId,
+        },
+      });
+    },
+  }),
   {
     type: "font.create",
     validatePayload: ({ payload }) => {

@@ -114,13 +114,13 @@ const expectPublicApisToReject = (command) => {
   expectInvalid(processResult);
 };
 
-test("the package feature version matches the computed-variable schema line", () => {
+test("the package feature version matches the current schema line", () => {
   const [majorVersion, featureVersion] = packageJson.version
     .split(".")
     .map(Number);
 
   expect(majorVersion).toBe(1);
-  expect(SCHEMA_VERSION).toBe(12);
+  expect(SCHEMA_VERSION).toBe(13);
   expect(featureVersion).toBe(SCHEMA_VERSION);
 });
 

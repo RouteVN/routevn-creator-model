@@ -1,0 +1,29 @@
+schemaVersion: 13
+type: audioEffect.update
+payload:
+  audioEffectId: item-a
+  data:
+    description: Smooth retained BGM properties
+    tagIds:
+      - tag-update
+    audioEffect:
+      type: update
+      tween:
+        volume:
+          keyframes:
+            - startValue: 75
+              value: target
+              duration: 500
+              easing: easeInOutSine
+        pan:
+          keyframes:
+            - value: 2
+              duration: 100
+              relative: true
+            - value: target
+              delay: 50
+              duration: 400
+        playbackRate:
+          keyframes:
+            - value: target
+              duration: 250

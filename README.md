@@ -207,6 +207,38 @@ persisted:
 }
 ```
 
+## Audio Effects
+
+Reusable BGM audio effects live in the top-level `audioEffects` collection.
+Repository metadata stays on the item while the Route Engine-compatible
+definition is nested under `audioEffect`:
+
+```js
+{
+  id: "crossfade",
+  type: "audioEffect",
+  name: "Crossfade",
+  audioEffect: {
+    type: "transition",
+    prev: {
+      fade: {
+        duration: 600,
+      },
+    },
+    next: {
+      fade: {
+        duration: 900,
+      },
+    },
+  },
+}
+```
+
+Update effects may tween `volume`, `pan`, and `playbackRate`. Every property
+has a non-empty `keyframes` array whose final keyframe uses the absolute value
+`"target"`. Audio effects support `audioEffect.create`, `audioEffect.update`,
+`audioEffect.delete`, and `audioEffect.move`.
+
 ## File Structure
 
 ```text
@@ -225,6 +257,7 @@ tests/
   images.spec.yaml
   sounds-and-videos.spec.yaml
   animations.spec.yaml
+  audio-effects.test.js
   fonts-and-colors.spec.yaml
   transforms-variables-textstyles.spec.yaml
   characters-and-layouts.spec.yaml

@@ -2096,6 +2096,32 @@ const directCases = [
     },
   }),
   ...createFolderedCommandCases({
+    familyName: "audioEffect",
+    collectionKey: "audioEffects",
+    idField: "audioEffectId",
+    idsField: "audioEffectIds",
+    createData: {
+      type: "audioEffect",
+      name: "Crossfade",
+      audioEffect: {
+        type: "transition",
+        prev: {
+          fade: {
+            duration: 600,
+          },
+        },
+        next: {
+          fade: {
+            duration: 900,
+          },
+        },
+      },
+    },
+    updateData: {
+      name: "Crossfade Updated",
+    },
+  }),
+  ...createFolderedCommandCases({
     familyName: "font",
     collectionKey: "fonts",
     idField: "fontId",

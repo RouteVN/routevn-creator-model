@@ -1,0 +1,6 @@
+schemaVersion: 13
+type: textStyle.move
+payload:
+  textStyleId: item-a
+  parentId: folder-a
+  position: last

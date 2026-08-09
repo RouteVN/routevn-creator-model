@@ -1,0 +1,6 @@
+schemaVersion: 13
+type: audioEffect.update
+payload:
+  audioEffectId: item-a
+  data:
+    name: Crossfade Updated

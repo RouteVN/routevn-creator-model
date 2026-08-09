@@ -1,0 +1,12 @@
+schemaVersion: 13
+type: audioEffect.create
+payload:
+  audioEffectId: item-a
+  data:
+    type: audioEffect
+    name: Crossfade
+    audioEffect:
+      type: transition
+      next:
+        fade:
+          duration: 600
