@@ -1685,7 +1685,14 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
     {
       const result = validateAllowedKeys({
         value: keyframe,
-        allowedKeys: ["value", "duration", "delay", "easing", "relative"],
+        allowedKeys: [
+          "startValue",
+          "value",
+          "duration",
+          "delay",
+          "easing",
+          "relative",
+        ],
         path: keyframePath,
         errorFactory,
       });
@@ -1712,6 +1719,16 @@ const validateAnimationKeyframes = ({ keyframes, path, errorFactory }) => {
       return invalidFromErrorFactory(
         errorFactory,
         `${keyframePath}.value must be a finite number`,
+      );
+    }
+
+    if (
+      keyframe.startValue !== undefined &&
+      !isFiniteNumber(keyframe.startValue)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.startValue must be a finite number when provided`,
       );
     }
 
