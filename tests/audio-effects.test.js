@@ -297,9 +297,9 @@ describe("audio effect persisted state", () => {
     );
 
     state.audioEffects.items["audio-effect-a"].id = "audio-effect-a";
-    state.audioEffects.items["audio-effect-a"].preview = {};
+    state.audioEffects.items["audio-effect-a"].preview = { unsupported: {} };
     expect(validateState({ state }).error.message).toContain(
-      ".preview is not allowed",
+      ".preview.unsupported is not allowed",
     );
 
     delete state.audioEffects.items["audio-effect-a"].preview;
@@ -443,6 +443,74 @@ test("audioEffect.update replaces nested definitions atomically", () => {
   expect(
     updated.state.audioEffects.items["audio-effect-a"].audioEffect.prev,
   ).toBeUndefined();
+});
+
+test("audioEffect.create and audioEffect.update persist preview sounds", () => {
+  const created = processCommand({
+    state: createEmptyTestState(),
+    command: createAudioEffectCommand(createCrossfadeDefinition(), {
+      preview: {
+        outgoing: { soundId: "sound-a" },
+        incoming: { soundId: "sound-b" },
+      },
+    }),
+  });
+
+  expect(created.valid).toBe(true);
+  expect(created.state.audioEffects.items["audio-effect-a"].preview).toEqual({
+    outgoing: { soundId: "sound-a" },
+    incoming: { soundId: "sound-b" },
+  });
+
+  const updated = processCommand({
+    state: created.state,
+    command: {
+      type: "audioEffect.update",
+      payload: {
+        audioEffectId: "audio-effect-a",
+        data: {
+          preview: {
+            outgoing: { soundId: "sound-c" },
+            incoming: { soundId: "sound-d" },
+          },
+        },
+      },
+    },
+  });
+
+  expect(updated.valid).toBe(true);
+  expect(updated.state.audioEffects.items["audio-effect-a"].preview).toEqual({
+    outgoing: { soundId: "sound-c" },
+    incoming: { soundId: "sound-d" },
+  });
+  expect(validateState({ state: updated.state })).toEqual({ valid: true });
+});
+
+test.each([
+  ["a non-object preview", false, "must be an object"],
+  [
+    "an unsupported preview slot",
+    { unsupported: {} },
+    ".unsupported is not allowed",
+  ],
+  [
+    "an unsupported preview field",
+    { outgoing: { fileId: "sound-a" } },
+    ".fileId is not allowed",
+  ],
+  [
+    "an empty sound id",
+    { incoming: { soundId: "" } },
+    ".soundId must be a non-empty string",
+  ],
+])("audioEffect.create rejects %s", (_label, preview, message) => {
+  const result = validatePayload(
+    createAudioEffectCommand(createCrossfadeDefinition(), { preview }),
+  );
+
+  expect(result.valid).toBe(false);
+  expect(result.error.kind).toBe("payload");
+  expect(result.error.message).toContain(message);
 });
 
 test.each([

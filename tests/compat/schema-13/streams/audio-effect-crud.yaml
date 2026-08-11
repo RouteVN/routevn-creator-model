@@ -232,6 +232,11 @@ commands:
         name: Crossfade
         tagIds:
           - smooth
+        preview:
+          outgoing:
+            soundId: sound-outgoing
+          incoming:
+            soundId: sound-incoming
         audioEffect:
           type: transition
           prev:
@@ -247,6 +252,9 @@ commands:
       audioEffectId: crossfade
       data:
         name: Smooth Volume Change
+        preview:
+          target:
+            soundId: sound-target
         audioEffect:
           type: update
           tween:

@@ -998,6 +998,10 @@ const createRichCompatibilityState = () => {
     name: "Crossfade",
     description: "Fade between two BGM sources",
     tagIds: ["smooth"],
+    preview: {
+      outgoing: { soundId: "sound-rich" },
+      incoming: { soundId: "sound-rich" },
+    },
     audioEffect: {
       type: "transition",
       prev: {
@@ -1792,6 +1796,10 @@ const payloadFixtures = [
       name: "Crossfade",
       description: "Fade between two BGM sources",
       tagIds: ["smooth"],
+      preview: {
+        outgoing: { soundId: "sound-outgoing" },
+        incoming: { soundId: "sound-incoming" },
+      },
       audioEffect: {
         type: "transition",
         prev: {
@@ -1816,6 +1824,9 @@ const payloadFixtures = [
     fullUpdateData: {
       description: "Retained BGM property update",
       tagIds: ["smooth"],
+      preview: {
+        target: { soundId: "sound-target" },
+      },
       audioEffect: {
         type: "update",
         tween: {
@@ -3876,6 +3887,10 @@ const streamFixtures = [
             type: "audioEffect",
             name: "Crossfade",
             tagIds: ["smooth"],
+            preview: {
+              outgoing: { soundId: "sound-outgoing" },
+              incoming: { soundId: "sound-incoming" },
+            },
             audioEffect: {
               type: "transition",
               prev: {
@@ -3900,6 +3915,9 @@ const streamFixtures = [
           audioEffectId: "crossfade",
           data: {
             name: "Smooth Volume Change",
+            preview: {
+              target: { soundId: "sound-target" },
+            },
             audioEffect: {
               type: "update",
               tween: {

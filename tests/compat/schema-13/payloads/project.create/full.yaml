@@ -382,6 +382,11 @@ payload:
           description: Fade between two BGM sources
           tagIds:
             - smooth
+          preview:
+            outgoing:
+              soundId: sound-rich
+            incoming:
+              soundId: sound-rich
           audioEffect:
             type: transition
             prev:

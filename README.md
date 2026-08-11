@@ -348,6 +348,10 @@ Audio effects are foldered resources stored in `audioEffects.items` and
   name: "Crossfade",
   description: "Fade between two BGM sources",
   tagIds: ["smooth"],
+  preview: {
+    outgoing: { soundId: "calm-theme" },
+    incoming: { soundId: "battle-theme" },
+  },
   audioEffect: {
     type: "transition",
     prev: { fade: { duration: 600, easing: "easeInOutSine" } },
@@ -355,6 +359,10 @@ Audio effects are foldered resources stored in `audioEffects.items` and
   },
 }
 ```
+
+The optional editor preview uses `outgoing` and `incoming` sound slots for a
+transition effect, or a single `target` sound slot for an update effect. Each
+slot is an object containing a `soundId`.
 
 `audioEffect.type` is either `transition` or `update`. Transition effects have
 at least one `prev.fade` or `next.fade`. Update effects tween one or more of

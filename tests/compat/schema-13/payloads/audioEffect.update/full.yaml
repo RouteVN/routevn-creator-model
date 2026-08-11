@@ -6,6 +6,9 @@ payload:
     description: Retained BGM property update
     tagIds:
       - smooth
+    preview:
+      target:
+        soundId: sound-target
     audioEffect:
       type: update
       tween:

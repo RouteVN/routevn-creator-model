@@ -2796,6 +2796,78 @@ const validateAudioEffectDefinition = ({ audioEffect, path, errorFactory }) => {
   }
 };
 
+const validateAudioEffectPreviewSlot = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["soundId"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (value.soundId !== undefined && !isNonEmptyString(value.soundId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.soundId must be a non-empty string when provided`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAudioEffectPreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["target", "outgoing", "incoming"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["target", "outgoing", "incoming"]) {
+    const result = validateAudioEffectPreviewSlot({
+      value: value[key],
+      path: `${path}.${key}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
+};
+
 const validateAudioEffectItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -2813,7 +2885,15 @@ const validateAudioEffectItems = ({ items, path, errorFactory }) => {
         allowedKeys:
           item.type === "folder"
             ? ["id", "type", "name", "description"]
-            : ["id", "type", "name", "description", "tagIds", "audioEffect"],
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "tagIds",
+                "preview",
+                "audioEffect",
+              ],
         path: itemPath,
         errorFactory,
       });
@@ -2852,6 +2932,17 @@ const validateAudioEffectItems = ({ items, path, errorFactory }) => {
 
     if (item.type !== "audioEffect") {
       continue;
+    }
+
+    {
+      const result = validateAudioEffectPreviewObject({
+        value: item.preview,
+        path: `${itemPath}.preview`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -12350,7 +12441,7 @@ const validateAudioEffectCreateData = ({ data, errorFactory }) => {
       allowedKeys:
         data.type === "folder"
           ? ["type", "name", "description"]
-          : ["type", "name", "description", "tagIds", "audioEffect"],
+          : ["type", "name", "description", "tagIds", "preview", "audioEffect"],
       path: "payload.data",
       errorFactory,
     });
@@ -12378,6 +12469,17 @@ const validateAudioEffectCreateData = ({ data, errorFactory }) => {
   }
 
   {
+    const result = validateAudioEffectPreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
     const result = validateOptionalUniqueIdArray({
       value: data.tagIds,
       path: "payload.data.tagIds",
@@ -12399,7 +12501,7 @@ const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "tagIds", "audioEffect"],
+      allowedKeys: ["name", "description", "tagIds", "preview", "audioEffect"],
       path: "payload.data",
       errorFactory,
     });
@@ -12427,6 +12529,17 @@ const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.description must be a string when provided",
     );
+  }
+
+  {
+    const result = validateAudioEffectPreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -19283,6 +19396,9 @@ const COMMAND_DEFINITIONS = [
           target: item,
           tagIds: payload.data.tagIds,
         });
+        if (payload.data.preview !== undefined) {
+          item.preview = structuredClone(payload.data.preview);
+        }
         item.audioEffect = structuredClone(payload.data.audioEffect);
       }
 
