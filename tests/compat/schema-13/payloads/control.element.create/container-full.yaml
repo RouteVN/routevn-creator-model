@@ -1,0 +1,19 @@
+schemaVersion: 13
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: container-body
+  data:
+    type: container
+    name: Body Container
+    x: 0
+    "y": 0
+    width: 100
+    height: 100
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    gapX: 16
+    gapY: 12

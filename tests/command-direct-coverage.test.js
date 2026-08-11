@@ -2096,6 +2096,27 @@ const directCases = [
     },
   }),
   ...createFolderedCommandCases({
+    familyName: "audioEffect",
+    collectionKey: "audioEffects",
+    idField: "audioEffectId",
+    idsField: "audioEffectIds",
+    createData: {
+      type: "audioEffect",
+      name: "Audio Effect",
+      audioEffect: {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [{ duration: 100, value: "target" }],
+          },
+        },
+      },
+    },
+    updateData: {
+      name: "Audio Effect Updated",
+    },
+  }),
+  ...createFolderedCommandCases({
     familyName: "font",
     collectionKey: "fonts",
     idField: "fontId",

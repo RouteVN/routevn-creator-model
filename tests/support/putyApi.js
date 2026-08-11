@@ -13,6 +13,7 @@ const ERROR_NAME_BY_KIND = {
 };
 const OMITTABLE_EMPTY_COLLECTION_KEYS = [
   "controls",
+  "audioEffects",
   "particles",
   "spritesheets",
   "voices",
@@ -30,6 +31,7 @@ const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
   "layouts",
   "controls",
   "animations",
+  "audioEffects",
   "particles",
   "spritesheets",
 ];

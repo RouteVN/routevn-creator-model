@@ -643,6 +643,20 @@ const createSparseCompatibilityState = () => {
     },
   };
   state.animations.tree = [createTreeNode("animation-main")];
+  state.audioEffects.items["audio-effect-main"] = {
+    id: "audio-effect-main",
+    type: "audioEffect",
+    name: "Main Audio Effect",
+    audioEffect: {
+      type: "update",
+      tween: {
+        volume: {
+          keyframes: [{ value: "target", duration: 250 }],
+        },
+      },
+    },
+  };
+  state.audioEffects.tree = [createTreeNode("audio-effect-main")];
   state.fonts.items["font-main"] = {
     id: "font-main",
     type: "font",
@@ -966,6 +980,74 @@ const createRichCompatibilityState = () => {
     },
   };
   state.animations.tree = [createTreeNode("animation-rich")];
+  state.tags.audioEffects.items.smooth = {
+    id: "smooth",
+    type: "tag",
+    name: "Smooth",
+    color: "#446688",
+  };
+  state.tags.audioEffects.tree = [{ id: "smooth" }];
+  state.audioEffects.items["folder-audio-effects"] = {
+    id: "folder-audio-effects",
+    type: "folder",
+    name: "Audio Effects",
+  };
+  state.audioEffects.items.crossfade = {
+    id: "crossfade",
+    type: "audioEffect",
+    name: "Crossfade",
+    description: "Fade between two BGM sources",
+    tagIds: ["smooth"],
+    audioEffect: {
+      type: "transition",
+      prev: {
+        fade: {
+          delay: 0,
+          duration: 600,
+          easing: "easeInOutSine",
+        },
+      },
+      next: {
+        fade: {
+          delay: 0,
+          duration: 900,
+          easing: "easeInOutSine",
+        },
+      },
+    },
+  };
+  state.audioEffects.items["smooth-volume"] = {
+    id: "smooth-volume",
+    type: "audioEffect",
+    name: "Smooth Volume Change",
+    tagIds: ["smooth"],
+    audioEffect: {
+      type: "update",
+      tween: {
+        volume: {
+          keyframes: [
+            {
+              startValue: 80,
+              value: 50,
+              duration: 150,
+              easing: "easeOutQuad",
+            },
+            {
+              value: "target",
+              duration: 350,
+              easing: "easeInOutSine",
+            },
+          ],
+        },
+      },
+    },
+  };
+  state.audioEffects.tree = [
+    createTreeNode("folder-audio-effects", [
+      createTreeNode("crossfade"),
+      createTreeNode("smooth-volume"),
+    ]),
+  ];
   return state;
 };
 
@@ -1689,6 +1771,82 @@ const payloadFixtures = [
       },
     },
   },
+  ...createFolderedPayloadSets({
+    family: "audioEffect",
+    idField: "audioEffectId",
+    idsField: "audioEffectIds",
+    minimalCreateData: {
+      type: "audioEffect",
+      name: "Audio Effect",
+      audioEffect: {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [{ value: "target", duration: 0 }],
+          },
+        },
+      },
+    },
+    fullCreateData: {
+      type: "audioEffect",
+      name: "Crossfade",
+      description: "Fade between two BGM sources",
+      tagIds: ["smooth"],
+      audioEffect: {
+        type: "transition",
+        prev: {
+          fade: {
+            delay: 0,
+            duration: 600,
+            easing: "easeInOutSine",
+          },
+        },
+        next: {
+          fade: {
+            delay: 0,
+            duration: 900,
+            easing: "easeInOutSine",
+          },
+        },
+      },
+    },
+    minimalUpdateData: {
+      name: "Audio Effect Updated",
+    },
+    fullUpdateData: {
+      description: "Retained BGM property update",
+      tagIds: ["smooth"],
+      audioEffect: {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [
+              {
+                startValue: 80,
+                value: 50,
+                duration: 150,
+                easing: "easeOutQuad",
+              },
+              {
+                value: "target",
+                duration: 350,
+                easing: "easeInOutSine",
+              },
+            ],
+          },
+          pan: {
+            keyframes: [{ value: "target", duration: 250 }],
+          },
+          playbackRate: {
+            keyframes: [
+              { value: 0.25, duration: 100, relative: true },
+              { value: "target", duration: 200 },
+            ],
+          },
+        },
+      },
+    },
+  }),
   ...createFolderedPayloadSets({
     family: "font",
     idField: "fontId",
@@ -3686,6 +3844,111 @@ const streamFixtures = [
       {
         type: "animation.delete",
         payload: { animationIds: ["animation-a", "folder-motion"] },
+      },
+    ],
+  },
+  {
+    fixtureName: "audio-effect-crud",
+    initialState: createEmptyTestState(),
+    commands: [
+      { type: "project.create", payload: { state: createEmptyTestState() } },
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "audioEffects",
+          tagId: "smooth",
+          data: { type: "tag", name: "Smooth" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "folder-audio-effects",
+          data: { type: "folder", name: "Audio Effects" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "folder-audio-effects",
+          data: {
+            type: "audioEffect",
+            name: "Crossfade",
+            tagIds: ["smooth"],
+            audioEffect: {
+              type: "transition",
+              prev: {
+                fade: {
+                  duration: 600,
+                  easing: "easeInOutSine",
+                },
+              },
+              next: {
+                fade: {
+                  duration: 900,
+                  easing: "easeInOutSine",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.update",
+        payload: {
+          audioEffectId: "crossfade",
+          data: {
+            name: "Smooth Volume Change",
+            audioEffect: {
+              type: "update",
+              tween: {
+                volume: {
+                  keyframes: [
+                    {
+                      startValue: 80,
+                      value: 50,
+                      duration: 150,
+                      easing: "easeOutQuad",
+                    },
+                    {
+                      value: "target",
+                      duration: 350,
+                      easing: "easeInOutSine",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: null,
+          position: "first",
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "folder-audio-effects",
+          position: "last",
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "audioEffects",
+          tagIds: ["smooth"],
+        },
+      },
+      {
+        type: "audioEffect.delete",
+        payload: { audioEffectIds: ["folder-audio-effects"] },
       },
     ],
   },

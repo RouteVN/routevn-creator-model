@@ -1,0 +1,437 @@
+import { describe, expect, test } from "vitest";
+
+import {
+  normalizeState,
+  processCommand,
+  validateAgainstState,
+  validatePayload,
+  validateState,
+} from "../src/index.js";
+import { createEmptyTestState } from "./support/createEmptyTestState.js";
+import { runCommandSequence } from "./support/runCommandSequence.js";
+
+const createAudioEffectCommand = (audioEffect, data = {}) => ({
+  type: "audioEffect.create",
+  payload: {
+    audioEffectId: "audio-effect-a",
+    data: {
+      type: "audioEffect",
+      name: "Audio Effect",
+      audioEffect,
+      ...data,
+    },
+  },
+});
+
+const expectInvalidDefinition = (audioEffect, message) => {
+  const result = validatePayload(createAudioEffectCommand(audioEffect));
+
+  expect(result.valid).toBe(false);
+  expect(result.error.kind).toBe("payload");
+  expect(result.error.message).toContain(message);
+};
+
+const createCrossfadeDefinition = () => ({
+  type: "transition",
+  prev: {
+    fade: {
+      delay: 0,
+      duration: 600,
+      easing: "easeInOutSine",
+    },
+  },
+  next: {
+    fade: {
+      delay: 0,
+      duration: 900,
+      easing: "easeInOutSine",
+    },
+  },
+});
+
+const createSmoothVolumeDefinition = () => ({
+  type: "update",
+  tween: {
+    volume: {
+      keyframes: [
+        {
+          startValue: 80,
+          value: 50,
+          duration: 150,
+          easing: "easeOutQuad",
+        },
+        {
+          value: "target",
+          duration: 350,
+          easing: "easeInOutSine",
+        },
+      ],
+    },
+  },
+});
+
+describe("audio effect definitions", () => {
+  test("accepts the crossfade transition contract", () => {
+    expect(
+      validatePayload(createAudioEffectCommand(createCrossfadeDefinition())),
+    ).toEqual({ valid: true });
+  });
+
+  test("accepts retained volume, pan, and playback-rate update tweens", () => {
+    expect(
+      validatePayload(
+        createAudioEffectCommand({
+          type: "update",
+          tween: {
+            volume: createSmoothVolumeDefinition().tween.volume,
+            pan: {
+              keyframes: [
+                {
+                  startValue: -1,
+                  value: 0.5,
+                  duration: 100,
+                  delay: 25,
+                  easing: "linear",
+                },
+                { value: "target", duration: 0 },
+              ],
+            },
+            playbackRate: {
+              keyframes: [
+                {
+                  startValue: -2,
+                  value: -3,
+                  duration: 50,
+                  relative: true,
+                },
+                { value: "target", duration: 75 },
+              ],
+            },
+          },
+        }),
+      ),
+    ).toEqual({ valid: true });
+  });
+
+  test.each([
+    [
+      "unknown definition keys",
+      { ...createCrossfadeDefinition(), extra: true },
+      ".extra is not allowed",
+    ],
+    ["a transition side", { type: "transition" }, ".prev or"],
+    [
+      "transition tween data",
+      { ...createCrossfadeDefinition(), tween: {} },
+      "cannot define tween",
+    ],
+    [
+      "update transition sides",
+      {
+        ...createSmoothVolumeDefinition(),
+        prev: createCrossfadeDefinition().prev,
+      },
+      "cannot define prev or next",
+    ],
+    ["an update tween", { type: "update" }, ".tween is required"],
+    [
+      "an empty update tween",
+      { type: "update", tween: {} },
+      "at least one tween property",
+    ],
+    [
+      "unsupported tween properties",
+      { type: "update", tween: { pitch: { keyframes: [] } } },
+      "not a supported audio effect tween property",
+    ],
+    [
+      "a transition fade",
+      { type: "transition", prev: {} },
+      ".fade is required",
+    ],
+    [
+      "fade duration",
+      { type: "transition", prev: { fade: { delay: 0 } } },
+      ".duration is required",
+    ],
+    [
+      "non-negative fade timing",
+      { type: "transition", prev: { fade: { duration: -1 } } },
+      "finite number >= 0",
+    ],
+    [
+      "known easing names",
+      {
+        type: "transition",
+        next: { fade: { duration: 1, easing: "unknown" } },
+      },
+      "supported Route Graphics easing",
+    ],
+    [
+      "non-empty keyframes",
+      { type: "update", tween: { volume: { keyframes: [] } } },
+      "non-empty array",
+    ],
+    [
+      "a final target keyframe",
+      {
+        type: "update",
+        tween: { volume: { keyframes: [{ value: 50, duration: 10 }] } },
+      },
+      "final keyframe",
+    ],
+    [
+      "an absolute final target",
+      {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [{ value: "target", duration: 10, relative: true }],
+          },
+        },
+      },
+      "absolute value 'target'",
+    ],
+    [
+      "exact tween config keys",
+      {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [{ value: "target", duration: 10 }],
+            initialValue: 50,
+          },
+        },
+      },
+      ".initialValue is not allowed",
+    ],
+  ])("rejects definitions missing %s", (_label, definition, message) => {
+    expectInvalidDefinition(definition, message);
+  });
+
+  test.each([
+    ["volume", -1, "between 0 and 100"],
+    ["volume", 101, "between 0 and 100"],
+    ["pan", -1.1, "between -1 and 1"],
+    ["pan", 1.1, "between -1 and 1"],
+    ["playbackRate", -0.1, "greater than or equal to 0"],
+  ])("enforces absolute %s bounds", (property, value, message) => {
+    expectInvalidDefinition(
+      {
+        type: "update",
+        tween: {
+          [property]: {
+            keyframes: [
+              { startValue: value, value, duration: 1 },
+              { value: "target", duration: 1 },
+            ],
+          },
+        },
+      },
+      message,
+    );
+  });
+
+  test("allows unbounded numeric deltas on relative keyframes", () => {
+    for (const property of ["volume", "pan", "playbackRate"]) {
+      expect(
+        validatePayload(
+          createAudioEffectCommand({
+            type: "update",
+            tween: {
+              [property]: {
+                keyframes: [
+                  {
+                    startValue: -1000,
+                    value: 1000,
+                    duration: 1,
+                    relative: true,
+                  },
+                  { value: "target", duration: 1 },
+                ],
+              },
+            },
+          }),
+        ),
+      ).toEqual({ valid: true });
+    }
+  });
+});
+
+describe("audio effect persisted state", () => {
+  test("normalizes the schema-13 collection and tag scope onto older states", () => {
+    const state = createEmptyTestState();
+    delete state.audioEffects;
+    delete state.tags.audioEffects;
+
+    expect(validateState({ state })).toEqual({ valid: true });
+
+    const normalizedState = normalizeState({ state });
+    expect(normalizedState.audioEffects).toEqual({ items: {}, tree: [] });
+    expect(normalizedState.tags.audioEffects).toEqual({ items: {}, tree: [] });
+    expect(state.audioEffects).toBeUndefined();
+    expect(state.tags.audioEffects).toBeUndefined();
+  });
+
+  test("rejects mismatched ids, unknown wrapper fields, and non-folder parents", () => {
+    const state = createEmptyTestState();
+    state.audioEffects.items["audio-effect-a"] = {
+      id: "different-id",
+      type: "audioEffect",
+      name: "Effect",
+      audioEffect: createCrossfadeDefinition(),
+    };
+    state.audioEffects.tree = [{ id: "audio-effect-a", children: [] }];
+
+    expect(validateState({ state }).error.message).toContain(
+      "must match item key",
+    );
+
+    state.audioEffects.items["audio-effect-a"].id = "audio-effect-a";
+    state.audioEffects.items["audio-effect-a"].preview = {};
+    expect(validateState({ state }).error.message).toContain(
+      ".preview is not allowed",
+    );
+
+    delete state.audioEffects.items["audio-effect-a"].preview;
+    state.audioEffects.tree[0].children = [{ id: "child", children: [] }];
+    state.audioEffects.items.child = {
+      id: "child",
+      type: "audioEffect",
+      name: "Child",
+      audioEffect: createCrossfadeDefinition(),
+    };
+    expect(validateState({ state }).error.message).toContain(
+      "folder audio effect item",
+    );
+  });
+
+  test("requires tag ids to exist in the audioEffects tag scope", () => {
+    const state = createEmptyTestState();
+    const command = createAudioEffectCommand(createCrossfadeDefinition(), {
+      tagIds: ["smooth"],
+    });
+
+    expect(validatePayload(command)).toEqual({ valid: true });
+    expect(validateAgainstState({ state, command }).error.message).toContain(
+      "must reference an existing tag in scope 'audioEffects'",
+    );
+  });
+});
+
+test("replays audio effect create, update, move, tag cleanup, and subtree delete", () => {
+  const steps = runCommandSequence({
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "audioEffects",
+          tagId: "smooth",
+          data: { type: "tag", name: "Smooth" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "transitions",
+          data: { type: "folder", name: "Transitions" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "transitions",
+          data: {
+            type: "audioEffect",
+            name: "Crossfade",
+            description: "Fade between two BGM sources",
+            tagIds: ["smooth"],
+            audioEffect: createCrossfadeDefinition(),
+          },
+        },
+      },
+      {
+        type: "audioEffect.update",
+        payload: {
+          audioEffectId: "crossfade",
+          data: {
+            name: "Smooth Volume Change",
+            audioEffect: createSmoothVolumeDefinition(),
+          },
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: null,
+          position: "first",
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "audioEffects",
+          tagIds: ["smooth"],
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "transitions",
+          position: "last",
+        },
+      },
+      {
+        type: "audioEffect.delete",
+        payload: {
+          audioEffectIds: ["transitions"],
+        },
+      },
+    ],
+  });
+
+  expect(steps[2].state.audioEffects.items.crossfade.tagIds).toEqual([
+    "smooth",
+  ]);
+  expect(steps[3].state.audioEffects.items.crossfade.audioEffect).toEqual(
+    createSmoothVolumeDefinition(),
+  );
+  expect(steps[4].state.audioEffects.tree.map((node) => node.id)).toEqual([
+    "crossfade",
+    "transitions",
+  ]);
+  expect(steps[5].state.audioEffects.items.crossfade.tagIds).toBeUndefined();
+  expect(steps[7].state.audioEffects).toEqual({ items: {}, tree: [] });
+});
+
+test("audioEffect.update replaces nested definitions atomically", () => {
+  const state = createEmptyTestState();
+  const created = processCommand({
+    state,
+    command: createAudioEffectCommand(createCrossfadeDefinition()),
+  });
+  expect(created.valid).toBe(true);
+
+  const updated = processCommand({
+    state: created.state,
+    command: {
+      type: "audioEffect.update",
+      payload: {
+        audioEffectId: "audio-effect-a",
+        data: { audioEffect: createSmoothVolumeDefinition() },
+      },
+    },
+  });
+
+  expect(updated.valid).toBe(true);
+  expect(
+    updated.state.audioEffects.items["audio-effect-a"].audioEffect,
+  ).toEqual(createSmoothVolumeDefinition());
+  expect(
+    updated.state.audioEffects.items["audio-effect-a"].audioEffect.prev,
+  ).toBeUndefined();
+});

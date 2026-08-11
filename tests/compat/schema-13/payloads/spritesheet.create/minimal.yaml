@@ -1,0 +1,15 @@
+schemaVersion: 13
+type: spritesheet.create
+payload:
+  spritesheetId: item-a
+  data:
+    type: spritesheet
+    name: Spritesheet
+    fileId: file-image
+    jsonData:
+      meta:
+        image: sheet.png
+    animations:
+      default:
+        frames:
+          - 0

@@ -1,0 +1,9 @@
+schemaVersion: 13
+type: voice.create
+payload:
+  voiceId: item-a
+  data:
+    type: voice
+    name: Voice
+    sceneId: scene-a
+    fileId: file-voice

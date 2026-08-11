@@ -1,0 +1,18 @@
+schemaVersion: 13
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: save-date-c
+  parentId: container-root
+  data:
+    type: text-ref-save-load-slot-date
+    name: Save Date
+    x: 0
+    "y": 40
+    anchorX: 0
+    anchorY: 0
+    scaleX: 1
+    scaleY: 1
+    rotation: 0
+    dateFormat: MM/DD/YYYY
+    textStyleId: text-style-ui
