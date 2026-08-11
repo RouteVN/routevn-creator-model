@@ -444,3 +444,37 @@ test("audioEffect.update replaces nested definitions atomically", () => {
     updated.state.audioEffects.items["audio-effect-a"].audioEffect.prev,
   ).toBeUndefined();
 });
+
+test.each([
+  ["definition", { audioEffect: undefined }],
+  ["name", { name: undefined }],
+])("audioEffect.update rejects an explicitly undefined %s", (_label, data) => {
+  const created = processCommand({
+    state: createEmptyTestState(),
+    command: createAudioEffectCommand(createCrossfadeDefinition()),
+  });
+  expect(created.valid).toBe(true);
+
+  const command = {
+    type: "audioEffect.update",
+    payload: {
+      audioEffectId: "audio-effect-a",
+      data,
+    },
+  };
+
+  expect(validatePayload(command)).toMatchObject({
+    valid: false,
+    error: { kind: "payload" },
+  });
+  expect(validateAgainstState({ state: created.state, command })).toMatchObject(
+    {
+      valid: false,
+      error: { kind: "payload" },
+    },
+  );
+  expect(processCommand({ state: created.state, command })).toMatchObject({
+    valid: false,
+    error: { kind: "payload" },
+  });
+});

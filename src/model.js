@@ -12415,7 +12415,7 @@ const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.name !== undefined && !isNonEmptyString(data.name)) {
+  if (Object.hasOwn(data, "name") && !isNonEmptyString(data.name)) {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.name must be a non-empty string when provided",
@@ -12440,7 +12440,7 @@ const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
     }
   }
 
-  if (data.audioEffect !== undefined) {
+  if (Object.hasOwn(data, "audioEffect")) {
     return validateAudioEffectDefinition({
       audioEffect: data.audioEffect,
       path: "payload.data.audioEffect",
