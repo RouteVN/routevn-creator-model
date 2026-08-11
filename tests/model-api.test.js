@@ -2319,6 +2319,89 @@ test("validatePayload rejects unsupported animation easing values", () => {
   );
 });
 
+test("validatePayload accepts animation keyframe start values", () => {
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "update",
+            tween: {
+              x: {
+                keyframes: [
+                  {
+                    startValue: 10,
+                    value: 50,
+                    duration: 300,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
+
+  expect(
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "transition",
+            next: {
+              tween: {
+                x: {
+                  keyframes: [
+                    {
+                      startValue: 10,
+                      value: 50,
+                      duration: 300,
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toEqual({ valid: true });
+});
+
+test("validatePayload rejects invalid animation keyframe start values", () => {
+  expectValidation(() =>
+    validatePayload({
+      type: "animation.update",
+      payload: {
+        animationId: "animation-a",
+        data: {
+          animation: {
+            type: "update",
+            tween: {
+              x: {
+                keyframes: [
+                  {
+                    startValue: "10",
+                    value: 50,
+                    duration: 300,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ).toThrow(
+    "payload.data.animation.tween.x.keyframes[0].startValue must be a finite number when provided",
+  );
+});
+
 test("validatePayload accepts empty transition tween keyframes arrays", () => {
   expect(
     validatePayload({
