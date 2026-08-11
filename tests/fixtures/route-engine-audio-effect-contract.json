@@ -37,9 +37,7 @@
     "valueType": "number",
     "minimum": 0,
     "maximum": 100,
-    "relative": false,
-    "prevEndpoint": 0,
-    "nextEndpoint": 100
+    "relative": false
   },
   "updateEndpoint": { "valueType": "number", "relative": false },
   "absoluteBounds": {

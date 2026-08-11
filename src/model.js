@@ -2699,13 +2699,6 @@ const validateAudioEffectFade = ({ fade, path, side, errorFactory }) => {
       }
     }
 
-    const endpoint = side === "prev" ? 0 : 100;
-    if (fade.keyframes.at(-1).value !== endpoint) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${path}.keyframes final value must be ${endpoint} for the ${side} transition fade`,
-      );
-    }
     return;
   }
 

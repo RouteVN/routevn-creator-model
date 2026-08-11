@@ -246,22 +246,6 @@ describe("audio effect definitions", () => {
       "relative is not supported",
     ],
     [
-      "outgoing fade endpoint",
-      {
-        type: "transition",
-        prev: { fade: { keyframes: [{ value: 1, duration: 1 }] } },
-      },
-      "final value must be 0",
-    ],
-    [
-      "incoming fade endpoint",
-      {
-        type: "transition",
-        next: { fade: { keyframes: [{ value: 99, duration: 1 }] } },
-      },
-      "final value must be 100",
-    ],
-    [
       "non-empty keyframes",
       { type: "update", tween: { volume: { keyframes: [] } } },
       "non-empty array",
@@ -301,6 +285,20 @@ describe("audio effect definitions", () => {
     ],
   ])("rejects definitions missing %s", (_label, definition, message) => {
     expectInvalidDefinition(definition, message);
+  });
+
+  test.each([
+    ["outgoing", "prev", 35],
+    ["incoming", "next", 65],
+  ])("accepts an editable %s final fade value", (_label, side, value) => {
+    expect(
+      validatePayload(
+        createAudioEffectCommand({
+          type: "transition",
+          [side]: { fade: { keyframes: [{ value, duration: 100 }] } },
+        }),
+      ),
+    ).toEqual({ valid: true });
   });
 
   test.each([

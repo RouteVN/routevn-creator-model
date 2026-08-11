@@ -72,14 +72,9 @@ test("audio effect transition fade keyframes stay in sync with Route Engine", ()
     minimum: 0,
     maximum: 100,
     relative: false,
-    prevEndpoint: 0,
-    nextEndpoint: 100,
   });
 
-  for (const [side, endpoint] of [
-    ["prev", contract.transitionFade.prevEndpoint],
-    ["next", contract.transitionFade.nextEndpoint],
-  ]) {
+  for (const side of ["prev", "next"]) {
     expect(
       validatePayload(
         createCommand({
@@ -95,7 +90,7 @@ test("audio effect transition fade keyframes stay in sync with Route Engine", ()
                   value: contract.transitionFade.maximum,
                   duration: 100,
                 },
-                { value: endpoint, duration: 100 },
+                { value: 50, duration: 100 },
               ],
             },
           },
