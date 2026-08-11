@@ -2525,10 +2525,10 @@ const validateAudioEffectKeyframes = ({
       );
     }
 
-    if (keyframe.value !== "target" && !isFiniteNumber(keyframe.value)) {
+    if (!isFiniteNumber(keyframe.value)) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${keyframePath}.value must be a finite number or 'target'`,
+        `${keyframePath}.value must be a finite number`,
       );
     }
 
@@ -2581,16 +2581,14 @@ const validateAudioEffectKeyframes = ({
     }
 
     if (keyframe.relative !== true) {
-      if (isFiniteNumber(keyframe.value)) {
-        const result = validateAudioEffectAbsoluteValue({
-          value: keyframe.value,
-          property,
-          path: `${keyframePath}.value`,
-          errorFactory,
-        });
-        if (result?.valid === false) {
-          return result;
-        }
+      const result = validateAudioEffectAbsoluteValue({
+        value: keyframe.value,
+        property,
+        path: `${keyframePath}.value`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
       }
 
       if (keyframe.startValue !== undefined) {
@@ -2608,10 +2606,10 @@ const validateAudioEffectKeyframes = ({
   }
 
   const finalKeyframe = keyframes.at(-1);
-  if (finalKeyframe.value !== "target" || finalKeyframe.relative === true) {
+  if (finalKeyframe.relative === true) {
     return invalidFromErrorFactory(
       errorFactory,
-      `${path} final keyframe must use the absolute value 'target'`,
+      `${path} final keyframe must use an absolute numeric value`,
     );
   }
 };

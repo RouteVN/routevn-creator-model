@@ -33,6 +33,7 @@
     "easeInOutElastic"
   ],
   "tweenProperties": ["volume", "pan", "playbackRate"],
+  "updateEndpoint": { "valueType": "number", "relative": false },
   "absoluteBounds": {
     "volume": { "minimum": 0, "maximum": 100 },
     "pan": { "minimum": -1, "maximum": 1 },

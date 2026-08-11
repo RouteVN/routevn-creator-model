@@ -210,7 +210,7 @@ state:
           tween:
             volume:
               keyframes:
-                - value: target
+                - value: 50
                   duration: 250
     tree:
       - id: audio-effect-main

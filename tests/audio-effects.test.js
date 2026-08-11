@@ -61,13 +61,19 @@ const createSmoothVolumeDefinition = () => ({
           easing: "easeOutQuad",
         },
         {
-          value: "target",
+          value: 30,
           duration: 350,
           easing: "easeInOutSine",
         },
       ],
     },
   },
+});
+
+const AUDIO_EFFECT_FINAL_VALUES = Object.freeze({
+  volume: 50,
+  pan: 0,
+  playbackRate: 1,
 });
 
 describe("audio effect definitions", () => {
@@ -93,7 +99,7 @@ describe("audio effect definitions", () => {
                   delay: 25,
                   easing: "linear",
                 },
-                { value: "target", duration: 0 },
+                { value: 0, duration: 0 },
               ],
             },
             playbackRate: {
@@ -104,7 +110,7 @@ describe("audio effect definitions", () => {
                   duration: 50,
                   relative: true,
                 },
-                { value: "target", duration: 75 },
+                { value: 1, duration: 75 },
               ],
             },
           },
@@ -173,24 +179,24 @@ describe("audio effect definitions", () => {
       "non-empty array",
     ],
     [
-      "a final target keyframe",
+      "numeric keyframe values",
       {
         type: "update",
-        tween: { volume: { keyframes: [{ value: 50, duration: 10 }] } },
+        tween: { volume: { keyframes: [{ value: "target", duration: 10 }] } },
       },
-      "final keyframe",
+      "must be a finite number",
     ],
     [
-      "an absolute final target",
+      "an absolute final keyframe",
       {
         type: "update",
         tween: {
           volume: {
-            keyframes: [{ value: "target", duration: 10, relative: true }],
+            keyframes: [{ value: 10, duration: 10, relative: true }],
           },
         },
       },
-      "absolute value 'target'",
+      "absolute numeric value",
     ],
     [
       "exact tween config keys",
@@ -198,7 +204,7 @@ describe("audio effect definitions", () => {
         type: "update",
         tween: {
           volume: {
-            keyframes: [{ value: "target", duration: 10 }],
+            keyframes: [{ value: 50, duration: 10 }],
             initialValue: 50,
           },
         },
@@ -223,7 +229,7 @@ describe("audio effect definitions", () => {
           [property]: {
             keyframes: [
               { startValue: value, value, duration: 1 },
-              { value: "target", duration: 1 },
+              { value: AUDIO_EFFECT_FINAL_VALUES[property], duration: 1 },
             ],
           },
         },
@@ -247,7 +253,10 @@ describe("audio effect definitions", () => {
                     duration: 1,
                     relative: true,
                   },
-                  { value: "target", duration: 1 },
+                  {
+                    value: AUDIO_EFFECT_FINAL_VALUES[property],
+                    duration: 1,
+                  },
                 ],
               },
             },

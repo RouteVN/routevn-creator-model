@@ -15,17 +15,17 @@ payload:
               value: 50
               duration: 150
               easing: easeOutQuad
-            - value: target
+            - value: 30
               duration: 350
               easing: easeInOutSine
         pan:
           keyframes:
-            - value: target
+            - value: 0
               duration: 250
         playbackRate:
           keyframes:
             - value: 0.25
               duration: 100
               relative: true
-            - value: target
+            - value: 1
               duration: 200

@@ -43,6 +43,12 @@ test("audio effect easing support stays in sync with Route Engine", () => {
 
 test("audio effect tween properties stay in sync with Route Engine", () => {
   expect(contract.tweenProperties).toEqual(["volume", "pan", "playbackRate"]);
+  expect(contract.updateEndpoint).toEqual({
+    valueType: "number",
+    relative: false,
+  });
+
+  const endpointValues = { volume: 50, pan: 0, playbackRate: 1 };
 
   for (const property of contract.tweenProperties) {
     expect(
@@ -51,7 +57,7 @@ test("audio effect tween properties stay in sync with Route Engine", () => {
           type: "update",
           tween: {
             [property]: {
-              keyframes: [{ value: "target", duration: 100 }],
+              keyframes: [{ value: endpointValues[property], duration: 100 }],
             },
           },
         }),
@@ -82,7 +88,7 @@ test("audio effect absolute numeric bounds stay in sync with Route Engine", () =
               [property]: {
                 keyframes: [
                   { startValue: value, value, duration: 0 },
-                  { value: "target", duration: 0 },
+                  { value, duration: 0 },
                 ],
               },
             },

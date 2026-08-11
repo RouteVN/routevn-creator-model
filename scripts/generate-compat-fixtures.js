@@ -651,7 +651,7 @@ const createSparseCompatibilityState = () => {
       type: "update",
       tween: {
         volume: {
-          keyframes: [{ value: "target", duration: 250 }],
+          keyframes: [{ value: 50, duration: 250 }],
         },
       },
     },
@@ -1033,7 +1033,7 @@ const createRichCompatibilityState = () => {
               easing: "easeOutQuad",
             },
             {
-              value: "target",
+              value: 30,
               duration: 350,
               easing: "easeInOutSine",
             },
@@ -1782,7 +1782,7 @@ const payloadFixtures = [
         type: "update",
         tween: {
           volume: {
-            keyframes: [{ value: "target", duration: 0 }],
+            keyframes: [{ value: 50, duration: 0 }],
           },
         },
       },
@@ -1828,19 +1828,19 @@ const payloadFixtures = [
                 easing: "easeOutQuad",
               },
               {
-                value: "target",
+                value: 30,
                 duration: 350,
                 easing: "easeInOutSine",
               },
             ],
           },
           pan: {
-            keyframes: [{ value: "target", duration: 250 }],
+            keyframes: [{ value: 0, duration: 250 }],
           },
           playbackRate: {
             keyframes: [
               { value: 0.25, duration: 100, relative: true },
-              { value: "target", duration: 200 },
+              { value: 1, duration: 200 },
             ],
           },
         },
@@ -3912,7 +3912,7 @@ const streamFixtures = [
                       easing: "easeOutQuad",
                     },
                     {
-                      value: "target",
+                      value: 30,
                       duration: 350,
                       easing: "easeInOutSine",
                     },

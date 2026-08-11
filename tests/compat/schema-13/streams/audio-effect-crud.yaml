@@ -256,7 +256,7 @@ commands:
                   value: 50
                   duration: 150
                   easing: easeOutQuad
-                - value: target
+                - value: 30
                   duration: 350
                   easing: easeInOutSine
   - type: audioEffect.move

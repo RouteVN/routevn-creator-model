@@ -2107,7 +2107,7 @@ const directCases = [
         type: "update",
         tween: {
           volume: {
-            keyframes: [{ duration: 100, value: "target" }],
+            keyframes: [{ duration: 100, value: 50 }],
           },
         },
       },

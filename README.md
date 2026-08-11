@@ -359,9 +359,10 @@ Audio effects are foldered resources stored in `audioEffects.items` and
 `audioEffect.type` is either `transition` or `update`. Transition effects have
 at least one `prev.fade` or `next.fade`. Update effects tween one or more of
 `volume`, `pan`, and `playbackRate`; each property has non-empty keyframes and
-must finish with the absolute value `"target"`. Absolute volume values are
-bounded to `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative
-keyframes represent unbounded numeric deltas.
+must finish with an absolute numeric keyframe. That final number becomes the
+persistent BGM property value after the effect finishes. Absolute volume values
+are bounded to `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative
+keyframes represent unbounded numeric deltas and cannot be final.
 
 ## Current Scope
 

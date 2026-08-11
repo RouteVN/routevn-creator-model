@@ -10,5 +10,5 @@ payload:
       tween:
         volume:
           keyframes:
-            - value: target
+            - value: 50
               duration: 0
