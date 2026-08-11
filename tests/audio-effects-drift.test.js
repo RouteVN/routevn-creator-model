@@ -66,6 +66,45 @@ test("audio effect tween properties stay in sync with Route Engine", () => {
   }
 });
 
+test("audio effect transition fade keyframes stay in sync with Route Engine", () => {
+  expect(contract.transitionFade).toEqual({
+    valueType: "number",
+    minimum: 0,
+    maximum: 100,
+    relative: false,
+    prevEndpoint: 0,
+    nextEndpoint: 100,
+  });
+
+  for (const [side, endpoint] of [
+    ["prev", contract.transitionFade.prevEndpoint],
+    ["next", contract.transitionFade.nextEndpoint],
+  ]) {
+    expect(
+      validatePayload(
+        createCommand({
+          type: "transition",
+          [side]: {
+            fade: {
+              keyframes: [
+                {
+                  value: contract.transitionFade.minimum,
+                  duration: 100,
+                },
+                {
+                  value: contract.transitionFade.maximum,
+                  duration: 100,
+                },
+                { value: endpoint, duration: 100 },
+              ],
+            },
+          },
+        }),
+      ),
+    ).toEqual({ valid: true });
+  }
+});
+
 test("audio effect absolute numeric bounds stay in sync with Route Engine", () => {
   expect(contract.absoluteBounds).toEqual({
     volume: { minimum: 0, maximum: 100 },

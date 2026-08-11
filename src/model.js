@@ -2660,7 +2660,55 @@ const validateAudioEffectTween = ({ tween, path, errorFactory }) => {
   }
 };
 
-const validateAudioEffectFade = ({ fade, path, errorFactory }) => {
+const validateAudioEffectFade = ({ fade, path, side, errorFactory }) => {
+  if (!isPlainObject(fade)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  if (Object.hasOwn(fade, "keyframes")) {
+    {
+      const result = validateExactKeys({
+        value: fade,
+        expectedKeys: ["keyframes"],
+        path,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectKeyframes({
+        keyframes: fade.keyframes,
+        property: "volume",
+        path: `${path}.keyframes`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    for (const [index, keyframe] of fade.keyframes.entries()) {
+      if (keyframe.relative === true) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path}.keyframes[${index}].relative is not supported for transition fades`,
+        );
+      }
+    }
+
+    const endpoint = side === "prev" ? 0 : 100;
+    if (fade.keyframes.at(-1).value !== endpoint) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.keyframes final value must be ${endpoint} for the ${side} transition fade`,
+      );
+    }
+    return;
+  }
+
   {
     const result = validateAllowedKeys({
       value: fade,
@@ -2704,7 +2752,12 @@ const validateAudioEffectFade = ({ fade, path, errorFactory }) => {
   });
 };
 
-const validateAudioEffectTransitionSide = ({ side, path, errorFactory }) => {
+const validateAudioEffectTransitionSide = ({
+  side,
+  sideName,
+  path,
+  errorFactory,
+}) => {
   {
     const result = validateExactKeys({
       value: side,
@@ -2720,6 +2773,7 @@ const validateAudioEffectTransitionSide = ({ side, path, errorFactory }) => {
   return validateAudioEffectFade({
     fade: side.fade,
     path: `${path}.fade`,
+    side: sideName,
     errorFactory,
   });
 };
@@ -2787,6 +2841,7 @@ const validateAudioEffectDefinition = ({ audioEffect, path, errorFactory }) => {
 
     const result = validateAudioEffectTransitionSide({
       side: audioEffect[side],
+      sideName: side,
       path: `${path}.${side}`,
       errorFactory,
     });

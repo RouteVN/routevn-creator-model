@@ -33,6 +33,14 @@
     "easeInOutElastic"
   ],
   "tweenProperties": ["volume", "pan", "playbackRate"],
+  "transitionFade": {
+    "valueType": "number",
+    "minimum": 0,
+    "maximum": 100,
+    "relative": false,
+    "prevEndpoint": 0,
+    "nextEndpoint": 100
+  },
   "updateEndpoint": { "valueType": "number", "relative": false },
   "absoluteBounds": {
     "volume": { "minimum": 0, "maximum": 100 },

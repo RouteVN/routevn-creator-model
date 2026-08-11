@@ -1006,16 +1006,18 @@ const createRichCompatibilityState = () => {
       type: "transition",
       prev: {
         fade: {
-          delay: 0,
-          duration: 600,
-          easing: "easeInOutSine",
+          keyframes: [
+            { value: 40, duration: 200, easing: "easeOutSine" },
+            { value: 0, duration: 400, easing: "easeInOutSine" },
+          ],
         },
       },
       next: {
         fade: {
-          delay: 0,
-          duration: 900,
-          easing: "easeInOutSine",
+          keyframes: [
+            { value: 60, duration: 300, easing: "easeOutSine" },
+            { value: 100, duration: 600, easing: "easeInOutSine" },
+          ],
         },
       },
     },
@@ -1804,16 +1806,18 @@ const payloadFixtures = [
         type: "transition",
         prev: {
           fade: {
-            delay: 0,
-            duration: 600,
-            easing: "easeInOutSine",
+            keyframes: [
+              { value: 40, duration: 200, easing: "easeOutSine" },
+              { value: 0, duration: 400, easing: "easeInOutSine" },
+            ],
           },
         },
         next: {
           fade: {
-            delay: 0,
-            duration: 900,
-            easing: "easeInOutSine",
+            keyframes: [
+              { value: 60, duration: 300, easing: "easeOutSine" },
+              { value: 100, duration: 600, easing: "easeInOutSine" },
+            ],
           },
         },
       },
@@ -3895,14 +3899,18 @@ const streamFixtures = [
               type: "transition",
               prev: {
                 fade: {
-                  duration: 600,
-                  easing: "easeInOutSine",
+                  keyframes: [
+                    { value: 40, duration: 200, easing: "easeOutSine" },
+                    { value: 0, duration: 400, easing: "easeInOutSine" },
+                  ],
                 },
               },
               next: {
                 fade: {
-                  duration: 900,
-                  easing: "easeInOutSine",
+                  keyframes: [
+                    { value: 60, duration: 300, easing: "easeOutSine" },
+                    { value: 100, duration: 600, easing: "easeInOutSine" },
+                  ],
                 },
               },
             },

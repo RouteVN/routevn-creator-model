@@ -35,16 +35,34 @@ const createCrossfadeDefinition = () => ({
   type: "transition",
   prev: {
     fade: {
-      delay: 0,
-      duration: 600,
-      easing: "easeInOutSine",
+      keyframes: [
+        {
+          value: 40,
+          duration: 200,
+          easing: "easeOutSine",
+        },
+        {
+          value: 0,
+          duration: 400,
+          easing: "easeInOutSine",
+        },
+      ],
     },
   },
   next: {
     fade: {
-      delay: 0,
-      duration: 900,
-      easing: "easeInOutSine",
+      keyframes: [
+        {
+          value: 60,
+          duration: 300,
+          easing: "easeOutSine",
+        },
+        {
+          value: 100,
+          duration: 600,
+          easing: "easeInOutSine",
+        },
+      ],
     },
   },
 });
@@ -80,6 +98,30 @@ describe("audio effect definitions", () => {
   test("accepts the crossfade transition contract", () => {
     expect(
       validatePayload(createAudioEffectCommand(createCrossfadeDefinition())),
+    ).toEqual({ valid: true });
+  });
+
+  test("accepts the legacy single-segment transition fade contract", () => {
+    expect(
+      validatePayload(
+        createAudioEffectCommand({
+          type: "transition",
+          prev: {
+            fade: {
+              delay: 0,
+              duration: 600,
+              easing: "easeInOutSine",
+            },
+          },
+          next: {
+            fade: {
+              delay: 0,
+              duration: 900,
+              easing: "easeInOutSine",
+            },
+          },
+        }),
+      ),
     ).toEqual({ valid: true });
   });
 
@@ -172,6 +214,52 @@ describe("audio effect definitions", () => {
         next: { fade: { duration: 1, easing: "unknown" } },
       },
       "supported Route Graphics easing",
+    ],
+    [
+      "non-empty transition fade keyframes",
+      { type: "transition", prev: { fade: { keyframes: [] } } },
+      "must be a non-empty array",
+    ],
+    [
+      "normalized transition fade values",
+      {
+        type: "transition",
+        prev: {
+          fade: { keyframes: [{ value: 101, duration: 1 }] },
+        },
+      },
+      "between 0 and 100",
+    ],
+    [
+      "absolute transition fade keyframes",
+      {
+        type: "transition",
+        next: {
+          fade: {
+            keyframes: [
+              { value: 10, duration: 1, relative: true },
+              { value: 100, duration: 1 },
+            ],
+          },
+        },
+      },
+      "relative is not supported",
+    ],
+    [
+      "outgoing fade endpoint",
+      {
+        type: "transition",
+        prev: { fade: { keyframes: [{ value: 1, duration: 1 }] } },
+      },
+      "final value must be 0",
+    ],
+    [
+      "incoming fade endpoint",
+      {
+        type: "transition",
+        next: { fade: { keyframes: [{ value: 99, duration: 1 }] } },
+      },
+      "final value must be 100",
     ],
     [
       "non-empty keyframes",
