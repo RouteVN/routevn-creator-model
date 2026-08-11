@@ -1,0 +1,6 @@
+schemaVersion: 13
+type: section.update
+payload:
+  sectionId: section-a
+  data:
+    name: Section A Updated

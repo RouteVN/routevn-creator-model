@@ -1,0 +1,620 @@
+schemaVersion: 13
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    audioEffects:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  voices:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  audioEffects:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          audioEffects:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items:
+            file-font-ui:
+              id: file-font-ui
+              type: font
+              mimeType: font/ttf
+              size: 1
+              sha256: file-font-ui-sha256
+            file-spritesheet-ui:
+              id: file-spritesheet-ui
+              type: image
+              mimeType: image/png
+              size: 1
+              sha256: file-spritesheet-ui-sha256
+            thumb-spritesheet-ui:
+              id: thumb-spritesheet-ui
+              type: image-thumbnail
+              mimeType: image/webp
+              size: 1
+              sha256: thumb-spritesheet-ui-sha256
+          tree:
+            - id: file-font-ui
+              children: []
+            - id: file-spritesheet-ui
+              children: []
+            - id: thumb-spritesheet-ui
+              children: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items:
+            spritesheet-ui:
+              id: spritesheet-ui
+              type: spritesheet
+              name: UI Spritesheet
+              fileId: file-spritesheet-ui
+              thumbnailFileId: thumb-spritesheet-ui
+              sheetWidth: 512
+              sheetHeight: 256
+              frameCount: 2
+              width: 256
+              height: 256
+              jsonData:
+                meta:
+                  image: ui-spritesheet.png
+              animations:
+                idle:
+                  frames:
+                    - 0
+                    - 1
+                  animationSpeed: 1
+                  loop: true
+          tree:
+            - id: spritesheet-ui
+              children: []
+        sounds:
+          items: {}
+          tree: []
+        voices:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        audioEffects:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items:
+            font-ui:
+              id: font-ui
+              type: font
+              name: UI Font
+              fileId: file-font-ui
+              fontFamily: Suit
+              minWeight: 100
+              defaultWeight: 400
+              maxWeight: 900
+          tree:
+            - id: font-ui
+              children: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items:
+            color-ui:
+              id: color-ui
+              type: color
+              name: White
+              hex: "#ffffff"
+          tree:
+            - id: color-ui
+              children: []
+        textStyles:
+          items:
+            text-style-ui:
+              id: text-style-ui
+              type: textStyle
+              name: UI Style
+              fontId:
+                - font-ui
+              colorId: color-ui
+              fontSize: 32
+              lineHeight: 1.4
+              fontWeight: "700"
+              shadow:
+                colorId: color-ui
+                alpha: 0.75
+                blur: 4
+                offsetX: 2
+                offsetY: 3
+          tree:
+            - id: text-style-ui
+              children: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items:
+            layout-dialogue:
+              id: layout-dialogue
+              type: layout
+              name: Dialogue
+              description: Main dialogue frame
+              layoutType: dialogue-adv
+              thumbnailFileId: thumb-spritesheet-ui
+              preview:
+                backgroundImageId: image-preview-layout
+                runtime:
+                  autoMode: true
+              elements:
+                items:
+                  container-root:
+                    id: container-root
+                    type: container
+                    name: Root
+                    x: 0
+                    "y": 0
+                    width: 100
+                    height: 100
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    gapX: 16
+                    gapY: 12
+                    scrollUp:
+                      inheritToChildren: true
+                      payload:
+                        actions:
+                          nextLine: {}
+                    scrollDown:
+                      payload:
+                        actions:
+                          toggleDialogueUI: {}
+                  text-a:
+                    id: text-a
+                    type: text
+                    name: Title
+                    x: 0
+                    "y": 0
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    text: Hello
+                    textStyleId: text-style-ui
+                  text-b:
+                    id: text-b
+                    type: text
+                    name: Subtitle
+                    hidden: true
+                    x: 0
+                    "y": 20
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    text: World
+                    textStyleId: text-style-ui
+                  save-date:
+                    id: save-date
+                    type: text-ref-save-load-slot-date
+                    name: Save Date
+                    x: 0
+                    "y": 40
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    dateFormat: DD/MM/YYYY
+                    textStyleId: text-style-ui
+                  sprite-blur:
+                    id: sprite-blur
+                    type: sprite
+                    name: Blurred Sprite
+                    x: 0
+                    "y": 60
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    blur:
+                      x: 6
+                      "y": 9
+                      quality: 3
+                      kernelSize: 9
+                      repeatEdgePixels: true
+                  choice-single-item:
+                    id: choice-single-item
+                    type: container-ref-choice-single-item
+                    name: Choice Single Item
+                    x: 0
+                    "y": 0
+                    anchorX: 0
+                    anchorY: 0
+                    scaleX: 1
+                    scaleY: 1
+                    rotation: 0
+                    direction: absolute
+                    choiceItemIndex: 0
+                    click:
+                      inheritToChildren: true
+                tree:
+                  - id: container-root
+                    children:
+                      - id: text-a
+                        children: []
+                      - id: text-b
+                        children: []
+                      - id: save-date
+                        children: []
+                      - id: sprite-blur
+                        children: []
+                      - id: choice-single-item
+                        children: []
+          tree:
+            - id: layout-dialogue
+              children: []
+        controls:
+          items: {}
+          tree: []
+  - type: layout.create
+    payload:
+      layoutId: folder-layouts
+      data:
+        type: folder
+        name: Layouts
+  - type: layout.create
+    payload:
+      layoutId: layout-alt
+      parentId: folder-layouts
+      data:
+        type: layout
+        name: Alt Layout
+        description: Alternate dialogue layout
+        layoutType: general
+        thumbnailFileId: thumb-spritesheet-ui
+        preview:
+          runtime:
+            autoMode: true
+        elements:
+          items: {}
+          tree: []
+  - type: layout.update
+    payload:
+      layoutId: layout-alt
+      data:
+        name: Alt Layout Updated
+        preview:
+          variables:
+            score: 7
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: container-root
+      data:
+        type: container
+        name: Root
+        x: 0
+        "y": 0
+        width: 100
+        height: 100
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: save-date
+      parentId: container-root
+      data:
+        type: text-ref-save-load-slot-date
+        name: Save Date
+        x: 0
+        "y": 40
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        dateFormat: DD/MM/YYYY
+        textStyleId: text-style-ui
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: text-a
+      parentId: container-root
+      data:
+        type: text-revealing
+        name: Title
+        x: 0
+        "y": 0
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        text: Hello
+        textStyleId: text-style-ui
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: anim-a
+      parentId: container-root
+      data:
+        type: spritesheet-animation
+        name: Idle Loop
+        x: 0
+        "y": 80
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        resourceId: spritesheet-ui
+        animationName: idle
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: sprite-blur
+      parentId: container-root
+      data:
+        type: sprite
+        name: Blurred Sprite
+        x: 0
+        "y": 60
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        blur:
+          x: 6
+          "y": 9
+          quality: 3
+          kernelSize: 9
+          repeatEdgePixels: true
+  - type: layout.element.create
+    payload:
+      layoutId: layout-alt
+      elementId: choice-single-item
+      parentId: container-root
+      data:
+        type: container-ref-choice-single-item
+        name: Choice Single Item
+        x: 0
+        "y": 0
+        anchorX: 0
+        anchorY: 0
+        scaleX: 1
+        scaleY: 1
+        rotation: 0
+        direction: absolute
+        choiceItemIndex: 0
+        click:
+          inheritToChildren: true
+  - type: layout.element.update
+    payload:
+      layoutId: layout-alt
+      elementId: text-a
+      data:
+        name: Title Updated
+        revealSoundStopTiming: immediate
+        scrollUp:
+          payload:
+            actions:
+              nextLine: {}
+        scrollDown:
+          payload:
+            actions:
+              toggleDialogueUI: {}
+  - type: layout.element.update
+    payload:
+      layoutId: layout-alt
+      elementId: save-date
+      data:
+        dateFormat: YYYY年MM月DD日
+  - type: layout.element.update
+    payload:
+      layoutId: layout-alt
+      elementId: sprite-blur
+      data:
+        blur:
+          x: 8
+          "y": 10
+          quality: 4
+          kernelSize: 11
+          repeatEdgePixels: false
+  - type: layout.element.update
+    payload:
+      layoutId: layout-alt
+      elementId: choice-single-item
+      data:
+        choiceItemIndex: 3
+  - type: layout.element.move
+    payload:
+      layoutId: layout-alt
+      elementId: text-a
+      parentId: container-root
+      position: last
+  - type: layout.element.delete
+    payload:
+      layoutId: layout-alt
+      elementIds:
+        - text-a
+        - save-date
+        - anim-a
+        - sprite-blur
+        - choice-single-item
+        - container-root
+  - type: layout.move
+    payload:
+      layoutId: layout-alt
+      parentId: folder-layouts
+      position: last
+  - type: layout.delete
+    payload:
+      layoutIds:
+        - layout-alt
+        - folder-layouts

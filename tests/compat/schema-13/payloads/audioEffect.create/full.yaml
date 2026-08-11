@@ -1,0 +1,38 @@
+schemaVersion: 13
+type: audioEffect.create
+payload:
+  audioEffectId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: audioEffect
+    name: Crossfade
+    description: Fade between two BGM sources
+    tagIds:
+      - smooth
+    preview:
+      outgoing:
+        soundId: sound-outgoing
+      incoming:
+        soundId: sound-incoming
+    audioEffect:
+      type: transition
+      prev:
+        fade:
+          keyframes:
+            - value: 40
+              duration: 200
+              easing: easeOutSine
+            - value: 0
+              duration: 400
+              easing: easeInOutSine
+      next:
+        fade:
+          keyframes:
+            - value: 60
+              duration: 300
+              easing: easeOutSine
+            - value: 100
+              duration: 600
+              easing: easeInOutSine

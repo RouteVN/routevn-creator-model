@@ -643,6 +643,20 @@ const createSparseCompatibilityState = () => {
     },
   };
   state.animations.tree = [createTreeNode("animation-main")];
+  state.audioEffects.items["audio-effect-main"] = {
+    id: "audio-effect-main",
+    type: "audioEffect",
+    name: "Main Audio Effect",
+    audioEffect: {
+      type: "update",
+      tween: {
+        volume: {
+          keyframes: [{ value: 50, duration: 250 }],
+        },
+      },
+    },
+  };
+  state.audioEffects.tree = [createTreeNode("audio-effect-main")];
   state.fonts.items["font-main"] = {
     id: "font-main",
     type: "font",
@@ -966,6 +980,80 @@ const createRichCompatibilityState = () => {
     },
   };
   state.animations.tree = [createTreeNode("animation-rich")];
+  state.tags.audioEffects.items.smooth = {
+    id: "smooth",
+    type: "tag",
+    name: "Smooth",
+    color: "#446688",
+  };
+  state.tags.audioEffects.tree = [{ id: "smooth" }];
+  state.audioEffects.items["folder-audio-effects"] = {
+    id: "folder-audio-effects",
+    type: "folder",
+    name: "Audio Effects",
+  };
+  state.audioEffects.items.crossfade = {
+    id: "crossfade",
+    type: "audioEffect",
+    name: "Crossfade",
+    description: "Fade between two BGM sources",
+    tagIds: ["smooth"],
+    preview: {
+      outgoing: { soundId: "sound-rich" },
+      incoming: { soundId: "sound-rich" },
+    },
+    audioEffect: {
+      type: "transition",
+      prev: {
+        fade: {
+          keyframes: [
+            { value: 40, duration: 200, easing: "easeOutSine" },
+            { value: 0, duration: 400, easing: "easeInOutSine" },
+          ],
+        },
+      },
+      next: {
+        fade: {
+          keyframes: [
+            { value: 60, duration: 300, easing: "easeOutSine" },
+            { value: 100, duration: 600, easing: "easeInOutSine" },
+          ],
+        },
+      },
+    },
+  };
+  state.audioEffects.items["smooth-volume"] = {
+    id: "smooth-volume",
+    type: "audioEffect",
+    name: "Smooth Volume Change",
+    tagIds: ["smooth"],
+    audioEffect: {
+      type: "update",
+      tween: {
+        volume: {
+          keyframes: [
+            {
+              startValue: 80,
+              value: 50,
+              duration: 150,
+              easing: "easeOutQuad",
+            },
+            {
+              value: 30,
+              duration: 350,
+              easing: "easeInOutSine",
+            },
+          ],
+        },
+      },
+    },
+  };
+  state.audioEffects.tree = [
+    createTreeNode("folder-audio-effects", [
+      createTreeNode("crossfade"),
+      createTreeNode("smooth-volume"),
+    ]),
+  ];
   return state;
 };
 
@@ -1689,6 +1777,91 @@ const payloadFixtures = [
       },
     },
   },
+  ...createFolderedPayloadSets({
+    family: "audioEffect",
+    idField: "audioEffectId",
+    idsField: "audioEffectIds",
+    minimalCreateData: {
+      type: "audioEffect",
+      name: "Audio Effect",
+      audioEffect: {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [{ value: 50, duration: 0 }],
+          },
+        },
+      },
+    },
+    fullCreateData: {
+      type: "audioEffect",
+      name: "Crossfade",
+      description: "Fade between two BGM sources",
+      tagIds: ["smooth"],
+      preview: {
+        outgoing: { soundId: "sound-outgoing" },
+        incoming: { soundId: "sound-incoming" },
+      },
+      audioEffect: {
+        type: "transition",
+        prev: {
+          fade: {
+            keyframes: [
+              { value: 40, duration: 200, easing: "easeOutSine" },
+              { value: 0, duration: 400, easing: "easeInOutSine" },
+            ],
+          },
+        },
+        next: {
+          fade: {
+            keyframes: [
+              { value: 60, duration: 300, easing: "easeOutSine" },
+              { value: 100, duration: 600, easing: "easeInOutSine" },
+            ],
+          },
+        },
+      },
+    },
+    minimalUpdateData: {
+      name: "Audio Effect Updated",
+    },
+    fullUpdateData: {
+      description: "Retained BGM property update",
+      tagIds: ["smooth"],
+      preview: {
+        target: { soundId: "sound-target" },
+      },
+      audioEffect: {
+        type: "update",
+        tween: {
+          volume: {
+            keyframes: [
+              {
+                startValue: 80,
+                value: 50,
+                duration: 150,
+                easing: "easeOutQuad",
+              },
+              {
+                value: 30,
+                duration: 350,
+                easing: "easeInOutSine",
+              },
+            ],
+          },
+          pan: {
+            keyframes: [{ value: 0, duration: 250 }],
+          },
+          playbackRate: {
+            keyframes: [
+              { value: 0.25, duration: 100, relative: true },
+              { value: 1, duration: 200 },
+            ],
+          },
+        },
+      },
+    },
+  }),
   ...createFolderedPayloadSets({
     family: "font",
     idField: "fontId",
@@ -3686,6 +3859,122 @@ const streamFixtures = [
       {
         type: "animation.delete",
         payload: { animationIds: ["animation-a", "folder-motion"] },
+      },
+    ],
+  },
+  {
+    fixtureName: "audio-effect-crud",
+    initialState: createEmptyTestState(),
+    commands: [
+      { type: "project.create", payload: { state: createEmptyTestState() } },
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "audioEffects",
+          tagId: "smooth",
+          data: { type: "tag", name: "Smooth" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "folder-audio-effects",
+          data: { type: "folder", name: "Audio Effects" },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "folder-audio-effects",
+          data: {
+            type: "audioEffect",
+            name: "Crossfade",
+            tagIds: ["smooth"],
+            preview: {
+              outgoing: { soundId: "sound-outgoing" },
+              incoming: { soundId: "sound-incoming" },
+            },
+            audioEffect: {
+              type: "transition",
+              prev: {
+                fade: {
+                  keyframes: [
+                    { value: 40, duration: 200, easing: "easeOutSine" },
+                    { value: 0, duration: 400, easing: "easeInOutSine" },
+                  ],
+                },
+              },
+              next: {
+                fade: {
+                  keyframes: [
+                    { value: 60, duration: 300, easing: "easeOutSine" },
+                    { value: 100, duration: 600, easing: "easeInOutSine" },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.update",
+        payload: {
+          audioEffectId: "crossfade",
+          data: {
+            name: "Smooth Volume Change",
+            preview: {
+              target: { soundId: "sound-target" },
+            },
+            audioEffect: {
+              type: "update",
+              tween: {
+                volume: {
+                  keyframes: [
+                    {
+                      startValue: 80,
+                      value: 50,
+                      duration: 150,
+                      easing: "easeOutQuad",
+                    },
+                    {
+                      value: 30,
+                      duration: 350,
+                      easing: "easeInOutSine",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: null,
+          position: "first",
+        },
+      },
+      {
+        type: "audioEffect.move",
+        payload: {
+          audioEffectId: "crossfade",
+          parentId: "folder-audio-effects",
+          position: "last",
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "audioEffects",
+          tagIds: ["smooth"],
+        },
+      },
+      {
+        type: "audioEffect.delete",
+        payload: { audioEffectIds: ["folder-audio-effects"] },
       },
     ],
   },

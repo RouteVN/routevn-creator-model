@@ -26,6 +26,7 @@ const COLLECTION_KEYS = [
   "voices",
   "videos",
   "animations",
+  "audioEffects",
   "particles",
   "characters",
   "fonts",
@@ -66,6 +67,7 @@ const TAG_SCOPE_BASE_KEYS = [
   "layouts",
   "controls",
   "animations",
+  "audioEffects",
   "particles",
   "spritesheets",
 ];
@@ -83,6 +85,7 @@ const createEmptyTagsState = () => ({
   layouts: createEmptyCollectionState(),
   controls: createEmptyCollectionState(),
   animations: createEmptyCollectionState(),
+  audioEffects: createEmptyCollectionState(),
   particles: createEmptyCollectionState(),
   spritesheets: createEmptyCollectionState(),
 });
@@ -248,6 +251,7 @@ const normalizeStateCollections = (state) => {
     "particles",
     "controls",
     "voices",
+    "audioEffects",
   ].filter((key) => state[key] === undefined);
   const normalizedTags = normalizeTagsState(state.tags);
   const hasNormalizedTags = normalizedTags !== state.tags;
@@ -340,6 +344,7 @@ const ANIMATION_EASING_KEYS = [
   "easeOutElastic",
   "easeInOutElastic",
 ];
+const AUDIO_EFFECT_TWEEN_PROPERTY_KEYS = ["volume", "pan", "playbackRate"];
 const VARIABLE_SCOPE_KEYS = ["context", "device", "account"];
 const VARIABLE_TYPE_KEYS = ["string", "number", "boolean", "object"];
 const LAYOUT_TYPE_KEYS = [
@@ -403,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2429,6 +2434,585 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
         if (result?.valid === false) {
           return result;
         }
+      }
+    }
+  }
+};
+
+const validateAudioEffectEasing = ({ value, path, errorFactory }) => {
+  if (value !== undefined && !ANIMATION_EASING_KEYS.includes(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a supported Route Graphics easing`,
+    );
+  }
+};
+
+const validateAudioEffectAbsoluteValue = ({
+  value,
+  property,
+  path,
+  errorFactory,
+}) => {
+  if (property === "volume" && (value < 0 || value > 100)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be between 0 and 100 for an absolute volume keyframe`,
+    );
+  }
+
+  if (property === "pan" && (value < -1 || value > 1)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be between -1 and 1 for an absolute pan keyframe`,
+    );
+  }
+
+  if (property === "playbackRate" && value < 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be greater than or equal to 0 for an absolute playbackRate keyframe`,
+    );
+  }
+};
+
+const validateAudioEffectKeyframes = ({
+  keyframes,
+  property,
+  path,
+  errorFactory,
+}) => {
+  if (!Array.isArray(keyframes) || keyframes.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a non-empty array`,
+    );
+  }
+
+  for (const [index, keyframe] of keyframes.entries()) {
+    const keyframePath = `${path}[${index}]`;
+
+    {
+      const result = validateAllowedKeys({
+        value: keyframe,
+        allowedKeys: [
+          "startValue",
+          "value",
+          "duration",
+          "delay",
+          "easing",
+          "relative",
+        ],
+        path: keyframePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!Object.hasOwn(keyframe, "value")) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.value is required`,
+      );
+    }
+
+    if (!Object.hasOwn(keyframe, "duration")) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.duration is required`,
+      );
+    }
+
+    if (!isFiniteNumber(keyframe.value)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.value must be a finite number`,
+      );
+    }
+
+    if (!isFiniteNumber(keyframe.duration) || keyframe.duration < 0) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.duration must be a finite number >= 0`,
+      );
+    }
+
+    if (
+      keyframe.delay !== undefined &&
+      (!isFiniteNumber(keyframe.delay) || keyframe.delay < 0)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.delay must be a finite number >= 0 when provided`,
+      );
+    }
+
+    if (
+      keyframe.startValue !== undefined &&
+      !isFiniteNumber(keyframe.startValue)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.startValue must be a finite number when provided`,
+      );
+    }
+
+    if (
+      keyframe.relative !== undefined &&
+      typeof keyframe.relative !== "boolean"
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${keyframePath}.relative must be a boolean when provided`,
+      );
+    }
+
+    {
+      const result = validateAudioEffectEasing({
+        value: keyframe.easing,
+        path: `${keyframePath}.easing`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (keyframe.relative !== true) {
+      const result = validateAudioEffectAbsoluteValue({
+        value: keyframe.value,
+        property,
+        path: `${keyframePath}.value`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+
+      if (keyframe.startValue !== undefined) {
+        const result = validateAudioEffectAbsoluteValue({
+          value: keyframe.startValue,
+          property,
+          path: `${keyframePath}.startValue`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    }
+  }
+
+  const finalKeyframe = keyframes.at(-1);
+  if (finalKeyframe.relative === true) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} final keyframe must use an absolute numeric value`,
+    );
+  }
+};
+
+const validateAudioEffectTween = ({ tween, path, errorFactory }) => {
+  if (!isPlainObject(tween)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  if (Object.keys(tween).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must contain at least one tween property`,
+    );
+  }
+
+  for (const [property, config] of Object.entries(tween)) {
+    if (!AUDIO_EFFECT_TWEEN_PROPERTY_KEYS.includes(property)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${property} is not a supported audio effect tween property`,
+      );
+    }
+
+    {
+      const result = validateExactKeys({
+        value: config,
+        expectedKeys: ["keyframes"],
+        path: `${path}.${property}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectKeyframes({
+        keyframes: config.keyframes,
+        property,
+        path: `${path}.${property}.keyframes`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateAudioEffectFade = ({ fade, path, side, errorFactory }) => {
+  if (!isPlainObject(fade)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an object`);
+  }
+
+  if (Object.hasOwn(fade, "keyframes")) {
+    {
+      const result = validateExactKeys({
+        value: fade,
+        expectedKeys: ["keyframes"],
+        path,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectKeyframes({
+        keyframes: fade.keyframes,
+        property: "volume",
+        path: `${path}.keyframes`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    for (const [index, keyframe] of fade.keyframes.entries()) {
+      if (keyframe.relative === true) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path}.keyframes[${index}].relative is not supported for transition fades`,
+        );
+      }
+    }
+
+    return;
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: fade,
+      allowedKeys: ["delay", "duration", "easing"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!Object.hasOwn(fade, "duration")) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.duration is required`,
+    );
+  }
+
+  if (!isFiniteNumber(fade.duration) || fade.duration < 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.duration must be a finite number >= 0`,
+    );
+  }
+
+  if (
+    fade.delay !== undefined &&
+    (!isFiniteNumber(fade.delay) || fade.delay < 0)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.delay must be a finite number >= 0 when provided`,
+    );
+  }
+
+  return validateAudioEffectEasing({
+    value: fade.easing,
+    path: `${path}.easing`,
+    errorFactory,
+  });
+};
+
+const validateAudioEffectTransitionSide = ({
+  side,
+  sideName,
+  path,
+  errorFactory,
+}) => {
+  {
+    const result = validateExactKeys({
+      value: side,
+      expectedKeys: ["fade"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateAudioEffectFade({
+    fade: side.fade,
+    path: `${path}.fade`,
+    side: sideName,
+    errorFactory,
+  });
+};
+
+const validateAudioEffectDefinition = ({ audioEffect, path, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: audioEffect,
+      allowedKeys: ["type", "tween", "prev", "next"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (audioEffect.type !== "update" && audioEffect.type !== "transition") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.type must be 'update' or 'transition'`,
+    );
+  }
+
+  if (audioEffect.type === "update") {
+    if (audioEffect.prev !== undefined || audioEffect.next !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.update audio effects cannot define prev or next`,
+      );
+    }
+
+    if (audioEffect.tween === undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.tween is required when ${path}.type is 'update'`,
+      );
+    }
+
+    return validateAudioEffectTween({
+      tween: audioEffect.tween,
+      path: `${path}.tween`,
+      errorFactory,
+    });
+  }
+
+  if (audioEffect.tween !== undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.transition audio effects cannot define tween`,
+    );
+  }
+
+  if (audioEffect.prev === undefined && audioEffect.next === undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.prev or ${path}.next is required when ${path}.type is 'transition'`,
+    );
+  }
+
+  for (const side of ["prev", "next"]) {
+    if (audioEffect[side] === undefined) {
+      continue;
+    }
+
+    const result = validateAudioEffectTransitionSide({
+      side: audioEffect[side],
+      sideName: side,
+      path: `${path}.${side}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+};
+
+const validateAudioEffectPreviewSlot = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["soundId"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (value.soundId !== undefined && !isNonEmptyString(value.soundId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.soundId must be a non-empty string when provided`,
+    );
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAudioEffectPreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["target", "outgoing", "incoming"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  for (const key of ["target", "outgoing", "incoming"]) {
+    const result = validateAudioEffectPreviewSlot({
+      value: value[key],
+      path: `${path}.${key}`,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateAudioEffectItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "audioEffect") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'audioEffect'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name", "description"]
+            : [
+                "id",
+                "type",
+                "name",
+                "description",
+                "tagIds",
+                "preview",
+                "audioEffect",
+              ],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
+    if (item.type !== "audioEffect") {
+      continue;
+    }
+
+    {
+      const result = validateAudioEffectPreviewObject({
+        value: item.preview,
+        path: `${itemPath}.preview`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: item.tagIds,
+        path: `${itemPath}.tagIds`,
+        errorFactory,
+        allowEmpty: false,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectDefinition({
+        audioEffect: item.audioEffect,
+        path: `${itemPath}.audioEffect`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
       }
     }
   }
@@ -6855,6 +7439,15 @@ const stripDeletedTagIdsFromScopeItems = ({
     return;
   }
 
+  if (scopeKey === "audioEffects") {
+    for (const item of Object.values(state.audioEffects.items)) {
+      if (item?.type === "audioEffect") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
   if (scopeKey === "particles") {
     for (const item of Object.values(state.particles.items)) {
       if (item?.type === "particle") {
@@ -7955,6 +8548,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.audioEffects") {
+    {
+      const result = validateAudioEffectItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   } else if (path === "state.fonts") {
     {
       const result = validateFontItems({
@@ -8176,6 +8780,7 @@ const validateCollection = ({ collection, path }) => {
     }
   } else if (
     path === "state.files" ||
+    path === "state.audioEffects" ||
     path === "state.particles" ||
     path === "state.transforms" ||
     path === "state.variables" ||
@@ -8190,11 +8795,13 @@ const validateCollection = ({ collection, path }) => {
         items: collection.items,
         path: `${path}.tree`,
         folderLabel:
-          path === "state.layouts"
-            ? "folder layout item"
-            : path === "state.controls"
-              ? "folder control item"
-              : "folder item",
+          path === "state.audioEffects"
+            ? "folder audio effect item"
+            : path === "state.layouts"
+              ? "folder layout item"
+              : path === "state.controls"
+                ? "folder control item"
+                : "folder item",
       });
       if (result?.valid === false) {
         return result;
@@ -8853,6 +9460,28 @@ export const assertInvariants = ({ state }) => {
       animation: animation.animation,
       path: "animation",
       details: { animationId },
+      errorFactory: createInvariantValidationError,
+    });
+    if (!result.valid) {
+      return result;
+    }
+  }
+
+  for (const [audioEffectId, audioEffect] of Object.entries(
+    state.audioEffects.items,
+  )) {
+    if (audioEffect.type !== "audioEffect") {
+      continue;
+    }
+
+    const result = validateTagIdsAgainstScope({
+      state,
+      tagIds: audioEffect.tagIds,
+      scopeKey: "audioEffects",
+      path: "audioEffect.tagIds",
+      details: {
+        audioEffectId,
+      },
       errorFactory: createInvariantValidationError,
     });
     if (!result.valid) {
@@ -11836,6 +12465,148 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
         return result;
       }
     }
+  }
+};
+
+const validateAudioEffectCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "audioEffect") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'audioEffect'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "tagIds", "preview", "audioEffect"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (data.type !== "audioEffect") {
+    return;
+  }
+
+  {
+    const result = validateAudioEffectPreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateAudioEffectDefinition({
+    audioEffect: data.audioEffect,
+    path: "payload.data.audioEffect",
+    errorFactory,
+  });
+};
+
+const validateAudioEffectUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "description", "tagIds", "preview", "audioEffect"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (Object.hasOwn(data, "name") && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  {
+    const result = validateAudioEffectPreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateOptionalUniqueIdArray({
+      value: data.tagIds,
+      path: "payload.data.tagIds",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.hasOwn(data, "audioEffect")) {
+    return validateAudioEffectDefinition({
+      audioEffect: data.audioEffect,
+      path: "payload.data.audioEffect",
+      errorFactory,
+    });
   }
 };
 
@@ -18650,6 +19421,87 @@ const COMMAND_DEFINITIONS = [
       return state;
     },
   },
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "audioEffect",
+    collectionKey: "audioEffects",
+    idField: "audioEffectId",
+    itemLabel: "audio effect item",
+    createDataValidator: validateAudioEffectCreateData,
+    updateDataValidator: validateAudioEffectUpdateData,
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.audioEffectId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      if (payload.data.type === "audioEffect") {
+        assignOptionalTagIds({
+          target: item,
+          tagIds: payload.data.tagIds,
+        });
+        if (payload.data.preview !== undefined) {
+          item.preview = structuredClone(payload.data.preview);
+        }
+        item.audioEffect = structuredClone(payload.data.audioEffect);
+      }
+
+      return item;
+    },
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "audioEffect") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "audioEffects",
+        path: "payload.data.tagIds",
+        details: {
+          audioEffectId: payload.audioEffectId,
+        },
+        errorFactory: createPreconditionValidationError,
+      });
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
+      ) {
+        return invalidFromErrorFactory(
+          createPreconditionValidationError,
+          "folder audio effect items cannot update audio effect fields",
+        );
+      }
+
+      if (currentItem.type !== "audioEffect") {
+        return;
+      }
+
+      return validateTagIdsAgainstScope({
+        state,
+        tagIds: payload.data.tagIds,
+        scopeKey: "audioEffects",
+        path: "payload.data.tagIds",
+        details: {
+          audioEffectId: payload.audioEffectId,
+        },
+        errorFactory: createPreconditionValidationError,
+      });
+    },
+  }),
   {
     type: "font.create",
     validatePayload: ({ payload }) => {

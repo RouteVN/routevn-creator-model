@@ -52,6 +52,10 @@ export const createEmptyTestState = () => ({
       items: {},
       tree: [],
     },
+    audioEffects: {
+      items: {},
+      tree: [],
+    },
     particles: {
       items: {},
       tree: [],
@@ -90,6 +94,10 @@ export const createEmptyTestState = () => ({
     tree: [],
   },
   animations: {
+    items: {},
+    tree: [],
+  },
+  audioEffects: {
     items: {},
     tree: [],
   },

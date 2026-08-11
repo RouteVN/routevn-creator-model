@@ -1,0 +1,6 @@
+schemaVersion: 13
+type: section.delete
+payload:
+  sectionIds:
+    - section-a
+    - section-b

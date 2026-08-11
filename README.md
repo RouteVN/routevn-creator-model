@@ -131,8 +131,12 @@ font IDs. Both forms are persisted as supplied, and every ID must reference an
 existing non-folder font:
 
 ```js
-{ fontId: "font-primary" }
-{ fontId: ["font-primary", "font-fallback"] }
+{
+  fontId: "font-primary";
+}
+{
+  fontId: ["font-primary", "font-fallback"];
+}
 ```
 
 ## Computed Variables
@@ -225,6 +229,8 @@ tests/
   images.spec.yaml
   sounds-and-videos.spec.yaml
   animations.spec.yaml
+  audio-effects.test.js
+  audio-effects-drift.test.js
   fonts-and-colors.spec.yaml
   transforms-variables-textstyles.spec.yaml
   characters-and-layouts.spec.yaml
@@ -332,6 +338,40 @@ Transition animation `mask` accepts one mask object or a non-empty ordered
 array. Each mask may define a non-negative safe-integer `delay` in
 milliseconds.
 
+Audio effects are foldered resources stored in `audioEffects.items` and
+`audioEffects.tree`. Non-folder items use this wrapper:
+
+```js
+{
+  id: "crossfade",
+  type: "audioEffect",
+  name: "Crossfade",
+  description: "Fade between two BGM sources",
+  tagIds: ["smooth"],
+  preview: {
+    outgoing: { soundId: "calm-theme" },
+    incoming: { soundId: "battle-theme" },
+  },
+  audioEffect: {
+    type: "transition",
+    prev: { fade: { duration: 600, easing: "easeInOutSine" } },
+    next: { fade: { duration: 900, easing: "easeInOutSine" } },
+  },
+}
+```
+
+The optional editor preview uses `outgoing` and `incoming` sound slots for a
+transition effect, or a single `target` sound slot for an update effect. Each
+slot is an object containing a `soundId`.
+
+`audioEffect.type` is either `transition` or `update`. Transition effects have
+at least one `prev.fade` or `next.fade`. Update effects tween one or more of
+`volume`, `pan`, and `playbackRate`; each property has non-empty keyframes and
+must finish with an absolute numeric keyframe. That final number becomes the
+persistent BGM property value after the effect finishes. Absolute volume values
+are bounded to `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative
+keyframes represent unbounded numeric deltas and cannot be final.
+
 ## Current Scope
 
 Currently implemented command types:
@@ -370,6 +410,10 @@ Currently implemented command types:
 - `animation.update`
 - `animation.delete`
 - `animation.move`
+- `audioEffect.create`
+- `audioEffect.update`
+- `audioEffect.delete`
+- `audioEffect.move`
 - `font.create`
 - `font.update`
 - `font.delete`

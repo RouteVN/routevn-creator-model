@@ -1,0 +1,298 @@
+schemaVersion: 13
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    audioEffects:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  voices:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  audioEffects:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          audioEffects:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        voices:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        audioEffects:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: tag.create
+    payload:
+      scopeKey: audioEffects
+      tagId: smooth
+      data:
+        type: tag
+        name: Smooth
+  - type: audioEffect.create
+    payload:
+      audioEffectId: folder-audio-effects
+      data:
+        type: folder
+        name: Audio Effects
+  - type: audioEffect.create
+    payload:
+      audioEffectId: crossfade
+      parentId: folder-audio-effects
+      data:
+        type: audioEffect
+        name: Crossfade
+        tagIds:
+          - smooth
+        preview:
+          outgoing:
+            soundId: sound-outgoing
+          incoming:
+            soundId: sound-incoming
+        audioEffect:
+          type: transition
+          prev:
+            fade:
+              keyframes:
+                - value: 40
+                  duration: 200
+                  easing: easeOutSine
+                - value: 0
+                  duration: 400
+                  easing: easeInOutSine
+          next:
+            fade:
+              keyframes:
+                - value: 60
+                  duration: 300
+                  easing: easeOutSine
+                - value: 100
+                  duration: 600
+                  easing: easeInOutSine
+  - type: audioEffect.update
+    payload:
+      audioEffectId: crossfade
+      data:
+        name: Smooth Volume Change
+        preview:
+          target:
+            soundId: sound-target
+        audioEffect:
+          type: update
+          tween:
+            volume:
+              keyframes:
+                - startValue: 80
+                  value: 50
+                  duration: 150
+                  easing: easeOutQuad
+                - value: 30
+                  duration: 350
+                  easing: easeInOutSine
+  - type: audioEffect.move
+    payload:
+      audioEffectId: crossfade
+      parentId: null
+      position: first
+  - type: audioEffect.move
+    payload:
+      audioEffectId: crossfade
+      parentId: folder-audio-effects
+      position: last
+  - type: tag.delete
+    payload:
+      scopeKey: audioEffects
+      tagIds:
+        - smooth
+  - type: audioEffect.delete
+    payload:
+      audioEffectIds:
+        - folder-audio-effects

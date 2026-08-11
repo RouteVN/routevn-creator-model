@@ -1,0 +1,11 @@
+schemaVersion: 13
+type: layout.create
+payload:
+  layoutId: item-a
+  data:
+    type: layout
+    name: Dialogue
+    layoutType: dialogue-adv
+    elements:
+      items: {}
+      tree: []
