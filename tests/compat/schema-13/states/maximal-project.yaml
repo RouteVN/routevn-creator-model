@@ -389,6 +389,7 @@ state:
           type: transition
           prev:
             fade:
+              initialValue: 100
               keyframes:
                 - value: 40
                   duration: 200
@@ -398,6 +399,7 @@ state:
                   easing: easeInOutSine
           next:
             fade:
+              initialValue: 0
               keyframes:
                 - value: 60
                   duration: 300
@@ -415,6 +417,7 @@ state:
           type: update
           tween:
             volume:
+              initialValue: 90
               keyframes:
                 - startValue: 80
                   value: 50

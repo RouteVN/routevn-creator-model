@@ -13,6 +13,7 @@ payload:
       type: update
       tween:
         volume:
+          initialValue: 90
           keyframes:
             - startValue: 80
               value: 50
@@ -22,10 +23,12 @@ payload:
               duration: 350
               easing: easeInOutSine
         pan:
+          initialValue: -0.5
           keyframes:
             - value: 0
               duration: 250
         playbackRate:
+          initialValue: 1.25
           keyframes:
             - value: 0.25
               duration: 100

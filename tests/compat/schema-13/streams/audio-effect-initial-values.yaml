@@ -210,92 +210,109 @@ commands:
         controls:
           items: {}
           tree: []
-  - type: tag.create
-    payload:
-      scopeKey: audioEffects
-      tagId: smooth
-      data:
-        type: tag
-        name: Smooth
   - type: audioEffect.create
     payload:
-      audioEffectId: folder-audio-effects
-      data:
-        type: folder
-        name: Audio Effects
-  - type: audioEffect.create
-    payload:
-      audioEffectId: crossfade
-      parentId: folder-audio-effects
+      audioEffectId: initial-crossfade
       data:
         type: audioEffect
-        name: Crossfade
-        tagIds:
-          - smooth
-        preview:
-          outgoing:
-            soundId: sound-outgoing
-          incoming:
-            soundId: sound-incoming
+        name: Initial Crossfade
         audioEffect:
           type: transition
           prev:
             fade:
               initialValue: 100
               keyframes:
-                - value: 40
-                  duration: 200
-                  easing: easeOutSine
                 - value: 0
                   duration: 400
-                  easing: easeInOutSine
           next:
             fade:
               initialValue: 0
               keyframes:
-                - value: 60
-                  duration: 300
-                  easing: easeOutSine
                 - value: 100
                   duration: 600
-                  easing: easeInOutSine
+  - type: audioEffect.create
+    payload:
+      audioEffectId: initial-update
+      data:
+        type: audioEffect
+        name: Initial Update
+        audioEffect:
+          type: update
+          tween:
+            volume:
+              initialValue: 100
+              keyframes:
+                - value: 75
+                  duration: 100
   - type: audioEffect.update
     payload:
-      audioEffectId: crossfade
+      audioEffectId: initial-update
       data:
-        name: Smooth Volume Change
-        preview:
-          target:
-            soundId: sound-target
         audioEffect:
           type: update
           tween:
             volume:
               initialValue: 90
               keyframes:
-                - startValue: 80
+                - startValue: 75
                   value: 50
-                  duration: 150
-                  easing: easeOutQuad
-                - value: 30
-                  duration: 350
-                  easing: easeInOutSine
-  - type: audioEffect.move
-    payload:
-      audioEffectId: crossfade
-      parentId: null
-      position: first
-  - type: audioEffect.move
-    payload:
-      audioEffectId: crossfade
-      parentId: folder-audio-effects
-      position: last
-  - type: tag.delete
-    payload:
-      scopeKey: audioEffects
-      tagIds:
-        - smooth
-  - type: audioEffect.delete
-    payload:
-      audioEffectIds:
-        - folder-audio-effects
+                  duration: 100
+            pan:
+              initialValue: -0.5
+              keyframes:
+                - value: 0
+                  duration: 100
+            playbackRate:
+              initialValue: 1.25
+              keyframes:
+                - value: 1
+                  duration: 100
+expectedFinalState:
+  audioEffects:
+    items:
+      initial-crossfade:
+        id: initial-crossfade
+        type: audioEffect
+        name: Initial Crossfade
+        audioEffect:
+          type: transition
+          prev:
+            fade:
+              initialValue: 100
+              keyframes:
+                - value: 0
+                  duration: 400
+          next:
+            fade:
+              initialValue: 0
+              keyframes:
+                - value: 100
+                  duration: 600
+      initial-update:
+        id: initial-update
+        type: audioEffect
+        name: Initial Update
+        audioEffect:
+          type: update
+          tween:
+            volume:
+              initialValue: 90
+              keyframes:
+                - startValue: 75
+                  value: 50
+                  duration: 100
+            pan:
+              initialValue: -0.5
+              keyframes:
+                - value: 0
+                  duration: 100
+            playbackRate:
+              initialValue: 1.25
+              keyframes:
+                - value: 1
+                  duration: 100
+    tree:
+      - id: initial-crossfade
+        children: []
+      - id: initial-update
+        children: []
