@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: layout.element.delete
-payload:
-  layoutId: layout-dialogue
-  elementIds:
-    - text-a
-    - text-b

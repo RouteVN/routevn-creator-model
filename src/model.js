@@ -408,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 14;
+export const SCHEMA_VERSION = 13;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",

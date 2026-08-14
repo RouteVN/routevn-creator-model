@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: variable.create
-payload:
-  variableId: folder-a
-  data:
-    type: folder
-    name: Folder A

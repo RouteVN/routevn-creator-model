@@ -1,6 +1,0 @@
-schemaVersion: 14
-type: color.delete
-payload:
-  colorIds:
-    - item-a
-    - item-b

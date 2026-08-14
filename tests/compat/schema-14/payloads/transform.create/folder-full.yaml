@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: transform.create
-payload:
-  transformId: folder-a
-  data:
-    type: folder
-    name: Folder A

@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: image.create
-payload:
-  imageId: folder-a
-  data:
-    type: folder
-    name: Folder A

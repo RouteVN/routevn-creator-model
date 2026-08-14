@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: particle.move
-payload:
-  particleId: item-a
-  parentId: folder-a
-  position: before
-  positionTargetId: item-b

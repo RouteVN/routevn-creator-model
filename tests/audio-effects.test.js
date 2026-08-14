@@ -249,14 +249,6 @@ describe("audio effect definitions", () => {
       "at least one audio property",
     ],
     [
-      "the removed fade transition property",
-      {
-        type: "transition",
-        next: { fade: { keyframes: [{ value: 100, duration: 1 }] } },
-      },
-      "not a supported audio effect property",
-    ],
-    [
       "transition keyframes",
       { type: "transition", prev: { volume: {} } },
       ".keyframes is required",

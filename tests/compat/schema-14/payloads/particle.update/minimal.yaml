@@ -1,6 +1,0 @@
-schemaVersion: 14
-type: particle.update
-payload:
-  particleId: item-a
-  data:
-    width: 1440

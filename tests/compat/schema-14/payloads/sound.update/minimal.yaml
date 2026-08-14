@@ -1,6 +1,0 @@
-schemaVersion: 14
-type: sound.update
-payload:
-  soundId: item-a
-  data:
-    duration: 42

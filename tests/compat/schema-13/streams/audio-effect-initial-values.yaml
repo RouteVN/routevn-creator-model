@@ -219,13 +219,13 @@ commands:
         audioEffect:
           type: transition
           prev:
-            fade:
+            volume:
               initialValue: 100
               keyframes:
                 - value: 0
                   duration: 400
           next:
-            fade:
+            volume:
               initialValue: 0
               keyframes:
                 - value: 100
@@ -277,13 +277,13 @@ expectedFinalState:
         audioEffect:
           type: transition
           prev:
-            fade:
+            volume:
               initialValue: 100
               keyframes:
                 - value: 0
                   duration: 400
           next:
-            fade:
+            volume:
               initialValue: 0
               keyframes:
                 - value: 100

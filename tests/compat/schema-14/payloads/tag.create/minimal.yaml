@@ -1,8 +1,0 @@
-schemaVersion: 14
-type: tag.create
-payload:
-  scopeKey: images
-  tagId: tag-bg
-  data:
-    type: tag
-    name: Background

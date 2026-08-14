@@ -1,7 +1,0 @@
-schemaVersion: 14
-type: font.create
-payload:
-  fontId: folder-a
-  data:
-    type: folder
-    name: Folder A
