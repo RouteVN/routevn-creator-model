@@ -161,6 +161,53 @@ describe("audio effect definitions", () => {
     ).toEqual({ valid: true });
   });
 
+  test("accepts property initial values independently from keyframe start values", () => {
+    expect(
+      validatePayload(
+        createAudioEffectCommand({
+          type: "update",
+          tween: {
+            volume: {
+              initialValue: 90,
+              keyframes: [
+                { startValue: 75, value: 50, duration: 100 },
+                { value: 30, duration: 100 },
+              ],
+            },
+            pan: {
+              initialValue: -0.5,
+              keyframes: [{ value: 0, duration: 100 }],
+            },
+            playbackRate: {
+              initialValue: 1.25,
+              keyframes: [{ value: 1, duration: 100 }],
+            },
+          },
+        }),
+      ),
+    ).toEqual({ valid: true });
+
+    expect(
+      validatePayload(
+        createAudioEffectCommand({
+          type: "transition",
+          prev: {
+            fade: {
+              initialValue: 90,
+              keyframes: [{ startValue: 75, value: 0, duration: 100 }],
+            },
+          },
+          next: {
+            fade: {
+              initialValue: 10,
+              keyframes: [{ startValue: 25, value: 100, duration: 100 }],
+            },
+          },
+        }),
+      ),
+    ).toEqual({ valid: true });
+  });
+
   test.each([
     [
       "unknown definition keys",
@@ -271,17 +318,17 @@ describe("audio effect definitions", () => {
       "absolute numeric value",
     ],
     [
-      "exact tween config keys",
+      "unknown tween config keys",
       {
         type: "update",
         tween: {
           volume: {
             keyframes: [{ value: 50, duration: 10 }],
-            initialValue: 50,
+            extra: 50,
           },
         },
       },
-      ".initialValue is not allowed",
+      ".extra is not allowed",
     ],
   ])("rejects definitions missing %s", (_label, definition, message) => {
     expectInvalidDefinition(definition, message);
@@ -315,6 +362,29 @@ describe("audio effect definitions", () => {
           [property]: {
             keyframes: [
               { startValue: value, value, duration: 1 },
+              { value: AUDIO_EFFECT_FINAL_VALUES[property], duration: 1 },
+            ],
+          },
+        },
+      },
+      message,
+    );
+  });
+
+  test.each([
+    ["volume", -1, "between 0 and 100"],
+    ["volume", 101, "between 0 and 100"],
+    ["pan", -1.1, "between -1 and 1"],
+    ["pan", 1.1, "between -1 and 1"],
+    ["playbackRate", -0.1, "greater than or equal to 0"],
+  ])("enforces %s initialValue bounds", (property, initialValue, message) => {
+    expectInvalidDefinition(
+      {
+        type: "update",
+        tween: {
+          [property]: {
+            initialValue,
+            keyframes: [
               { value: AUDIO_EFFECT_FINAL_VALUES[property], duration: 1 },
             ],
           },

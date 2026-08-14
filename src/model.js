@@ -2493,6 +2493,31 @@ const validateAudioEffectAbsoluteValue = ({
   }
 };
 
+const validateAudioEffectInitialValue = ({
+  value,
+  property,
+  path,
+  errorFactory,
+}) => {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isFiniteNumber(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be a finite number when provided`,
+    );
+  }
+
+  return validateAudioEffectAbsoluteValue({
+    value,
+    property,
+    path,
+    errorFactory,
+  });
+};
+
 const validateAudioEffectKeyframes = ({
   keyframes,
   property,
@@ -2652,10 +2677,29 @@ const validateAudioEffectTween = ({ tween, path, errorFactory }) => {
     }
 
     {
-      const result = validateExactKeys({
+      const result = validateAllowedKeys({
         value: config,
-        expectedKeys: ["keyframes"],
+        allowedKeys: ["initialValue", "keyframes"],
         path: `${path}.${property}`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!Object.hasOwn(config, "keyframes")) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${property}.keyframes is required`,
+      );
+    }
+
+    {
+      const result = validateAudioEffectInitialValue({
+        value: config.initialValue,
+        property,
+        path: `${path}.${property}.initialValue`,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -2684,10 +2728,22 @@ const validateAudioEffectFade = ({ fade, path, side, errorFactory }) => {
 
   if (Object.hasOwn(fade, "keyframes")) {
     {
-      const result = validateExactKeys({
+      const result = validateAllowedKeys({
         value: fade,
-        expectedKeys: ["keyframes"],
+        allowedKeys: ["initialValue", "keyframes"],
         path,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateAudioEffectInitialValue({
+        value: fade.initialValue,
+        property: "volume",
+        path: `${path}.initialValue`,
         errorFactory,
       });
       if (result?.valid === false) {
@@ -2722,8 +2778,20 @@ const validateAudioEffectFade = ({ fade, path, side, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: fade,
-      allowedKeys: ["delay", "duration", "easing"],
+      allowedKeys: ["initialValue", "delay", "duration", "easing"],
       path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  {
+    const result = validateAudioEffectInitialValue({
+      value: fade.initialValue,
+      property: "volume",
+      path: `${path}.initialValue`,
       errorFactory,
     });
     if (result?.valid === false) {
