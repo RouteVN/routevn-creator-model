@@ -295,6 +295,110 @@ const upgradeSchema4PayloadFixture = (fixture) => {
   };
 };
 
+const upgradeAudioEffectDefinitionToSchema14 = (definition) => {
+  const nextDefinition = structuredClone(definition);
+  if (nextDefinition?.type !== "transition") {
+    return nextDefinition;
+  }
+
+  for (const side of ["prev", "next"]) {
+    const tracks = nextDefinition[side];
+    const fade = tracks?.fade;
+    if (!fade) {
+      continue;
+    }
+
+    const volume = {};
+    if (fade.initialValue !== undefined) {
+      volume.initialValue = fade.initialValue;
+    }
+    if (Array.isArray(fade.keyframes)) {
+      volume.keyframes = structuredClone(fade.keyframes);
+    } else {
+      const keyframe = {
+        value: side === "prev" ? 0 : 100,
+        duration: fade.duration,
+      };
+      if (fade.delay !== undefined) {
+        keyframe.delay = fade.delay;
+      }
+      if (fade.easing !== undefined) {
+        keyframe.easing = fade.easing;
+      }
+      volume.keyframes = [keyframe];
+    }
+
+    delete tracks.fade;
+    tracks.volume = volume;
+  }
+
+  return nextDefinition;
+};
+
+const upgradeAudioEffectItemToSchema14 = (item) => {
+  const nextItem = structuredClone(item);
+  if (nextItem?.type === "audioEffect" && nextItem.audioEffect) {
+    nextItem.audioEffect = upgradeAudioEffectDefinitionToSchema14(
+      nextItem.audioEffect,
+    );
+  }
+  return nextItem;
+};
+
+const upgradeStateToSchema14 = (state) => {
+  const nextState = structuredClone(state);
+  const items = nextState.audioEffects?.items;
+  if (!items) {
+    return nextState;
+  }
+
+  for (const [itemId, item] of Object.entries(items)) {
+    items[itemId] = upgradeAudioEffectItemToSchema14(item);
+  }
+  return nextState;
+};
+
+const upgradePayloadToSchema14 = ({ type, payload }) => {
+  const nextPayload = structuredClone(payload);
+  if (type === "project.create" && nextPayload.state) {
+    nextPayload.state = upgradeStateToSchema14(nextPayload.state);
+  }
+  if (
+    (type === "audioEffect.create" || type === "audioEffect.update") &&
+    nextPayload.data?.audioEffect
+  ) {
+    nextPayload.data.audioEffect = upgradeAudioEffectDefinitionToSchema14(
+      nextPayload.data.audioEffect,
+    );
+  }
+  return nextPayload;
+};
+
+const upgradeSchema13StateFixture = (fixture) => ({
+  state: upgradeStateToSchema14(fixture.rawFixture.state),
+});
+
+const upgradeSchema13StreamFixture = (fixture) => ({
+  initialState: upgradeStateToSchema14(fixture.rawFixture.initialState),
+  commands: structuredClone(fixture.rawFixture.commands ?? []).map(
+    (command) => {
+      const nextCommand = structuredClone(command);
+      nextCommand.payload = upgradePayloadToSchema14(nextCommand);
+      return nextCommand;
+    },
+  ),
+  expectedFinalState:
+    fixture.rawFixture.expectedFinalState === undefined
+      ? undefined
+      : upgradeStateToSchema14(fixture.rawFixture.expectedFinalState),
+});
+
+const upgradeSchema13PayloadFixture = (fixture) => {
+  const upgraded = upgradeSchema4PayloadFixture(fixture);
+  upgraded.payload = upgradePayloadToSchema14(upgraded);
+  return upgraded;
+};
+
 const upgradeFixtureForCurrentSchema = (fixture) => {
   switch (fixture.schemaVersion) {
     case 1:
@@ -369,7 +473,38 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
     case 10:
     case 11:
     case 12:
+      if (fixture.kind === "state") {
+        return upgradeSchema4StateFixture(fixture);
+      }
+
+      if (fixture.kind === "stream") {
+        return upgradeSchema4StreamFixture(fixture);
+      }
+
+      if (fixture.kind === "payload") {
+        return upgradeSchema4PayloadFixture(fixture);
+      }
+
+      throw new Error(
+        `unsupported compatibility fixture kind: ${fixture.kind}`,
+      );
     case 13:
+      if (fixture.kind === "state") {
+        return upgradeSchema13StateFixture(fixture);
+      }
+
+      if (fixture.kind === "stream") {
+        return upgradeSchema13StreamFixture(fixture);
+      }
+
+      if (fixture.kind === "payload") {
+        return upgradeSchema13PayloadFixture(fixture);
+      }
+
+      throw new Error(
+        `unsupported compatibility fixture kind: ${fixture.kind}`,
+      );
+    case 14:
       if (fixture.kind === "state") {
         return upgradeSchema4StateFixture(fixture);
       }

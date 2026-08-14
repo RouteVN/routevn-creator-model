@@ -1,0 +1,7 @@
+schemaVersion: 14
+type: character.update
+payload:
+  characterId: item-a
+  data:
+    description: Lead actor
+    shortcut: "2"

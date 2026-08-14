@@ -1,0 +1,6 @@
+schemaVersion: 14
+type: transform.delete
+payload:
+  transformIds:
+    - item-a
+    - item-b

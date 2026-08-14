@@ -120,7 +120,7 @@ test("the package feature version matches the computed-variable schema line", ()
     .map(Number);
 
   expect(majorVersion).toBe(1);
-  expect(SCHEMA_VERSION).toBe(13);
+  expect(SCHEMA_VERSION).toBe(14);
   expect(featureVersion).toBe(SCHEMA_VERSION);
 });
 
