@@ -1005,7 +1005,7 @@ const createRichCompatibilityState = () => {
     audioEffect: {
       type: "transition",
       prev: {
-        fade: {
+        volume: {
           initialValue: 100,
           keyframes: [
             { value: 40, duration: 200, easing: "easeOutSine" },
@@ -1014,7 +1014,7 @@ const createRichCompatibilityState = () => {
         },
       },
       next: {
-        fade: {
+        volume: {
           initialValue: 0,
           keyframes: [
             { value: 60, duration: 300, easing: "easeOutSine" },
@@ -1808,7 +1808,7 @@ const payloadFixtures = [
       audioEffect: {
         type: "transition",
         prev: {
-          fade: {
+          volume: {
             initialValue: 100,
             keyframes: [
               { value: 40, duration: 200, easing: "easeOutSine" },
@@ -1817,7 +1817,7 @@ const payloadFixtures = [
           },
         },
         next: {
-          fade: {
+          volume: {
             initialValue: 0,
             keyframes: [
               { value: 60, duration: 300, easing: "easeOutSine" },
@@ -3906,7 +3906,7 @@ const streamFixtures = [
             audioEffect: {
               type: "transition",
               prev: {
-                fade: {
+                volume: {
                   initialValue: 100,
                   keyframes: [
                     { value: 40, duration: 200, easing: "easeOutSine" },
@@ -3915,7 +3915,7 @@ const streamFixtures = [
                 },
               },
               next: {
-                fade: {
+                volume: {
                   initialValue: 0,
                   keyframes: [
                     { value: 60, duration: 300, easing: "easeOutSine" },
@@ -4004,13 +4004,13 @@ const streamFixtures = [
             audioEffect: {
               type: "transition",
               prev: {
-                fade: {
+                volume: {
                   initialValue: 100,
                   keyframes: [{ value: 0, duration: 400 }],
                 },
               },
               next: {
-                fade: {
+                volume: {
                   initialValue: 0,
                   keyframes: [{ value: 100, duration: 600 }],
                 },
@@ -4074,13 +4074,13 @@ const streamFixtures = [
             audioEffect: {
               type: "transition",
               prev: {
-                fade: {
+                volume: {
                   initialValue: 100,
                   keyframes: [{ value: 0, duration: 400 }],
                 },
               },
               next: {
-                fade: {
+                volume: {
                   initialValue: 0,
                   keyframes: [{ value: 100, duration: 600 }],
                 },

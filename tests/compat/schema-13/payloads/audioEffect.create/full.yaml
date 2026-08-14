@@ -19,7 +19,7 @@ payload:
     audioEffect:
       type: transition
       prev:
-        fade:
+        volume:
           initialValue: 100
           keyframes:
             - value: 40
@@ -29,7 +29,7 @@ payload:
               duration: 400
               easing: easeInOutSine
       next:
-        fade:
+        volume:
           initialValue: 0
           keyframes:
             - value: 60

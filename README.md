@@ -354,8 +354,17 @@ Audio effects are foldered resources stored in `audioEffects.items` and
   },
   audioEffect: {
     type: "transition",
-    prev: { fade: { duration: 600, easing: "easeInOutSine" } },
-    next: { fade: { duration: 900, easing: "easeInOutSine" } },
+    prev: {
+      volume: {
+        keyframes: [{ value: 0, duration: 600, easing: "easeInOutSine" }],
+      },
+    },
+    next: {
+      volume: {
+        initialValue: 0,
+        keyframes: [{ value: 100, duration: 900, easing: "easeInOutSine" }],
+      },
+    },
   },
 }
 ```
@@ -365,12 +374,13 @@ transition effect, or a single `target` sound slot for an update effect. Each
 slot is an object containing a `soundId`.
 
 `audioEffect.type` is either `transition` or `update`. Transition effects have
-at least one `prev.fade` or `next.fade`. Update effects tween one or more of
-`volume`, `pan`, and `playbackRate`; each property has non-empty keyframes and
-must finish with an absolute numeric keyframe. That final number becomes the
-persistent BGM property value after the effect finishes. Absolute volume values
-are bounded to `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative
-keyframes represent unbounded numeric deltas and cannot be final.
+at least one property under `prev` or `next`; update effects place properties
+under `tween`. Both support only `volume`, `pan`, and `playbackRate`. Each
+property has non-empty keyframes and must finish with an absolute numeric
+keyframe. A final `tween` or `next` value becomes the persistent BGM property
+value after the effect finishes. Absolute volume values are bounded to
+`0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative keyframes
+represent unbounded numeric deltas and cannot be final.
 
 ## Current Scope
 

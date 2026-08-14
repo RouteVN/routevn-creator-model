@@ -34,7 +34,7 @@ const expectInvalidDefinition = (audioEffect, message) => {
 const createCrossfadeDefinition = () => ({
   type: "transition",
   prev: {
-    fade: {
+    volume: {
       keyframes: [
         {
           value: 40,
@@ -50,7 +50,8 @@ const createCrossfadeDefinition = () => ({
     },
   },
   next: {
-    fade: {
+    volume: {
+      initialValue: 0,
       keyframes: [
         {
           value: 60,
@@ -101,23 +102,26 @@ describe("audio effect definitions", () => {
     ).toEqual({ valid: true });
   });
 
-  test("accepts the legacy single-segment transition fade contract", () => {
+  test("accepts volume, pan, and playback-rate transition properties", () => {
     expect(
       validatePayload(
         createAudioEffectCommand({
           type: "transition",
           prev: {
-            fade: {
-              delay: 0,
-              duration: 600,
-              easing: "easeInOutSine",
+            volume: {
+              keyframes: [{ value: 0, duration: 600 }],
+            },
+            pan: {
+              keyframes: [{ value: -1, duration: 300 }],
             },
           },
           next: {
-            fade: {
-              delay: 0,
-              duration: 900,
-              easing: "easeInOutSine",
+            volume: {
+              initialValue: 0,
+              keyframes: [{ value: 100, duration: 900 }],
+            },
+            playbackRate: {
+              keyframes: [{ value: 1, duration: 500 }],
             },
           },
         }),
@@ -192,13 +196,13 @@ describe("audio effect definitions", () => {
         createAudioEffectCommand({
           type: "transition",
           prev: {
-            fade: {
+            volume: {
               initialValue: 90,
               keyframes: [{ startValue: 75, value: 0, duration: 100 }],
             },
           },
           next: {
-            fade: {
+            volume: {
               initialValue: 10,
               keyframes: [{ startValue: 25, value: 100, duration: 100 }],
             },
@@ -232,65 +236,77 @@ describe("audio effect definitions", () => {
     [
       "an empty update tween",
       { type: "update", tween: {} },
-      "at least one tween property",
+      "at least one audio property",
     ],
     [
       "unsupported tween properties",
       { type: "update", tween: { pitch: { keyframes: [] } } },
-      "not a supported audio effect tween property",
+      "not a supported audio effect property",
     ],
     [
-      "a transition fade",
+      "a transition property",
       { type: "transition", prev: {} },
-      ".fade is required",
+      "at least one audio property",
     ],
     [
-      "fade duration",
-      { type: "transition", prev: { fade: { delay: 0 } } },
+      "transition keyframes",
+      { type: "transition", prev: { volume: {} } },
+      ".keyframes is required",
+    ],
+    [
+      "transition keyframe duration",
+      {
+        type: "transition",
+        prev: { volume: { keyframes: [{ value: 0 }] } },
+      },
       ".duration is required",
     ],
     [
-      "non-negative fade timing",
-      { type: "transition", prev: { fade: { duration: -1 } } },
+      "non-negative transition timing",
+      {
+        type: "transition",
+        prev: { volume: { keyframes: [{ value: 0, duration: -1 }] } },
+      },
       "finite number >= 0",
     ],
     [
       "known easing names",
       {
         type: "transition",
-        next: { fade: { duration: 1, easing: "unknown" } },
+        next: {
+          volume: {
+            keyframes: [{ value: 100, duration: 1, easing: "unknown" }],
+          },
+        },
       },
       "supported Route Graphics easing",
     ],
     [
-      "non-empty transition fade keyframes",
-      { type: "transition", prev: { fade: { keyframes: [] } } },
+      "non-empty transition keyframes",
+      { type: "transition", prev: { volume: { keyframes: [] } } },
       "must be a non-empty array",
     ],
     [
-      "normalized transition fade values",
+      "bounded transition property values",
       {
         type: "transition",
         prev: {
-          fade: { keyframes: [{ value: 101, duration: 1 }] },
+          volume: { keyframes: [{ value: 101, duration: 1 }] },
         },
       },
       "between 0 and 100",
     ],
     [
-      "absolute transition fade keyframes",
+      "an absolute final transition keyframe",
       {
         type: "transition",
         next: {
-          fade: {
-            keyframes: [
-              { value: 10, duration: 1, relative: true },
-              { value: 100, duration: 1 },
-            ],
+          volume: {
+            keyframes: [{ value: 10, duration: 1, relative: true }],
           },
         },
       },
-      "relative is not supported",
+      "absolute numeric value",
     ],
     [
       "non-empty keyframes",
@@ -334,19 +350,23 @@ describe("audio effect definitions", () => {
     expectInvalidDefinition(definition, message);
   });
 
-  test.each([
-    ["outgoing", "prev", 35],
-    ["incoming", "next", 65],
-  ])("accepts an editable %s final fade value", (_label, side, value) => {
-    expect(
-      validatePayload(
-        createAudioEffectCommand({
-          type: "transition",
-          [side]: { fade: { keyframes: [{ value, duration: 100 }] } },
-        }),
-      ),
-    ).toEqual({ valid: true });
-  });
+  test.each(["prev", "next"])(
+    "accepts every supported transition property on %s",
+    (side) => {
+      expect(
+        validatePayload(
+          createAudioEffectCommand({
+            type: "transition",
+            [side]: {
+              volume: { keyframes: [{ value: 35, duration: 100 }] },
+              pan: { keyframes: [{ value: 0.5, duration: 100 }] },
+              playbackRate: { keyframes: [{ value: 1.25, duration: 100 }] },
+            },
+          }),
+        ),
+      ).toEqual({ valid: true });
+    },
+  );
 
   test.each([
     ["volume", -1, "between 0 and 100"],
