@@ -20,6 +20,7 @@ payload:
       type: transition
       prev:
         fade:
+          initialValue: 100
           keyframes:
             - value: 40
               duration: 200
@@ -29,6 +30,7 @@ payload:
               easing: easeInOutSine
       next:
         fade:
+          initialValue: 0
           keyframes:
             - value: 60
               duration: 300

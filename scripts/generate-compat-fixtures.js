@@ -1006,6 +1006,7 @@ const createRichCompatibilityState = () => {
       type: "transition",
       prev: {
         fade: {
+          initialValue: 100,
           keyframes: [
             { value: 40, duration: 200, easing: "easeOutSine" },
             { value: 0, duration: 400, easing: "easeInOutSine" },
@@ -1014,6 +1015,7 @@ const createRichCompatibilityState = () => {
       },
       next: {
         fade: {
+          initialValue: 0,
           keyframes: [
             { value: 60, duration: 300, easing: "easeOutSine" },
             { value: 100, duration: 600, easing: "easeInOutSine" },
@@ -1031,6 +1033,7 @@ const createRichCompatibilityState = () => {
       type: "update",
       tween: {
         volume: {
+          initialValue: 90,
           keyframes: [
             {
               startValue: 80,
@@ -1806,6 +1809,7 @@ const payloadFixtures = [
         type: "transition",
         prev: {
           fade: {
+            initialValue: 100,
             keyframes: [
               { value: 40, duration: 200, easing: "easeOutSine" },
               { value: 0, duration: 400, easing: "easeInOutSine" },
@@ -1814,6 +1818,7 @@ const payloadFixtures = [
         },
         next: {
           fade: {
+            initialValue: 0,
             keyframes: [
               { value: 60, duration: 300, easing: "easeOutSine" },
               { value: 100, duration: 600, easing: "easeInOutSine" },
@@ -1835,6 +1840,7 @@ const payloadFixtures = [
         type: "update",
         tween: {
           volume: {
+            initialValue: 90,
             keyframes: [
               {
                 startValue: 80,
@@ -1850,9 +1856,11 @@ const payloadFixtures = [
             ],
           },
           pan: {
+            initialValue: -0.5,
             keyframes: [{ value: 0, duration: 250 }],
           },
           playbackRate: {
+            initialValue: 1.25,
             keyframes: [
               { value: 0.25, duration: 100, relative: true },
               { value: 1, duration: 200 },
@@ -3899,6 +3907,7 @@ const streamFixtures = [
               type: "transition",
               prev: {
                 fade: {
+                  initialValue: 100,
                   keyframes: [
                     { value: 40, duration: 200, easing: "easeOutSine" },
                     { value: 0, duration: 400, easing: "easeInOutSine" },
@@ -3907,6 +3916,7 @@ const streamFixtures = [
               },
               next: {
                 fade: {
+                  initialValue: 0,
                   keyframes: [
                     { value: 60, duration: 300, easing: "easeOutSine" },
                     { value: 100, duration: 600, easing: "easeInOutSine" },
@@ -3930,6 +3940,7 @@ const streamFixtures = [
               type: "update",
               tween: {
                 volume: {
+                  initialValue: 90,
                   keyframes: [
                     {
                       startValue: 80,
@@ -3977,6 +3988,134 @@ const streamFixtures = [
         payload: { audioEffectIds: ["folder-audio-effects"] },
       },
     ],
+  },
+  {
+    fixtureName: "audio-effect-initial-values",
+    initialState: createEmptyTestState(),
+    commands: [
+      { type: "project.create", payload: { state: createEmptyTestState() } },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "initial-crossfade",
+          data: {
+            type: "audioEffect",
+            name: "Initial Crossfade",
+            audioEffect: {
+              type: "transition",
+              prev: {
+                fade: {
+                  initialValue: 100,
+                  keyframes: [{ value: 0, duration: 400 }],
+                },
+              },
+              next: {
+                fade: {
+                  initialValue: 0,
+                  keyframes: [{ value: 100, duration: 600 }],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.create",
+        payload: {
+          audioEffectId: "initial-update",
+          data: {
+            type: "audioEffect",
+            name: "Initial Update",
+            audioEffect: {
+              type: "update",
+              tween: {
+                volume: {
+                  initialValue: 100,
+                  keyframes: [{ value: 75, duration: 100 }],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "audioEffect.update",
+        payload: {
+          audioEffectId: "initial-update",
+          data: {
+            audioEffect: {
+              type: "update",
+              tween: {
+                volume: {
+                  initialValue: 90,
+                  keyframes: [{ startValue: 75, value: 50, duration: 100 }],
+                },
+                pan: {
+                  initialValue: -0.5,
+                  keyframes: [{ value: 0, duration: 100 }],
+                },
+                playbackRate: {
+                  initialValue: 1.25,
+                  keyframes: [{ value: 1, duration: 100 }],
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+    expectedFinalState: {
+      audioEffects: {
+        items: {
+          "initial-crossfade": {
+            id: "initial-crossfade",
+            type: "audioEffect",
+            name: "Initial Crossfade",
+            audioEffect: {
+              type: "transition",
+              prev: {
+                fade: {
+                  initialValue: 100,
+                  keyframes: [{ value: 0, duration: 400 }],
+                },
+              },
+              next: {
+                fade: {
+                  initialValue: 0,
+                  keyframes: [{ value: 100, duration: 600 }],
+                },
+              },
+            },
+          },
+          "initial-update": {
+            id: "initial-update",
+            type: "audioEffect",
+            name: "Initial Update",
+            audioEffect: {
+              type: "update",
+              tween: {
+                volume: {
+                  initialValue: 90,
+                  keyframes: [{ startValue: 75, value: 50, duration: 100 }],
+                },
+                pan: {
+                  initialValue: -0.5,
+                  keyframes: [{ value: 0, duration: 100 }],
+                },
+                playbackRate: {
+                  initialValue: 1.25,
+                  keyframes: [{ value: 1, duration: 100 }],
+                },
+              },
+            },
+          },
+        },
+        tree: [
+          createTreeNode("initial-crossfade"),
+          createTreeNode("initial-update"),
+        ],
+      },
+    },
   },
   {
     fixtureName: "character-crud",
@@ -4769,6 +4908,9 @@ const generateStreamFixtures = async () => {
         schemaVersion: SCHEMA_VERSION,
         initialState: fixture.initialState,
         commands: fixture.commands,
+        ...(fixture.expectedFinalState === undefined
+          ? {}
+          : { expectedFinalState: fixture.expectedFinalState }),
       },
     );
   }
