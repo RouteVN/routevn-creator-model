@@ -10,6 +10,36 @@ const COMPAT_SCHEMA_ROOT = new URL(
 
 const clone = (value) => structuredClone(value);
 
+const createCameraAnimation = () => ({
+  type: "animation",
+  name: "Camera One",
+  cameraTracks: ["update"],
+  animation: {
+    type: "update",
+    tween: Object.fromEntries(
+      Object.entries({ x: 640, y: 360, scaleX: 1, scaleY: 1 }).map(
+        ([key, value]) => [
+          key,
+          {
+            initialValue: value,
+            keyframes: [{ duration: 1000, value, easing: "linear" }],
+          },
+        ],
+      ),
+    ),
+  },
+});
+
+const createCameraState = () => {
+  const state = createEmptyTestState();
+  state.animations.items["camera-one"] = {
+    id: "camera-one",
+    ...createCameraAnimation(),
+  };
+  state.animations.tree = [{ id: "camera-one", children: [] }];
+  return state;
+};
+
 const createTreeNode = (id, children = []) => ({ id, children });
 
 const createEmptyNestedCollection = () => ({
@@ -1193,6 +1223,27 @@ const createFolderedPayloadSets = ({
 };
 
 const payloadFixtures = [
+  {
+    type: "animation.create",
+    fixtureName: "camera",
+    payload: { animationId: "camera-one", data: createCameraAnimation() },
+  },
+  {
+    type: "animation.update",
+    fixtureName: "camera",
+    payload: {
+      animationId: "camera-one",
+      data: {
+        cameraTracks: ["update"],
+        animation: createCameraAnimation().animation,
+      },
+    },
+  },
+  {
+    type: "animation.update",
+    fixtureName: "camera-ungroup",
+    payload: { animationId: "camera-one", data: { cameraTracks: [] } },
+  },
   ...payloadSet(
     "project.create",
     {
@@ -2990,6 +3041,7 @@ const payloadFixtures = [
 ];
 
 const stateFixtures = [
+  { fixtureName: "camera-project", state: createCameraState() },
   {
     fixtureName: "minimal-project",
     state: createEmptyTestState(),
@@ -3013,6 +3065,38 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    fixtureName: "animation-camera",
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "animation.create",
+        payload: { animationId: "camera-one", data: createCameraAnimation() },
+      },
+      {
+        type: "animation.update",
+        payload: { animationId: "camera-one", data: { name: "Camera Two" } },
+      },
+      {
+        type: "animation.update",
+        payload: {
+          animationId: "camera-one",
+          data: {
+            cameraTracks: ["prev", "next"],
+            animation: {
+              type: "transition",
+              prev: { tween: createCameraAnimation().animation.tween },
+              next: { tween: createCameraAnimation().animation.tween },
+            },
+          },
+        },
+      },
+      {
+        type: "animation.update",
+        payload: { animationId: "camera-one", data: { cameraTracks: [] } },
+      },
+    ],
+  },
   {
     fixtureName: "story-crud",
     initialState: createEmptyTestState(),

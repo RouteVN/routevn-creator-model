@@ -408,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 13;
+export const SCHEMA_VERSION = 14;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2345,6 +2345,82 @@ const validateAnimationDefinition = ({ animation, path, errorFactory }) => {
   }
 };
 
+// Camera is an authored grouping of four synchronized runtime tween tracks.
+// No grouping is inferred for older animations that omit cameraTracks.
+const validateCameraTracks = ({ value, animation, path, errorFactory }) => {
+  if (value === undefined) return;
+  if (
+    !Array.isArray(value) ||
+    value.some((side) => !["update", "prev", "next"].includes(side)) ||
+    new Set(value).size !== value.length
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an array of unique update, prev, or next sides`,
+    );
+  }
+  // Partial update payloads are checked against the merged resource below.
+  if (animation === undefined) return;
+  for (const side of value) {
+    const tween = side === "update" ? animation.tween : animation[side]?.tween;
+    const validSide =
+      animation.type === "update" ? side === "update" : side !== "update";
+    const properties = ["x", "y", "scaleX", "scaleY"];
+    const tracks = properties.map((property) => tween?.[property]);
+    if (
+      !validSide ||
+      tracks.some(
+        (track) =>
+          !Array.isArray(track?.keyframes) ||
+          !Number.isFinite(track.initialValue),
+      ) ||
+      tween.translateX !== undefined ||
+      tween.translateY !== undefined
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${side} requires x, y, scaleX, and scaleY keyframe tracks with initial values and no translation tracks`,
+      );
+    }
+    const reference = tracks[0].keyframes;
+    for (const [index, track] of tracks.entries()) {
+      if (
+        track.keyframes.length !== reference.length ||
+        track.keyframes.some((frame, frameIndex) => {
+          const other = reference[frameIndex];
+          return (
+            frame.relative === true ||
+            frame.duration !== other.duration ||
+            (frame.delay ?? 0) !== (other.delay ?? 0) ||
+            (frame.easing ?? "linear") !== (other.easing ?? "linear") ||
+            (frame.startValue !== undefined) !==
+              (other.startValue !== undefined)
+          );
+        })
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path}.${side} requires synchronized absolute keyframes`,
+        );
+      }
+      if (
+        index >= 2 &&
+        (track.initialValue <= 0 ||
+          track.keyframes.some(
+            (frame) =>
+              frame.value <= 0 ||
+              (frame.startValue !== undefined && frame.startValue <= 0),
+          ))
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${path}.${side} requires positive camera scales`,
+        );
+      }
+    }
+  }
+};
+
 const validateAnimationItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -2370,6 +2446,7 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
                 "tagIds",
                 "thumbnailFileId",
                 "preview",
+                "cameraTracks",
                 "animation",
               ],
         path: itemPath,
@@ -2452,6 +2529,13 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
           return result;
         }
       }
+      const cameraResult = validateCameraTracks({
+        value: item.cameraTracks,
+        animation: item.animation,
+        path: `${itemPath}.cameraTracks`,
+        errorFactory,
+      });
+      if (cameraResult?.valid === false) return cameraResult;
     }
   }
 };
@@ -12260,6 +12344,7 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
               "tagIds",
               "thumbnailFileId",
               "preview",
+              "cameraTracks",
               "animation",
             ],
       path: "payload.data",
@@ -12327,6 +12412,12 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
         return result;
       }
     }
+    return validateCameraTracks({
+      value: data.cameraTracks,
+      animation: data.animation,
+      path: "payload.data.cameraTracks",
+      errorFactory,
+    });
   }
 };
 
@@ -12340,6 +12431,7 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
         "tagIds",
         "thumbnailFileId",
         "preview",
+        "cameraTracks",
         "animation",
       ],
       path: "payload.data",
@@ -12415,6 +12507,12 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
       }
     }
   }
+  return validateCameraTracks({
+    value: data.cameraTracks,
+    animation: data.animation,
+    path: "payload.data.cameraTracks",
+    errorFactory,
+  });
 };
 
 const validateAudioEffectCreateData = ({ data, errorFactory }) => {
@@ -19066,6 +19164,9 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.preview !== undefined) {
           nextAnimation.preview = structuredClone(payload.data.preview);
         }
+        if (payload.data.cameraTracks !== undefined) {
+          nextAnimation.cameraTracks = [...payload.data.cameraTracks];
+        }
         nextAnimation.animation = structuredClone(payload.data.animation);
       }
 
@@ -19135,6 +19236,13 @@ const COMMAND_DEFINITIONS = [
       }
 
       if (currentAnimation.type === "animation") {
+        const cameraResult = validateCameraTracks({
+          value: payload.data.cameraTracks ?? currentAnimation.cameraTracks,
+          animation: payload.data.animation ?? currentAnimation.animation,
+          path: "payload.data.cameraTracks",
+          errorFactory: createPreconditionValidationError,
+        });
+        if (cameraResult?.valid === false) return cameraResult;
         if (payload.data.animation !== undefined) {
           const result = validateAnimationMaskImageReferences({
             state,

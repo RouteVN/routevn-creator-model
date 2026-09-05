@@ -1,0 +1,212 @@
+schemaVersion: 14
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    audioEffects:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  voices:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  audioEffects:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: animation.create
+    payload:
+      animationId: camera-one
+      data:
+        type: animation
+        name: Camera One
+        cameraTracks:
+          - update
+        animation:
+          type: update
+          tween:
+            x:
+              initialValue: 640
+              keyframes:
+                - duration: 1000
+                  value: 640
+                  easing: linear
+            "y":
+              initialValue: 360
+              keyframes:
+                - duration: 1000
+                  value: 360
+                  easing: linear
+            scaleX:
+              initialValue: 1
+              keyframes:
+                - duration: 1000
+                  value: 1
+                  easing: linear
+            scaleY:
+              initialValue: 1
+              keyframes:
+                - duration: 1000
+                  value: 1
+                  easing: linear
+  - type: animation.update
+    payload:
+      animationId: camera-one
+      data:
+        name: Camera Two
+  - type: animation.update
+    payload:
+      animationId: camera-one
+      data:
+        cameraTracks:
+          - prev
+          - next
+        animation:
+          type: transition
+          prev:
+            tween:
+              x:
+                initialValue: 640
+                keyframes:
+                  - duration: 1000
+                    value: 640
+                    easing: linear
+              "y":
+                initialValue: 360
+                keyframes:
+                  - duration: 1000
+                    value: 360
+                    easing: linear
+              scaleX:
+                initialValue: 1
+                keyframes:
+                  - duration: 1000
+                    value: 1
+                    easing: linear
+              scaleY:
+                initialValue: 1
+                keyframes:
+                  - duration: 1000
+                    value: 1
+                    easing: linear
+          next:
+            tween:
+              x:
+                initialValue: 640
+                keyframes:
+                  - duration: 1000
+                    value: 640
+                    easing: linear
+              "y":
+                initialValue: 360
+                keyframes:
+                  - duration: 1000
+                    value: 360
+                    easing: linear
+              scaleX:
+                initialValue: 1
+                keyframes:
+                  - duration: 1000
+                    value: 1
+                    easing: linear
+              scaleY:
+                initialValue: 1
+                keyframes:
+                  - duration: 1000
+                    value: 1
+                    easing: linear
+  - type: animation.update
+    payload:
+      animationId: camera-one
+      data:
+        cameraTracks: []

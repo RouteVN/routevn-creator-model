@@ -106,6 +106,21 @@ Design rules:
 - random ids across RouteVN should use `nanoid` with the RouteVN base58 variant;
   deterministic derived tokens such as partition hashes are a separate case
 
+## Animation Camera Tracks
+
+Animation resources may explicitly group synchronized position and scale tracks
+with `cameraTracks: ["update"]`, or `["prev", "next"]` for transitions.
+Each listed side must contain `x`, `y`, `scaleX`, and `scaleY` keyframe
+tracks with numeric initial values, matching timing/easing and start-value
+presence, absolute values, and positive scales. Translation tracks cannot
+coexist with Camera on the same side.
+
+This authoring marker does not alter the runtime animation format. Existing
+animations without the marker remain separate tracks; no grouping is inferred.
+An update may use `cameraTracks: []` to remove grouping. Updates to animation
+data are validated with the resource's retained grouping unless it is replaced
+in the same command.
+
 ## Font Weight Metadata
 
 Font resources may store extracted weight capabilities in three flat fields:
