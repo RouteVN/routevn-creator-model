@@ -1,0 +1,7 @@
+schemaVersion: 14
+type: tag.delete
+payload:
+  scopeKey: characterSprites:character-hero
+  tagIds:
+    - tag-smile
+    - tag-angry

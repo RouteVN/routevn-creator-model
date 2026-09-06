@@ -1,0 +1,7 @@
+schemaVersion: 14
+type: color.move
+payload:
+  colorId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b

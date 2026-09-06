@@ -1,0 +1,284 @@
+schemaVersion: 14
+initialState:
+  project: {}
+  story:
+    initialSceneId: null
+  tags:
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    controls:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    audioEffects:
+      items: {}
+      tree: []
+    particles:
+      items: {}
+      tree: []
+    spritesheets:
+      items: {}
+      tree: []
+  scenes:
+    items: {}
+    tree: []
+  files:
+    items: {}
+    tree: []
+  images:
+    items: {}
+    tree: []
+  spritesheets:
+    items: {}
+    tree: []
+  sounds:
+    items: {}
+    tree: []
+  voices:
+    items: {}
+    tree: []
+  videos:
+    items: {}
+    tree: []
+  animations:
+    items: {}
+    tree: []
+  audioEffects:
+    items: {}
+    tree: []
+  particles:
+    items: {}
+    tree: []
+  characters:
+    items: {}
+    tree: []
+  fonts:
+    items: {}
+    tree: []
+  transforms:
+    items: {}
+    tree: []
+  colors:
+    items: {}
+    tree: []
+  textStyles:
+    items: {}
+    tree: []
+  variables:
+    items: {}
+    tree: []
+  layouts:
+    items: {}
+    tree: []
+  controls:
+    items: {}
+    tree: []
+commands:
+  - type: project.create
+    payload:
+      state:
+        project: {}
+        story:
+          initialSceneId: null
+        tags:
+          images:
+            items: {}
+            tree: []
+          sounds:
+            items: {}
+            tree: []
+          videos:
+            items: {}
+            tree: []
+          characters:
+            items: {}
+            tree: []
+          fonts:
+            items: {}
+            tree: []
+          transforms:
+            items: {}
+            tree: []
+          colors:
+            items: {}
+            tree: []
+          textStyles:
+            items: {}
+            tree: []
+          variables:
+            items: {}
+            tree: []
+          layouts:
+            items: {}
+            tree: []
+          controls:
+            items: {}
+            tree: []
+          animations:
+            items: {}
+            tree: []
+          audioEffects:
+            items: {}
+            tree: []
+          particles:
+            items: {}
+            tree: []
+          spritesheets:
+            items: {}
+            tree: []
+        scenes:
+          items: {}
+          tree: []
+        files:
+          items: {}
+          tree: []
+        images:
+          items: {}
+          tree: []
+        spritesheets:
+          items: {}
+          tree: []
+        sounds:
+          items: {}
+          tree: []
+        voices:
+          items: {}
+          tree: []
+        videos:
+          items: {}
+          tree: []
+        animations:
+          items: {}
+          tree: []
+        audioEffects:
+          items: {}
+          tree: []
+        particles:
+          items: {}
+          tree: []
+        characters:
+          items: {}
+          tree: []
+        fonts:
+          items: {}
+          tree: []
+        transforms:
+          items: {}
+          tree: []
+        colors:
+          items: {}
+          tree: []
+        textStyles:
+          items: {}
+          tree: []
+        variables:
+          items: {}
+          tree: []
+        layouts:
+          items: {}
+          tree: []
+        controls:
+          items: {}
+          tree: []
+  - type: file.create
+    payload:
+      fileId: file-image
+      data:
+        mimeType: image/png
+        size: 256
+        sha256: file-image-sha256
+  - type: file.create
+    payload:
+      fileId: file-smile
+      data:
+        mimeType: image/png
+        size: 256
+        sha256: file-smile-sha256
+  - type: character.create
+    payload:
+      characterId: character-hero
+      data:
+        type: character
+        name: Hero
+        sprites:
+          items: {}
+          tree: []
+  - type: tag.create
+    payload:
+      scopeKey: images
+      tagId: tag-bg
+      data:
+        type: tag
+        name: Background
+  - type: tag.create
+    payload:
+      scopeKey: characterSprites:character-hero
+      tagId: tag-smile
+      data:
+        type: tag
+        name: Smile
+  - type: image.create
+    payload:
+      imageId: image-a
+      data:
+        type: image
+        name: Background
+        fileId: file-image
+        tagIds:
+          - tag-bg
+  - type: character.sprite.create
+    payload:
+      characterId: character-hero
+      spriteId: sprite-smile
+      data:
+        type: image
+        name: Smile
+        fileId: file-smile
+        tagIds:
+          - tag-smile
+  - type: tag.update
+    payload:
+      scopeKey: images
+      tagId: tag-bg
+      data:
+        name: Backdrop
+        color: "#112233"
+  - type: tag.delete
+    payload:
+      scopeKey: images
+      tagIds:
+        - tag-bg
+  - type: character.delete
+    payload:
+      characterIds:
+        - character-hero
