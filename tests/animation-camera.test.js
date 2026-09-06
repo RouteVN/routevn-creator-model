@@ -35,6 +35,47 @@ const updateCommand = (data) => ({
 });
 
 describe("animation Camera grouping", () => {
+  it.each(["update", "prev", "next"])(
+    "supports removing and restoring the %s Camera initial pose without changing keyframes",
+    (side) => {
+      const data = createData();
+      data.cameraTracks = [side];
+      if (side !== "update") {
+        data.animation = {
+          type: "transition",
+          [side]: { tween: createTween() },
+        };
+      }
+      const original = structuredClone(data.animation);
+      const animation = structuredClone(original);
+      const tween = side === "update" ? animation.tween : animation[side].tween;
+      for (const track of Object.values(tween)) delete track.initialValue;
+      const implicitData = { ...data, animation };
+      expect(validatePayload(createCommand(implicitData))).toEqual({
+        valid: true,
+      });
+      const initialState = createEmptyTestState();
+      const commands = [createCommand(data), updateCommand({ animation })];
+      const removed = replayCommands({ state: initialState, commands });
+      expect(removed.valid).toBe(true);
+      expect(validateState({ state: removed.state })).toEqual({ valid: true });
+      expect(removed.state.animations.items["camera-one"].animation).toEqual(
+        animation,
+      );
+      expect(removed.state.animations.items["camera-one"].cameraTracks).toEqual(
+        [side],
+      );
+      const restored = processCommand({
+        state: removed.state,
+        command: updateCommand({ animation: original }),
+      });
+      expect(restored.valid).toBe(true);
+      expect(restored.state.animations.items["camera-one"].animation).toEqual(
+        original,
+      );
+    },
+  );
+
   it("creates, edits, replays, and removes grouping without mutating prior state", () => {
     const initialState = createEmptyTestState();
     const commands = [

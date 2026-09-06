@@ -1,0 +1,28 @@
+schemaVersion: 14
+type: animation.update
+payload:
+  animationId: camera-one
+  data:
+    animation:
+      type: update
+      tween:
+        x:
+          keyframes:
+            - duration: 1000
+              value: 640
+              easing: linear
+        "y":
+          keyframes:
+            - duration: 1000
+              value: 360
+              easing: linear
+        scaleX:
+          keyframes:
+            - duration: 1000
+              value: 1
+              easing: linear
+        scaleY:
+          keyframes:
+            - duration: 1000
+              value: 1
+              easing: linear

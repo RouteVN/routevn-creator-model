@@ -111,9 +111,10 @@ Design rules:
 Animation resources may explicitly group synchronized position and scale tracks
 with `cameraTracks: ["update"]`, or `["prev", "next"]` for transitions.
 Each listed side must contain `x`, `y`, `scaleX`, and `scaleY` keyframe
-tracks with numeric initial values, matching timing/easing and start-value
-presence, absolute values, and positive scales. Translation tracks cannot
-coexist with Camera on the same side.
+tracks with matching timing/easing and start-value presence, absolute values,
+and positive scales. Track initial values are optional; they must be numeric
+on all four tracks or omitted from all four to use the target's existing pose.
+Translation tracks cannot coexist with Camera on the same side.
 
 This authoring marker does not alter the runtime animation format. Existing
 animations without the marker remain separate tracks; no grouping is inferred.

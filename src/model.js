@@ -2372,14 +2372,17 @@ const validateCameraTracks = ({ value, animation, path, errorFactory }) => {
       tracks.some(
         (track) =>
           !Array.isArray(track?.keyframes) ||
-          !Number.isFinite(track.initialValue),
+          (track.initialValue !== undefined &&
+            !Number.isFinite(track.initialValue)) ||
+          (track.initialValue !== undefined) !==
+            (tracks[0]?.initialValue !== undefined),
       ) ||
       tween.translateX !== undefined ||
       tween.translateY !== undefined
     ) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${path}.${side} requires x, y, scaleX, and scaleY keyframe tracks with initial values and no translation tracks`,
+        `${path}.${side} requires x, y, scaleX, and scaleY keyframe tracks with matching initial-value presence and no translation tracks`,
       );
     }
     const reference = tracks[0].keyframes;
@@ -2405,7 +2408,7 @@ const validateCameraTracks = ({ value, animation, path, errorFactory }) => {
       }
       if (
         index >= 2 &&
-        (track.initialValue <= 0 ||
+        ((track.initialValue !== undefined && track.initialValue <= 0) ||
           track.keyframes.some(
             (frame) =>
               frame.value <= 0 ||

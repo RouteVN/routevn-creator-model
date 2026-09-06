@@ -30,11 +30,19 @@ const createCameraAnimation = () => ({
   },
 });
 
-const createCameraState = () => {
+const createCameraWithoutInitialValue = () => {
+  const data = createCameraAnimation();
+  for (const track of Object.values(data.animation.tween)) {
+    delete track.initialValue;
+  }
+  return data;
+};
+
+const createCameraState = (data = createCameraAnimation()) => {
   const state = createEmptyTestState();
   state.animations.items["camera-one"] = {
     id: "camera-one",
-    ...createCameraAnimation(),
+    ...data,
   };
   state.animations.tree = [{ id: "camera-one", children: [] }];
   return state;
@@ -1223,6 +1231,22 @@ const createFolderedPayloadSets = ({
 };
 
 const payloadFixtures = [
+  {
+    type: "animation.create",
+    fixtureName: "camera-without-initial-value",
+    payload: {
+      animationId: "camera-one",
+      data: createCameraWithoutInitialValue(),
+    },
+  },
+  {
+    type: "animation.update",
+    fixtureName: "camera-remove-initial-value",
+    payload: {
+      animationId: "camera-one",
+      data: { animation: createCameraWithoutInitialValue().animation },
+    },
+  },
   {
     type: "animation.create",
     fixtureName: "camera",
@@ -3043,6 +3067,10 @@ const payloadFixtures = [
 const stateFixtures = [
   { fixtureName: "camera-project", state: createCameraState() },
   {
+    fixtureName: "camera-project-without-initial-value",
+    state: createCameraState(createCameraWithoutInitialValue()),
+  },
+  {
     fixtureName: "minimal-project",
     state: createEmptyTestState(),
   },
@@ -3076,6 +3104,13 @@ const streamFixtures = [
       {
         type: "animation.update",
         payload: { animationId: "camera-one", data: { name: "Camera Two" } },
+      },
+      {
+        type: "animation.update",
+        payload: {
+          animationId: "camera-one",
+          data: { animation: createCameraWithoutInitialValue().animation },
+        },
       },
       {
         type: "animation.update",
