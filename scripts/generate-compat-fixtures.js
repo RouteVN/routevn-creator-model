@@ -1230,7 +1230,18 @@ const createFolderedPayloadSets = ({
   ];
 };
 
+const createDefaultAvatarState = () => {
+  const state = createRichCompatibilityState();
+  state.project.defaultDialogueAvatarTransformId = "transform-rich";
+  return state;
+};
+
 const payloadFixtures = [
+  ...payloadSet(
+    "project.set_default_dialogue_avatar_transform",
+    { transformId: null },
+    { transformId: "transform-rich" },
+  ),
   {
     type: "animation.create",
     fixtureName: "camera-without-initial-value",
@@ -3065,6 +3076,10 @@ const payloadFixtures = [
 ];
 
 const stateFixtures = [
+  {
+    fixtureName: "default-dialogue-avatar-project",
+    state: createDefaultAvatarState(),
+  },
   { fixtureName: "camera-project", state: createCameraState() },
   {
     fixtureName: "camera-project-without-initial-value",
@@ -3093,6 +3108,49 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    fixtureName: "default-dialogue-avatar-transform",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "transform.create",
+        payload: {
+          transformId: "transform-second",
+          data: {
+            type: "transform",
+            name: "Transform Two",
+            x: 0,
+            y: 0,
+            scaleX: 1,
+            scaleY: 1,
+            anchorX: 0,
+            anchorY: 0,
+            rotation: 0,
+          },
+        },
+      },
+      {
+        type: "project.set_default_dialogue_avatar_transform",
+        payload: { transformId: "transform-second" },
+      },
+      {
+        type: "project.set_default_dialogue_avatar_transform",
+        payload: { transformId: "transform-rich" },
+      },
+      {
+        type: "project.set_default_dialogue_avatar_transform",
+        payload: { transformId: null },
+      },
+      {
+        type: "project.set_default_dialogue_avatar_transform",
+        payload: { transformId: "transform-rich" },
+      },
+      {
+        type: "transform.delete",
+        payload: { transformIds: ["transform-rich"] },
+      },
+    ],
+  },
   {
     fixtureName: "animation-camera",
     initialState: createEmptyTestState(),

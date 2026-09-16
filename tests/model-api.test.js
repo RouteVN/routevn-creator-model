@@ -5384,6 +5384,7 @@ test("validateAgainstState rejects deleting folders that contain referenced file
 test("registry exposes only fully implemented command types", () => {
   expect(listCommandTypes()).toEqual([
     "project.create",
+    "project.set_default_dialogue_avatar_transform",
     "file.create",
     "file.delete",
     "file.move",

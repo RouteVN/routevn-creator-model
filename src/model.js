@@ -408,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 14;
+export const SCHEMA_VERSION = 15;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -9050,6 +9050,21 @@ export const assertInvariants = ({ state }) => {
     return invalidInvariant("state must be an object");
   }
 
+  const defaultTransformId = state.project?.defaultDialogueAvatarTransformId;
+  if (defaultTransformId !== undefined) {
+    if (!isNonEmptyString(defaultTransformId)) {
+      return invalidInvariant(
+        "project.defaultDialogueAvatarTransformId must be a non-empty string",
+      );
+    }
+    if (state.transforms?.items?.[defaultTransformId]?.type !== "transform") {
+      return invalidInvariant(
+        "project.defaultDialogueAvatarTransformId must reference an existing transform",
+        { transformId: defaultTransformId },
+      );
+    }
+  }
+
   const initialSceneId = state.story?.initialSceneId;
   const sceneItems = state?.scenes?.items;
 
@@ -10358,7 +10373,7 @@ const runValidateState = ({ state }) => {
     {
       const result = validateAllowedKeys({
         value: normalizedState.project,
-        allowedKeys: ["resolution"],
+        allowedKeys: ["resolution", "defaultDialogueAvatarTransformId"],
         path: "state.project",
         errorFactory: createStateValidationError,
       });
@@ -15791,6 +15806,51 @@ const COMMAND_DEFINITIONS = [
     reduce: ({ payload }) =>
       structuredClone(normalizeStateCollections(payload.state)),
   },
+  {
+    type: "project.set_default_dialogue_avatar_transform",
+    validatePayload: ({ payload }) => {
+      const result = validateExactKeys({
+        value: payload,
+        expectedKeys: ["transformId"],
+        path: "payload",
+        errorFactory: createPayloadValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+      if (
+        payload.transformId !== null &&
+        !isNonEmptyString(payload.transformId)
+      ) {
+        return invalidPayload(
+          "payload.transformId must be a non-empty string or null",
+        );
+      }
+      return VALID_RESULT;
+    },
+    validateAgainstState: ({ state, payload }) => {
+      if (
+        payload.transformId !== null &&
+        state.transforms.items[payload.transformId]?.type !== "transform"
+      ) {
+        return invalidPrecondition(
+          "payload.transformId must reference an existing transform",
+          {
+            transformId: payload.transformId,
+          },
+        );
+      }
+      return VALID_RESULT;
+    },
+    reduce: ({ state, payload }) => {
+      if (payload.transformId === null) {
+        delete state.project.defaultDialogueAvatarTransformId;
+      } else {
+        state.project.defaultDialogueAvatarTransformId = payload.transformId;
+      }
+      return state;
+    },
+  },
   ...createFolderedCollectionCommandDefinitions({
     familyName: "file",
     collectionKey: "files",
@@ -20532,6 +20592,11 @@ const COMMAND_DEFINITIONS = [
   ...createFolderedCollectionCommandDefinitions({
     familyName: "transform",
     collectionKey: "transforms",
+    afterDelete: ({ state, deletedIds }) => {
+      if (deletedIds.has(state.project.defaultDialogueAvatarTransformId)) {
+        delete state.project.defaultDialogueAvatarTransformId;
+      }
+    },
     idField: "transformId",
     itemLabel: "transform item",
     createDataValidator: validateTransformCreateData,

@@ -398,11 +398,22 @@ value after the effect finishes. Absolute volume values are bounded to
 `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative keyframes
 represent unbounded numeric deltas and cannot be final.
 
+`project.defaultDialogueAvatarTransformId` optionally references a transform for
+new dialogue avatars. Omit it when no default is selected. Set or replace the
+reference with `project.set_default_dialogue_avatar_transform` and payload
+`{ transformId: "transform-id" }`; clear it with `{ transformId: null }`.
+Folders and missing transforms are rejected. Deleting the referenced transform
+or its ancestor folder clears the default atomically. Renaming, moving, or
+copying transforms leaves the default unchanged. This authoring default does
+not rewrite existing dialogue avatar actions.
+
 ## Current Scope
 
 Currently implemented command types:
 
 - `project.create`
+- `project.set_default_dialogue_avatar_transform`
+
 - `story.update`
 - `scene.create`
 - `scene.update`
