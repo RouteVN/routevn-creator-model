@@ -1,0 +1,7 @@
+schemaVersion: 15
+type: color.create
+payload:
+  colorId: folder-a
+  data:
+    type: folder
+    name: Folder A

@@ -1137,6 +1137,31 @@ const createFolderedCommandCases = ({
 
 const directCases = [
   {
+    type: "project.set_default_dialogue_avatar_transform",
+    runPositive: () => {
+      const state = createEmptyTestState();
+      const result = processCommand({
+        state,
+        command: {
+          type: "project.set_default_dialogue_avatar_transform",
+          payload: { transformId: null },
+        },
+      });
+      expect(result).toEqual({ valid: true, state });
+    },
+    runNegative: () => {
+      expect(
+        validateAgainstState({
+          state: createEmptyTestState(),
+          command: {
+            type: "project.set_default_dialogue_avatar_transform",
+            payload: { transformId: "missing" },
+          },
+        }).valid,
+      ).toBe(false);
+    },
+  },
+  {
     type: "project.create",
     runPositive: () => {
       const state = createEmptyTestState();

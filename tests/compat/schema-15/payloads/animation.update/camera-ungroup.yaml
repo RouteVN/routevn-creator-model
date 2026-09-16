@@ -1,0 +1,6 @@
+schemaVersion: 15
+type: animation.update
+payload:
+  animationId: camera-one
+  data:
+    cameraTracks: []
