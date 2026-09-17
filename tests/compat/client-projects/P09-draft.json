@@ -1,0 +1,758 @@
+{
+  "protocol": 1,
+  "id": "P09-draft",
+  "provenance": {
+    "sourcePath": "tests/fixtures/legacy-projects/P09-draft/source/project.db",
+    "sourceSha256": "20cbdc817d1787953cca0c2a2507167cdce11a0dfb37643d9b06c766ca4118eb",
+    "writer": {
+      "revision": "4d1fe31f96ff7a8f4eebf2b58679755a827a8851",
+      "lockfileSha256": "13e42d8cb0604f7d17798286bc910e5630f8709b1d627742db4948f28acdbef0",
+      "sourceSha256": "0c4c004dd3e504a538f29aff9981024bb188188cc7e3ba437feac4b9722505db",
+      "dependencies": {
+        "@routevn/creator-model": "1.15.0",
+        "insieme": "2.1.1",
+        "route-engine-js": "1.46.1"
+      },
+      "declaredModel": "1.15.0"
+    },
+    "previousReader": {
+      "revision": "4d1fe31f96ff7a8f4eebf2b58679755a827a8851",
+      "lockfileSha256": "13e42d8cb0604f7d17798286bc910e5630f8709b1d627742db4948f28acdbef0",
+      "sourceSha256": "0c4c004dd3e504a538f29aff9981024bb188188cc7e3ba437feac4b9722505db",
+      "dependencies": {
+        "@routevn/creator-model": "1.15.0",
+        "insieme": "2.1.1",
+        "route-engine-js": "1.46.1"
+      },
+      "declaredModel": "1.15.0"
+    },
+    "modelVersion": "1.15.0"
+  },
+  "initialState": {
+    "project": {
+      "resolution": {
+        "width": 1920,
+        "height": 1080
+      }
+    },
+    "story": {
+      "initialSceneId": null
+    },
+    "files": {
+      "items": {},
+      "tree": []
+    },
+    "images": {
+      "items": {},
+      "tree": []
+    },
+    "spritesheets": {
+      "items": {},
+      "tree": []
+    },
+    "sounds": {
+      "items": {},
+      "tree": []
+    },
+    "voices": {
+      "items": {},
+      "tree": []
+    },
+    "videos": {
+      "items": {},
+      "tree": []
+    },
+    "animations": {
+      "items": {},
+      "tree": []
+    },
+    "audioEffects": {
+      "items": {},
+      "tree": []
+    },
+    "particles": {
+      "items": {},
+      "tree": []
+    },
+    "characters": {
+      "items": {},
+      "tree": []
+    },
+    "fonts": {
+      "items": {},
+      "tree": []
+    },
+    "transforms": {
+      "items": {},
+      "tree": []
+    },
+    "colors": {
+      "items": {},
+      "tree": []
+    },
+    "textStyles": {
+      "items": {},
+      "tree": []
+    },
+    "variables": {
+      "items": {},
+      "tree": []
+    },
+    "layouts": {
+      "items": {},
+      "tree": []
+    },
+    "controls": {
+      "items": {},
+      "tree": []
+    },
+    "scenes": {
+      "items": {},
+      "tree": []
+    },
+    "tags": {
+      "images": {
+        "items": {},
+        "tree": []
+      },
+      "sounds": {
+        "items": {},
+        "tree": []
+      },
+      "videos": {
+        "items": {},
+        "tree": []
+      },
+      "characters": {
+        "items": {},
+        "tree": []
+      },
+      "fonts": {
+        "items": {},
+        "tree": []
+      },
+      "transforms": {
+        "items": {},
+        "tree": []
+      },
+      "colors": {
+        "items": {},
+        "tree": []
+      },
+      "textStyles": {
+        "items": {},
+        "tree": []
+      },
+      "variables": {
+        "items": {},
+        "tree": []
+      },
+      "layouts": {
+        "items": {},
+        "tree": []
+      },
+      "controls": {
+        "items": {},
+        "tree": []
+      },
+      "animations": {
+        "items": {},
+        "tree": []
+      },
+      "audioEffects": {
+        "items": {},
+        "tree": []
+      },
+      "particles": {
+        "items": {},
+        "tree": []
+      },
+      "spritesheets": {
+        "items": {},
+        "tree": []
+      }
+    }
+  },
+  "commands": [
+    {
+      "type": "scene.create",
+      "payload": {
+        "sceneId": "scene-one",
+        "data": {
+          "name": "Scene One"
+        }
+      }
+    },
+    {
+      "type": "scene.create",
+      "payload": {
+        "sceneId": "scene-two",
+        "data": {
+          "name": "Scene Two"
+        }
+      }
+    },
+    {
+      "type": "section.create",
+      "payload": {
+        "sceneId": "scene-one",
+        "sectionId": "section-one",
+        "data": {
+          "name": "Section One"
+        }
+      }
+    },
+    {
+      "type": "section.create",
+      "payload": {
+        "sceneId": "scene-one",
+        "sectionId": "section-three",
+        "data": {
+          "name": "Section Three"
+        }
+      }
+    },
+    {
+      "type": "section.create",
+      "payload": {
+        "sceneId": "scene-two",
+        "sectionId": "section-two",
+        "data": {
+          "name": "Section Two"
+        }
+      }
+    },
+    {
+      "type": "line.create",
+      "payload": {
+        "sectionId": "section-one",
+        "lines": [
+          {
+            "lineId": "line-one",
+            "data": {
+              "actions": {
+                "dialogue": {
+                  "content": [
+                    {
+                      "text": "First"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "lineId": "line-two",
+            "data": {
+              "actions": {
+                "dialogue": {
+                  "content": [
+                    {
+                      "text": "Second"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "file.create",
+      "payload": {
+        "fileId": "file-one",
+        "data": {
+          "mimeType": "image/png",
+          "size": 128,
+          "sha256": "fixture-image-sha256"
+        }
+      }
+    },
+    {
+      "type": "image.create",
+      "payload": {
+        "imageId": "image-one",
+        "data": {
+          "type": "image",
+          "name": "Image One",
+          "fileId": "file-one"
+        }
+      }
+    },
+    {
+      "type": "character.create",
+      "payload": {
+        "characterId": "character-one",
+        "data": {
+          "type": "character",
+          "name": "Character One",
+          "sprites": {
+            "items": {},
+            "tree": []
+          }
+        }
+      }
+    },
+    {
+      "type": "transform.create",
+      "payload": {
+        "transformId": "transform-one",
+        "data": {
+          "type": "transform",
+          "name": "Transform One",
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "anchorX": 0,
+          "anchorY": 0,
+          "rotation": 0
+        }
+      }
+    },
+    {
+      "type": "character.create",
+      "payload": {
+        "characterId": "speaker-one",
+        "data": {
+          "type": "character",
+          "name": "Speaker One",
+          "sprites": {
+            "items": {},
+            "tree": []
+          }
+        }
+      }
+    },
+    {
+      "type": "character.sprite.create",
+      "payload": {
+        "characterId": "character-one",
+        "spriteId": "sprite-one",
+        "data": {
+          "type": "image",
+          "name": "Sprite One",
+          "fileId": "file-one"
+        }
+      }
+    },
+    {
+      "type": "layout.create",
+      "payload": {
+        "layoutId": "layout-one",
+        "data": {
+          "type": "layout",
+          "name": "Layout One",
+          "layoutType": "dialogue-adv",
+          "elements": {
+            "items": {},
+            "tree": []
+          }
+        }
+      }
+    },
+    {
+      "type": "project.set_default_dialogue_avatar_transform",
+      "payload": {
+        "transformId": "transform-one"
+      }
+    },
+    {
+      "type": "layout.update",
+      "payload": {
+        "layoutId": "layout-one",
+        "data": {
+          "preview": {
+            "dialogue": {
+              "characterId": "speaker-one",
+              "character": {
+                "name": "Speaker One",
+                "sprite": {
+                  "transformId": "transform-one",
+                  "items": [
+                    {
+                      "id": "base",
+                      "resourceId": "sprite-one"
+                    }
+                  ]
+                }
+              },
+              "content": [
+                {
+                  "text": "Preview One"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expectedState": {
+    "project": {
+      "resolution": {
+        "width": 1920,
+        "height": 1080
+      },
+      "defaultDialogueAvatarTransformId": "transform-one"
+    },
+    "story": {
+      "initialSceneId": null
+    },
+    "files": {
+      "items": {
+        "file-one": {
+          "id": "file-one",
+          "mimeType": "image/png",
+          "size": 128,
+          "sha256": "fixture-image-sha256"
+        }
+      },
+      "tree": [
+        {
+          "id": "file-one",
+          "children": []
+        }
+      ]
+    },
+    "images": {
+      "items": {
+        "image-one": {
+          "id": "image-one",
+          "type": "image",
+          "name": "Image One",
+          "fileId": "file-one"
+        }
+      },
+      "tree": [
+        {
+          "id": "image-one",
+          "children": []
+        }
+      ]
+    },
+    "spritesheets": {
+      "items": {},
+      "tree": []
+    },
+    "sounds": {
+      "items": {},
+      "tree": []
+    },
+    "voices": {
+      "items": {},
+      "tree": []
+    },
+    "videos": {
+      "items": {},
+      "tree": []
+    },
+    "animations": {
+      "items": {},
+      "tree": []
+    },
+    "audioEffects": {
+      "items": {},
+      "tree": []
+    },
+    "particles": {
+      "items": {},
+      "tree": []
+    },
+    "characters": {
+      "items": {
+        "character-one": {
+          "id": "character-one",
+          "type": "character",
+          "name": "Character One",
+          "sprites": {
+            "items": {
+              "sprite-one": {
+                "id": "sprite-one",
+                "type": "image",
+                "name": "Sprite One",
+                "fileId": "file-one"
+              }
+            },
+            "tree": [
+              {
+                "id": "sprite-one",
+                "children": []
+              }
+            ]
+          }
+        },
+        "speaker-one": {
+          "id": "speaker-one",
+          "type": "character",
+          "name": "Speaker One",
+          "sprites": {
+            "items": {},
+            "tree": []
+          }
+        }
+      },
+      "tree": [
+        {
+          "id": "character-one",
+          "children": []
+        },
+        {
+          "id": "speaker-one",
+          "children": []
+        }
+      ]
+    },
+    "fonts": {
+      "items": {},
+      "tree": []
+    },
+    "transforms": {
+      "items": {
+        "transform-one": {
+          "id": "transform-one",
+          "type": "transform",
+          "name": "Transform One",
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "anchorX": 0,
+          "anchorY": 0,
+          "rotation": 0
+        }
+      },
+      "tree": [
+        {
+          "id": "transform-one",
+          "children": []
+        }
+      ]
+    },
+    "colors": {
+      "items": {},
+      "tree": []
+    },
+    "textStyles": {
+      "items": {},
+      "tree": []
+    },
+    "variables": {
+      "items": {},
+      "tree": []
+    },
+    "layouts": {
+      "items": {
+        "layout-one": {
+          "id": "layout-one",
+          "type": "layout",
+          "name": "Layout One",
+          "layoutType": "dialogue-adv",
+          "elements": {
+            "items": {},
+            "tree": []
+          },
+          "preview": {
+            "dialogue": {
+              "characterId": "speaker-one",
+              "character": {
+                "name": "Speaker One",
+                "sprite": {
+                  "transformId": "transform-one",
+                  "items": [
+                    {
+                      "id": "base",
+                      "resourceId": "sprite-one"
+                    }
+                  ]
+                }
+              },
+              "content": [
+                {
+                  "text": "Preview One"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tree": [
+        {
+          "id": "layout-one",
+          "children": []
+        }
+      ]
+    },
+    "controls": {
+      "items": {},
+      "tree": []
+    },
+    "scenes": {
+      "items": {
+        "scene-one": {
+          "id": "scene-one",
+          "type": "scene",
+          "name": "Scene One",
+          "sections": {
+            "items": {
+              "section-one": {
+                "id": "section-one",
+                "name": "Section One",
+                "lines": {
+                  "items": {
+                    "line-one": {
+                      "id": "line-one",
+                      "actions": {
+                        "dialogue": {
+                          "content": [
+                            {
+                              "text": "First"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "line-two": {
+                      "id": "line-two",
+                      "actions": {
+                        "dialogue": {
+                          "content": [
+                            {
+                              "text": "Second"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "tree": [
+                    {
+                      "id": "line-one"
+                    },
+                    {
+                      "id": "line-two"
+                    }
+                  ]
+                }
+              },
+              "section-three": {
+                "id": "section-three",
+                "name": "Section Three",
+                "lines": {
+                  "items": {},
+                  "tree": []
+                }
+              }
+            },
+            "tree": [
+              {
+                "id": "section-one",
+                "children": []
+              },
+              {
+                "id": "section-three",
+                "children": []
+              }
+            ]
+          }
+        },
+        "scene-two": {
+          "id": "scene-two",
+          "type": "scene",
+          "name": "Scene Two",
+          "sections": {
+            "items": {
+              "section-two": {
+                "id": "section-two",
+                "name": "Section Two",
+                "lines": {
+                  "items": {},
+                  "tree": []
+                }
+              }
+            },
+            "tree": [
+              {
+                "id": "section-two",
+                "children": []
+              }
+            ]
+          }
+        }
+      },
+      "tree": [
+        {
+          "id": "scene-one",
+          "children": []
+        },
+        {
+          "id": "scene-two",
+          "children": []
+        }
+      ]
+    },
+    "tags": {
+      "images": {
+        "items": {},
+        "tree": []
+      },
+      "sounds": {
+        "items": {},
+        "tree": []
+      },
+      "videos": {
+        "items": {},
+        "tree": []
+      },
+      "characters": {
+        "items": {},
+        "tree": []
+      },
+      "fonts": {
+        "items": {},
+        "tree": []
+      },
+      "transforms": {
+        "items": {},
+        "tree": []
+      },
+      "colors": {
+        "items": {},
+        "tree": []
+      },
+      "textStyles": {
+        "items": {},
+        "tree": []
+      },
+      "variables": {
+        "items": {},
+        "tree": []
+      },
+      "layouts": {
+        "items": {},
+        "tree": []
+      },
+      "controls": {
+        "items": {},
+        "tree": []
+      },
+      "animations": {
+        "items": {},
+        "tree": []
+      },
+      "audioEffects": {
+        "items": {},
+        "tree": []
+      },
+      "particles": {
+        "items": {},
+        "tree": []
+      },
+      "spritesheets": {
+        "items": {},
+        "tree": []
+      }
+    }
+  }
+}
