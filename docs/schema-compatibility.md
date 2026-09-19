@@ -57,6 +57,14 @@ tests/compat/schema-<n>/
     ...
 ```
 
+An independently captured legacy section-move case lives in
+[`tests/compat/section-move-legacy-preserved/`](../tests/compat/section-move-legacy-preserved/README.md).
+Its original model-14 state bytes and source hashes are frozen separately from
+the generated schema archives. `bun run test:compat` also runs this case through
+the public sequential and batch APIs, comparing the complete ordered state and
+checking preservation of unknown legacy actions and line identities. It has no
+client or storage dependency and does not certify future strict authoring.
+
 ### Payload Fixtures
 
 Payload fixtures exist to catch validator regressions.

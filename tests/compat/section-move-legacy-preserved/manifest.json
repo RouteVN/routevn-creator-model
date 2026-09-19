@@ -1,0 +1,44 @@
+{
+  "id": "section-move-legacy-preserved",
+  "origin": "Synthetic neutral model commands; no user project",
+  "observedModel": {
+    "packageVersion": "1.14.0",
+    "schemaVersion": 14,
+    "revision": "4dc3cdaa7805905c98547743b91cf74d3ea8fef2",
+    "versionArgument": "omitted"
+  },
+  "source": {
+    "repository": "RouteVN/routevn-creator-client",
+    "revision": "c980bfe6f735abb1ab39a996b053b3a5661348e0",
+    "files": {
+      "docs/validation-preparation/fixtures/scenarios/section-move-legacy-preserved.json": {
+        "bytes": 2417,
+        "sha256": "4cf6d065a2768bc987e5c723d80a77304e4268a479f393e1a5a2a9a43a61f4d6"
+      },
+      "docs/validation-preparation/fixtures/seeds/project-one.state.json": {
+        "bytes": 5084,
+        "sha256": "68fbea6344dd0629fa26b3ef882b762bea2a9d2d2faea6740a1ad9b0410e9973"
+      },
+      "docs/validation-preparation/fixtures/observed/section-move-legacy-preserved.state.json": {
+        "bytes": 5254,
+        "sha256": "7e98fd550bc9fa982dcd5ebe8a51226a9e0727356361617648ed658dfe2bc740"
+      }
+    }
+  },
+  "adoption": "Initial and expected state bytes are unchanged. Commands preserve type and domain payload; illustrative transport envelopes are removed. No candidate output was captured.",
+  "scope": "Unversioned legacy reducer compatibility only. Strict version dispatch, new references, and copy/duplicate validation remain future work.",
+  "files": {
+    "commands.json": {
+      "bytes": 510,
+      "sha256": "1ea600c4d1c2302af807e6e8c437d47e6c9f5e653007b5782f0f24c2f0a2fa84"
+    },
+    "expected-state.json": {
+      "bytes": 5254,
+      "sha256": "7e98fd550bc9fa982dcd5ebe8a51226a9e0727356361617648ed658dfe2bc740"
+    },
+    "initial-state.json": {
+      "bytes": 5084,
+      "sha256": "68fbea6344dd0629fa26b3ef882b762bea2a9d2d2faea6740a1ad9b0410e9973"
+    }
+  }
+}
