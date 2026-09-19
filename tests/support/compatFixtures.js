@@ -295,7 +295,7 @@ const upgradeSchema4PayloadFixture = (fixture) => {
   };
 };
 
-const upgradeFixtureForCurrentSchema = (fixture) => {
+export const upgradeFixtureForCurrentSchema = (fixture) => {
   switch (fixture.schemaVersion) {
     case 1:
       if (fixture.kind === "state") {
@@ -387,6 +387,33 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
       throw new Error(
         `unsupported compatibility fixture kind: ${fixture.kind}`,
       );
+    case 16: {
+      if (fixture.rawFixture.modelSchemaVersion !== 16)
+        throw new Error(
+          `schema 16 requires explicit modelSchemaVersion: ${fixture.fileUrl.pathname}`,
+        );
+      if (fixture.kind === "state")
+        return {
+          ...upgradeSchema4StateFixture(fixture),
+          modelSchemaVersion: 16,
+        };
+      if (fixture.kind === "payload")
+        return {
+          ...upgradeSchema4PayloadFixture(fixture),
+          modelSchemaVersion: 16,
+        };
+      if (fixture.kind === "stream") {
+        const result = upgradeSchema4StreamFixture(fixture);
+        if (
+          result.commands.some((command) => command.modelSchemaVersion !== 16)
+        )
+          throw new Error(
+            `strict stream lost command modelSchemaVersion: ${fixture.fileUrl.pathname}`,
+          );
+        return { ...result, modelSchemaVersion: 16 };
+      }
+      throw new Error(`unknown fixture kind ${fixture.kind}`);
+    }
     default:
       throw new Error(
         `no compatibility upgrade adapter for schemaVersion ${fixture.schemaVersion}: ${fixture.fileUrl.pathname}`,

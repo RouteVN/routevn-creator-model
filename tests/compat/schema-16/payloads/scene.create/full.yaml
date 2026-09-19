@@ -1,0 +1,15 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: scene.create
+payload:
+  sceneId: scene-c
+  parentId: folder-scenes
+  position: before
+  positionTargetId: scene-b
+  data:
+    type: scene
+    name: Train Station
+    description: Station platform intro
+    position:
+      x: 320
+      "y": 80

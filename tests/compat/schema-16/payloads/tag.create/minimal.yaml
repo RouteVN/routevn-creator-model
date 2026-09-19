@@ -1,0 +1,9 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: tag.create
+payload:
+  scopeKey: images
+  tagId: tag-bg
+  data:
+    type: tag
+    name: Background

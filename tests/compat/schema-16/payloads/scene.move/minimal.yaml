@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: scene.move
+payload:
+  sceneId: scene-a
+  parentId: folder-scenes
+  position: last

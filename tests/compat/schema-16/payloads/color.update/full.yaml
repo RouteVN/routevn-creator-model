@@ -1,0 +1,8 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: color.update
+payload:
+  colorId: item-a
+  data:
+    description: Deeper emphasis tone
+    hex: "#223344"

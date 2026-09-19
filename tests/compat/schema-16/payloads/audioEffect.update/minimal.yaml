@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: audioEffect.update
+payload:
+  audioEffectId: item-a
+  data:
+    name: Audio Effect Updated

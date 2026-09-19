@@ -1,0 +1,11 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: font.update
+payload:
+  fontId: item-a
+  data:
+    description: Updated display family
+    fontFamily: Suit Alt
+    minWeight: 600
+    defaultWeight: 600
+    maxWeight: 600

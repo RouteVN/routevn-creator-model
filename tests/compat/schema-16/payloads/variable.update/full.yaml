@@ -1,0 +1,14 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: variable.update
+payload:
+  variableId: item-a
+  data:
+    description: Progress score
+    isEnum: true
+    enumValues:
+      - calm
+      - tense
+      - urgent
+    default: tense
+    value: urgent

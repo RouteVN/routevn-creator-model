@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: line.delete
+payload:
+  lineIds:
+    - line-a
+    - line-b

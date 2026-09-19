@@ -1,0 +1,8 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: line.update_actions
+payload:
+  lineId: line-a
+  data:
+    dialogue:
+      content: Tense

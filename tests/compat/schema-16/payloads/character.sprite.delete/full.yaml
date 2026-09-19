@@ -1,0 +1,8 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: character.sprite.delete
+payload:
+  characterId: character-hero
+  spriteIds:
+    - sprite-a
+    - sprite-b

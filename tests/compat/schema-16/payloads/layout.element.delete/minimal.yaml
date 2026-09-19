@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: layout.element.delete
+payload:
+  layoutId: layout-dialogue
+  elementIds:
+    - text-a

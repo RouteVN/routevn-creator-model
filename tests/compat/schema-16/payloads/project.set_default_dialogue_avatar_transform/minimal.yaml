@@ -1,0 +1,5 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: project.set_default_dialogue_avatar_transform
+payload:
+  transformId: null

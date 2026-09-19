@@ -7,6 +7,7 @@ import {
 } from "../src/index.js";
 import { listCommandTypes } from "../src/model.js";
 import {
+  upgradeFixtureForCurrentSchema,
   getCurrentSchemaPayloadCoverage,
   listCompatibilitySchemaVersions,
   loadCompatibilityPayloadFixtures,
@@ -126,12 +127,7 @@ test("current schema payload fixture coverage stays aligned with command types",
 
 for (const fixture of payloadFixtures) {
   test(`compat payload: schema-${fixture.schemaVersion}/${fixture.type}/${fixture.fixtureName}`, () => {
-    expect(
-      validatePayload({
-        type: fixture.type,
-        payload: fixture.payload,
-      }),
-    ).toEqual({
+    expect(validatePayload(fixture)).toEqual({
       valid: true,
     });
   });
@@ -139,7 +135,7 @@ for (const fixture of payloadFixtures) {
 
 for (const fixture of stateFixtures) {
   test(`compat state: schema-${fixture.schemaVersion}/${fixture.fixtureName}`, () => {
-    expect(validateState({ state: fixture.state })).toEqual({
+    expect(validateState(fixture)).toEqual({
       valid: true,
     });
   });
@@ -153,19 +149,16 @@ test("compatibility stream fixtures exist for the current schema line", () => {
 
 for (const fixture of streamFixtures) {
   test(`compat stream: schema-${fixture.schemaVersion}/${fixture.fixtureName}`, () => {
-    expect(validateState({ state: fixture.initialState })).toEqual({
+    const initial = { state: fixture.initialState };
+    if (Object.hasOwn(fixture, "modelSchemaVersion")) initial.modelSchemaVersion = fixture.modelSchemaVersion;
+    expect(validateState(initial)).toEqual({
       valid: true,
     });
 
     let currentState = structuredClone(fixture.initialState);
 
     for (const command of fixture.commands) {
-      expect(
-        validatePayload({
-          type: command.type,
-          payload: command.payload,
-        }),
-      ).toEqual({
+      expect(validatePayload(command)).toEqual({
         valid: true,
       });
 
@@ -174,7 +167,10 @@ for (const fixture of streamFixtures) {
         command,
       });
 
-      expect(result.valid).toBe(true);
+      expect(
+        result.valid,
+        `${command.type}: ${JSON.stringify(result.error)}`,
+      ).toBe(true);
       expect(validateState({ state: result.state })).toEqual({
         valid: true,
       });
@@ -187,3 +183,15 @@ for (const fixture of streamFixtures) {
     }
   });
 }
+
+test("schema-16 fixture metadata cannot silently select historical validation", () => {
+  for (const fixture of [...payloadFixtures, ...stateFixtures, ...streamFixtures].filter((entry) => entry.schemaVersion === 16)) {
+    const rawFixture = structuredClone(fixture.rawFixture);
+    delete rawFixture.modelSchemaVersion;
+    expect(() => upgradeFixtureForCurrentSchema({ ...fixture, rawFixture })).toThrow(/requires explicit modelSchemaVersion/);
+  }
+  const fixture = streamFixtures.find((entry) => entry.schemaVersion === 16);
+  const rawFixture = structuredClone(fixture.rawFixture);
+  delete rawFixture.commands[0].modelSchemaVersion;
+  expect(() => upgradeFixtureForCurrentSchema({ ...fixture, rawFixture })).toThrow(/lost command modelSchemaVersion/);
+});

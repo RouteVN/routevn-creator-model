@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: scene.create
+payload:
+  sceneId: scene-c
+  data:
+    name: New Scene

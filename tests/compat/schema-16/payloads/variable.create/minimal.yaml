@@ -1,0 +1,12 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: variable.create
+payload:
+  variableId: item-a
+  data:
+    type: variable
+    variableType: number
+    name: Score
+    scope: device
+    default: 0
+    value: 0
