@@ -1,0 +1,29 @@
+[
+  {
+    "type": "line.update_actions",
+    "payload": {
+      "lineId": "line-one",
+      "data": {
+        "unrecognizedLegacyAction": {
+          "oldValue": true
+        },
+        "dialogue": {
+          "content": [
+            {
+              "text": "Legacy"
+            }
+          ],
+          "unusedLegacyField": true
+        }
+      }
+    }
+  },
+  {
+    "type": "section.move",
+    "payload": {
+      "sectionId": "section-one",
+      "sceneId": "scene-two",
+      "position": "last"
+    }
+  }
+]
