@@ -65,7 +65,8 @@ and contexts, typed bindings and conditions, complete resource references,
 atlas metadata, layout/control interactions, and preview data. Patches validate
 the affected result; unchanged legacy data remains intact. Moves retain entity
 identity and reject newly broken references. Object variable `set` operations
-require `valueMode: "literal"`; their JSON contents are never interpolated.
+retain the existing representation and runtime interpolation. Strict validation
+checks nested bindings without rewriting values; no engine upgrade is required.
 See the [schema-16 contract and matrix](docs/strict-schema-16.md).
 
 A strict successful `processCommand` also returns `validationWork` so consumers

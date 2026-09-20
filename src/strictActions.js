@@ -1014,6 +1014,27 @@ actions.control = object(
   { resourceId: ref("controls"), resourceType: choice("control") },
   ["resourceId"],
 );
+// Object assignments retain the shipped runtime's recursive template handling.
+// Data keys are not actions; only string values can contain runtime bindings.
+const objectAssignment = (value, path, context) => {
+  if (value === null || typeof value !== "object")
+    fail(path, "must be an object or array");
+  const pending = [{ value, path }];
+  while (pending.length) {
+    const entry = pending.pop();
+    if (typeof entry.value === "string") {
+      if (entry.value.startsWith("_event")) {
+        if (entry.value !== "_event.value" || (!context.shapeOnly && !context.eventType))
+          fail(entry.path, "has no compatible immediate event binding");
+      } else if (/^\$\{[^}]+\}$/.test(entry.value)) {
+        pathType(entry.value.slice(2, -1), entry.path, context);
+      } else template(entry.value, entry.path, context);
+    } else if (entry.value !== null && typeof entry.value === "object") {
+      for (const [key, child] of Object.entries(entry.value))
+        pending.push({ value: child, path: `${entry.path}.${key}` });
+    }
+  }
+};
 actions.updateVariable = (value, path, context) => {
   object(
     {
@@ -1036,7 +1057,6 @@ actions.updateVariable = (value, path, context) => {
               ),
               value: () => {},
               roundTo: number(0, 12, true),
-              valueMode: choice("literal"),
             },
             ["variableId", "op"],
           )(operation, p, c);
@@ -1059,27 +1079,13 @@ actions.updateVariable = (value, path, context) => {
           )
             fail(p, "toggle takes no value or rounding");
           if (
-            own(operation, "valueMode") &&
-            (operation.op !== "set" ||
-              operation.value === null ||
-              typeof operation.value !== "object" ||
-              (kind && kind !== "object"))
-          )
-            fail(p, "literal mode requires an object-variable set");
-          if (
             kind === "object" ||
             (operation.value !== null && typeof operation.value === "object")
           ) {
-            if (
-              operation.op !== "set" ||
-              operation.valueMode !== "literal" ||
-              operation.value === null ||
-              typeof operation.value !== "object"
-            )
-              fail(
-                p,
-                "object writes require explicit literal mode and an object or array",
-              );
+            if (operation.op !== "set") fail(p, "object variables support only set");
+            if (kind && kind !== "object")
+              precondition(`${p}.value`, "requires an object variable");
+            typed("object", objectAssignment)(operation.value, `${p}.value`, c);
           } else if (kind === "boolean") {
             if (!["set", "toggle"].includes(operation.op))
               fail(p, "boolean variables support set or toggle");

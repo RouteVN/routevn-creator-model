@@ -231,7 +231,7 @@ test.each([
     updateVariable: {
       id: "op1",
       operations: [
-        { variableId: "object-one", op: "set", value: { arbitrary: true } },
+        { variableId: "object-one", op: "multiply", value: { arbitrary: true } },
       ],
     },
   },
@@ -239,15 +239,15 @@ test.each([
   expect(validatePayload(lineCommand(actions)).valid).toBe(false),
 );
 
-test("literal object values retain inert templates and prototype-like data keys", () => {
+test("object assignments keep unmarked template data and prototype-like data keys", () => {
   const value = JSON.parse(
-    '{"__proto__":{"safe":true},"template":"${variables.any}","event":"_event.value"}',
+    '{"__proto__":{"safe":true},"template":"${variables.any}","event":"Plain data"}',
   );
   const command = lineCommand({
     updateVariable: {
       id: "op1",
       operations: [
-        { variableId: "object-one", op: "set", value, valueMode: "literal" },
+        { variableId: "object-one", op: "set", value },
       ],
     },
   });
@@ -383,7 +383,7 @@ test("same-identity moves preserve old lines and reject a voice that would leave
     error: { kind: "precondition" },
   });
 });
-test("literal object keys never create reference dependencies", () => {
+test("object data keys are not action references", () => {
   let state = withImage(stateWith());
   state = apply(state, "variable.create", {
     variableId: "object-one",
@@ -405,10 +405,9 @@ test("literal object keys never create reference dependencies", () => {
           {
             variableId: "object-one",
             op: "set",
-            valueMode: "literal",
             value: {
               background: { resourceId: "image-one" },
-              text: "${variables.missing}",
+              text: "Plain data",
             },
           },
         ],
@@ -483,4 +482,129 @@ test("enum changes cannot invalidate supported legacy operations", () => {
   expect(processCommand({ state, command })).toMatchObject({ valid: false, error: { kind: "precondition" } });
   state = apply(state, "line.update_actions", { lineId: "line-one", data: { updateVariable: { id: "op1", operations: [{ variableId: "color", op: "set", value: "red" }] } } });
   expect(processCommand({ state, command }).valid).toBe(true);
+});
+
+const objectVariableState = () => {
+  let state = stateWith();
+  for (const [variableId, variableType, value] of [
+    ["objectOne", "object", {}],
+    ["source", "string", "Alice"],
+    ["sourceObject", "object", { name: "Alice" }],
+  ]) {
+    state = apply(state, "variable.create", {
+      variableId,
+      data: {
+        type: "variable",
+        variableType,
+        name: variableId,
+        scope: "context",
+        default: value,
+        value,
+      },
+    });
+  }
+  return state;
+};
+const objectWrite = (value, fields = {}) =>
+  lineCommand({
+    updateVariable: {
+      id: "operationOne",
+      operations: [{ variableId: "objectOne", op: "set", value, ...fields }],
+    },
+  });
+
+test.each([
+  {
+    message: "${variables.source}",
+    nested: ["Hello ${variables.source}", { actions: { nextLine: {} } }],
+  },
+  ["${variables.source}", { nested: "${variables.sourceObject}" }, null],
+  "${variables.sourceObject}",
+])(
+  "strict object assignments retain the existing action representation %#",
+  (value) => {
+    const state = objectVariableState();
+    const command = objectWrite(value);
+    const result = processCommand({ state, command });
+    expect(result.valid).toBe(true);
+    expect(getActions(result.state)).toEqual(command.payload.data);
+    expect(getActions(state)).toEqual({});
+  },
+);
+
+test.each(["literal", "template", false])(
+  "removed valueMode %s is an unknown operation field",
+  (valueMode) => {
+    expect(validatePayload(objectWrite({}, { valueMode })).valid).toBe(false);
+    const historical = objectWrite({}, { valueMode });
+    delete historical.modelSchemaVersion;
+    expect(validatePayload(historical).valid).toBe(true);
+  },
+);
+
+test.each([
+  null,
+  1,
+  true,
+  "ordinary text",
+  "${variables.source}",
+  { text: "${variables.missing}" },
+  { text: "${variables.source + 1}" },
+  { event: "_event.value" },
+])("invalid strict object assignments still fail %#", (value) => {
+  expect(
+    processCommand({
+      state: objectVariableState(),
+      command: objectWrite(value),
+    }).valid,
+  ).toBe(false);
+});
+
+test("object data rejects arithmetic and assignment to a scalar variable", () => {
+  const state = objectVariableState();
+  for (const fields of [
+    { op: "increment" },
+    { op: "toggle" },
+    { variableId: "source" },
+  ])
+    expect(
+      processCommand({ state, command: objectWrite({}, fields) }).valid,
+    ).toBe(false);
+});
+
+test("nested template references block deleting a variable they use", () => {
+  const first = processCommand({
+    state: objectVariableState(),
+    command: objectWrite({ nested: ["${variables.source}"] }),
+  });
+  expect(first.valid).toBe(true);
+  const result = processCommand({
+    state: first.state,
+    command: strict("variable.delete", { variableIds: ["source"] }),
+  });
+  expect(result).toMatchObject({
+    valid: false,
+    error: { kind: "precondition" },
+  });
+});
+
+test("a full strict state rejects object assignments bound to a scalar", () => {
+  const first = processCommand({
+    state: objectVariableState(),
+    command: objectWrite("${variables.sourceObject}"),
+  });
+  expect(first.valid).toBe(true);
+  expect(
+    validateState({ state: first.state, modelSchemaVersion: SCHEMA_VERSION })
+      .valid,
+  ).toBe(true);
+  const changed = structuredClone(first.state);
+  Object.assign(changed.variables.items.sourceObject, {
+    variableType: "string",
+    default: "text",
+    value: "text",
+  });
+  expect(
+    validateState({ state: changed, modelSchemaVersion: SCHEMA_VERSION }).valid,
+  ).toBe(false);
 });

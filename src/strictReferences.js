@@ -34,8 +34,10 @@ function collect(state, spend) {
   const operationMatches = (variable, operation) => {
     if (variable.computed !== undefined || variable.readOnly === true) return false;
     const type = variable.variableType;
-    if (type === "object") return operation.op === "set" && operation.valueMode === "literal" && operation.value !== null && typeof operation.value === "object";
-    if (operation.valueMode === "literal") return false;
+    if (type === "object") {
+      const actual = bindingType(operation.value);
+      return operation.op === "set" && operation.value !== null && operation.value !== undefined && (!actual || actual === "object");
+    }
     if (operation.op === "toggle") return type === "boolean";
     if (operation.op !== "set" && type !== "number") return false;
     if (operation.value === undefined) return ["increment", "decrement"].includes(operation.op) && type === "number";
@@ -62,6 +64,21 @@ function collect(state, spend) {
     )) {
       const id = match[1] ?? JSON.parse(match[2]);
       ref("variables", id, [...path, "binding", id]);
+    }
+  };
+  const assignmentBindings = (value, path) => {
+    const pending = [{ value, path }];
+    while (pending.length) {
+      const entry = pending.pop();
+      spend(1);
+      binding(entry.value, entry.path);
+      if (entry.value !== null && typeof entry.value === "object") {
+        const children = Array.isArray(entry.value)
+          ? list(entry.value).map((child, index) => [index, child])
+          : entries(entry.value);
+        for (const [key, child] of children)
+          pending.push({ value: child, path: [...entry.path, key] });
+      }
     }
   };
   const content = (value, path) => {
@@ -247,8 +264,7 @@ function collect(state, spend) {
             [...q, "variableId"],
             (variable) => operationMatches(variable, operation),
           );
-          if (operation?.valueMode !== "literal")
-            binding(operation?.value, [...q, "value"]);
+          assignmentBindings(operation?.value, [...q, "value"]);
         });
       if (name === "form")
         for (const [key, field] of entries(value.fields)) {
