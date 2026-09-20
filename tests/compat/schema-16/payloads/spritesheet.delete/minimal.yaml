@@ -1,0 +1,6 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: spritesheet.delete
+payload:
+  spritesheetIds:
+    - item-a

@@ -52,6 +52,29 @@ replayCommands({
 `SCHEMA_VERSION` is the exported schema version constant for persisted command
 compatibility.
 
+Schema 16 adds opt-in strict validation. New authoring must include
+`modelSchemaVersion: 16` on the command supplied to `validatePayload`,
+`validateAgainstState`, `processCommand`, and each entry in `replayCommands`.
+Use `validateState({ state, modelSchemaVersion: 16 })` for a newly created or
+fully replaced project. Only omission selects historical compatibility;
+explicit null, malformed, or unsupported versions fail closed. The model never
+reads storage envelopes or infers a version from domain payload fields.
+
+Strict validation checks bounded JSON input before cloning, closed action shapes
+and contexts, typed bindings and conditions, complete resource references,
+atlas metadata, layout/control interactions, and preview data. Patches validate
+the affected result; unchanged legacy data remains intact. Moves retain entity
+identity and reject newly broken references. Object variable `set` operations
+retain the existing representation and runtime interpolation. Strict validation
+checks nested bindings without rewriting values; no engine upgrade is required.
+See the [schema-16 contract and matrix](docs/strict-schema-16.md).
+
+A strict successful `processCommand` also returns `validationWork` so consumers
+can enforce the batch work budget. Mixed-version batch replay validates each
+strict intermediate state and reports the original failing command index.
+Historical fixture versions 1–15 remain frozen; schema-16 fixtures explicitly
+carry their model version.
+
 Validation functions return:
 
 ```js

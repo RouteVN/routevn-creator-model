@@ -16,6 +16,12 @@ import {
   removeTreeNode,
 } from "./helpers.js";
 import { isRuntimeFieldId } from "./runtimeFields.js";
+import { modelContract, scanStrictJson } from "./strictInput.js";
+import {
+  validateStrictPayload,
+  validateStrictState,
+  validateStrictTransition,
+} from "./strictProject.js";
 
 const COLLECTION_KEYS = [
   "scenes",
@@ -408,7 +414,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 15;
+export const SCHEMA_VERSION = 16;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -5239,10 +5245,10 @@ const validateCharacterSpriteItems = ({
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
 
-    if (item?.type !== "folder" && item?.type !== "image") {
+    if (!["folder", "image", "spritesheet"].includes(item?.type)) {
       return invalidFromErrorFactory(
         errorFactory,
-        `${itemPath}.type must be 'folder' or 'image'`,
+        `${itemPath}.type must be 'folder', 'image', or 'spritesheet'`,
       );
     }
 
@@ -5262,6 +5268,15 @@ const validateCharacterSpriteItems = ({
                 "fileId",
                 "width",
                 "height",
+                ...(item.type === "spritesheet"
+                  ? [
+                      "sheetWidth",
+                      "sheetHeight",
+                      "frameCount",
+                      "jsonData",
+                      "animations",
+                    ]
+                  : []),
               ],
         path: itemPath,
         errorFactory,
@@ -5299,7 +5314,7 @@ const validateCharacterSpriteItems = ({
       );
     }
 
-    if (item.type === "image") {
+    if (item.type !== "folder") {
       if (allowTagIds) {
         {
           const result = validateOptionalUniqueIdArray({
@@ -9608,7 +9623,7 @@ export const assertInvariants = ({ state }) => {
     for (const [spriteId, sprite] of Object.entries(
       character.sprites?.items || {},
     )) {
-      if (sprite.type !== "image") {
+      if (!["image", "spritesheet"].includes(sprite.type)) {
         continue;
       }
 
@@ -10462,7 +10477,18 @@ const runValidateState = ({ state }) => {
   });
 };
 
-export const validateState = ({ state }) => runValidateState({ state });
+export const validateState = (input) =>
+  captureValidation(() => {
+    const contract = modelContract(input);
+    if (typeof contract !== "string") return contract;
+    const { state } = input;
+    if (contract === "strict")
+      scanStrictJson(state, { project: true, path: "state" });
+    const result = runValidateState({ state });
+    if (!result.valid) return result;
+    if (contract === "strict") validateStrictState(state);
+    return VALID_RESULT;
+  });
 
 export const normalizeState = ({ state }) => normalizeStateCollections(state);
 
@@ -13576,10 +13602,10 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type !== "folder" && data.type !== "image") {
+  if (!["folder", "image", "spritesheet"].includes(data.type)) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.data.type must be 'folder' or 'image'",
+      "payload.data.type must be 'folder', 'image', or 'spritesheet'",
     );
   }
 
@@ -13598,6 +13624,15 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
               "thumbnailFileId",
               "width",
               "height",
+              ...(data.type === "spritesheet"
+                ? [
+                    "sheetWidth",
+                    "sheetHeight",
+                    "frameCount",
+                    "jsonData",
+                    "animations",
+                  ]
+                : []),
             ],
       path: "payload.data",
       errorFactory,
@@ -13621,7 +13656,7 @@ const validateCharacterSpriteCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (data.type === "image") {
+  if (data.type !== "folder") {
     {
       const result = validateOptionalUniqueIdArray({
         value: data.tagIds,
@@ -13678,6 +13713,11 @@ const validateCharacterSpriteUpdateData = ({ data, errorFactory }) => {
         "thumbnailFileId",
         "width",
         "height",
+        "sheetWidth",
+        "sheetHeight",
+        "frameCount",
+        "jsonData",
+        "animations",
       ],
       path: "payload.data",
       errorFactory,
@@ -15718,7 +15758,7 @@ const findReferencedFileUsage = ({ state, fileId }) => {
     for (const [spriteId, sprite] of Object.entries(
       character.sprites?.items || {},
     )) {
-      if (sprite.type !== "image") {
+      if (!["image", "spritesheet"].includes(sprite.type)) {
         continue;
       }
 
@@ -21195,7 +21235,7 @@ const COMMAND_DEFINITIONS = [
       for (const [spriteId, sprite] of Object.entries(
         payload.data.sprites?.items || {},
       )) {
-        if (sprite.type !== "image") {
+        if (!["image", "spritesheet"].includes(sprite.type)) {
           continue;
         }
 
@@ -21723,7 +21763,7 @@ const COMMAND_DEFINITIONS = [
         }
       }
 
-      if (payload.data.type === "image") {
+      if (["image", "spritesheet"].includes(payload.data.type)) {
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -21847,7 +21887,7 @@ const COMMAND_DEFINITIONS = [
         );
       }
 
-      if (currentItem.type === "image") {
+      if (["image", "spritesheet"].includes(currentItem.type)) {
         const result = validateReferencedFilesInData({
           state,
           data: payload.data,
@@ -23466,8 +23506,13 @@ export const getCommandDefinition = ({ type }) => {
 export const listCommandTypes = () =>
   COMMAND_DEFINITIONS.map((definition) => definition.type);
 
-export const validatePayload = ({ type, payload }) => {
+export const validatePayload = (input) => {
   return captureValidation(() => {
+    const contract = modelContract(input);
+    if (typeof contract !== "string") return contract;
+    const { type, payload } = input;
+    if (contract === "strict")
+      scanStrictJson(payload, { project: type === "project.create" });
     if (typeof type !== "string" || type.length === 0) {
       return invalidPayload("type must be a non-empty string");
     }
@@ -23485,7 +23530,10 @@ export const validatePayload = ({ type, payload }) => {
       definition.validatePayload({ payload }),
     );
 
-    return normalizePayloadResult(validationResult);
+    const result = normalizePayloadResult(validationResult);
+    if (!result.valid) return result;
+    if (contract === "strict") validateStrictPayload(type, payload);
+    return result;
   });
 };
 
@@ -23514,10 +23562,7 @@ const validateCommandDefinitionAgainstState = ({ state, command }) => {
 
   const payloadResult = validatePayload(command);
   if (!payloadResult.valid) {
-    return invalidPayload(
-      payloadResult.error.message,
-      toDomainErrorDetails(payloadResult.error),
-    );
+    return payloadResult;
   }
 
   const definition = getCommandDefinition({ type: command.type });
@@ -23584,6 +23629,10 @@ const appendReplayCommandContext = (result, { commandIndex, command } = {}) => {
 };
 
 export const validateAgainstState = ({ state, command }) => {
+  if (isPlainObject(command) && modelContract(command) !== "legacy") {
+    const result = processCommand({ state, command });
+    return result.valid ? VALID_RESULT : result;
+  }
   return captureValidation(() => {
     const normalizedState = normalizeStateCollections(state);
 
@@ -23606,6 +23655,10 @@ export const validateAgainstState = ({ state, command }) => {
 
 export const processCommand = ({ state, command }) => {
   return captureValidation(() => {
+    if (isPlainObject(command) && modelContract(command) !== "legacy") {
+      const payloadResult = validatePayload(command);
+      if (!payloadResult.valid) return payloadResult;
+    }
     const normalizedState = normalizeStateCollections(state);
     const shouldMaterializeNormalizedState = normalizedState !== state;
 
@@ -23633,6 +23686,10 @@ export const processCommand = ({ state, command }) => {
       return applyResult;
     }
 
+    let validationWork;
+    if (modelContract(command) === "strict") {
+      validationWork = validateStrictTransition(normalizedState, applyResult.state, command);
+    }
     const stateResultAfterCommand = validateState({
       state: applyResult.state,
     });
@@ -23640,10 +23697,9 @@ export const processCommand = ({ state, command }) => {
       return stateResultAfterCommand;
     }
 
-    return {
-      valid: true,
-      state: applyResult.state,
-    };
+    const result = { valid: true, state: applyResult.state };
+    if (validationWork !== undefined) result.validationWork = validationWork;
+    return result;
   });
 };
 
@@ -23675,6 +23731,8 @@ export const replayCommands = ({ state, commands }) => {
         });
       }
 
+      const strict = modelContract(command) === "strict";
+      const before = strict ? structuredClone(workingState) : undefined;
       const applyResult = applyCommandDefinition({
         state: workingState,
         definition: validationResult.definition,
@@ -23687,6 +23745,17 @@ export const replayCommands = ({ state, commands }) => {
         });
       }
 
+      if (strict) {
+        const strictResult = captureValidation(() => {
+          validateStrictTransition(before, applyResult.state, command);
+          return validateState({ state: applyResult.state });
+        });
+        if (!strictResult.valid)
+          return appendReplayCommandContext(strictResult, {
+            commandIndex: index,
+            command,
+          });
+      }
       workingState = applyResult.state;
     }
 

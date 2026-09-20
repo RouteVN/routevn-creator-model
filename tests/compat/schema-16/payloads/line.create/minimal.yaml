@@ -1,0 +1,11 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: line.create
+payload:
+  sectionId: section-a
+  lines:
+    - lineId: line-c
+      data:
+        actions:
+          dialogue:
+            content: new

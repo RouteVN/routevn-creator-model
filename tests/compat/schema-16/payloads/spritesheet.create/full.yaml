@@ -1,0 +1,56 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: spritesheet.create
+payload:
+  spritesheetId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: spritesheet
+    name: Hero Idle
+    description: Idle loop spritesheet
+    fileId: file-image
+    thumbnailFileId: thumb-image
+    sheetWidth: 1024
+    sheetHeight: 512
+    frameCount: 4
+    width: 256
+    height: 256
+    jsonData:
+      frames:
+        frame-0:
+          frame:
+            x: 0
+            "y": 0
+            w: 1
+            h: 1
+        frame-1:
+          frame:
+            x: 1
+            "y": 0
+            w: 1
+            h: 1
+        frame-2:
+          frame:
+            x: 2
+            "y": 0
+            w: 1
+            h: 1
+        frame-3:
+          frame:
+            x: 3
+            "y": 0
+            w: 1
+            h: 1
+      meta:
+        image: hero-idle.png
+    animations:
+      idle:
+        frames:
+          - 0
+          - 1
+          - 2
+          - 3
+        fps: 12
+        loop: true

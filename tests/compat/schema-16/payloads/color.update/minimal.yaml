@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: color.update
+payload:
+  colorId: item-a
+  data:
+    hex: "#223344"

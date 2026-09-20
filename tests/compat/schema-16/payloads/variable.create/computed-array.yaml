@@ -1,0 +1,14 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: variable.create
+payload:
+  variableId: score-thresholds
+  data:
+    type: variable
+    variableType: object
+    name: Score Thresholds
+    computed:
+      value:
+        - 10
+        - 50
+        - 100

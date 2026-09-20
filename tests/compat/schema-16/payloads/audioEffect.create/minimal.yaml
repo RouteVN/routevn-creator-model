@@ -1,0 +1,15 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: audioEffect.create
+payload:
+  audioEffectId: item-a
+  data:
+    type: audioEffect
+    name: Audio Effect
+    audioEffect:
+      type: update
+      tween:
+        volume:
+          keyframes:
+            - value: 50
+              duration: 0

@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: textStyle.update
+payload:
+  textStyleId: item-a
+  data:
+    clearShadow: true

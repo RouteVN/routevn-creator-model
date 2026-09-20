@@ -1,0 +1,6 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: story.update
+payload:
+  data:
+    initialSceneId: null

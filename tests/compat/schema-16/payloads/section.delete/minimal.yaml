@@ -1,0 +1,6 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: section.delete
+payload:
+  sectionIds:
+    - section-a

@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: spritesheet.update
+payload:
+  spritesheetId: item-a
+  data:
+    name: Spritesheet Updated

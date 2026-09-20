@@ -8,6 +8,14 @@ const COMPAT_SCHEMA_ROOT = new URL(
   import.meta.url,
 );
 
+const atlasFrames = (count) =>
+  Object.fromEntries(
+    Array.from({ length: count }, (_, index) => [
+      `frame-${index}`,
+      { frame: { x: index, y: 0, w: 1, h: 1 } },
+    ]),
+  );
+
 const clone = (value) => structuredClone(value);
 
 const createCameraAnimation = () => ({
@@ -107,7 +115,8 @@ const createFileItem = ({
 const withFiles = (state, files) => {
   for (const file of files) {
     state.files.items[file.id] = createFileItem(file);
-    state.files.tree.push(createTreeNode(file.id));
+    if (!state.files.tree.some((node) => node.id === file.id))
+      state.files.tree.push(createTreeNode(file.id));
   }
   return state;
 };
@@ -181,6 +190,7 @@ const withSpritesheetRefs = (state) => {
     width: 256,
     height: 256,
     jsonData: {
+      frames: atlasFrames(2),
       meta: {
         image: "ui-spritesheet.png",
       },
@@ -199,6 +209,16 @@ const withSpritesheetRefs = (state) => {
 
 const createSceneBaseState = () => {
   const state = createEmptyTestState();
+  withFiles(state, [
+    { id: "file-image-rich", type: "image", mimeType: "image/png" },
+  ]);
+  state.images.items["image-rich"] = {
+    id: "image-rich",
+    type: "image",
+    name: "Image One",
+    fileId: "file-image-rich",
+  };
+  state.images.tree = [createTreeNode("image-rich")];
   state.story.initialSceneId = "scene-a";
   state.scenes.items = {
     "scene-a": {
@@ -263,13 +283,13 @@ const createLineBaseState = () => {
       "line-a": {
         id: "line-a",
         actions: {
-          say: "hello",
+          dialogue: { content: "hello" },
         },
       },
       "line-b": {
         id: "line-b",
         actions: {
-          say: "bye",
+          dialogue: { content: "bye" },
         },
       },
     },
@@ -280,7 +300,7 @@ const createLineBaseState = () => {
       "line-other": {
         id: "line-other",
         actions: {
-          say: "other",
+          dialogue: { content: "other" },
         },
       },
     },
@@ -331,6 +351,26 @@ const createCharacterBaseState = () => {
 
 const createLayoutBaseState = () => {
   const state = withSpritesheetRefs(withTextStyleRefs(createEmptyTestState()));
+  state.variables.items.score = {
+    id: "score",
+    type: "variable",
+    variableType: "number",
+    name: "Score",
+    scope: "context",
+    default: 0,
+    value: 0,
+  };
+  state.variables.tree = [createTreeNode("score")];
+  withFiles(state, [
+    { id: "file-image-rich", type: "image", mimeType: "image/png" },
+  ]);
+  state.images.items["image-rich"] = {
+    id: "image-rich",
+    type: "image",
+    name: "Image One",
+    fileId: "file-image-rich",
+  };
+  state.images.tree = [createTreeNode("image-rich")];
   state.layouts.items["layout-dialogue"] = {
     id: "layout-dialogue",
     type: "layout",
@@ -339,7 +379,7 @@ const createLayoutBaseState = () => {
     layoutType: "dialogue-adv",
     thumbnailFileId: "thumb-spritesheet-ui",
     preview: {
-      backgroundImageId: "image-preview-layout",
+      backgroundImageId: "image-rich",
       runtime: {
         autoMode: true,
       },
@@ -636,6 +676,7 @@ const createSparseCompatibilityState = () => {
     width: 256,
     height: 256,
     jsonData: {
+      frames: atlasFrames(2),
       meta: {
         image: "main-spritesheet.png",
       },
@@ -930,6 +971,7 @@ const createRichCompatibilityState = () => {
     width: 256,
     height: 256,
     jsonData: {
+      frames: atlasFrames(4),
       meta: {
         image: "hero-idle.png",
       },
@@ -1445,7 +1487,7 @@ const payloadFixtures = [
           lineId: "line-c",
           data: {
             actions: {
-              say: "new",
+              dialogue: { content: "new" },
             },
           },
         },
@@ -1482,7 +1524,7 @@ const payloadFixtures = [
           lineId: "line-d",
           data: {
             actions: {
-              say: "next",
+              dialogue: { content: "next" },
             },
           },
         },
@@ -1494,7 +1536,7 @@ const payloadFixtures = [
     {
       lineId: "line-a",
       data: {
-        mood: "tense",
+        dialogue: { content: "Tense" },
       },
     },
     {
@@ -1623,6 +1665,7 @@ const payloadFixtures = [
       name: "Spritesheet",
       fileId: "file-image",
       jsonData: {
+        frames: atlasFrames(1),
         meta: {
           image: "sheet.png",
         },
@@ -1645,6 +1688,7 @@ const payloadFixtures = [
       width: 256,
       height: 256,
       jsonData: {
+        frames: atlasFrames(4),
         meta: {
           image: "hero-idle.png",
         },
@@ -1667,6 +1711,7 @@ const payloadFixtures = [
       width: 320,
       height: 256,
       jsonData: {
+        frames: atlasFrames(6),
         meta: {
           image: "hero-idle-updated.png",
         },
@@ -2329,7 +2374,7 @@ const payloadFixtures = [
       layoutType: "dialogue-adv",
       thumbnailFileId: "thumb-image",
       preview: {
-        backgroundImageId: "image-preview-layout",
+        backgroundImageId: "image-rich",
         runtime: {
           autoMode: true,
         },
@@ -3271,7 +3316,7 @@ const streamFixtures = [
               lineId: "line-c",
               data: {
                 actions: {
-                  say: "new",
+                  dialogue: { content: "new" },
                 },
               },
             },
@@ -3283,7 +3328,7 @@ const streamFixtures = [
         payload: {
           lineId: "line-a",
           data: {
-            mood: "tense",
+            dialogue: { content: "Tense" },
             background: {
               resourceId: "image-rich",
               opacity: 0.5,
@@ -3481,6 +3526,7 @@ const streamFixtures = [
             width: 256,
             height: 256,
             jsonData: {
+              frames: atlasFrames(2),
               meta: {
                 image: "hero-idle.png",
               },
@@ -3830,7 +3876,7 @@ const streamFixtures = [
                   name: "Tense",
                   input: {
                     variables: {
-                      mood: "tense",
+                      dialogue: { content: "Tense" },
                     },
                   },
                 },
@@ -5048,6 +5094,7 @@ const generatePayloadFixtures = async () => {
       ),
       {
         schemaVersion: SCHEMA_VERSION,
+        modelSchemaVersion: SCHEMA_VERSION,
         type: fixture.type,
         payload: fixture.payload,
       },
@@ -5066,6 +5113,7 @@ const generateStateFixtures = async () => {
       new URL(`./states/${fixture.fixtureName}.yaml`, COMPAT_SCHEMA_ROOT),
       {
         schemaVersion: SCHEMA_VERSION,
+        modelSchemaVersion: SCHEMA_VERSION,
         state: fixture.state,
       },
     );
@@ -5083,8 +5131,12 @@ const generateStreamFixtures = async () => {
       new URL(`./streams/${fixture.fixtureName}.yaml`, COMPAT_SCHEMA_ROOT),
       {
         schemaVersion: SCHEMA_VERSION,
+        modelSchemaVersion: SCHEMA_VERSION,
         initialState: fixture.initialState,
-        commands: fixture.commands,
+        commands: fixture.commands.map((command) => ({
+          ...command,
+          modelSchemaVersion: SCHEMA_VERSION,
+        })),
         ...(fixture.expectedFinalState === undefined
           ? {}
           : { expectedFinalState: fixture.expectedFinalState }),

@@ -1,0 +1,7 @@
+schemaVersion: 16
+modelSchemaVersion: 16
+type: animation.move
+payload:
+  animationId: item-a
+  parentId: folder-a
+  position: last
