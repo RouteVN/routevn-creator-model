@@ -408,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 15;
+export const SCHEMA_VERSION = 16;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3456,6 +3456,7 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
                 "seed",
                 "modules",
                 "thumbnailFileId",
+                "preview",
               ],
         path: itemPath,
         errorFactory,
@@ -3538,6 +3539,17 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validateParticlePreviewObject({
+        value: item.preview,
+        path: `${itemPath}.preview`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -5043,6 +5055,7 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
                 "lineHeight",
                 "fontWeight",
                 "previewText",
+                "previewAlign",
                 "fontStyle",
                 "breakWords",
                 "align",
@@ -5145,6 +5158,16 @@ const validateTextStyleItems = ({ items, path, errorFactory }) => {
         return invalidFromErrorFactory(
           errorFactory,
           `${itemPath}.previewText must be a string when provided`,
+        );
+      }
+
+      if (
+        item.previewAlign !== undefined &&
+        !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(item.previewAlign)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.previewAlign must be 'left', 'center', or 'right' when provided`,
         );
       }
 
@@ -7748,6 +7771,39 @@ const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
   return VALID_RESULT;
 };
 
+// A particle's preview settings: the background image its editor preview and
+// thumbnail show behind the effect.
+const validateParticlePreviewObject = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["background"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateTransformPreviewSlot({
+    value: value.background,
+    path: `${path}.background`,
+    errorFactory,
+  });
+};
+
 const validateLayoutItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -8997,12 +9053,13 @@ const validateTransformPreviewImageReferences = ({
   path,
   details = {},
   errorFactory = createPreconditionValidationError,
+  slotKeys = ["background", "target"],
 }) => {
   if (!isPlainObject(preview)) {
     return VALID_RESULT;
   }
 
-  for (const slotKey of ["background", "target"]) {
+  for (const slotKey of slotKeys) {
     const imageId = preview[slotKey]?.imageId;
     const result = validateImageReference({
       state,
@@ -9733,6 +9790,22 @@ export const assertInvariants = ({ state }) => {
         path: "particle.thumbnailFileId",
         details: { particleId, thumbnailFileId: particle.thumbnailFileId },
         errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    {
+      const result = validateTransformPreviewImageReferences({
+        state,
+        preview: particle.preview,
+        path: "particle.preview",
+        details: {
+          particleId,
+        },
+        errorFactory: createInvariantValidationError,
+        slotKeys: ["background"],
       });
       if (!result.valid) {
         return result;
@@ -12817,6 +12890,7 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
               "seed",
               "modules",
               "thumbnailFileId",
+              "preview",
             ],
       path: "payload.data",
       errorFactory,
@@ -12852,6 +12926,17 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateParticlePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -12915,6 +13000,7 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
         "seed",
         "modules",
         "thumbnailFileId",
+        "preview",
       ],
       path: "payload.data",
       errorFactory,
@@ -12953,6 +13039,17 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateParticlePreviewObject({
+      value: data.preview,
+      path: "payload.data.preview",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13346,6 +13443,7 @@ const validateTextStyleCreateData = ({ data, errorFactory }) => {
               "lineHeight",
               "fontWeight",
               "previewText",
+              "previewAlign",
               "fontStyle",
               "breakWords",
               "align",
@@ -13422,6 +13520,7 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
         "lineHeight",
         "fontWeight",
         "previewText",
+        "previewAlign",
         "fontStyle",
         "breakWords",
         "align",
@@ -13564,6 +13663,16 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
     return invalidFromErrorFactory(
       errorFactory,
       "payload.data.align must be 'left', 'center', or 'right' when provided",
+    );
+  }
+
+  if (
+    data.previewAlign !== undefined &&
+    !LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS.includes(data.previewAlign)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.previewAlign must be 'left', 'center', or 'right' when provided",
     );
   }
 };
@@ -20511,6 +20620,10 @@ const COMMAND_DEFINITIONS = [
         item.thumbnailFileId = payload.data.thumbnailFileId;
       }
 
+      if (payload.data.preview !== undefined) {
+        item.preview = structuredClone(payload.data.preview);
+      }
+
       return item;
     },
     updateItem: ({ currentItem, payload }) => {
@@ -20550,6 +20663,19 @@ const COMMAND_DEFINITIONS = [
           return fileResult;
         }
 
+        const previewResult = validateTransformPreviewImageReferences({
+          state,
+          preview: payload.data.preview,
+          path: "payload.data.preview",
+          details: {
+            particleId: payload.particleId,
+          },
+          slotKeys: ["background"],
+        });
+        if (!previewResult.valid) {
+          return previewResult;
+        }
+
         return validateTagIdsAgainstScope({
           state,
           tagIds: payload.data.tagIds,
@@ -20576,6 +20702,19 @@ const COMMAND_DEFINITIONS = [
       });
       if (!fileResult.valid) {
         return fileResult;
+      }
+
+      const previewResult = validateTransformPreviewImageReferences({
+        state,
+        preview: payload.data.preview,
+        path: "payload.data.preview",
+        details: {
+          particleId: payload.particleId,
+        },
+        slotKeys: ["background"],
+      });
+      if (!previewResult.valid) {
+        return previewResult;
       }
 
       return validateTagIdsAgainstScope({

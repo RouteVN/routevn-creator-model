@@ -1,0 +1,5 @@
+schemaVersion: 16
+type: image.delete
+payload:
+  imageIds:
+    - item-a

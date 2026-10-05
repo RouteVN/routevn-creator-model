@@ -1,0 +1,6 @@
+schemaVersion: 16
+type: audioEffect.move
+payload:
+  audioEffectId: item-a
+  parentId: folder-a
+  position: last

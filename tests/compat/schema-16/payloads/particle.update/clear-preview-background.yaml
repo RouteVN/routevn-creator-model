@@ -1,0 +1,6 @@
+schemaVersion: 16
+type: particle.update
+payload:
+  particleId: item-a
+  data:
+    preview: {}
