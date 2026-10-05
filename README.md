@@ -404,7 +404,8 @@ preview text: `left`, `center`, or `right`. It only affects editor previews;
 
 `particle.preview` optionally holds a particle's editor preview settings,
 `{ background: { imageId } }`: the image shown behind the effect in its editor
-preview and thumbnail. The image must reference an existing image item. Send
+preview and thumbnail. The image must reference an existing image item, not a
+folder, and that image cannot be deleted while a particle preview uses it. Send
 `preview: {}` in `particle.update` to clear the background.
 
 `project.defaultDialogueAvatarTransformId` optionally references a transform for
