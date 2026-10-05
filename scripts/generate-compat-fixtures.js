@@ -1230,6 +1230,29 @@ const createFolderedPayloadSets = ({
   ];
 };
 
+const createPreviewSettingsState = () => {
+  const state = createRichCompatibilityState();
+  state.textStyles.items["text-style-ui"].previewAlign = "right";
+  state.particles.items["particle-preview"] = {
+    id: "particle-preview",
+    type: "particle",
+    name: "Snow",
+    width: 1280,
+    height: 720,
+    modules: {
+      emission: {},
+      appearance: {},
+    },
+    preview: {
+      background: {
+        imageId: "image-rich",
+      },
+    },
+  };
+  state.particles.tree.push(createTreeNode("particle-preview"));
+  return state;
+};
+
 const createDefaultAvatarState = () => {
   const state = createRichCompatibilityState();
   state.project.defaultDialogueAvatarTransformId = "transform-rich";
@@ -2054,6 +2077,11 @@ const payloadFixtures = [
           texture: "snowflake",
         },
       },
+      preview: {
+        background: {
+          imageId: "image-rich",
+        },
+      },
     },
     minimalUpdateData: {
       width: 1440,
@@ -2063,8 +2091,23 @@ const payloadFixtures = [
       width: 1440,
       height: 900,
       seed: 67890,
+      preview: {
+        background: {
+          imageId: "image-rich",
+        },
+      },
     },
   }),
+  {
+    type: "particle.update",
+    fixtureName: "clear-preview-background",
+    payload: {
+      particleId: "item-a",
+      data: {
+        preview: {},
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "transform",
     idField: "transformId",
@@ -2251,6 +2294,7 @@ const payloadFixtures = [
       lineHeight: 1.4,
       fontWeight: "700",
       previewText: "Hello",
+      previewAlign: "left",
       shadow: {
         colorId: "color-ui",
         alpha: 0.75,
@@ -2269,6 +2313,7 @@ const payloadFixtures = [
       lineHeight: 1.6,
       fontWeight: "600",
       previewText: "Preview",
+      previewAlign: "right",
       shadow: {
         colorId: "color-ui",
         alpha: 0.6,
@@ -3077,6 +3122,10 @@ const payloadFixtures = [
 
 const stateFixtures = [
   {
+    fixtureName: "preview-settings-project",
+    state: createPreviewSettingsState(),
+  },
+  {
     fixtureName: "default-dialogue-avatar-project",
     state: createDefaultAvatarState(),
   },
@@ -3108,6 +3157,64 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    fixtureName: "preview-settings",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "particle.create",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            type: "particle",
+            name: "Snow",
+            width: 1280,
+            height: 720,
+            modules: {
+              emission: {},
+              appearance: {},
+            },
+            preview: {
+              background: {
+                imageId: "image-rich",
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            preview: {},
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            preview: {
+              background: {
+                imageId: "image-rich",
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "textStyle.update",
+        payload: {
+          textStyleId: "text-style-ui",
+          data: {
+            previewAlign: "left",
+          },
+        },
+      },
+    ],
+  },
   {
     fixtureName: "default-dialogue-avatar-transform",
     initialState: createRichCompatibilityState(),

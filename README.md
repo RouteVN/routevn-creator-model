@@ -398,6 +398,16 @@ value after the effect finishes. Absolute volume values are bounded to
 `0..100`, pan to `-1..1`, and playback rate to `>= 0`; relative keyframes
 represent unbounded numeric deltas and cannot be final.
 
+`textStyle.previewAlign` optionally sets how editors align a text style's
+preview text: `left`, `center`, or `right`. It only affects editor previews;
+`align` stays the alignment layouts use.
+
+`particle.preview` optionally holds a particle's editor preview settings,
+`{ background: { imageId } }`: the image shown behind the effect in its editor
+preview and thumbnail. The image must reference an existing image item, not a
+folder, and that image cannot be deleted while a particle preview uses it. Send
+`preview: {}` in `particle.update` to clear the background.
+
 `project.defaultDialogueAvatarTransformId` optionally references a transform for
 new dialogue avatars. Omit it when no default is selected. Set or replace the
 reference with `project.set_default_dialogue_avatar_transform` and payload
