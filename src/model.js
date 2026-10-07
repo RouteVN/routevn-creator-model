@@ -7733,6 +7733,100 @@ const validateTransformPreviewSlot = ({ value, path, errorFactory }) => {
   return VALID_RESULT;
 };
 
+// A transform preview's target is an image, or a character drawn with one
+// sprite per sprite group, in the { id, resourceId } shape scene lines use.
+const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: ["imageId", "characterId", "sprites"],
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (value.characterId === undefined) {
+    if (value.sprites !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.sprites requires ${path}.characterId`,
+      );
+    }
+
+    return validateTransformPreviewSlot({ value, path, errorFactory });
+  }
+
+  if (value.imageId !== undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must hold either imageId or characterId, not both`,
+    );
+  }
+
+  if (!isNonEmptyString(value.characterId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.characterId must be a non-empty string when provided`,
+    );
+  }
+
+  if (!Array.isArray(value.sprites) || value.sprites.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.sprites must be a non-empty array when characterId is provided`,
+    );
+  }
+
+  const spriteGroupIds = new Set();
+  for (const [index, sprite] of value.sprites.entries()) {
+    const spritePath = `${path}.sprites[${index}]`;
+    {
+      const result = validateAllowedKeys({
+        value: sprite,
+        allowedKeys: ["id", "resourceId"],
+        path: spritePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    for (const key of ["id", "resourceId"]) {
+      if (!isNonEmptyString(sprite[key])) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${spritePath}.${key} must be a non-empty string`,
+        );
+      }
+    }
+
+    if (spriteGroupIds.has(sprite.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${spritePath}.id must be unique within ${path}.sprites`,
+      );
+    }
+    spriteGroupIds.add(sprite.id);
+  }
+
+  return VALID_RESULT;
+};
+
 const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
   if (value === undefined) {
     return VALID_RESULT;
@@ -7757,10 +7851,10 @@ const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
     }
   }
 
-  for (const key of ["background", "target"]) {
+  {
     const result = validateTransformPreviewSlot({
-      value: value[key],
-      path: `${path}.${key}`,
+      value: value.background,
+      path: `${path}.background`,
       errorFactory,
     });
     if (result?.valid === false) {
@@ -7768,7 +7862,11 @@ const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
     }
   }
 
-  return VALID_RESULT;
+  return validateTransformPreviewTarget({
+    value: value.target,
+    path: `${path}.target`,
+    errorFactory,
+  });
 };
 
 // A particle's preview settings: the background image its editor preview and
@@ -9047,7 +9145,47 @@ const validateAnimationMaskImageReferences = ({
   return VALID_RESULT;
 };
 
-const validateTransformPreviewImageReferences = ({
+// A character drawn with one sprite per sprite group: the character must exist
+// and each sprite must be one of its non-folder sprites.
+const validateCharacterSpritesReference = ({
+  state,
+  characterId,
+  sprites,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  const character = state.characters?.items?.[characterId];
+  if (!isPlainObject(character) || character.type !== "character") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.characterId must reference an existing character`,
+      {
+        ...details,
+        characterId,
+      },
+    );
+  }
+
+  for (const [index, sprite] of sprites.entries()) {
+    const characterSprite = character.sprites?.items?.[sprite.resourceId];
+    if (!isPlainObject(characterSprite) || characterSprite.type !== "image") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.sprites[${index}].resourceId must reference an existing non-folder sprite of the character`,
+        {
+          ...details,
+          characterId,
+          spriteId: sprite.resourceId,
+        },
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const validateTransformPreviewReferences = ({
   state,
   preview,
   path,
@@ -9060,18 +9198,31 @@ const validateTransformPreviewImageReferences = ({
   }
 
   for (const slotKey of slotKeys) {
-    const imageId = preview[slotKey]?.imageId;
-    const result = validateImageReference({
-      state,
-      imageId,
-      path: `${path}.${slotKey}.imageId`,
-      details: {
-        ...details,
-        slot: slotKey,
-        imageId,
-      },
-      errorFactory,
-    });
+    const slot = preview[slotKey];
+    const result =
+      slot?.characterId === undefined
+        ? validateImageReference({
+            state,
+            imageId: slot?.imageId,
+            path: `${path}.${slotKey}.imageId`,
+            details: {
+              ...details,
+              slot: slotKey,
+              imageId: slot?.imageId,
+            },
+            errorFactory,
+          })
+        : validateCharacterSpritesReference({
+            state,
+            characterId: slot.characterId,
+            sprites: slot.sprites,
+            path: `${path}.${slotKey}`,
+            details: {
+              ...details,
+              slot: slotKey,
+            },
+            errorFactory,
+          });
     if (!result.valid) {
       return result;
     }
@@ -9747,7 +9898,7 @@ export const assertInvariants = ({ state }) => {
     }
 
     {
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: transform.preview,
         path: "transform.preview",
@@ -9797,7 +9948,7 @@ export const assertInvariants = ({ state }) => {
     }
 
     {
-      const result = validateTransformPreviewImageReferences({
+      const result = validateTransformPreviewReferences({
         state,
         preview: particle.preview,
         path: "particle.preview",
@@ -20663,7 +20814,7 @@ const COMMAND_DEFINITIONS = [
           return fileResult;
         }
 
-        const previewResult = validateTransformPreviewImageReferences({
+        const previewResult = validateTransformPreviewReferences({
           state,
           preview: payload.data.preview,
           path: "payload.data.preview",
@@ -20704,7 +20855,7 @@ const COMMAND_DEFINITIONS = [
         return fileResult;
       }
 
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: payload.data.preview,
         path: "payload.data.preview",
@@ -20801,7 +20952,7 @@ const COMMAND_DEFINITIONS = [
         return fileResult;
       }
 
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: payload.data.preview,
         path: "payload.data.preview",
@@ -20848,7 +20999,7 @@ const COMMAND_DEFINITIONS = [
           return fileResult;
         }
 
-        const previewResult = validateTransformPreviewImageReferences({
+        const previewResult = validateTransformPreviewReferences({
           state,
           preview: payload.data.preview,
           path: "payload.data.preview",
