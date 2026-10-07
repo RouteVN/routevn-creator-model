@@ -496,4 +496,40 @@ describe("transform preview target", () => {
       }).valid,
     ).toBe(true);
   });
+
+  it("validates the preview target's shape and references in state", () => {
+    const state = createPreviewState();
+    state.transforms.items["transform-one"] = {
+      id: "transform-one",
+      ...createTransformData({
+        preview: { target: structuredClone(characterTarget) },
+      }),
+    };
+    state.transforms.tree.push({ id: "transform-one", children: [] });
+    expect(validateState({ state }).valid).toBe(true);
+
+    const { target } = state.transforms.items["transform-one"].preview;
+    const expectInvalid = (message) => {
+      const result = validateState({ state });
+      expect(result.valid).toBe(false);
+      expect(result.error.message).toContain(message);
+    };
+
+    target.sprites[1].resourceId = "sprite-missing";
+    expectInvalid(
+      "transform.preview.target.sprites[1].resourceId must reference an existing non-folder sprite of the character",
+    );
+
+    target.sprites[1].resourceId = "sprite-angry";
+    target.characterId = "character-missing";
+    expectInvalid(
+      "transform.preview.target.characterId must reference an existing character",
+    );
+
+    target.characterId = "character-one";
+    target.imageId = "image-bg";
+    expectInvalid(
+      "preview.target must hold either imageId or characterId, not both",
+    );
+  });
 });
