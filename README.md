@@ -412,11 +412,12 @@ folder, and that image cannot be deleted while a particle preview uses it. Send
 `{ background, target }`. `background` is `{ imageId }`, the image behind the
 target. `target` is what the transform places: an image as `{ imageId }`, or a
 character as `{ characterId, sprites }`, where `sprites` holds one
-`{ id, resourceId }` per sprite group, the shape scene lines use. Each image
-must reference an existing non-folder image, the character an existing
-character, and each `resourceId` one of that character's non-folder sprites;
-none of them can be deleted while a transform preview uses it. Send
-`preview: {}` in `transform.update` to clear both.
+`{ id, resourceId }` per sprite group, the shape scene lines use. Sprites draw
+in array order, the first at the bottom. Each image must reference an existing
+non-folder image, the character an existing character, and each `resourceId`
+one of that character's sprites, of any kind but a folder; none of them can be
+deleted while a transform preview uses it. Send `preview: {}` in
+`transform.update` to clear both.
 
 `project.defaultDialogueAvatarTransformId` optionally references a transform for
 new dialogue avatars. Omit it when no default is selected. Set or replace the

@@ -7733,32 +7733,13 @@ const validateTransformPreviewSlot = ({ value, path, errorFactory }) => {
   return VALID_RESULT;
 };
 
-// A transform preview's target is an image, or a character drawn with one
-// sprite per sprite group, in the { id, resourceId } shape scene lines use.
-const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
-  if (value === undefined) {
-    return VALID_RESULT;
-  }
+const PREVIEW_VISUAL_KEYS = ["imageId", "characterId", "sprites"];
 
-  if (!isPlainObject(value)) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path} must be an object when provided`,
-    );
-  }
-
-  {
-    const result = validateAllowedKeys({
-      value,
-      allowedKeys: ["imageId", "characterId", "sprites"],
-      path,
-      errorFactory,
-    });
-    if (result?.valid === false) {
-      return result;
-    }
-  }
-
+// What a preview slot shows: an image as { imageId }, or a character as
+// { characterId, sprites } with one { id, resourceId } per sprite group, the
+// shape scene lines use. Sprites draw in array order, the first at the
+// bottom. The caller checks the slot's keys, so a slot can add its own.
+const validatePreviewVisual = ({ value, path, errorFactory }) => {
   if (value.characterId === undefined) {
     if (value.sprites !== undefined) {
       return invalidFromErrorFactory(
@@ -7767,7 +7748,14 @@ const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
       );
     }
 
-    return validateTransformPreviewSlot({ value, path, errorFactory });
+    if (value.imageId !== undefined && !isNonEmptyString(value.imageId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.imageId must be a non-empty string when provided`,
+      );
+    }
+
+    return VALID_RESULT;
   }
 
   if (value.imageId !== undefined) {
@@ -7825,6 +7813,34 @@ const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
   }
 
   return VALID_RESULT;
+};
+
+// A transform preview's target shows an image or a character.
+const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: PREVIEW_VISUAL_KEYS,
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validatePreviewVisual({ value, path, errorFactory });
 };
 
 const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
@@ -9146,7 +9162,7 @@ const validateAnimationMaskImageReferences = ({
 };
 
 // A character drawn with one sprite per sprite group: the character must exist
-// and each sprite must be one of its non-folder sprites.
+// and each sprite must be one of its sprites, of any kind but a folder.
 const validateCharacterSpritesReference = ({
   state,
   characterId,
@@ -9169,7 +9185,7 @@ const validateCharacterSpritesReference = ({
 
   for (const [index, sprite] of sprites.entries()) {
     const characterSprite = character.sprites?.items?.[sprite.resourceId];
-    if (!isPlainObject(characterSprite) || characterSprite.type !== "image") {
+    if (!isPlainObject(characterSprite) || characterSprite.type === "folder") {
       return invalidFromErrorFactory(
         errorFactory,
         `${path}.sprites[${index}].resourceId must reference an existing non-folder sprite of the character`,
@@ -9185,6 +9201,35 @@ const validateCharacterSpritesReference = ({
   return VALID_RESULT;
 };
 
+// The references of what a preview slot shows: its image, or its character
+// and that character's sprites.
+const validatePreviewVisualReferences = ({
+  state,
+  visual,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) =>
+  visual?.characterId === undefined
+    ? validateImageReference({
+        state,
+        imageId: visual?.imageId,
+        path: `${path}.imageId`,
+        details: {
+          ...details,
+          imageId: visual?.imageId,
+        },
+        errorFactory,
+      })
+    : validateCharacterSpritesReference({
+        state,
+        characterId: visual.characterId,
+        sprites: visual.sprites,
+        path,
+        details,
+        errorFactory,
+      });
+
 const validateTransformPreviewReferences = ({
   state,
   preview,
@@ -9198,31 +9243,16 @@ const validateTransformPreviewReferences = ({
   }
 
   for (const slotKey of slotKeys) {
-    const slot = preview[slotKey];
-    const result =
-      slot?.characterId === undefined
-        ? validateImageReference({
-            state,
-            imageId: slot?.imageId,
-            path: `${path}.${slotKey}.imageId`,
-            details: {
-              ...details,
-              slot: slotKey,
-              imageId: slot?.imageId,
-            },
-            errorFactory,
-          })
-        : validateCharacterSpritesReference({
-            state,
-            characterId: slot.characterId,
-            sprites: slot.sprites,
-            path: `${path}.${slotKey}`,
-            details: {
-              ...details,
-              slot: slotKey,
-            },
-            errorFactory,
-          });
+    const result = validatePreviewVisualReferences({
+      state,
+      visual: preview[slotKey],
+      path: `${path}.${slotKey}`,
+      details: {
+        ...details,
+        slot: slotKey,
+      },
+      errorFactory,
+    });
     if (!result.valid) {
       return result;
     }
