@@ -7733,6 +7733,116 @@ const validateTransformPreviewSlot = ({ value, path, errorFactory }) => {
   return VALID_RESULT;
 };
 
+const PREVIEW_VISUAL_KEYS = ["imageId", "characterId", "sprites"];
+
+// What a preview slot shows: an image as { imageId }, or a character as
+// { characterId, sprites } with one { id, resourceId } per sprite group, the
+// shape scene lines use. Sprites draw in array order, the first at the
+// bottom. The caller checks the slot's keys, so a slot can add its own.
+const validatePreviewVisual = ({ value, path, errorFactory }) => {
+  if (value.characterId === undefined) {
+    if (value.sprites !== undefined) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.sprites requires ${path}.characterId`,
+      );
+    }
+
+    if (value.imageId !== undefined && !isNonEmptyString(value.imageId)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.imageId must be a non-empty string when provided`,
+      );
+    }
+
+    return VALID_RESULT;
+  }
+
+  if (value.imageId !== undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must hold either imageId or characterId, not both`,
+    );
+  }
+
+  if (!isNonEmptyString(value.characterId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.characterId must be a non-empty string when provided`,
+    );
+  }
+
+  if (!Array.isArray(value.sprites) || value.sprites.length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.sprites must be a non-empty array when characterId is provided`,
+    );
+  }
+
+  const spriteGroupIds = new Set();
+  for (const [index, sprite] of value.sprites.entries()) {
+    const spritePath = `${path}.sprites[${index}]`;
+    {
+      const result = validateAllowedKeys({
+        value: sprite,
+        allowedKeys: ["id", "resourceId"],
+        path: spritePath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    for (const key of ["id", "resourceId"]) {
+      if (!isNonEmptyString(sprite[key])) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${spritePath}.${key} must be a non-empty string`,
+        );
+      }
+    }
+
+    if (spriteGroupIds.has(sprite.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${spritePath}.id must be unique within ${path}.sprites`,
+      );
+    }
+    spriteGroupIds.add(sprite.id);
+  }
+
+  return VALID_RESULT;
+};
+
+// A transform preview's target shows an image or a character.
+const validateTransformPreviewTarget = ({ value, path, errorFactory }) => {
+  if (value === undefined) {
+    return VALID_RESULT;
+  }
+
+  if (!isPlainObject(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be an object when provided`,
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value,
+      allowedKeys: PREVIEW_VISUAL_KEYS,
+      path,
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validatePreviewVisual({ value, path, errorFactory });
+};
+
 const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
   if (value === undefined) {
     return VALID_RESULT;
@@ -7757,10 +7867,10 @@ const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
     }
   }
 
-  for (const key of ["background", "target"]) {
+  {
     const result = validateTransformPreviewSlot({
-      value: value[key],
-      path: `${path}.${key}`,
+      value: value.background,
+      path: `${path}.background`,
       errorFactory,
     });
     if (result?.valid === false) {
@@ -7768,7 +7878,11 @@ const validateTransformPreviewObject = ({ value, path, errorFactory }) => {
     }
   }
 
-  return VALID_RESULT;
+  return validateTransformPreviewTarget({
+    value: value.target,
+    path: `${path}.target`,
+    errorFactory,
+  });
 };
 
 // A particle's preview settings: the background image its editor preview and
@@ -9047,7 +9161,76 @@ const validateAnimationMaskImageReferences = ({
   return VALID_RESULT;
 };
 
-const validateTransformPreviewImageReferences = ({
+// A character drawn with one sprite per sprite group: the character must exist
+// and each sprite must be one of its sprites, of any kind but a folder.
+const validateCharacterSpritesReference = ({
+  state,
+  characterId,
+  sprites,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) => {
+  const character = state.characters?.items?.[characterId];
+  if (!isPlainObject(character) || character.type !== "character") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.characterId must reference an existing character`,
+      {
+        ...details,
+        characterId,
+      },
+    );
+  }
+
+  for (const [index, sprite] of sprites.entries()) {
+    const characterSprite = character.sprites?.items?.[sprite.resourceId];
+    if (!isPlainObject(characterSprite) || characterSprite.type === "folder") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.sprites[${index}].resourceId must reference an existing non-folder sprite of the character`,
+        {
+          ...details,
+          characterId,
+          spriteId: sprite.resourceId,
+        },
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+// The references of what a preview slot shows: its image, or its character
+// and that character's sprites.
+const validatePreviewVisualReferences = ({
+  state,
+  visual,
+  path,
+  details = {},
+  errorFactory = createPreconditionValidationError,
+}) =>
+  visual?.characterId === undefined
+    ? validateImageReference({
+        state,
+        imageId: visual?.imageId,
+        path: `${path}.imageId`,
+        details: {
+          ...details,
+          imageId: visual?.imageId,
+        },
+        errorFactory,
+      })
+    : validateCharacterSpritesReference({
+        state,
+        characterId: visual.characterId,
+        sprites: visual.sprites,
+        path,
+        details,
+        errorFactory,
+      });
+
+const validateTransformPreviewReferences = ({
   state,
   preview,
   path,
@@ -9060,15 +9243,13 @@ const validateTransformPreviewImageReferences = ({
   }
 
   for (const slotKey of slotKeys) {
-    const imageId = preview[slotKey]?.imageId;
-    const result = validateImageReference({
+    const result = validatePreviewVisualReferences({
       state,
-      imageId,
-      path: `${path}.${slotKey}.imageId`,
+      visual: preview[slotKey],
+      path: `${path}.${slotKey}`,
       details: {
         ...details,
         slot: slotKey,
-        imageId,
       },
       errorFactory,
     });
@@ -9747,7 +9928,7 @@ export const assertInvariants = ({ state }) => {
     }
 
     {
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: transform.preview,
         path: "transform.preview",
@@ -9797,7 +9978,7 @@ export const assertInvariants = ({ state }) => {
     }
 
     {
-      const result = validateTransformPreviewImageReferences({
+      const result = validateTransformPreviewReferences({
         state,
         preview: particle.preview,
         path: "particle.preview",
@@ -20663,7 +20844,7 @@ const COMMAND_DEFINITIONS = [
           return fileResult;
         }
 
-        const previewResult = validateTransformPreviewImageReferences({
+        const previewResult = validateTransformPreviewReferences({
           state,
           preview: payload.data.preview,
           path: "payload.data.preview",
@@ -20704,7 +20885,7 @@ const COMMAND_DEFINITIONS = [
         return fileResult;
       }
 
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: payload.data.preview,
         path: "payload.data.preview",
@@ -20801,7 +20982,7 @@ const COMMAND_DEFINITIONS = [
         return fileResult;
       }
 
-      const previewResult = validateTransformPreviewImageReferences({
+      const previewResult = validateTransformPreviewReferences({
         state,
         preview: payload.data.preview,
         path: "payload.data.preview",
@@ -20848,7 +21029,7 @@ const COMMAND_DEFINITIONS = [
           return fileResult;
         }
 
-        const previewResult = validateTransformPreviewImageReferences({
+        const previewResult = validateTransformPreviewReferences({
           state,
           preview: payload.data.preview,
           path: "payload.data.preview",

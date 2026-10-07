@@ -1253,6 +1253,20 @@ const createPreviewSettingsState = () => {
   return state;
 };
 
+const createTransformPreviewCharacterState = () => {
+  const state = createRichCompatibilityState();
+  state.transforms.items["transform-rich"].preview = {
+    background: {
+      imageId: "image-rich",
+    },
+    target: {
+      characterId: "character-hero",
+      sprites: [{ id: "base", resourceId: "sprite-a" }],
+    },
+  };
+  return state;
+};
+
 const createDefaultAvatarState = () => {
   const state = createRichCompatibilityState();
   state.project.defaultDialogueAvatarTransformId = "transform-rich";
@@ -2145,6 +2159,51 @@ const payloadFixtures = [
       rotation: 15,
     },
   }),
+  {
+    type: "transform.create",
+    fixtureName: "preview-character-target",
+    payload: {
+      transformId: "transform-preview",
+      data: {
+        type: "transform",
+        name: "Center",
+        x: 960,
+        y: 540,
+        scaleX: 1,
+        scaleY: 1,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        rotation: 0,
+        preview: {
+          background: {
+            imageId: "image-rich",
+          },
+          target: {
+            characterId: "character-hero",
+            sprites: [{ id: "base", resourceId: "sprite-a" }],
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "transform.update",
+    fixtureName: "preview-character-target",
+    payload: {
+      transformId: "item-a",
+      data: {
+        preview: {
+          target: {
+            characterId: "character-hero",
+            sprites: [
+              { id: "body", resourceId: "sprite-a" },
+              { id: "face", resourceId: "sprite-b" },
+            ],
+          },
+        },
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "variable",
     idField: "variableId",
@@ -3126,6 +3185,10 @@ const stateFixtures = [
     state: createPreviewSettingsState(),
   },
   {
+    fixtureName: "transform-preview-character-project",
+    state: createTransformPreviewCharacterState(),
+  },
+  {
     fixtureName: "default-dialogue-avatar-project",
     state: createDefaultAvatarState(),
   },
@@ -3210,6 +3273,51 @@ const streamFixtures = [
           textStyleId: "text-style-ui",
           data: {
             previewAlign: "left",
+          },
+        },
+      },
+    ],
+  },
+  {
+    fixtureName: "transform-preview-character-target",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            preview: {
+              target: {
+                characterId: "character-hero",
+                sprites: [
+                  { id: "body", resourceId: "sprite-a" },
+                  { id: "face", resourceId: "sprite-b" },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            preview: {
+              target: {
+                imageId: "image-rich",
+              },
+            },
+          },
+        },
+      },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            preview: {},
           },
         },
       },

@@ -1,0 +1,13 @@
+schemaVersion: 16
+type: transform.update
+payload:
+  transformId: item-a
+  data:
+    preview:
+      target:
+        characterId: character-hero
+        sprites:
+          - id: body
+            resourceId: sprite-a
+          - id: face
+            resourceId: sprite-b
