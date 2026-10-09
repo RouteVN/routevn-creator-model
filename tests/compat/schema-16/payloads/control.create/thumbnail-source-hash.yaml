@@ -1,0 +1,12 @@
+schemaVersion: 16
+type: control.create
+payload:
+  controlId: control-thumbnail
+  data:
+    type: control
+    name: Navigation
+    thumbnailFileId: thumb-control
+    thumbnailSourceHash: hash-control
+    elements:
+      items: {}
+      tree: []

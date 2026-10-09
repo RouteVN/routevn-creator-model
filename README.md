@@ -419,6 +419,19 @@ one of that character's sprites, of any kind but a folder; none of them can be
 deleted while a transform preview uses it. Send `preview: {}` in
 `transform.update` to clear both.
 
+Transforms, particles, layouts, and controls can record
+`thumbnailSourceHash` next to `thumbnailFileId`: a non-empty string the editor
+derives from what it drew for that thumbnail, so it can tell whether the
+thumbnail is still current. The model does not interpret it or check it
+against the image. It is only accepted together with `thumbnailFileId`, in state
+and in each create or update payload. An update keeps it while the thumbnail
+stays the same, including when the same `thumbnailFileId` is sent again, and
+drops it when a different `thumbnailFileId` comes without a hash or the
+thumbnail is removed. A transform's `previewFileId` is captured with its
+thumbnail, so a different `previewFileId` sent without a hash drops it too. A
+`thumbnailSourceHash` sent as `undefined` counts as not sent, as it is once a
+command is serialized. Folders cannot have one.
+
 `project.defaultDialogueAvatarTransformId` optionally references a transform for
 new dialogue avatars. Omit it when no default is selected. Set or replace the
 reference with `project.set_default_dialogue_avatar_transform` and payload

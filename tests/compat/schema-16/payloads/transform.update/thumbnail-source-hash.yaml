@@ -1,0 +1,7 @@
+schemaVersion: 16
+type: transform.update
+payload:
+  transformId: item-a
+  data:
+    thumbnailFileId: thumb-transform
+    thumbnailSourceHash: hash-transform

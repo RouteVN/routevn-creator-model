@@ -1,0 +1,16 @@
+schemaVersion: 16
+type: transform.create
+payload:
+  transformId: transform-thumbnail
+  data:
+    type: transform
+    name: Center
+    x: 960
+    "y": 540
+    scaleX: 1
+    scaleY: 1
+    anchorX: 0.5
+    anchorY: 0.5
+    rotation: 0
+    thumbnailFileId: thumb-transform
+    thumbnailSourceHash: hash-transform

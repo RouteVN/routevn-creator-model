@@ -1,0 +1,7 @@
+schemaVersion: 16
+type: layout.update
+payload:
+  layoutId: item-a
+  data:
+    thumbnailFileId: thumb-layout
+    thumbnailSourceHash: hash-layout

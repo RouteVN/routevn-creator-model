@@ -3270,6 +3270,38 @@ const validateColorItems = ({ items, path, errorFactory }) => {
   }
 };
 
+// A thumbnail file and, optionally, the source hash of what the editor drew
+// for it. The hash only comes with a thumbnail.
+const validateThumbnailFields = ({ value, path, errorFactory }) => {
+  if (
+    value.thumbnailFileId !== undefined &&
+    !isNonEmptyString(value.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailFileId must be a non-empty string when provided`,
+    );
+  }
+
+  if (value.thumbnailSourceHash === undefined) {
+    return;
+  }
+
+  if (!isNonEmptyString(value.thumbnailSourceHash)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailSourceHash must be a non-empty string when provided`,
+    );
+  }
+
+  if (value.thumbnailFileId === undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailSourceHash requires ${path}.thumbnailFileId`,
+    );
+  }
+};
+
 const validateTransformItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -3301,6 +3333,7 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
                 "anchorY",
                 "rotation",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "previewFileId",
                 "preview",
               ],
@@ -3341,14 +3374,25 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "transform") {
-      for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-        const fileId = item[fieldName];
-        if (fileId !== undefined && !isNonEmptyString(fileId)) {
-          return invalidFromErrorFactory(
-            errorFactory,
-            `${itemPath}.${fieldName} must be a non-empty string when provided`,
-          );
+      {
+        const result = validateThumbnailFields({
+          value: item,
+          path: itemPath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
         }
+      }
+
+      if (
+        item.previewFileId !== undefined &&
+        !isNonEmptyString(item.previewFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.previewFileId must be a non-empty string when provided`,
+        );
       }
 
       {
@@ -3456,6 +3500,7 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
                 "seed",
                 "modules",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
               ],
         path: itemPath,
@@ -3531,14 +3576,15 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateThumbnailFields({
+        value: item,
+        path: itemPath,
         errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -7232,6 +7278,32 @@ const applyTagIdsUpdate = ({ currentItem, data }) => {
   return nextItem;
 };
 
+// Updates an item that can hold a thumbnail. Its source hash stays only while
+// it still describes the files captured with it: sending one of them anew
+// without a hash, or removing the thumbnail, drops it, while resending the
+// same file keeps it. A hash sent as undefined counts as not sent, as it is
+// once the command is serialized.
+const applyThumbnailItemUpdate = ({
+  currentItem,
+  data,
+  capturedFileFields = ["thumbnailFileId"],
+}) => {
+  const nextItem = applyTagIdsUpdate({ currentItem, data });
+  const capturedFilesKept = capturedFileFields.every(
+    (field) => nextItem[field] === currentItem[field],
+  );
+  const sourceHash =
+    data.thumbnailSourceHash ??
+    (capturedFilesKept ? currentItem.thumbnailSourceHash : undefined);
+
+  delete nextItem.thumbnailSourceHash;
+  if (sourceHash !== undefined && nextItem.thumbnailFileId !== undefined) {
+    nextItem.thumbnailSourceHash = sourceHash;
+  }
+
+  return nextItem;
+};
+
 const applyTextStyleUpdate = ({ currentItem, data }) => {
   const nextData = structuredClone(data);
   delete nextData.clearShadow;
@@ -7945,6 +8017,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "layoutSchemaVersion",
                 "isFragment",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
                 "elements",
               ],
@@ -7984,14 +8057,15 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateThumbnailFields({
+        value: item,
+        path: itemPath,
         errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -8085,6 +8159,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
                 "description",
                 "tagIds",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
                 "elements",
                 "keyboard",
@@ -8126,14 +8201,15 @@ const validateControlItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateThumbnailFields({
+        value: item,
+        path: itemPath,
         errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -12963,6 +13039,7 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
               "anchorY",
               "rotation",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "previewFileId",
               "preview",
             ],
@@ -12989,14 +13066,25 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "transform") {
-    for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-      const fileId = data[fieldName];
-      if (fileId !== undefined && !isNonEmptyString(fileId)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `payload.data.${fieldName} must be a non-empty string when provided`,
-        );
+    {
+      const result = validateThumbnailFields({
+        value: data,
+        path: "payload.data",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
       }
+    }
+
+    if (
+      data.previewFileId !== undefined &&
+      !isNonEmptyString(data.previewFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.previewFileId must be a non-empty string when provided",
+      );
     }
 
     {
@@ -13071,6 +13159,7 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
               "seed",
               "modules",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
             ],
       path: "payload.data",
@@ -13099,14 +13188,15 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
     return;
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13181,6 +13271,7 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
         "seed",
         "modules",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -13212,14 +13303,15 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13305,6 +13397,7 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
         "anchorY",
         "rotation",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "previewFileId",
         "preview",
       ],
@@ -13337,14 +13430,25 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-    const fileId = data[fieldName];
-    if (fileId !== undefined && !isNonEmptyString(fileId)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `payload.data.${fieldName} must be a non-empty string when provided`,
-      );
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
     }
+  }
+
+  if (
+    data.previewFileId !== undefined &&
+    !isNonEmptyString(data.previewFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.previewFileId must be a non-empty string when provided",
+    );
   }
 
   {
@@ -14286,6 +14390,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "layoutSchemaVersion",
               "isFragment",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
               "elements",
             ],
@@ -14311,14 +14416,15 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14394,6 +14500,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
         "layoutType",
         "isFragment",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -14436,14 +14543,15 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     }
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14502,6 +14610,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
               "description",
               "tagIds",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
               "elements",
               "keyboard",
@@ -14529,14 +14638,15 @@ const validateControlCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14610,6 +14720,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
         "keyboard",
         "keyup",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -14641,14 +14752,15 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -20800,6 +20912,9 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.thumbnailFileId !== undefined) {
         item.thumbnailFileId = payload.data.thumbnailFileId;
       }
+      if (payload.data.thumbnailSourceHash !== undefined) {
+        item.thumbnailSourceHash = payload.data.thumbnailSourceHash;
+      }
 
       if (payload.data.preview !== undefined) {
         item.preview = structuredClone(payload.data.preview);
@@ -20808,7 +20923,7 @@ const COMMAND_DEFINITIONS = [
       return item;
     },
     updateItem: ({ currentItem, payload }) => {
-      const nextItem = applyTagIdsUpdate({
+      const nextItem = applyThumbnailItemUpdate({
         currentItem,
         data: payload.data,
       });
@@ -20951,6 +21066,9 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.thumbnailFileId !== undefined) {
         item.thumbnailFileId = payload.data.thumbnailFileId;
       }
+      if (payload.data.thumbnailSourceHash !== undefined) {
+        item.thumbnailSourceHash = payload.data.thumbnailSourceHash;
+      }
       if (payload.data.previewFileId !== undefined) {
         item.previewFileId = payload.data.previewFileId;
       }
@@ -20960,10 +21078,12 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
+    // The thumbnail and the full-size preview image are captured together.
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyThumbnailItemUpdate({
         currentItem,
         data: payload.data,
+        capturedFileFields: ["thumbnailFileId", "previewFileId"],
       }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "transform") {
@@ -21674,6 +21794,11 @@ const COMMAND_DEFINITIONS = [
                   thumbnailFileId: payload.data.thumbnailFileId,
                 }
               : {}),
+            ...(payload.data.thumbnailSourceHash !== undefined
+              ? {
+                  thumbnailSourceHash: payload.data.thumbnailSourceHash,
+                }
+              : {}),
             ...(payload.data.preview !== undefined
               ? {
                   preview: structuredClone(payload.data.preview),
@@ -21684,7 +21809,7 @@ const COMMAND_DEFINITIONS = [
         : {}),
     }),
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyThumbnailItemUpdate({
         currentItem,
         data: payload.data,
       }),
@@ -21844,7 +21969,7 @@ const COMMAND_DEFINITIONS = [
       };
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+      applyThumbnailItemUpdate({
         currentItem,
         data: payload.data,
       }),
