@@ -1,0 +1,7 @@
+schemaVersion: 16
+type: control.update
+payload:
+  controlId: item-a
+  data:
+    thumbnailFileId: thumb-control
+    thumbnailSourceHash: hash-control

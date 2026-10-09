@@ -3270,6 +3270,28 @@ const validateColorItems = ({ items, path, errorFactory }) => {
   }
 };
 
+// A thumbnail source hash records what an editor drew for the thumbnail file,
+// so it only comes with one.
+const validateThumbnailSourceHash = ({ value, path, errorFactory }) => {
+  if (value.thumbnailSourceHash === undefined) {
+    return;
+  }
+
+  if (!isNonEmptyString(value.thumbnailSourceHash)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailSourceHash must be a non-empty string when provided`,
+    );
+  }
+
+  if (value.thumbnailFileId === undefined) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailSourceHash requires ${path}.thumbnailFileId`,
+    );
+  }
+};
+
 const validateTransformItems = ({ items, path, errorFactory }) => {
   for (const [itemId, item] of Object.entries(items)) {
     const itemPath = `${path}.${itemId}`;
@@ -3301,6 +3323,7 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
                 "anchorY",
                 "rotation",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "previewFileId",
                 "preview",
               ],
@@ -3348,6 +3371,17 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
             errorFactory,
             `${itemPath}.${fieldName} must be a non-empty string when provided`,
           );
+        }
+      }
+
+      {
+        const result = validateThumbnailSourceHash({
+          value: item,
+          path: itemPath,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
         }
       }
 
@@ -3456,6 +3490,7 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
                 "seed",
                 "modules",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
               ],
         path: itemPath,
@@ -3539,6 +3574,17 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validateThumbnailSourceHash({
+        value: item,
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -7232,6 +7278,19 @@ const applyTagIdsUpdate = ({ currentItem, data }) => {
   return nextItem;
 };
 
+// A new thumbnail sent without its source hash drops the old hash, which no
+// longer describes it.
+const applyThumbnailUpdate = ({ nextItem, data }) => {
+  if (
+    data.thumbnailFileId !== undefined &&
+    data.thumbnailSourceHash === undefined
+  ) {
+    delete nextItem.thumbnailSourceHash;
+  }
+
+  return nextItem;
+};
+
 const applyTextStyleUpdate = ({ currentItem, data }) => {
   const nextData = structuredClone(data);
   delete nextData.clearShadow;
@@ -7945,6 +8004,7 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
                 "layoutSchemaVersion",
                 "isFragment",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
                 "elements",
               ],
@@ -7992,6 +8052,17 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validateThumbnailSourceHash({
+        value: item,
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -8085,6 +8156,7 @@ const validateControlItems = ({ items, path, errorFactory }) => {
                 "description",
                 "tagIds",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
                 "elements",
                 "keyboard",
@@ -8134,6 +8206,17 @@ const validateControlItems = ({ items, path, errorFactory }) => {
         errorFactory,
         `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
       );
+    }
+
+    {
+      const result = validateThumbnailSourceHash({
+        value: item,
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -12963,6 +13046,7 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
               "anchorY",
               "rotation",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "previewFileId",
               "preview",
             ],
@@ -12996,6 +13080,17 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
           errorFactory,
           `payload.data.${fieldName} must be a non-empty string when provided`,
         );
+      }
+    }
+
+    {
+      const result = validateThumbnailSourceHash({
+        value: data,
+        path: "payload.data",
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
       }
     }
 
@@ -13071,6 +13166,7 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
               "seed",
               "modules",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
             ],
       path: "payload.data",
@@ -13107,6 +13203,17 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13181,6 +13288,7 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
         "seed",
         "modules",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -13220,6 +13328,17 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -13305,6 +13424,7 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
         "anchorY",
         "rotation",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "previewFileId",
         "preview",
       ],
@@ -13344,6 +13464,17 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
         errorFactory,
         `payload.data.${fieldName} must be a non-empty string when provided`,
       );
+    }
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
     }
   }
 
@@ -14286,6 +14417,7 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
               "layoutSchemaVersion",
               "isFragment",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
               "elements",
             ],
@@ -14319,6 +14451,17 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14394,6 +14537,7 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
         "layoutType",
         "isFragment",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -14444,6 +14588,17 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14502,6 +14657,7 @@ const validateControlCreateData = ({ data, errorFactory }) => {
               "description",
               "tagIds",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
               "elements",
               "keyboard",
@@ -14537,6 +14693,17 @@ const validateControlCreateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -14610,6 +14777,7 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
         "keyboard",
         "keyup",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
       ],
       path: "payload.data",
@@ -14649,6 +14817,17 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.thumbnailFileId must be a non-empty string when provided",
     );
+  }
+
+  {
+    const result = validateThumbnailSourceHash({
+      value: data,
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -20800,6 +20979,9 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.thumbnailFileId !== undefined) {
         item.thumbnailFileId = payload.data.thumbnailFileId;
       }
+      if (payload.data.thumbnailSourceHash !== undefined) {
+        item.thumbnailSourceHash = payload.data.thumbnailSourceHash;
+      }
 
       if (payload.data.preview !== undefined) {
         item.preview = structuredClone(payload.data.preview);
@@ -20817,7 +20999,7 @@ const COMMAND_DEFINITIONS = [
         delete nextItem.seed;
       }
 
-      return nextItem;
+      return applyThumbnailUpdate({ nextItem, data: payload.data });
     },
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
@@ -20951,6 +21133,9 @@ const COMMAND_DEFINITIONS = [
       if (payload.data.thumbnailFileId !== undefined) {
         item.thumbnailFileId = payload.data.thumbnailFileId;
       }
+      if (payload.data.thumbnailSourceHash !== undefined) {
+        item.thumbnailSourceHash = payload.data.thumbnailSourceHash;
+      }
       if (payload.data.previewFileId !== undefined) {
         item.previewFileId = payload.data.previewFileId;
       }
@@ -20961,8 +21146,11 @@ const COMMAND_DEFINITIONS = [
       return item;
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
-        currentItem,
+      applyThumbnailUpdate({
+        nextItem: applyTagIdsUpdate({
+          currentItem,
+          data: payload.data,
+        }),
         data: payload.data,
       }),
     validateCreateState: ({ state, payload }) => {
@@ -21674,6 +21862,11 @@ const COMMAND_DEFINITIONS = [
                   thumbnailFileId: payload.data.thumbnailFileId,
                 }
               : {}),
+            ...(payload.data.thumbnailSourceHash !== undefined
+              ? {
+                  thumbnailSourceHash: payload.data.thumbnailSourceHash,
+                }
+              : {}),
             ...(payload.data.preview !== undefined
               ? {
                   preview: structuredClone(payload.data.preview),
@@ -21684,8 +21877,11 @@ const COMMAND_DEFINITIONS = [
         : {}),
     }),
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
-        currentItem,
+      applyThumbnailUpdate({
+        nextItem: applyTagIdsUpdate({
+          currentItem,
+          data: payload.data,
+        }),
         data: payload.data,
       }),
     validateCreateState: ({ state, payload }) => {
@@ -21844,8 +22040,11 @@ const COMMAND_DEFINITIONS = [
       };
     },
     updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
-        currentItem,
+      applyThumbnailUpdate({
+        nextItem: applyTagIdsUpdate({
+          currentItem,
+          data: payload.data,
+        }),
         data: payload.data,
       }),
     validateCreateState: ({ state, payload }) => {

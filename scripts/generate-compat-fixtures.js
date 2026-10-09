@@ -1267,6 +1267,22 @@ const createTransformPreviewCharacterState = () => {
   return state;
 };
 
+const createThumbnailSourceHashState = () => {
+  const state = createPreviewSettingsState();
+  state.transforms.items["transform-rich"].thumbnailFileId = "thumb-image-rich";
+  state.transforms.items["transform-rich"].thumbnailSourceHash =
+    "hash-transform-rich";
+  state.particles.items["particle-preview"].thumbnailFileId =
+    "thumb-image-rich";
+  state.particles.items["particle-preview"].thumbnailSourceHash =
+    "hash-particle-preview";
+  state.layouts.items["layout-dialogue"].thumbnailSourceHash =
+    "hash-layout-dialogue";
+  state.controls.items["control-default"].thumbnailSourceHash =
+    "hash-control-default";
+  return state;
+};
+
 const createDefaultAvatarState = () => {
   const state = createRichCompatibilityState();
   state.project.defaultDialogueAvatarTransformId = "transform-rich";
@@ -2201,6 +2217,124 @@ const payloadFixtures = [
             ],
           },
         },
+      },
+    },
+  },
+  {
+    type: "transform.create",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      transformId: "transform-thumbnail",
+      data: {
+        type: "transform",
+        name: "Center",
+        x: 960,
+        y: 540,
+        scaleX: 1,
+        scaleY: 1,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        rotation: 0,
+        thumbnailFileId: "thumb-transform",
+        thumbnailSourceHash: "hash-transform",
+      },
+    },
+  },
+  {
+    type: "transform.update",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      transformId: "item-a",
+      data: {
+        thumbnailFileId: "thumb-transform",
+        thumbnailSourceHash: "hash-transform",
+      },
+    },
+  },
+  {
+    type: "particle.create",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      particleId: "particle-thumbnail",
+      data: {
+        type: "particle",
+        name: "Snow",
+        width: 1280,
+        height: 720,
+        modules: {
+          emission: {},
+          appearance: {},
+        },
+        thumbnailFileId: "thumb-particle",
+        thumbnailSourceHash: "hash-particle",
+      },
+    },
+  },
+  {
+    type: "particle.update",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      particleId: "item-a",
+      data: {
+        thumbnailFileId: "thumb-particle",
+        thumbnailSourceHash: "hash-particle",
+      },
+    },
+  },
+  {
+    type: "layout.create",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      layoutId: "layout-thumbnail",
+      data: {
+        type: "layout",
+        name: "Dialogue",
+        layoutType: "general",
+        thumbnailFileId: "thumb-layout",
+        thumbnailSourceHash: "hash-layout",
+        elements: {
+          items: {},
+          tree: [],
+        },
+      },
+    },
+  },
+  {
+    type: "layout.update",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      layoutId: "item-a",
+      data: {
+        thumbnailFileId: "thumb-layout",
+        thumbnailSourceHash: "hash-layout",
+      },
+    },
+  },
+  {
+    type: "control.create",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      controlId: "control-thumbnail",
+      data: {
+        type: "control",
+        name: "Navigation",
+        thumbnailFileId: "thumb-control",
+        thumbnailSourceHash: "hash-control",
+        elements: {
+          items: {},
+          tree: [],
+        },
+      },
+    },
+  },
+  {
+    type: "control.update",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      controlId: "item-a",
+      data: {
+        thumbnailFileId: "thumb-control",
+        thumbnailSourceHash: "hash-control",
       },
     },
   },
@@ -3189,6 +3323,10 @@ const stateFixtures = [
     state: createTransformPreviewCharacterState(),
   },
   {
+    fixtureName: "thumbnail-source-hash-project",
+    state: createThumbnailSourceHashState(),
+  },
+  {
     fixtureName: "default-dialogue-avatar-project",
     state: createDefaultAvatarState(),
   },
@@ -3318,6 +3456,97 @@ const streamFixtures = [
           transformId: "transform-rich",
           data: {
             preview: {},
+          },
+        },
+      },
+    ],
+  },
+  {
+    fixtureName: "thumbnail-source-hash",
+    initialState: createPreviewSettingsState(),
+    commands: [
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-transform-rich",
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-particle-preview",
+          },
+        },
+      },
+      {
+        type: "layout.update",
+        payload: {
+          layoutId: "layout-dialogue",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-layout-dialogue",
+          },
+        },
+      },
+      {
+        type: "control.update",
+        payload: {
+          controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-control-default",
+          },
+        },
+      },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            name: "Camera Wide",
+          },
+        },
+      },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            thumbnailFileId: "thumb-spritesheet-ui",
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            thumbnailFileId: "thumb-spritesheet-ui",
+          },
+        },
+      },
+      {
+        type: "layout.update",
+        payload: {
+          layoutId: "layout-dialogue",
+          data: {
+            thumbnailFileId: "thumb-spritesheet-ui",
+          },
+        },
+      },
+      {
+        type: "control.update",
+        payload: {
+          controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-spritesheet-ui",
           },
         },
       },

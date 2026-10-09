@@ -1,0 +1,13 @@
+schemaVersion: 16
+type: layout.create
+payload:
+  layoutId: layout-thumbnail
+  data:
+    type: layout
+    name: Dialogue
+    layoutType: general
+    thumbnailFileId: thumb-layout
+    thumbnailSourceHash: hash-layout
+    elements:
+      items: {}
+      tree: []

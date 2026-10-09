@@ -1,0 +1,14 @@
+schemaVersion: 16
+type: particle.create
+payload:
+  particleId: particle-thumbnail
+  data:
+    type: particle
+    name: Snow
+    width: 1280
+    height: 720
+    modules:
+      emission: {}
+      appearance: {}
+    thumbnailFileId: thumb-particle
+    thumbnailSourceHash: hash-particle
