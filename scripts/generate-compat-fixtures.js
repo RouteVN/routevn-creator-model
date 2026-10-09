@@ -3462,6 +3462,9 @@ const streamFixtures = [
     ],
   },
   {
+    // Each thumbnail gets a hash, keeps it through another edit, loses it to a
+    // new thumbnail sent without one, then gets a new hash that survives the
+    // same thumbnail being sent again.
     fixtureName: "thumbnail-source-hash",
     initialState: createPreviewSettingsState(),
     commands: [
@@ -3471,7 +3474,7 @@ const streamFixtures = [
           transformId: "transform-rich",
           data: {
             thumbnailFileId: "thumb-image-rich",
-            thumbnailSourceHash: "hash-transform-rich",
+            thumbnailSourceHash: "hash-transform-rich-1",
           },
         },
       },
@@ -3481,7 +3484,7 @@ const streamFixtures = [
           particleId: "particle-preview",
           data: {
             thumbnailFileId: "thumb-image-rich",
-            thumbnailSourceHash: "hash-particle-preview",
+            thumbnailSourceHash: "hash-particle-preview-1",
           },
         },
       },
@@ -3491,7 +3494,7 @@ const streamFixtures = [
           layoutId: "layout-dialogue",
           data: {
             thumbnailFileId: "thumb-image-rich",
-            thumbnailSourceHash: "hash-layout-dialogue",
+            thumbnailSourceHash: "hash-layout-dialogue-1",
           },
         },
       },
@@ -3501,7 +3504,7 @@ const streamFixtures = [
           controlId: "control-default",
           data: {
             thumbnailFileId: "thumb-image-rich",
-            thumbnailSourceHash: "hash-control-default",
+            thumbnailSourceHash: "hash-control-default-1",
           },
         },
       },
@@ -3550,7 +3553,118 @@ const streamFixtures = [
           },
         },
       },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-transform-rich-2",
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-particle-preview-2",
+          },
+        },
+      },
+      {
+        type: "layout.update",
+        payload: {
+          layoutId: "layout-dialogue",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-layout-dialogue-2",
+          },
+        },
+      },
+      {
+        type: "control.update",
+        payload: {
+          controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-control-default-2",
+          },
+        },
+      },
+      {
+        type: "transform.update",
+        payload: {
+          transformId: "transform-rich",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+          },
+        },
+      },
+      {
+        type: "particle.update",
+        payload: {
+          particleId: "particle-preview",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+          },
+        },
+      },
+      {
+        type: "layout.update",
+        payload: {
+          layoutId: "layout-dialogue",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+          },
+        },
+      },
+      {
+        type: "control.update",
+        payload: {
+          controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+          },
+        },
+      },
     ],
+    expectedFinalState: {
+      transforms: {
+        items: {
+          "transform-rich": {
+            name: "Camera Wide",
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-transform-rich-2",
+          },
+        },
+      },
+      particles: {
+        items: {
+          "particle-preview": {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-particle-preview-2",
+          },
+        },
+      },
+      layouts: {
+        items: {
+          "layout-dialogue": {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-layout-dialogue-2",
+          },
+        },
+      },
+      controls: {
+        items: {
+          "control-default": {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-control-default-2",
+          },
+        },
+      },
+    },
   },
   {
     fixtureName: "default-dialogue-avatar-transform",

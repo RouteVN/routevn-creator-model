@@ -3270,9 +3270,19 @@ const validateColorItems = ({ items, path, errorFactory }) => {
   }
 };
 
-// A thumbnail source hash records what an editor drew for the thumbnail file,
-// so it only comes with one.
-const validateThumbnailSourceHash = ({ value, path, errorFactory }) => {
+// A thumbnail file and, optionally, the source hash of what the editor drew
+// for it. The hash only comes with a thumbnail.
+const validateThumbnailFields = ({ value, path, errorFactory }) => {
+  if (
+    value.thumbnailFileId !== undefined &&
+    !isNonEmptyString(value.thumbnailFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.thumbnailFileId must be a non-empty string when provided`,
+    );
+  }
+
   if (value.thumbnailSourceHash === undefined) {
     return;
   }
@@ -3364,18 +3374,8 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "transform") {
-      for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-        const fileId = item[fieldName];
-        if (fileId !== undefined && !isNonEmptyString(fileId)) {
-          return invalidFromErrorFactory(
-            errorFactory,
-            `${itemPath}.${fieldName} must be a non-empty string when provided`,
-          );
-        }
-      }
-
       {
-        const result = validateThumbnailSourceHash({
+        const result = validateThumbnailFields({
           value: item,
           path: itemPath,
           errorFactory,
@@ -3383,6 +3383,16 @@ const validateTransformItems = ({ items, path, errorFactory }) => {
         if (result?.valid === false) {
           return result;
         }
+      }
+
+      if (
+        item.previewFileId !== undefined &&
+        !isNonEmptyString(item.previewFileId)
+      ) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.previewFileId must be a non-empty string when provided`,
+        );
       }
 
       {
@@ -3566,18 +3576,8 @@ const validateParticleItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
-    }
-
     {
-      const result = validateThumbnailSourceHash({
+      const result = validateThumbnailFields({
         value: item,
         path: itemPath,
         errorFactory,
@@ -7278,14 +7278,27 @@ const applyTagIdsUpdate = ({ currentItem, data }) => {
   return nextItem;
 };
 
-// A new thumbnail sent without its source hash drops the old hash, which no
-// longer describes it.
-const applyThumbnailUpdate = ({ nextItem, data }) => {
-  if (
-    data.thumbnailFileId !== undefined &&
-    data.thumbnailSourceHash === undefined
-  ) {
-    delete nextItem.thumbnailSourceHash;
+// Updates an item that can hold a thumbnail. Its source hash stays only while
+// it still describes the files captured with it: sending one of them anew
+// without a hash, or removing the thumbnail, drops it, while resending the
+// same file keeps it. A hash sent as undefined counts as not sent, as it is
+// once the command is serialized.
+const applyThumbnailItemUpdate = ({
+  currentItem,
+  data,
+  capturedFileFields = ["thumbnailFileId"],
+}) => {
+  const nextItem = applyTagIdsUpdate({ currentItem, data });
+  const capturedFilesKept = capturedFileFields.every(
+    (field) => nextItem[field] === currentItem[field],
+  );
+  const sourceHash =
+    data.thumbnailSourceHash ??
+    (capturedFilesKept ? currentItem.thumbnailSourceHash : undefined);
+
+  delete nextItem.thumbnailSourceHash;
+  if (sourceHash !== undefined && nextItem.thumbnailFileId !== undefined) {
+    nextItem.thumbnailSourceHash = sourceHash;
   }
 
   return nextItem;
@@ -8044,18 +8057,8 @@ const validateLayoutItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
-    }
-
     {
-      const result = validateThumbnailSourceHash({
+      const result = validateThumbnailFields({
         value: item,
         path: itemPath,
         errorFactory,
@@ -8198,18 +8201,8 @@ const validateControlItems = ({ items, path, errorFactory }) => {
       );
     }
 
-    if (
-      item.thumbnailFileId !== undefined &&
-      !isNonEmptyString(item.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-      );
-    }
-
     {
-      const result = validateThumbnailSourceHash({
+      const result = validateThumbnailFields({
         value: item,
         path: itemPath,
         errorFactory,
@@ -13073,18 +13066,8 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "transform") {
-    for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-      const fileId = data[fieldName];
-      if (fileId !== undefined && !isNonEmptyString(fileId)) {
-        return invalidFromErrorFactory(
-          errorFactory,
-          `payload.data.${fieldName} must be a non-empty string when provided`,
-        );
-      }
-    }
-
     {
-      const result = validateThumbnailSourceHash({
+      const result = validateThumbnailFields({
         value: data,
         path: "payload.data",
         errorFactory,
@@ -13092,6 +13075,16 @@ const validateTransformCreateData = ({ data, errorFactory }) => {
       if (result?.valid === false) {
         return result;
       }
+    }
+
+    if (
+      data.previewFileId !== undefined &&
+      !isNonEmptyString(data.previewFileId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.previewFileId must be a non-empty string when provided",
+      );
     }
 
     {
@@ -13195,18 +13188,8 @@ const validateParticleCreateData = ({ data, errorFactory }) => {
     return;
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -13320,18 +13303,8 @@ const validateParticleUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -13457,18 +13430,8 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  for (const fieldName of ["thumbnailFileId", "previewFileId"]) {
-    const fileId = data[fieldName];
-    if (fileId !== undefined && !isNonEmptyString(fileId)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `payload.data.${fieldName} must be a non-empty string when provided`,
-      );
-    }
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -13476,6 +13439,16 @@ const validateTransformUpdateData = ({ data, errorFactory }) => {
     if (result?.valid === false) {
       return result;
     }
+  }
+
+  if (
+    data.previewFileId !== undefined &&
+    !isNonEmptyString(data.previewFileId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.previewFileId must be a non-empty string when provided",
+    );
   }
 
   {
@@ -14443,18 +14416,8 @@ const validateLayoutCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -14580,18 +14543,8 @@ const validateLayoutUpdateData = ({ data, errorFactory }) => {
     }
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -14685,18 +14638,8 @@ const validateControlCreateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -14809,18 +14752,8 @@ const validateControlUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
-  }
-
   {
-    const result = validateThumbnailSourceHash({
+    const result = validateThumbnailFields({
       value: data,
       path: "payload.data",
       errorFactory,
@@ -20990,7 +20923,7 @@ const COMMAND_DEFINITIONS = [
       return item;
     },
     updateItem: ({ currentItem, payload }) => {
-      const nextItem = applyTagIdsUpdate({
+      const nextItem = applyThumbnailItemUpdate({
         currentItem,
         data: payload.data,
       });
@@ -20999,7 +20932,7 @@ const COMMAND_DEFINITIONS = [
         delete nextItem.seed;
       }
 
-      return applyThumbnailUpdate({ nextItem, data: payload.data });
+      return nextItem;
     },
     validateUpdateState: ({ state, payload, currentItem }) => {
       if (
@@ -21145,13 +21078,12 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
+    // The thumbnail and the full-size preview image are captured together.
     updateItem: ({ currentItem, payload }) =>
-      applyThumbnailUpdate({
-        nextItem: applyTagIdsUpdate({
-          currentItem,
-          data: payload.data,
-        }),
+      applyThumbnailItemUpdate({
+        currentItem,
         data: payload.data,
+        capturedFileFields: ["thumbnailFileId", "previewFileId"],
       }),
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "transform") {
@@ -21877,11 +21809,8 @@ const COMMAND_DEFINITIONS = [
         : {}),
     }),
     updateItem: ({ currentItem, payload }) =>
-      applyThumbnailUpdate({
-        nextItem: applyTagIdsUpdate({
-          currentItem,
-          data: payload.data,
-        }),
+      applyThumbnailItemUpdate({
+        currentItem,
         data: payload.data,
       }),
     validateCreateState: ({ state, payload }) => {
@@ -22040,11 +21969,8 @@ const COMMAND_DEFINITIONS = [
       };
     },
     updateItem: ({ currentItem, payload }) =>
-      applyThumbnailUpdate({
-        nextItem: applyTagIdsUpdate({
-          currentItem,
-          data: payload.data,
-        }),
+      applyThumbnailItemUpdate({
+        currentItem,
         data: payload.data,
       }),
     validateCreateState: ({ state, payload }) => {

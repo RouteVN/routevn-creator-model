@@ -20,8 +20,14 @@ const addFile = (state, fileId) => {
 
 const createThumbnailState = () => {
   const state = createEmptyTestState();
-  addFile(state, "file-thumb-one");
-  addFile(state, "file-thumb-two");
+  for (const fileId of [
+    "file-thumb-one",
+    "file-thumb-two",
+    "file-preview-one",
+    "file-preview-two",
+  ]) {
+    addFile(state, fileId);
+  }
   return state;
 };
 
@@ -65,6 +71,7 @@ const RESOURCES = [
       type: "layout",
       name: "Layout One",
       layoutType: "general",
+      isFragment: false,
       elements: {
         items: {},
         tree: [],
@@ -91,56 +98,124 @@ const thumbnailOne = {
   thumbnailSourceHash: "hash-one",
 };
 
-const run = (state, type, payload) =>
-  processCommand({ state, command: { type, payload } });
+// Runs a command and checks it left the state it was given unchanged.
+const run = (state, type, payload) => {
+  const before = structuredClone(state);
+  const result = processCommand({ state, command: { type, payload } });
+  expect(state).toStrictEqual(before);
+  return result;
+};
+
+// The whole state after a command: the previous state with only this item
+// replaced (and, for a create, added to the tree).
+const expectStateWithItem = (
+  result,
+  previousState,
+  collectionKey,
+  item,
+  { created = false } = {},
+) => {
+  const expected = structuredClone(previousState);
+  expected[collectionKey].items[item.id] = item;
+  if (created) {
+    expected[collectionKey].tree.push({ id: item.id, children: [] });
+  }
+
+  expect(result.valid).toBe(true);
+  expect(result.state).toStrictEqual(expected);
+};
 
 describe.each(RESOURCES)(
   "$family thumbnail source hash",
   ({ family, collectionKey, idField, data }) => {
     const itemId = `${family}-one`;
-    const create = (state, extraData = {}) =>
+    const createdItem = { id: itemId, ...data, ...thumbnailOne };
+    const create = (state = createThumbnailState()) =>
       run(state, `${family}.create`, {
         [idField]: itemId,
-        data: { ...data, ...extraData },
+        data: { ...data, ...thumbnailOne },
       });
     const update = (state, nextData) =>
       run(state, `${family}.update`, { [idField]: itemId, data: nextData });
-    const itemOf = (result) => result.state[collectionKey].items[itemId];
 
-    it("stores the hash with its thumbnail on create and update", () => {
-      const created = create(createThumbnailState(), thumbnailOne);
+    it("stores the hash with its thumbnail on create", () => {
+      const state = createThumbnailState();
 
-      expect(created.valid).toBe(true);
-      expect(itemOf(created)).toMatchObject(thumbnailOne);
+      expectStateWithItem(create(state), state, collectionKey, createdItem, {
+        created: true,
+      });
+    });
 
+    it("replaces the hash with a new thumbnail", () => {
+      const created = create();
       const updated = update(created.state, {
         thumbnailFileId: "file-thumb-two",
         thumbnailSourceHash: "hash-two",
       });
 
-      expect(updated.valid).toBe(true);
-      expect(itemOf(updated)).toMatchObject({
+      expectStateWithItem(updated, created.state, collectionKey, {
+        ...createdItem,
         thumbnailFileId: "file-thumb-two",
         thumbnailSourceHash: "hash-two",
       });
-      expect(itemOf(created)).toMatchObject(thumbnailOne);
     });
 
-    it("keeps the hash through other edits and drops it with a new thumbnail sent without one", () => {
-      const created = create(createThumbnailState(), thumbnailOne);
+    it("keeps the hash through other edits and when the same thumbnail is sent again", () => {
+      const created = create();
       const renamed = update(created.state, { name: "Renamed" });
+      const renamedItem = { ...createdItem, name: "Renamed" };
 
-      expect(renamed.valid).toBe(true);
-      expect(itemOf(renamed)).toMatchObject(thumbnailOne);
+      expectStateWithItem(renamed, created.state, collectionKey, renamedItem);
 
-      const replaced = update(renamed.state, {
-        thumbnailFileId: "file-thumb-two",
+      const resent = update(renamed.state, {
+        thumbnailFileId: "file-thumb-one",
       });
 
-      expect(replaced.valid).toBe(true);
-      expect(itemOf(replaced).thumbnailFileId).toBe("file-thumb-two");
-      expect(itemOf(replaced)).not.toHaveProperty("thumbnailSourceHash");
-      expect(itemOf(renamed)).toMatchObject(thumbnailOne);
+      expectStateWithItem(resent, renamed.state, collectionKey, renamedItem);
+    });
+
+    it("drops the hash when a new thumbnail comes without one", () => {
+      const created = create();
+      const replaced = update(created.state, {
+        thumbnailFileId: "file-thumb-two",
+      });
+      const { thumbnailSourceHash, ...itemWithoutHash } = createdItem;
+
+      expect(thumbnailSourceHash).toBe("hash-one");
+      expectStateWithItem(replaced, created.state, collectionKey, {
+        ...itemWithoutHash,
+        thumbnailFileId: "file-thumb-two",
+      });
+    });
+
+    it("treats a hash sent as undefined as not sent", () => {
+      const created = create();
+      const updated = update(created.state, {
+        name: "Renamed",
+        thumbnailSourceHash: undefined,
+      });
+
+      expectStateWithItem(updated, created.state, collectionKey, {
+        ...createdItem,
+        name: "Renamed",
+      });
+    });
+
+    it("drops the hash with a thumbnail sent as undefined", () => {
+      const created = create();
+      const updated = update(created.state, {
+        name: "Renamed",
+        thumbnailFileId: undefined,
+      });
+      const { thumbnailSourceHash, ...itemWithoutHash } = createdItem;
+
+      expect(thumbnailSourceHash).toBe("hash-one");
+      // As with any field, an update spreads a key sent as undefined.
+      expectStateWithItem(updated, created.state, collectionKey, {
+        ...itemWithoutHash,
+        name: "Renamed",
+        thumbnailFileId: undefined,
+      });
     });
 
     it("rejects a hash that is empty, not a string, or sent without its thumbnail", () => {
@@ -205,8 +280,7 @@ describe.each(RESOURCES)(
     });
 
     it("validates the hash in state", () => {
-      const created = create(createThumbnailState(), thumbnailOne);
-      const state = structuredClone(created.state);
+      const state = structuredClone(create().state);
       const item = state[collectionKey].items[itemId];
 
       expect(validateState({ state }).valid).toBe(true);
@@ -225,3 +299,67 @@ describe.each(RESOURCES)(
     });
   },
 );
+
+describe("transform thumbnail source hash with its preview image", () => {
+  const { collectionKey, idField, data } = RESOURCES[0];
+  const createdItem = {
+    id: "transform-one",
+    ...data,
+    ...thumbnailOne,
+    previewFileId: "file-preview-one",
+  };
+  const create = () =>
+    run(createThumbnailState(), "transform.create", {
+      [idField]: "transform-one",
+      data: {
+        ...data,
+        ...thumbnailOne,
+        previewFileId: "file-preview-one",
+      },
+    });
+  const update = (state, nextData) =>
+    run(state, "transform.update", {
+      [idField]: "transform-one",
+      data: nextData,
+    });
+
+  it("keeps the hash while the preview image stays the same", () => {
+    const created = create();
+    const resent = update(created.state, {
+      thumbnailFileId: "file-thumb-one",
+      previewFileId: "file-preview-one",
+    });
+
+    expectStateWithItem(resent, created.state, collectionKey, createdItem);
+  });
+
+  it("drops the hash when a new preview image comes without one", () => {
+    const created = create();
+    const replaced = update(created.state, {
+      previewFileId: "file-preview-two",
+    });
+    const { thumbnailSourceHash, ...itemWithoutHash } = createdItem;
+
+    expect(thumbnailSourceHash).toBe("hash-one");
+    expectStateWithItem(replaced, created.state, collectionKey, {
+      ...itemWithoutHash,
+      previewFileId: "file-preview-two",
+    });
+  });
+
+  it("stores a new hash sent with both new images", () => {
+    const created = create();
+    const recaptured = update(created.state, {
+      thumbnailFileId: "file-thumb-two",
+      previewFileId: "file-preview-two",
+      thumbnailSourceHash: "hash-two",
+    });
+
+    expectStateWithItem(recaptured, created.state, collectionKey, {
+      ...createdItem,
+      thumbnailFileId: "file-thumb-two",
+      previewFileId: "file-preview-two",
+      thumbnailSourceHash: "hash-two",
+    });
+  });
+});

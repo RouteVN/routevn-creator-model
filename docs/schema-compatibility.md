@@ -27,6 +27,22 @@ The current repo policy is:
 - missing old properties, changed old values, or changed array results are
   compatibility failures
 
+### Extending An Unreleased Schema
+
+A schema line can still change until an app release ships it. While no app
+release includes the current `SCHEMA_VERSION`:
+
+- an additive shape, such as a new optional field or a new accepted variant,
+  may extend it in a patch release instead of a new minor and schema archive
+- add new named fixtures for it next to `minimal.yaml` and `full.yaml`, and
+  leave the existing current-schema fixtures unchanged, so the archive shows
+  that nothing already accepted changed
+- builds on an earlier patch of the same schema reject commands and states
+  that use the new shape, so move the client to the new patch before builds
+  that write it and builds that don't open the same project
+
+Once an app release ships the schema, the minor bump rule above applies again.
+
 ## Compatibility Archive
 
 Compatibility fixtures live under:
@@ -128,6 +144,9 @@ If yes:
 - bump package **minor**
 - keep `SCHEMA_VERSION` aligned with that new minor
 - add a new `tests/compat/schema-<n>/` archive
+
+unless the current schema has not shipped in an app release yet; see
+[Extending An Unreleased Schema](#extending-an-unreleased-schema).
 
 If no:
 
