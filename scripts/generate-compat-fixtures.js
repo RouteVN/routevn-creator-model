@@ -3733,12 +3733,26 @@ const streamFixtures = [
         },
       },
     ],
+    // The fields the clears must leave in place. That the cleared fields are
+    // gone is checked by validateState and tests/clear-optional-fields.test.js.
     expectedFinalState: {
       textStyles: {
         items: {
           "text-style-ui": {
+            name: "UI Style",
+            fontId: ["font-ui"],
             colorId: "color-ui",
+            fontSize: 32,
+            lineHeight: 1.4,
+            fontWeight: "700",
             strokeWidth: 0,
+            shadow: {
+              colorId: "color-ui",
+              alpha: 0.75,
+              blur: 4,
+              offsetX: 2,
+              offsetY: 3,
+            },
           },
         },
       },
@@ -3746,6 +3760,25 @@ const streamFixtures = [
         items: {
           "spritesheet-rich": {
             type: "spritesheet",
+            name: "Hero Idle",
+            description: "Idle loop spritesheet",
+            fileId: "file-spritesheet-rich",
+            thumbnailFileId: "thumb-spritesheet-rich",
+            sheetWidth: 1024,
+            sheetHeight: 512,
+            frameCount: 4,
+            jsonData: {
+              meta: {
+                image: "hero-idle.png",
+              },
+            },
+            animations: {
+              idle: {
+                frames: [0, 1, 2, 3],
+                animationSpeed: 1,
+                loop: true,
+              },
+            },
           },
         },
       },

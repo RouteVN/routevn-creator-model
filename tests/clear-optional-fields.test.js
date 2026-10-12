@@ -53,6 +53,9 @@ const createState = () => {
   return state;
 };
 
+// A command as it is stored and replayed.
+const stored = (command) => JSON.parse(JSON.stringify(command));
+
 const apply = (state, command) => {
   const before = structuredClone(state);
   const result = processCommand({ state, command });
@@ -121,12 +124,29 @@ test("textStyle.update removes the outline color when strokeColorId is null", ()
   });
 });
 
-test("a stored outline clear replays to the same text style", () => {
-  const initialState = createOutlinedTextStyle();
+test("an outline color cleared with null stays cleared once stored, unlike undefined", () => {
+  const replayed = apply(
+    createOutlinedTextStyle(),
+    stored(clearOutlineCommand),
+  );
+  expect(replayed.textStyles.items["text-style-one"]).not.toHaveProperty(
+    "strokeColorId",
+  );
 
-  expect(
-    apply(initialState, JSON.parse(JSON.stringify(clearOutlineCommand))),
-  ).toEqual(apply(initialState, clearOutlineCommand));
+  const undefinedClear = stored({
+    type: "textStyle.update",
+    payload: {
+      textStyleId: "text-style-one",
+      data: { strokeColorId: undefined },
+    },
+  });
+  expect(undefinedClear.payload.data).toEqual({});
+  expect(validatePayload(undefinedClear)).toMatchObject({
+    valid: false,
+    error: {
+      message: "payload.data must include at least one updatable field",
+    },
+  });
 });
 
 test("textStyle.update accepts null only for the outline color", () => {
@@ -182,19 +202,35 @@ test("spritesheet.update removes the default frame size when it is null", () => 
   expect(withoutSize.spritesheets.items["sheet-one"]).toEqual(expectedSheet);
 });
 
-test("a stored frame size clear replays to the same spritesheet", () => {
-  const initialState = createSizedSpritesheet();
-  const command = {
+test("a frame size cleared with null stays cleared once stored, unlike undefined", () => {
+  const replayed = apply(
+    createSizedSpritesheet(),
+    stored({
+      type: "spritesheet.update",
+      payload: {
+        spritesheetId: "sheet-one",
+        data: { width: null, height: null },
+      },
+    }),
+  );
+  const sheet = replayed.spritesheets.items["sheet-one"];
+  expect(sheet).not.toHaveProperty("width");
+  expect(sheet).not.toHaveProperty("height");
+
+  const undefinedClear = stored({
     type: "spritesheet.update",
     payload: {
       spritesheetId: "sheet-one",
-      data: { width: null, height: null },
+      data: { width: undefined, height: undefined },
     },
-  };
-
-  expect(apply(initialState, JSON.parse(JSON.stringify(command)))).toEqual(
-    apply(initialState, command),
-  );
+  });
+  expect(undefinedClear.payload.data).toEqual({});
+  expect(validatePayload(undefinedClear)).toMatchObject({
+    valid: false,
+    error: {
+      message: "payload.data must include at least one updatable field",
+    },
+  });
 });
 
 test("spritesheet.update rejects a frame size that is not a number or null", () => {
