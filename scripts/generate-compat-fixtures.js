@@ -1733,6 +1733,17 @@ const payloadFixtures = [
       },
     },
   }),
+  {
+    type: "spritesheet.update",
+    fixtureName: "clear-frame-size",
+    payload: {
+      spritesheetId: "item-a",
+      data: {
+        width: null,
+        height: null,
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "sound",
     idField: "soundId",
@@ -2523,6 +2534,17 @@ const payloadFixtures = [
       textStyleId: "item-a",
       data: {
         clearShadow: true,
+      },
+    },
+  },
+  {
+    type: "textStyle.update",
+    fixtureName: "clear-stroke-color",
+    payload: {
+      textStyleId: "item-a",
+      data: {
+        strokeColorId: null,
+        strokeWidth: 0,
       },
     },
   },
@@ -3661,6 +3683,69 @@ const streamFixtures = [
           "control-default": {
             thumbnailFileId: "thumb-image-rich",
             thumbnailSourceHash: "hash-control-default-2",
+          },
+        },
+      },
+    },
+  },
+  {
+    // An outline color and a spritesheet's default frame size are set, then
+    // removed with null, which a stored command keeps, unlike undefined.
+    fixtureName: "clear-optional-fields",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "textStyle.update",
+        payload: {
+          textStyleId: "text-style-ui",
+          data: {
+            strokeColorId: "color-ui",
+            strokeWidth: 2,
+          },
+        },
+      },
+      {
+        type: "textStyle.update",
+        payload: {
+          textStyleId: "text-style-ui",
+          data: {
+            strokeColorId: null,
+            strokeWidth: 0,
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-rich",
+          data: {
+            width: null,
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-rich",
+          data: {
+            height: null,
+          },
+        },
+      },
+    ],
+    expectedFinalState: {
+      textStyles: {
+        items: {
+          "text-style-ui": {
+            colorId: "color-ui",
+            strokeWidth: 0,
+          },
+        },
+      },
+      spritesheets: {
+        items: {
+          "spritesheet-rich": {
+            type: "spritesheet",
           },
         },
       },

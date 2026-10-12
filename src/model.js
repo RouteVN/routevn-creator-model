@@ -408,7 +408,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 16;
+export const SCHEMA_VERSION = 17;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -7317,6 +7317,10 @@ const applyTextStyleUpdate = ({ currentItem, data }) => {
     delete nextItem.shadow;
   }
 
+  if (data.strokeColorId === null) {
+    delete nextItem.strokeColorId;
+  }
+
   return nextItem;
 };
 
@@ -11717,17 +11721,25 @@ const validateSpritesheetUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  for (const key of [
-    "sheetWidth",
-    "sheetHeight",
-    "frameCount",
-    "width",
-    "height",
-  ]) {
+  for (const key of ["sheetWidth", "sheetHeight", "frameCount"]) {
     if (data[key] !== undefined && !isFiniteNumber(data[key])) {
       return invalidFromErrorFactory(
         errorFactory,
         `payload.data.${key} must be a finite number`,
+      );
+    }
+  }
+
+  // null removes the default frame size.
+  for (const key of ["width", "height"]) {
+    if (
+      data[key] !== undefined &&
+      data[key] !== null &&
+      !isFiniteNumber(data[key])
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `payload.data.${key} must be a finite number or null`,
       );
     }
   }
@@ -13868,13 +13880,23 @@ const validateTextStyleUpdateData = ({ data, errorFactory }) => {
     }
   }
 
-  for (const key of ["colorId", "strokeColorId"]) {
-    if (data[key] !== undefined && !isNonEmptyString(data[key])) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `payload.data.${key} must be a non-empty string when provided`,
-      );
-    }
+  if (data.colorId !== undefined && !isNonEmptyString(data.colorId)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.colorId must be a non-empty string when provided",
+    );
+  }
+
+  // null removes the outline color.
+  if (
+    data.strokeColorId !== undefined &&
+    data.strokeColorId !== null &&
+    !isNonEmptyString(data.strokeColorId)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.strokeColorId must be a non-empty string or null when provided",
+    );
   }
 
   for (const key of ["fontSize", "lineHeight", "strokeAlpha", "strokeWidth"]) {
@@ -16355,11 +16377,20 @@ const COMMAND_DEFINITIONS = [
 
       return item;
     },
-    updateItem: ({ currentItem, payload }) =>
-      applyTagIdsUpdate({
+    updateItem: ({ currentItem, payload }) => {
+      const nextItem = applyTagIdsUpdate({
         currentItem,
         data: payload.data,
-      }),
+      });
+
+      for (const key of ["width", "height"]) {
+        if (payload.data[key] === null) {
+          delete nextItem[key];
+        }
+      }
+
+      return nextItem;
+    },
     validateCreateState: ({ state, payload }) => {
       if (payload.data.type !== "spritesheet") {
         return;
@@ -21491,7 +21522,7 @@ const COMMAND_DEFINITIONS = [
       }
 
       for (const field of ["colorId", "strokeColorId"]) {
-        if (payload.data[field] === undefined) {
+        if (payload.data[field] === undefined || payload.data[field] === null) {
           continue;
         }
 

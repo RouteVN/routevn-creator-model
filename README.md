@@ -441,6 +441,12 @@ or its ancestor folder clears the default atomically. Renaming, moving, or
 copying transforms leaves the default unchanged. This authoring default does
 not rewrite existing dialogue avatar actions.
 
+Stored commands are JSON, which drops keys set to `undefined`, so an update
+cannot clear an optional field by setting it to `undefined`. Send `null`
+instead for these fields: `strokeColorId` in `textStyle.update` removes a text
+style's outline color, and `width` or `height` in `spritesheet.update` removes
+a spritesheet's default frame size. A `null` value is never stored.
+
 ## Current Scope
 
 Currently implemented command types:
