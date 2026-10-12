@@ -1,0 +1,7 @@
+schemaVersion: 17
+type: layout.schema.upgrade
+payload:
+  layoutIds:
+    - layout-dialogue
+    - layout-menu
+  targetSchemaVersion: 2

@@ -1,0 +1,6 @@
+schemaVersion: 17
+type: font.update
+payload:
+  fontId: item-a
+  data:
+    fontFamily: Suit Alt

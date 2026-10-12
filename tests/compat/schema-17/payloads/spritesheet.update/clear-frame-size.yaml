@@ -1,0 +1,7 @@
+schemaVersion: 17
+type: spritesheet.update
+payload:
+  spritesheetId: item-a
+  data:
+    width: null
+    height: null

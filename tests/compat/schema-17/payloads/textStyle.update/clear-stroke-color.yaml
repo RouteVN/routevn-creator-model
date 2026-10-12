@@ -1,0 +1,7 @@
+schemaVersion: 17
+type: textStyle.update
+payload:
+  textStyleId: item-a
+  data:
+    strokeColorId: null
+    strokeWidth: 0

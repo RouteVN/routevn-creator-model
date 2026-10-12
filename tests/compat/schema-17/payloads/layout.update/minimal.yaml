@@ -1,0 +1,6 @@
+schemaVersion: 17
+type: layout.update
+payload:
+  layoutId: item-a
+  data:
+    name: Dialogue Updated
