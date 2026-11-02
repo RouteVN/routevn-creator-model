@@ -18,6 +18,16 @@ const manifest = read("manifest.json");
 const initialState = read("initial-state.json");
 const commands = read("commands.json");
 const expectedState = read("expected-state.json");
+// Collections the model gained after this capture. A state without one gets it
+// as an empty collection after the captured roots, so the expected state is
+// the captured one followed by these, and nothing else may differ.
+const COLLECTIONS_ADDED_AFTER_CAPTURE = {
+  assetPacks: { items: {}, tree: [] },
+};
+const expectedCurrentState = {
+  ...expectedState,
+  ...COLLECTIONS_ADDED_AFTER_CAPTURE,
+};
 
 describe("legacy section move compatibility", () => {
   it("retains the captured model-14 snapshots and provenance", () => {
@@ -62,7 +72,7 @@ describe("legacy section move compatibility", () => {
       state = result.state;
     }
     expect(validateState({ state })).toEqual({ valid: true });
-    expect(JSON.stringify(state)).toBe(JSON.stringify(expectedState));
+    expect(JSON.stringify(state)).toBe(JSON.stringify(expectedCurrentState));
     expect(
       state.scenes.items["scene-one"].sections.items["section-one"],
     ).toBeUndefined();
@@ -90,7 +100,9 @@ describe("legacy section move compatibility", () => {
     const before = JSON.stringify(input);
     const result = replayCommands(input);
     expect(result.valid, JSON.stringify(result.error)).toBe(true);
-    expect(JSON.stringify(result.state)).toBe(JSON.stringify(expectedState));
+    expect(JSON.stringify(result.state)).toBe(
+      JSON.stringify(expectedCurrentState),
+    );
     expect(JSON.stringify(input)).toBe(before);
   });
 });

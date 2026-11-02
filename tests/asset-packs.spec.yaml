@@ -1,0 +1,608 @@
+file: ./support/putyApi.js
+group: model
+suites:
+  - processCommand
+  - validatePayload
+  - validateAgainstState
+---
+suite: processCommand
+exportName: processCommand
+---
+case: assetPack.create inserts a pack before a sibling inside a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          folder-packs:
+            id: folder-packs
+            type: folder
+            name: Packs
+          pack-b:
+            id: pack-b
+            type: assetPack
+            name: Audio
+            resources: []
+        tree:
+          - id: folder-packs
+            children:
+              - id: pack-b
+                children: []
+    command:
+      type: assetPack.create
+      payload:
+        assetPackId: pack-a
+        parentId: folder-packs
+        position: before
+        positionTargetId: pack-b
+        data:
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
+            - resourceType: images
+              folderIds:
+                - folder-cg
+                - folder-bg
+            - resourceType: layouts
+              folderIds:
+                - folder-ui
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    assetPacks:
+      items:
+        folder-packs:
+          id: folder-packs
+          type: folder
+          name: Packs
+        pack-b:
+          id: pack-b
+          type: assetPack
+          name: Audio
+          resources: []
+        pack-a:
+          id: pack-a
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
+            - resourceType: images
+              folderIds:
+                - folder-cg
+                - folder-bg
+            - resourceType: layouts
+              folderIds:
+                - folder-ui
+      tree:
+        - id: folder-packs
+          children:
+            - id: pack-a
+              children: []
+            - id: pack-b
+              children: []
+---
+case: assetPack.update replaces resources and keeps the other fields
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            description: Opening chapter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.update
+      payload:
+        assetPackId: pack-a
+        data:
+          resources:
+            - resourceType: sounds
+              folderIds:
+                - folder-bgm
+            - resourceType: images
+              folderIds:
+                - folder-bg
+                - folder-cg
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    assetPacks:
+      items:
+        pack-a:
+          id: pack-a
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
+            - resourceType: sounds
+              folderIds:
+                - folder-bgm
+            - resourceType: images
+              folderIds:
+                - folder-bg
+                - folder-cg
+      tree:
+        - id: pack-a
+          children: []
+---
+case: assetPack.delete removes a folder and its nested packs
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          folder-packs:
+            id: folder-packs
+            type: folder
+            name: Packs
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources: []
+          pack-b:
+            id: pack-b
+            type: assetPack
+            name: Audio
+            resources: []
+        tree:
+          - id: folder-packs
+            children:
+              - id: pack-a
+                children: []
+          - id: pack-b
+            children: []
+    command:
+      type: assetPack.delete
+      payload:
+        assetPackIds:
+          - folder-packs
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items: {}
+      tree: []
+    sounds:
+      items: {}
+      tree: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items: {}
+      tree: []
+    assetPacks:
+      items:
+        pack-b:
+          id: pack-b
+          type: assetPack
+          name: Audio
+          resources: []
+      tree:
+        - id: pack-b
+          children: []
+---
+suite: validatePayload
+exportName: validatePayload
+---
+case: assetPack.create rejects a resource type listed twice
+in:
+  - type: assetPack.create
+    payload:
+      assetPackId: pack-a
+      data:
+        type: assetPack
+        name: Starter
+        resources:
+          - resourceType: images
+            folderIds:
+              - folder-cg
+          - resourceType: images
+            folderIds:
+              - folder-bg
+throws: payload.data.resources[1].resourceType must be unique within payload.data.resources
+---
+case: assetPack.update rejects a folder id listed twice
+in:
+  - type: assetPack.update
+    payload:
+      assetPackId: pack-a
+      data:
+        resources:
+          - resourceType: images
+            folderIds:
+              - folder-cg
+              - folder-cg
+throws: payload.data.resources[0].folderIds[1] must be unique
+---
+case: assetPack.create rejects tag ids
+in:
+  - type: assetPack.create
+    payload:
+      assetPackId: pack-a
+      data:
+        type: assetPack
+        name: Starter
+        tagIds:
+          - tag-a
+        resources: []
+throws: payload.data.tagIds is not allowed
+---
+suite: validateAgainstState
+exportName: validateAgainstState
+---
+case: assetPack.move rejects a non-folder parent target
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources: []
+          pack-b:
+            id: pack-b
+            type: assetPack
+            name: Audio
+            resources: []
+        tree:
+          - id: pack-a
+            children: []
+          - id: pack-b
+            children: []
+    command:
+      type: assetPack.move
+      payload:
+        assetPackId: pack-a
+        parentId: pack-b
+throws: payload.parentId must reference a folder asset pack item
+---
+case: assetPack.update rejects asset pack fields on a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          folder-packs:
+            id: folder-packs
+            type: folder
+            name: Packs
+        tree:
+          - id: folder-packs
+            children: []
+    command:
+      type: assetPack.update
+      payload:
+        assetPackId: folder-packs
+        data:
+          resources: []
+throws: folder asset pack items cannot update asset pack fields

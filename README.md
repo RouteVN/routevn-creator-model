@@ -227,6 +227,80 @@ persisted:
 }
 ```
 
+## Asset Packs
+
+Schema 18 adds the `assetPacks` collection. A project can hold several asset
+packs, each a named selection of top-level folders from other resource
+collections. Like the other collections it owns `items` and `tree`; its items
+are folders, `{ id, type: "folder", name }`, which can contain packs and other
+folders, and packs:
+
+```js
+{
+  id: "starter-pack",
+  type: "assetPack",
+  name: "Starter Pack",
+  description: "Art and audio for the opening chapter", // optional
+  resources: [
+    { resourceType: "images", folderIds: ["folder-cg", "folder-bg"] },
+    { resourceType: "sounds", folderIds: ["folder-bgm"] },
+  ],
+}
+```
+
+`resources` is required and may be empty. Each `resourceType` is one of
+`images`, `sounds`, `videos`, `characters`, `transforms`, `animations`,
+`audioEffects`, `particles`, `spritesheets`, `colors`, `fonts`, `textStyles`,
+`layouts`, `variables`, or `controls`, and appears at most once. `folderIds` is
+an array, possibly empty, of unique ids, kept in the order the author picked
+them. Asset packs have no `tagIds` and no tag scope.
+
+Folder ids are not checked against the collection they name, and deleting or
+moving a folder there does not change any pack. A pack can therefore keep ids
+of folders that were deleted later; clients skip them. A pack names the folders
+the author picked; the model does not check that a folder is top-level, or a
+folder at all.
+
+The commands use the same payload shapes as `color.*`:
+
+```js
+// assetPack.create: data is a pack or { type: "folder", name }
+{
+  assetPackId: "starter-pack",
+  parentId: "folder-packs", // optional, as are index or position/positionTargetId
+  position: "before",
+  positionTargetId: "audio-pack",
+  data: {
+    type: "assetPack",
+    name: "Starter Pack",
+    description: "Art and audio for the opening chapter",
+    resources: [{ resourceType: "images", folderIds: ["folder-cg"] }],
+  },
+}
+
+// assetPack.update: any of name, description, resources; folders take name only
+{
+  assetPackId: "starter-pack",
+  data: {
+    resources: [
+      { resourceType: "sounds", folderIds: ["folder-bgm"] },
+      { resourceType: "images", folderIds: ["folder-bg", "folder-cg"] },
+    ],
+  },
+}
+
+// assetPack.delete: deletes each item and everything inside it
+{ assetPackIds: ["folder-packs"] }
+
+// assetPack.move
+{ assetPackId: "starter-pack", parentId: null, position: "first" }
+```
+
+`assetPack.update` replaces `resources` as a whole. A state without an
+`assetPacks` root, such as one saved before schema 18, still validates; the
+model adds an empty collection when it normalizes or processes it, and
+`project.create` does the same for a new project.
+
 ## File Structure
 
 ```text
@@ -247,6 +321,8 @@ tests/
   animations.spec.yaml
   audio-effects.test.js
   audio-effects-drift.test.js
+  asset-packs.test.js
+  asset-packs.spec.yaml
   fonts-and-colors.spec.yaml
   transforms-variables-textstyles.spec.yaml
   characters-and-layouts.spec.yaml
@@ -536,6 +612,10 @@ Currently implemented command types:
 - `control.element.update`
 - `control.element.delete`
 - `control.element.move`
+- `assetPack.create`
+- `assetPack.update`
+- `assetPack.delete`
+- `assetPack.move`
 
 The rest of the future command surface should be added only when full
 validation, preconditions, reducer behavior, and tests are added together.

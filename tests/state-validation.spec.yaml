@@ -1311,3 +1311,246 @@ in:
           - id: layout-dialogue
             children: []
 throws: state.layouts.items.layout-dialogue.elements.items.text-title.style is not allowed
+---
+case: validateState rejects asset packs listing a resource type twice
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources:
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
+              - resourceType: sounds
+                folderIds:
+                  - folder-se
+        tree:
+          - id: pack-a
+            children: []
+throws: "state.assetPacks.items.pack-a.resources[1].resourceType must be unique within state.assetPacks.items.pack-a.resources"
+---
+case: validateState rejects asset pack folders with resources
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          folder-packs:
+            id: folder-packs
+            type: folder
+            name: Packs
+            resources: []
+        tree:
+          - id: folder-packs
+            children: []
+throws: "state.assetPacks.items.folder-packs.resources is not allowed"
+---
+case: validateState rejects asset packs with children
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources: []
+          pack-b:
+            id: pack-b
+            type: assetPack
+            name: Audio
+            resources: []
+        tree:
+          - id: pack-a
+            children:
+              - id: pack-b
+                children: []
+throws: "state.assetPacks.tree[0].children requires 'pack-a' to be a folder asset pack item"
+---
+case: validateState accepts asset packs that keep ids of missing folders
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-deleted
+        tree:
+          - id: pack-a
+            children: []

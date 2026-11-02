@@ -1,0 +1,15 @@
+schemaVersion: 18
+type: assetPack.update
+payload:
+  assetPackId: item-a
+  data:
+    name: Chapter One Pack
+    description: Everything chapter one needs
+    resources:
+      - resourceType: sounds
+        folderIds:
+          - folder-audio
+      - resourceType: images
+        folderIds:
+          - folder-cg
+          - folder-art

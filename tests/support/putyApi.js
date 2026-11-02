@@ -17,6 +17,7 @@ const OMITTABLE_EMPTY_COLLECTION_KEYS = [
   "particles",
   "spritesheets",
   "voices",
+  "assetPacks",
 ];
 const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
   "images",

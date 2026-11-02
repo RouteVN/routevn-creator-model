@@ -36,6 +36,7 @@ const COLLECTION_KEYS = [
   "variables",
   "layouts",
   "controls",
+  "assetPacks",
 ];
 const ROOT_KEYS = ["project", "story", "tags", ...COLLECTION_KEYS];
 const LINE_UPDATE_ACTIONS_PRESERVE_PATHS = ["dialogue.content"];
@@ -252,6 +253,7 @@ const normalizeStateCollections = (state) => {
     "controls",
     "voices",
     "audioEffects",
+    "assetPacks",
   ].filter((key) => state[key] === undefined);
   const normalizedTags = normalizeTagsState(state.tags);
   const hasNormalizedTags = normalizedTags !== state.tags;
@@ -408,7 +410,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 17;
+export const SCHEMA_VERSION = 18;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -3265,6 +3267,156 @@ const validateColorItems = ({ items, path, errorFactory }) => {
           errorFactory,
           `${itemPath}.hex must be a #RRGGBB string`,
         );
+      }
+    }
+  }
+};
+
+// The resource collections an asset pack can take top-level folders from.
+const ASSET_PACK_RESOURCE_TYPES = [
+  "images",
+  "sounds",
+  "videos",
+  "characters",
+  "transforms",
+  "animations",
+  "audioEffects",
+  "particles",
+  "spritesheets",
+  "colors",
+  "fonts",
+  "textStyles",
+  "layouts",
+  "variables",
+  "controls",
+];
+
+// An asset pack's resources list, for each resource collection at most once,
+// the ids of the folders the pack includes, in the order the author picked
+// them. The ids are deliberately not checked against the collection they name,
+// and deleting a folder does not remove its id from any pack: a pack may keep
+// ids of folders that no longer exist, and readers skip them.
+const validateAssetPackResources = ({ value, path, errorFactory }) => {
+  if (!Array.isArray(value)) {
+    return invalidFromErrorFactory(errorFactory, `${path} must be an array`);
+  }
+
+  const seenResourceTypes = new Set();
+
+  for (const [index, entry] of value.entries()) {
+    const entryPath = `${path}[${index}]`;
+
+    {
+      const result = validateExactKeys({
+        value: entry,
+        expectedKeys: ["resourceType", "folderIds"],
+        path: entryPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!ASSET_PACK_RESOURCE_TYPES.includes(entry.resourceType)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${entryPath}.resourceType must be one of: ${ASSET_PACK_RESOURCE_TYPES.map((key) => `'${key}'`).join(", ")}`,
+      );
+    }
+
+    if (seenResourceTypes.has(entry.resourceType)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${entryPath}.resourceType must be unique within ${path}`,
+      );
+    }
+    seenResourceTypes.add(entry.resourceType);
+
+    if (!Array.isArray(entry.folderIds)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${entryPath}.folderIds must be an array`,
+      );
+    }
+
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: entry.folderIds,
+        path: `${entryPath}.folderIds`,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  }
+};
+
+const validateAssetPackItems = ({ items, path, errorFactory }) => {
+  for (const [itemId, item] of Object.entries(items)) {
+    const itemPath = `${path}.${itemId}`;
+
+    if (item?.type !== "folder" && item?.type !== "assetPack") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.type must be 'folder' or 'assetPack'`,
+      );
+    }
+
+    {
+      const result = validateAllowedKeys({
+        value: item,
+        allowedKeys:
+          item.type === "folder"
+            ? ["id", "type", "name"]
+            : ["id", "type", "name", "description", "resources"],
+        path: itemPath,
+        errorFactory,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+
+    if (!isNonEmptyString(item.id)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must be a non-empty string`,
+      );
+    }
+
+    if (item.id !== itemId) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.id must match item key '${itemId}'`,
+      );
+    }
+
+    if (!isNonEmptyString(item.name)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.name must be a non-empty string`,
+      );
+    }
+
+    if (item.type === "assetPack") {
+      if (item.description !== undefined && !isString(item.description)) {
+        return invalidFromErrorFactory(
+          errorFactory,
+          `${itemPath}.description must be a string when provided`,
+        );
+      }
+
+      {
+        const result = validateAssetPackResources({
+          value: item.resources,
+          path: `${itemPath}.resources`,
+          errorFactory,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
     }
   }
@@ -8944,6 +9096,17 @@ const validateCollection = ({ collection, path }) => {
         return result;
       }
     }
+  } else if (path === "state.assetPacks") {
+    {
+      const result = validateAssetPackItems({
+        items: collection.items,
+        path: `${path}.items`,
+        errorFactory: createStateValidationError,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
   }
 
   if (!Array.isArray(collection.tree)) {
@@ -9059,6 +9222,18 @@ const validateCollection = ({ collection, path }) => {
         nodes: collection.tree,
         items: collection.items,
         path: `${path}.tree`,
+      });
+      if (result?.valid === false) {
+        return result;
+      }
+    }
+  } else if (path === "state.assetPacks") {
+    {
+      const result = validateGenericFolderOwnership({
+        nodes: collection.tree,
+        items: collection.items,
+        path: `${path}.tree`,
+        folderLabel: "folder asset pack item",
       });
       if (result?.valid === false) {
         return result;
@@ -12673,6 +12848,102 @@ const validateColorUpdateData = ({ data, errorFactory }) => {
       errorFactory,
       "payload.data.hex must be a #RRGGBB string when provided",
     );
+  }
+};
+
+const validateAssetPackCreateData = ({ data, errorFactory }) => {
+  if (!isPlainObject(data)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must be an object",
+    );
+  }
+
+  if (data.type !== "folder" && data.type !== "assetPack") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.type must be 'folder' or 'assetPack'",
+    );
+  }
+
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys:
+        data.type === "folder"
+          ? ["type", "name"]
+          : ["type", "name", "description", "resources"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (!isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string",
+    );
+  }
+
+  if (data.type === "assetPack") {
+    if (data.description !== undefined && !isString(data.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        "payload.data.description must be a string when provided",
+      );
+    }
+
+    return validateAssetPackResources({
+      value: data.resources,
+      path: "payload.data.resources",
+      errorFactory,
+    });
+  }
+};
+
+const validateAssetPackUpdateData = ({ data, errorFactory }) => {
+  {
+    const result = validateAllowedKeys({
+      value: data,
+      allowedKeys: ["name", "description", "resources"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data must include at least one updatable field",
+    );
+  }
+
+  if (Object.hasOwn(data, "name") && !isNonEmptyString(data.name)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.name must be a non-empty string when provided",
+    );
+  }
+
+  if (Object.hasOwn(data, "description") && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
+  if (Object.hasOwn(data, "resources")) {
+    return validateAssetPackResources({
+      value: data.resources,
+      path: "payload.data.resources",
+      errorFactory,
+    });
   }
 };
 
@@ -23929,6 +24200,46 @@ const COMMAND_DEFINITIONS = [
       return state;
     },
   },
+  // Asset pack resources hold folder ids from other collections without
+  // checking them, and deleting a folder elsewhere leaves packs unchanged; see
+  // validateAssetPackResources.
+  ...createFolderedCollectionCommandDefinitions({
+    familyName: "assetPack",
+    collectionKey: "assetPacks",
+    idField: "assetPackId",
+    itemLabel: "asset pack item",
+    createDataValidator: validateAssetPackCreateData,
+    updateDataValidator: validateAssetPackUpdateData,
+    createItem: ({ payload }) => {
+      const item = {
+        id: payload.assetPackId,
+        type: payload.data.type,
+        name: payload.data.name,
+      };
+
+      if (payload.data.type !== "assetPack") {
+        return item;
+      }
+
+      if (payload.data.description !== undefined) {
+        item.description = payload.data.description;
+      }
+
+      item.resources = structuredClone(payload.data.resources);
+
+      return item;
+    },
+    validateUpdateState: ({ payload, currentItem }) => {
+      if (
+        currentItem.type === "folder" &&
+        Object.keys(payload.data).some((key) => key !== "name")
+      ) {
+        return invalidPrecondition(
+          "folder asset pack items cannot update asset pack fields",
+        );
+      }
+    },
+  }),
 ];
 
 const definitionsByType = new Map(

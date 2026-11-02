@@ -2353,6 +2353,23 @@ const directCases = [
       name: "Control Updated",
     },
   }),
+  ...createFolderedCommandCases({
+    familyName: "assetPack",
+    collectionKey: "assetPacks",
+    idField: "assetPackId",
+    idsField: "assetPackIds",
+    createData: {
+      type: "assetPack",
+      name: "Starter Pack",
+      resources: [{ resourceType: "images", folderIds: ["folder-bg"] }],
+    },
+    updateData: {
+      resources: [
+        { resourceType: "sounds", folderIds: ["folder-bgm"] },
+        { resourceType: "images", folderIds: ["folder-cg", "folder-bg"] },
+      ],
+    },
+  }),
   {
     type: "character.sprite.create",
     runPositive: () => {

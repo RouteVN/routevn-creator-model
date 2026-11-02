@@ -1,0 +1,22 @@
+schemaVersion: 18
+type: assetPack.create
+payload:
+  assetPackId: item-a
+  parentId: folder-a
+  position: before
+  positionTargetId: item-b
+  data:
+    type: assetPack
+    name: Starter Pack
+    description: Art and audio for the opening chapter
+    resources:
+      - resourceType: images
+        folderIds:
+          - folder-art
+          - folder-cg
+      - resourceType: sounds
+        folderIds:
+          - folder-audio
+      - resourceType: layouts
+        folderIds:
+          - folder-ui
