@@ -55,6 +55,15 @@ initialState:
     spritesheets:
       items: {}
       tree: []
+    assetPacks:
+      items:
+        tag-chapter:
+          id: tag-chapter
+          type: tag
+          name: Chapter
+          color: "#664422"
+      tree:
+        - id: tag-chapter
   scenes:
     items:
       scene-a:
@@ -833,11 +842,12 @@ initialState:
         type: assetPack
         name: Starter Pack
         description: Art and audio for the opening chapter
+        tagIds:
+          - tag-chapter
         resources:
           - resourceType: images
             folderIds:
               - folder-art
-              - folder-removed
           - resourceType: sounds
             folderIds:
               - folder-audio
@@ -863,6 +873,13 @@ initialState:
       - id: asset-pack-empty
         children: []
 commands:
+  - type: tag.create
+    payload:
+      scopeKey: assetPacks
+      tagId: tag-music
+      data:
+        type: tag
+        name: Music
   - type: assetPack.create
     payload:
       assetPackId: folder-packs
@@ -875,6 +892,13 @@ commands:
       data:
         type: folder
         name: Chapter Two
+  - type: image.create
+    payload:
+      imageId: folder-chapter-two-cg
+      parentId: folder-chapter-two
+      data:
+        type: folder
+        name: Chapter Two CG
   - type: assetPack.create
     payload:
       assetPackId: asset-pack-chapter
@@ -883,10 +907,12 @@ commands:
         type: assetPack
         name: Chapter Pack
         description: Art for chapter two
+        tagIds:
+          - tag-chapter
         resources:
           - resourceType: images
             folderIds:
-              - folder-chapter-two
+              - folder-chapter-two-cg
               - folder-art
   - type: assetPack.create
     payload:
@@ -895,24 +921,49 @@ commands:
       data:
         type: assetPack
         name: Audio Pack
-        resources: []
-  - type: assetPack.update
+  - type: assetPack.resource.create
     payload:
       assetPackId: asset-pack-chapter
+      resourceType: sounds
+      position: first
       data:
-        resources:
-          - resourceType: sounds
-            folderIds:
-              - folder-audio
-          - resourceType: images
-            folderIds:
-              - folder-art
-              - folder-chapter-two
+        folderIds:
+          - folder-audio
+  - type: assetPack.resource.update
+    payload:
+      assetPackId: asset-pack-chapter
+      resourceType: images
+      data:
+        folderIds:
+          - folder-art
+          - folder-chapter-two-cg
+  - type: assetPack.resource.create
+    payload:
+      assetPackId: asset-pack-chapter
+      resourceType: videos
+      position: after
+      positionTargetResourceType: sounds
+      data:
+        folderIds:
+          - folder-video
+  - type: assetPack.resource.move
+    payload:
+      assetPackId: asset-pack-chapter
+      resourceType: images
+      index: 0
   - type: assetPack.update
     payload:
       assetPackId: folder-packs
       data:
         name: Chapter Packs
+        description: Packs for chapter two
+  - type: assetPack.resource.update
+    payload:
+      assetPackId: asset-pack-chapter
+      resourceType: images
+      data:
+        folderIds:
+          - folder-art
   - type: image.delete
     payload:
       imageIds:
@@ -943,11 +994,42 @@ commands:
       data:
         name: Music
         description: Background music
-        resources:
-          - resourceType: sounds
-            folderIds:
-              - folder-audio
+        tagIds:
+          - tag-music
+  - type: assetPack.resource.create
+    payload:
+      assetPackId: asset-pack-audio
+      resourceType: sounds
+      data:
+        folderIds:
+          - folder-audio
+  - type: assetPack.resource.delete
+    payload:
+      assetPackId: asset-pack-starter
+      resourceTypes:
+        - videos
+        - audioEffects
+  - type: tag.delete
+    payload:
+      scopeKey: assetPacks
+      tagIds:
+        - tag-chapter
+  - type: assetPack.resource.move
+    payload:
+      assetPackId: asset-pack-chapter
+      resourceType: videos
+      position: before
+      positionTargetResourceType: images
 expectedFinalState:
+  tags:
+    assetPacks:
+      items:
+        tag-music:
+          id: tag-music
+          type: tag
+          name: Music
+      tree:
+        - id: tag-music
   images:
     tree:
       - id: folder-art
@@ -965,41 +1047,39 @@ expectedFinalState:
           - resourceType: images
             folderIds:
               - folder-art
-              - folder-removed
           - resourceType: sounds
             folderIds:
               - folder-audio
-          - resourceType: videos
-            folderIds:
-              - folder-video
           - resourceType: spritesheets
             folderIds:
               - folder-spritesheets
-          - resourceType: audioEffects
-            folderIds:
-              - folder-audio-effects
       folder-packs:
         id: folder-packs
         type: folder
         name: Chapter Packs
+        description: Packs for chapter two
       asset-pack-chapter:
         id: asset-pack-chapter
         type: assetPack
         name: Chapter Pack
         description: Art for chapter two
         resources:
-          - resourceType: sounds
+          - resourceType: videos
             folderIds:
-              - folder-audio
+              - folder-video
           - resourceType: images
             folderIds:
               - folder-art
-              - folder-chapter-two
+          - resourceType: sounds
+            folderIds:
+              - folder-audio
       asset-pack-audio:
         id: asset-pack-audio
         type: assetPack
         name: Music
         description: Background music
+        tagIds:
+          - tag-music
         resources:
           - resourceType: sounds
             folderIds:

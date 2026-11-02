@@ -71,6 +71,7 @@ const TAG_SCOPE_BASE_KEYS = [
   "audioEffects",
   "particles",
   "spritesheets",
+  "assetPacks",
 ];
 const CHARACTER_SPRITE_TAG_SCOPE_PREFIX = "characterSprites:";
 const createEmptyTagsState = () => ({
@@ -89,6 +90,7 @@ const createEmptyTagsState = () => ({
   audioEffects: createEmptyCollectionState(),
   particles: createEmptyCollectionState(),
   spritesheets: createEmptyCollectionState(),
+  assetPacks: createEmptyCollectionState(),
 });
 const isCharacterSpriteTagScopeKey = (value) =>
   isNonEmptyString(value) &&
@@ -3272,7 +3274,7 @@ const validateColorItems = ({ items, path, errorFactory }) => {
   }
 };
 
-// The resource collections an asset pack can take top-level folders from.
+// The resource collections an asset pack can take folders from.
 const ASSET_PACK_RESOURCE_TYPES = [
   "images",
   "sounds",
@@ -3291,11 +3293,19 @@ const ASSET_PACK_RESOURCE_TYPES = [
   "controls",
 ];
 
+const validateAssetPackResourceType = ({ value, path, errorFactory }) => {
+  if (!ASSET_PACK_RESOURCE_TYPES.includes(value)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path} must be one of: ${ASSET_PACK_RESOURCE_TYPES.map((key) => `'${key}'`).join(", ")}`,
+    );
+  }
+};
+
 // An asset pack's resources list, for each resource collection at most once,
-// the ids of the folders the pack includes, in the order the author picked
-// them. The ids are deliberately not checked against the collection they name,
-// and deleting a folder does not remove its id from any pack: a pack may keep
-// ids of folders that no longer exist, and readers skip them.
+// the ids of the folders the pack includes. The order of the collections and
+// of each collection's folders is the author's. A collection with no folders
+// is left out of the list.
 const validateAssetPackResources = ({ value, path, errorFactory }) => {
   if (!Array.isArray(value)) {
     return invalidFromErrorFactory(errorFactory, `${path} must be an array`);
@@ -3318,11 +3328,15 @@ const validateAssetPackResources = ({ value, path, errorFactory }) => {
       }
     }
 
-    if (!ASSET_PACK_RESOURCE_TYPES.includes(entry.resourceType)) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateAssetPackResourceType({
+        value: entry.resourceType,
+        path: `${entryPath}.resourceType`,
         errorFactory,
-        `${entryPath}.resourceType must be one of: ${ASSET_PACK_RESOURCE_TYPES.map((key) => `'${key}'`).join(", ")}`,
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     if (seenResourceTypes.has(entry.resourceType)) {
@@ -3333,15 +3347,8 @@ const validateAssetPackResources = ({ value, path, errorFactory }) => {
     }
     seenResourceTypes.add(entry.resourceType);
 
-    if (!Array.isArray(entry.folderIds)) {
-      return invalidFromErrorFactory(
-        errorFactory,
-        `${entryPath}.folderIds must be an array`,
-      );
-    }
-
     {
-      const result = validateOptionalUniqueIdArray({
+      const result = validateRequiredUniqueIdArray({
         value: entry.folderIds,
         path: `${entryPath}.folderIds`,
         errorFactory,
@@ -3350,6 +3357,112 @@ const validateAssetPackResources = ({ value, path, errorFactory }) => {
         return result;
       }
     }
+  }
+};
+
+const validateAssetPackResourceData = ({ data, errorFactory }) => {
+  {
+    const result = validateExactKeys({
+      value: data,
+      expectedKeys: ["folderIds"],
+      path: "payload.data",
+      errorFactory,
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  return validateRequiredUniqueIdArray({
+    value: data.folderIds,
+    path: "payload.data.folderIds",
+    errorFactory,
+  });
+};
+
+// A pack's folder ids reference folders, at any depth, of the collection their
+// resource type names, as a text style's fontId references a font. Deleting a
+// folder a pack lists is therefore rejected until the pack no longer lists it.
+const isAssetPackResourceFolder = ({ state, resourceType, folderId }) =>
+  state[resourceType].items[folderId]?.type === "folder";
+
+const validateAssetPackFolderIdsAgainstState = ({
+  state,
+  resourceType,
+  folderIds,
+  path,
+  details,
+}) => {
+  for (const [index, folderId] of folderIds.entries()) {
+    if (!isAssetPackResourceFolder({ state, resourceType, folderId })) {
+      return invalidPrecondition(
+        `${path}[${index}] must reference an existing folder in '${resourceType}'`,
+        {
+          ...details,
+          resourceType,
+          folderId,
+        },
+      );
+    }
+  }
+
+  return VALID_RESULT;
+};
+
+const findAssetPackResourceIndex = ({ assetPack, resourceType }) =>
+  assetPack.resources.findIndex((entry) => entry.resourceType === resourceType);
+
+const hasAssetPackResource = ({ assetPack, resourceType }) =>
+  findAssetPackResourceIndex({ assetPack, resourceType }) !== -1;
+
+// Places a resource in a pack's list the way insertTreeNode places a node among
+// its siblings, with positionTargetResourceType in place of positionTargetId.
+const insertAssetPackResource = ({
+  resources,
+  resource,
+  index,
+  position,
+  positionTargetResourceType,
+}) => {
+  const targetIndex = resources.findIndex(
+    (entry) => entry.resourceType === positionTargetResourceType,
+  );
+  let insertIndex = resources.length;
+
+  if (Number.isInteger(index)) {
+    insertIndex = Math.min(index, resources.length);
+  } else if (position === "first") {
+    insertIndex = 0;
+  } else if (position === "before" && targetIndex !== -1) {
+    insertIndex = targetIndex;
+  } else if (position === "after" && targetIndex !== -1) {
+    insertIndex = targetIndex + 1;
+  }
+
+  resources.splice(insertIndex, 0, resource);
+};
+
+const validateAssetPackResourcePlacementFields = ({
+  payload,
+  errorFactory,
+}) => {
+  {
+    const result = validatePlacementFields({
+      payload,
+      errorFactory,
+      targetField: "positionTargetResourceType",
+    });
+    if (result?.valid === false) {
+      return result;
+    }
+  }
+
+  if (payload.positionTargetResourceType !== undefined) {
+    return validateAssetPackResourceType({
+      value: payload.positionTargetResourceType,
+      path: "payload.positionTargetResourceType",
+      errorFactory,
+    });
   }
 };
 
@@ -3369,8 +3482,8 @@ const validateAssetPackItems = ({ items, path, errorFactory }) => {
         value: item,
         allowedKeys:
           item.type === "folder"
-            ? ["id", "type", "name"]
-            : ["id", "type", "name", "description", "resources"],
+            ? ["id", "type", "name", "description"]
+            : ["id", "type", "name", "description", "tagIds", "resources"],
         path: itemPath,
         errorFactory,
       });
@@ -3400,12 +3513,24 @@ const validateAssetPackItems = ({ items, path, errorFactory }) => {
       );
     }
 
+    if (item.description !== undefined && !isString(item.description)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${itemPath}.description must be a string when provided`,
+      );
+    }
+
     if (item.type === "assetPack") {
-      if (item.description !== undefined && !isString(item.description)) {
-        return invalidFromErrorFactory(
+      {
+        const result = validateOptionalUniqueIdArray({
+          value: item.tagIds,
+          path: `${itemPath}.tagIds`,
           errorFactory,
-          `${itemPath}.description must be a string when provided`,
-        );
+          allowEmpty: false,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
       {
@@ -7753,6 +7878,15 @@ const stripDeletedTagIdsFromScopeItems = ({
     return;
   }
 
+  if (scopeKey === "assetPacks") {
+    for (const item of Object.values(state.assetPacks.items)) {
+      if (item?.type === "assetPack") {
+        stripDeletedTagIdsFromItem({ item, deletedTagIds });
+      }
+    }
+    return;
+  }
+
   if (!isCharacterSpriteTagScopeKey(scopeKey)) {
     return;
   }
@@ -10405,6 +10539,46 @@ export const assertInvariants = ({ state }) => {
     }
   }
 
+  for (const [assetPackId, assetPack] of Object.entries(
+    state.assetPacks.items,
+  )) {
+    if (assetPack.type !== "assetPack") {
+      continue;
+    }
+
+    {
+      const result = validateTagIdsAgainstScope({
+        state,
+        tagIds: assetPack.tagIds,
+        scopeKey: "assetPacks",
+        path: "assetPack.tagIds",
+        details: {
+          assetPackId,
+        },
+        errorFactory: createInvariantValidationError,
+      });
+      if (!result.valid) {
+        return result;
+      }
+    }
+
+    for (const { resourceType, folderIds } of assetPack.resources) {
+      for (const folderId of folderIds) {
+        if (!isAssetPackResourceFolder({ state, resourceType, folderId })) {
+          return invalidInvariant(
+            "assetPack.resources.folderIds must reference an existing folder in the resourceType collection",
+            {
+              assetPackId,
+              assetPackName: assetPack.name,
+              resourceType,
+              folderId,
+            },
+          );
+        }
+      }
+    }
+  }
+
   const assertImageReference = ({
     ownerIdField,
     ownerId,
@@ -10975,7 +11149,14 @@ export const validateState = ({ state }) => runValidateState({ state });
 
 export const normalizeState = ({ state }) => normalizeStateCollections(state);
 
-const validatePlacementFields = ({ payload, errorFactory }) => {
+// targetField names the payload field that holds the before/after target:
+// positionTargetId for tree items, positionTargetResourceType for an asset
+// pack's resources.
+const validatePlacementFields = ({
+  payload,
+  errorFactory,
+  targetField = "positionTargetId",
+}) => {
   if (
     payload.index !== undefined &&
     (!Number.isInteger(payload.index) || payload.index < 0)
@@ -10987,7 +11168,7 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   }
 
   const hasPosition = payload.position !== undefined;
-  const hasPositionTargetId = payload.positionTargetId !== undefined;
+  const hasPositionTarget = payload[targetField] !== undefined;
 
   if (payload.index !== undefined && hasPosition) {
     return invalidFromErrorFactory(
@@ -10997,10 +11178,10 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   }
 
   if (!hasPosition) {
-    if (hasPositionTargetId) {
+    if (hasPositionTarget) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.positionTargetId requires payload.position",
+        `payload.${targetField} requires payload.position`,
       );
     }
     return;
@@ -11019,19 +11200,19 @@ const validatePlacementFields = ({ payload, errorFactory }) => {
   }
 
   if (payload.position === "before" || payload.position === "after") {
-    if (!isNonEmptyString(payload.positionTargetId)) {
+    if (!isNonEmptyString(payload[targetField])) {
       return invalidFromErrorFactory(
         errorFactory,
-        "payload.positionTargetId must be a non-empty string when payload.position is 'before' or 'after'",
+        `payload.${targetField} must be a non-empty string when payload.position is 'before' or 'after'`,
       );
     }
     return;
   }
 
-  if (hasPositionTargetId) {
+  if (hasPositionTarget) {
     return invalidFromErrorFactory(
       errorFactory,
-      "payload.positionTargetId is allowed only when payload.position is 'before' or 'after'",
+      `payload.${targetField} is allowed only when payload.position is 'before' or 'after'`,
     );
   }
 };
@@ -12871,8 +13052,8 @@ const validateAssetPackCreateData = ({ data, errorFactory }) => {
       value: data,
       allowedKeys:
         data.type === "folder"
-          ? ["type", "name"]
-          : ["type", "name", "description", "resources"],
+          ? ["type", "name", "description"]
+          : ["type", "name", "description", "tagIds", "resources"],
       path: "payload.data",
       errorFactory,
     });
@@ -12888,19 +13069,32 @@ const validateAssetPackCreateData = ({ data, errorFactory }) => {
     );
   }
 
+  if (data.description !== undefined && !isString(data.description)) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      "payload.data.description must be a string when provided",
+    );
+  }
+
   if (data.type === "assetPack") {
-    if (data.description !== undefined && !isString(data.description)) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateOptionalUniqueIdArray({
+        value: data.tagIds,
+        path: "payload.data.tagIds",
         errorFactory,
-        "payload.data.description must be a string when provided",
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
-    return validateAssetPackResources({
-      value: data.resources,
-      path: "payload.data.resources",
-      errorFactory,
-    });
+    if (data.resources !== undefined) {
+      return validateAssetPackResources({
+        value: data.resources,
+        path: "payload.data.resources",
+        errorFactory,
+      });
+    }
   }
 };
 
@@ -12908,7 +13102,7 @@ const validateAssetPackUpdateData = ({ data, errorFactory }) => {
   {
     const result = validateAllowedKeys({
       value: data,
-      allowedKeys: ["name", "description", "resources"],
+      allowedKeys: ["name", "description", "tagIds"],
       path: "payload.data",
       errorFactory,
     });
@@ -12938,13 +13132,11 @@ const validateAssetPackUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (Object.hasOwn(data, "resources")) {
-    return validateAssetPackResources({
-      value: data.resources,
-      path: "payload.data.resources",
-      errorFactory,
-    });
-  }
+  return validateOptionalUniqueIdArray({
+    value: data.tagIds,
+    path: "payload.data.tagIds",
+    errorFactory,
+  });
 };
 
 const validateAnimationCreateData = ({ data, errorFactory }) => {
@@ -24200,9 +24392,6 @@ const COMMAND_DEFINITIONS = [
       return state;
     },
   },
-  // Asset pack resources hold folder ids from other collections without
-  // checking them, and deleting a folder elsewhere leaves packs unchanged; see
-  // validateAssetPackResources.
   ...createFolderedCollectionCommandDefinitions({
     familyName: "assetPack",
     collectionKey: "assetPacks",
@@ -24217,29 +24406,469 @@ const COMMAND_DEFINITIONS = [
         name: payload.data.name,
       };
 
-      if (payload.data.type !== "assetPack") {
-        return item;
-      }
-
       if (payload.data.description !== undefined) {
         item.description = payload.data.description;
       }
 
-      item.resources = structuredClone(payload.data.resources);
+      if (payload.data.type !== "assetPack") {
+        return item;
+      }
+
+      assignOptionalTagIds({
+        target: item,
+        tagIds: payload.data.tagIds,
+      });
+
+      item.resources =
+        payload.data.resources === undefined
+          ? []
+          : structuredClone(payload.data.resources);
 
       return item;
     },
-    validateUpdateState: ({ payload, currentItem }) => {
+    updateItem: ({ currentItem, payload }) =>
+      applyTagIdsUpdate({
+        currentItem,
+        data: payload.data,
+      }),
+    validateCreateState: ({ state, payload }) => {
+      if (payload.data.type !== "assetPack") {
+        return;
+      }
+
+      {
+        const result = validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "assetPacks",
+          path: "payload.data.tagIds",
+          details: {
+            assetPackId: payload.assetPackId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+
+      const resources = payload.data.resources ?? [];
+      for (const [index, resource] of resources.entries()) {
+        const result = validateAssetPackFolderIdsAgainstState({
+          state,
+          resourceType: resource.resourceType,
+          folderIds: resource.folderIds,
+          path: `payload.data.resources[${index}].folderIds`,
+          details: {
+            assetPackId: payload.assetPackId,
+          },
+        });
+        if (!result.valid) {
+          return result;
+        }
+      }
+    },
+    validateUpdateState: ({ state, payload, currentItem }) => {
       if (
         currentItem.type === "folder" &&
-        Object.keys(payload.data).some((key) => key !== "name")
+        Object.keys(payload.data).some(
+          (key) => key !== "name" && key !== "description",
+        )
       ) {
         return invalidPrecondition(
           "folder asset pack items cannot update asset pack fields",
         );
       }
+
+      if (currentItem.type === "assetPack") {
+        return validateTagIdsAgainstScope({
+          state,
+          tagIds: payload.data.tagIds,
+          scopeKey: "assetPacks",
+          path: "payload.data.tagIds",
+          details: {
+            assetPackId: payload.assetPackId,
+          },
+        });
+      }
     },
   }),
+  // A pack's resources list changes through assetPack.resource.*, keyed by
+  // resourceType, as a character's sprites change through character.sprite.*.
+  {
+    type: "assetPack.resource.create",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "assetPackId",
+            "resourceType",
+            "data",
+            "index",
+            "position",
+            "positionTargetResourceType",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.assetPackId)) {
+        return invalidPayload("payload.assetPackId must be a non-empty string");
+      }
+
+      {
+        const result = validateAssetPackResourceType({
+          value: payload.resourceType,
+          path: "payload.resourceType",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateAssetPackResourceData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateAssetPackResourcePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      if (!isPlainObject(assetPack) || assetPack.type !== "assetPack") {
+        return invalidPrecondition(
+          "payload.assetPackId must reference an existing asset pack",
+        );
+      }
+
+      if (
+        hasAssetPackResource({
+          assetPack,
+          resourceType: payload.resourceType,
+        })
+      ) {
+        return invalidPrecondition(
+          "payload.resourceType must not already exist in the asset pack",
+        );
+      }
+
+      if (
+        payload.positionTargetResourceType !== undefined &&
+        !hasAssetPackResource({
+          assetPack,
+          resourceType: payload.positionTargetResourceType,
+        })
+      ) {
+        return invalidPrecondition(
+          "payload.positionTargetResourceType must reference an existing asset pack resource",
+        );
+      }
+
+      return validateAssetPackFolderIdsAgainstState({
+        state,
+        resourceType: payload.resourceType,
+        folderIds: payload.data.folderIds,
+        path: "payload.data.folderIds",
+        details: {
+          assetPackId: payload.assetPackId,
+        },
+      });
+    },
+    reduce: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+
+      insertAssetPackResource({
+        resources: assetPack.resources,
+        resource: {
+          resourceType: payload.resourceType,
+          folderIds: structuredClone(payload.data.folderIds),
+        },
+        index: payload.index,
+        position: payload.position,
+        positionTargetResourceType: payload.positionTargetResourceType,
+      });
+
+      return state;
+    },
+  },
+  {
+    type: "assetPack.resource.update",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["assetPackId", "resourceType", "data"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.assetPackId)) {
+        return invalidPayload("payload.assetPackId must be a non-empty string");
+      }
+
+      {
+        const result = validateAssetPackResourceType({
+          value: payload.resourceType,
+          path: "payload.resourceType",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      {
+        const result = validateAssetPackResourceData({
+          data: payload.data,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      if (!isPlainObject(assetPack) || assetPack.type !== "assetPack") {
+        return invalidPrecondition(
+          "payload.assetPackId must reference an existing asset pack",
+        );
+      }
+
+      if (
+        !hasAssetPackResource({
+          assetPack,
+          resourceType: payload.resourceType,
+        })
+      ) {
+        return invalidPrecondition(
+          "payload.resourceType must reference an existing asset pack resource",
+        );
+      }
+
+      return validateAssetPackFolderIdsAgainstState({
+        state,
+        resourceType: payload.resourceType,
+        folderIds: payload.data.folderIds,
+        path: "payload.data.folderIds",
+        details: {
+          assetPackId: payload.assetPackId,
+        },
+      });
+    },
+    reduce: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      const index = findAssetPackResourceIndex({
+        assetPack,
+        resourceType: payload.resourceType,
+      });
+
+      assetPack.resources[index].folderIds = structuredClone(
+        payload.data.folderIds,
+      );
+
+      return state;
+    },
+  },
+  {
+    type: "assetPack.resource.delete",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateExactKeys({
+          value: payload,
+          expectedKeys: ["assetPackId", "resourceTypes"],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.assetPackId)) {
+        return invalidPayload("payload.assetPackId must be a non-empty string");
+      }
+
+      {
+        const result = validateRequiredUniqueIdArray({
+          value: payload.resourceTypes,
+          path: "payload.resourceTypes",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      for (const [index, resourceType] of payload.resourceTypes.entries()) {
+        const result = validateAssetPackResourceType({
+          value: resourceType,
+          path: `payload.resourceTypes[${index}]`,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      if (!isPlainObject(assetPack) || assetPack.type !== "assetPack") {
+        return invalidPrecondition(
+          "payload.assetPackId must reference an existing asset pack",
+        );
+      }
+
+      for (const resourceType of payload.resourceTypes) {
+        if (!hasAssetPackResource({ assetPack, resourceType })) {
+          return invalidPrecondition(
+            "payload.resourceTypes must reference existing asset pack resources",
+            { resourceType },
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      assetPack.resources = assetPack.resources.filter(
+        (entry) => !payload.resourceTypes.includes(entry.resourceType),
+      );
+
+      return state;
+    },
+  },
+  {
+    type: "assetPack.resource.move",
+    validatePayload: ({ payload }) => {
+      {
+        const result = validateAllowedKeys({
+          value: payload,
+          allowedKeys: [
+            "assetPackId",
+            "resourceType",
+            "index",
+            "position",
+            "positionTargetResourceType",
+          ],
+          path: "payload",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      if (!isNonEmptyString(payload.assetPackId)) {
+        return invalidPayload("payload.assetPackId must be a non-empty string");
+      }
+
+      {
+        const result = validateAssetPackResourceType({
+          value: payload.resourceType,
+          path: "payload.resourceType",
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+
+      // A resource has no parent to move to, so a move must place it.
+      if (payload.index === undefined && payload.position === undefined) {
+        return invalidPayload("payload.index or payload.position is required");
+      }
+
+      {
+        const result = validateAssetPackResourcePlacementFields({
+          payload,
+          errorFactory: createPayloadValidationError,
+        });
+        if (result?.valid === false) {
+          return result;
+        }
+      }
+    },
+    validateAgainstState: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      if (!isPlainObject(assetPack) || assetPack.type !== "assetPack") {
+        return invalidPrecondition(
+          "payload.assetPackId must reference an existing asset pack",
+        );
+      }
+
+      if (
+        !hasAssetPackResource({
+          assetPack,
+          resourceType: payload.resourceType,
+        })
+      ) {
+        return invalidPrecondition(
+          "payload.resourceType must reference an existing asset pack resource",
+        );
+      }
+
+      if (payload.positionTargetResourceType !== undefined) {
+        if (payload.positionTargetResourceType === payload.resourceType) {
+          return invalidPrecondition(
+            "payload.positionTargetResourceType must not reference the moved asset pack resource",
+          );
+        }
+
+        if (
+          !hasAssetPackResource({
+            assetPack,
+            resourceType: payload.positionTargetResourceType,
+          })
+        ) {
+          return invalidPrecondition(
+            "payload.positionTargetResourceType must reference an existing asset pack resource",
+          );
+        }
+      }
+    },
+    reduce: ({ state, payload }) => {
+      const assetPack = state.assetPacks.items[payload.assetPackId];
+      const [resource] = assetPack.resources.splice(
+        findAssetPackResourceIndex({
+          assetPack,
+          resourceType: payload.resourceType,
+        }),
+        1,
+      );
+
+      insertAssetPackResource({
+        resources: assetPack.resources,
+        resource,
+        index: payload.index,
+        position: payload.position,
+        positionTargetResourceType: payload.positionTargetResourceType,
+      });
+
+      return state;
+    },
+  },
 ];
 
 const definitionsByType = new Map(

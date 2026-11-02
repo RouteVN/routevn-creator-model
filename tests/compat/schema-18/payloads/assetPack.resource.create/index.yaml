@@ -1,0 +1,9 @@
+schemaVersion: 18
+type: assetPack.resource.create
+payload:
+  assetPackId: item-a
+  resourceType: layouts
+  index: 1
+  data:
+    folderIds:
+      - folder-ui

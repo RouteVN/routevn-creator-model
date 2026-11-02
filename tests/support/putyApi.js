@@ -35,6 +35,7 @@ const OMITTABLE_EMPTY_TAG_SCOPE_KEYS = [
   "audioEffects",
   "particles",
   "spritesheets",
+  "assetPacks",
 ];
 
 const isPlainObject = (value) =>

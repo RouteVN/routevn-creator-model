@@ -5,11 +5,6 @@ payload:
   data:
     name: Chapter One Pack
     description: Everything chapter one needs
-    resources:
-      - resourceType: sounds
-        folderIds:
-          - folder-audio
-      - resourceType: images
-        folderIds:
-          - folder-cg
-          - folder-art
+    tagIds:
+      - tag-a
+      - tag-b

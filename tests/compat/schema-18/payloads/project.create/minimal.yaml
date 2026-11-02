@@ -51,6 +51,9 @@ payload:
       spritesheets:
         items: {}
         tree: []
+      assetPacks:
+        items: {}
+        tree: []
     scenes:
       items: {}
       tree: []

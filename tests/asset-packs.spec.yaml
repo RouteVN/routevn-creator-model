@@ -8,7 +8,7 @@ suites:
 suite: processCommand
 exportName: processCommand
 ---
-case: assetPack.create inserts a pack before a sibling inside a folder
+case: assetPack.create inserts a pack listing nested folders before a sibling inside a folder
 in:
   - state:
       project: {}
@@ -21,11 +21,29 @@ in:
         items: {}
         tree: []
       images:
-        items: {}
-        tree: []
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
       sounds:
-        items: {}
-        tree: []
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
       videos:
         items: {}
         tree: []
@@ -51,8 +69,14 @@ in:
         items: {}
         tree: []
       layouts:
-        items: {}
-        tree: []
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
       assetPacks:
         items:
           folder-packs:
@@ -100,11 +124,29 @@ out:
       items: {}
       tree: []
     images:
-      items: {}
-      tree: []
+      items:
+        folder-bg:
+          id: folder-bg
+          type: folder
+          name: Backgrounds
+        folder-cg:
+          id: folder-cg
+          type: folder
+          name: CG
+      tree:
+        - id: folder-bg
+          children:
+            - id: folder-cg
+              children: []
     sounds:
-      items: {}
-      tree: []
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
     videos:
       items: {}
       tree: []
@@ -130,8 +172,14 @@ out:
       items: {}
       tree: []
     layouts:
-      items: {}
-      tree: []
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
     assetPacks:
       items:
         folder-packs:
@@ -164,7 +212,7 @@ out:
             - id: pack-b
               children: []
 ---
-case: assetPack.update replaces resources and keeps the other fields
+case: assetPack.resource.create places a resource type after another
 in:
   - state:
       project: {}
@@ -177,11 +225,29 @@ in:
         items: {}
         tree: []
       images:
-        items: {}
-        tree: []
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
       sounds:
-        items: {}
-        tree: []
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
       videos:
         items: {}
         tree: []
@@ -207,8 +273,14 @@ in:
         items: {}
         tree: []
       layouts:
-        items: {}
-        tree: []
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
       assetPacks:
         items:
           pack-a:
@@ -220,22 +292,22 @@ in:
               - resourceType: images
                 folderIds:
                   - folder-cg
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
         tree:
           - id: pack-a
             children: []
     command:
-      type: assetPack.update
+      type: assetPack.resource.create
       payload:
         assetPackId: pack-a
+        resourceType: layouts
+        position: after
+        positionTargetResourceType: images
         data:
-          resources:
-            - resourceType: sounds
-              folderIds:
-                - folder-bgm
-            - resourceType: images
-              folderIds:
-                - folder-bg
-                - folder-cg
+          folderIds:
+            - folder-ui
 out:
   state:
     project: {}
@@ -248,11 +320,29 @@ out:
       items: {}
       tree: []
     images:
-      items: {}
-      tree: []
+      items:
+        folder-bg:
+          id: folder-bg
+          type: folder
+          name: Backgrounds
+        folder-cg:
+          id: folder-cg
+          type: folder
+          name: CG
+      tree:
+        - id: folder-bg
+          children:
+            - id: folder-cg
+              children: []
     sounds:
-      items: {}
-      tree: []
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
     videos:
       items: {}
       tree: []
@@ -278,8 +368,14 @@ out:
       items: {}
       tree: []
     layouts:
-      items: {}
-      tree: []
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
     assetPacks:
       items:
         pack-a:
@@ -288,13 +384,560 @@ out:
           name: Starter
           description: Opening chapter
           resources:
+            - resourceType: images
+              folderIds:
+                - folder-cg
+            - resourceType: layouts
+              folderIds:
+                - folder-ui
             - resourceType: sounds
               folderIds:
                 - folder-bgm
+      tree:
+        - id: pack-a
+          children: []
+---
+case: assetPack.resource.update replaces a resource type's folders in place
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            description: Opening chapter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.resource.update
+      payload:
+        assetPackId: pack-a
+        resourceType: images
+        data:
+          folderIds:
+            - folder-bg
+            - folder-cg
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-bg:
+          id: folder-bg
+          type: folder
+          name: Backgrounds
+        folder-cg:
+          id: folder-cg
+          type: folder
+          name: CG
+      tree:
+        - id: folder-bg
+          children:
+            - id: folder-cg
+              children: []
+    sounds:
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
+    assetPacks:
+      items:
+        pack-a:
+          id: pack-a
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
             - resourceType: images
               folderIds:
                 - folder-bg
                 - folder-cg
+            - resourceType: sounds
+              folderIds:
+                - folder-bgm
+      tree:
+        - id: pack-a
+          children: []
+---
+case: assetPack.resource.move moves a resource type to the front
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            description: Opening chapter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
+              - resourceType: layouts
+                folderIds:
+                  - folder-ui
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.resource.move
+      payload:
+        assetPackId: pack-a
+        resourceType: layouts
+        position: first
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-bg:
+          id: folder-bg
+          type: folder
+          name: Backgrounds
+        folder-cg:
+          id: folder-cg
+          type: folder
+          name: CG
+      tree:
+        - id: folder-bg
+          children:
+            - id: folder-cg
+              children: []
+    sounds:
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
+    assetPacks:
+      items:
+        pack-a:
+          id: pack-a
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
+            - resourceType: layouts
+              folderIds:
+                - folder-ui
+            - resourceType: images
+              folderIds:
+                - folder-cg
+            - resourceType: sounds
+              folderIds:
+                - folder-bgm
+      tree:
+        - id: pack-a
+          children: []
+---
+case: assetPack.resource.delete removes resource types and keeps the others in order
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            description: Opening chapter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
+              - resourceType: layouts
+                folderIds:
+                  - folder-ui
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.resource.delete
+      payload:
+        assetPackId: pack-a
+        resourceTypes:
+          - images
+          - sounds
+out:
+  state:
+    project: {}
+    story:
+      initialSceneId: null
+    scenes:
+      items: {}
+      tree: []
+    files:
+      items: {}
+      tree: []
+    images:
+      items:
+        folder-bg:
+          id: folder-bg
+          type: folder
+          name: Backgrounds
+        folder-cg:
+          id: folder-cg
+          type: folder
+          name: CG
+      tree:
+        - id: folder-bg
+          children:
+            - id: folder-cg
+              children: []
+    sounds:
+      items:
+        folder-bgm:
+          id: folder-bgm
+          type: folder
+          name: BGM
+      tree:
+        - id: folder-bgm
+          children: []
+    videos:
+      items: {}
+      tree: []
+    animations:
+      items: {}
+      tree: []
+    characters:
+      items: {}
+      tree: []
+    fonts:
+      items: {}
+      tree: []
+    transforms:
+      items: {}
+      tree: []
+    colors:
+      items: {}
+      tree: []
+    textStyles:
+      items: {}
+      tree: []
+    variables:
+      items: {}
+      tree: []
+    layouts:
+      items:
+        folder-ui:
+          id: folder-ui
+          type: folder
+          name: UI
+      tree:
+        - id: folder-ui
+          children: []
+    assetPacks:
+      items:
+        pack-a:
+          id: pack-a
+          type: assetPack
+          name: Starter
+          description: Opening chapter
+          resources:
+            - resourceType: layouts
+              folderIds:
+                - folder-ui
       tree:
         - id: pack-a
           children: []
@@ -447,7 +1090,7 @@ in:
               - folder-bg
 throws: payload.data.resources[1].resourceType must be unique within payload.data.resources
 ---
-case: assetPack.update rejects a folder id listed twice
+case: assetPack.update rejects resources
 in:
   - type: assetPack.update
     payload:
@@ -457,21 +1100,37 @@ in:
           - resourceType: images
             folderIds:
               - folder-cg
-              - folder-cg
-throws: payload.data.resources[0].folderIds[1] must be unique
+throws: payload.data.resources is not allowed
 ---
-case: assetPack.create rejects tag ids
+case: assetPack.resource.update rejects an empty folder list
 in:
-  - type: assetPack.create
+  - type: assetPack.resource.update
     payload:
       assetPackId: pack-a
+      resourceType: images
       data:
-        type: assetPack
-        name: Starter
-        tagIds:
-          - tag-a
-        resources: []
-throws: payload.data.tagIds is not allowed
+        folderIds: []
+throws: payload.data.folderIds must be a non-empty array
+---
+case: assetPack.resource.move rejects a move without a placement
+in:
+  - type: assetPack.resource.move
+    payload:
+      assetPackId: pack-a
+      resourceType: images
+throws: payload.index or payload.position is required
+---
+case: assetPack.resource.create rejects a position target without a position
+in:
+  - type: assetPack.resource.create
+    payload:
+      assetPackId: pack-a
+      resourceType: layouts
+      positionTargetResourceType: images
+      data:
+        folderIds:
+          - folder-ui
+throws: payload.positionTargetResourceType requires payload.position
 ---
 suite: validateAgainstState
 exportName: validateAgainstState
@@ -545,7 +1204,7 @@ in:
         parentId: pack-b
 throws: payload.parentId must reference a folder asset pack item
 ---
-case: assetPack.update rejects asset pack fields on a folder
+case: assetPack.update rejects tag ids on a folder
 in:
   - state:
       project: {}
@@ -604,5 +1263,283 @@ in:
       payload:
         assetPackId: folder-packs
         data:
-          resources: []
+          tagIds:
+            - tag-chapter
 throws: folder asset pack items cannot update asset pack fields
+---
+case: assetPack.resource.create rejects a type the pack already has
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            description: Opening chapter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+              - resourceType: sounds
+                folderIds:
+                  - folder-bgm
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.resource.create
+      payload:
+        assetPackId: pack-a
+        resourceType: sounds
+        data:
+          folderIds:
+            - folder-bgm
+throws: payload.resourceType must not already exist in the asset pack
+---
+case: assetPack.resource.create rejects an item that is not a folder
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items:
+          color-red:
+            id: color-red
+            type: color
+            name: Red
+            hex: "#ff0000"
+        tree:
+          - id: color-red
+            children: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
+        tree:
+          - id: pack-a
+            children: []
+    command:
+      type: assetPack.resource.create
+      payload:
+        assetPackId: pack-a
+        resourceType: colors
+        data:
+          folderIds:
+            - color-red
+throws: payload.data.folderIds[0] must reference an existing folder in 'colors'
+---
+case: assetPack.create rejects a folder of another collection
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-bg:
+            id: folder-bg
+            type: folder
+            name: Backgrounds
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-bg
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items:
+          folder-bgm:
+            id: folder-bgm
+            type: folder
+            name: BGM
+        tree:
+          - id: folder-bgm
+            children: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items:
+          folder-ui:
+            id: folder-ui
+            type: folder
+            name: UI
+        tree:
+          - id: folder-ui
+            children: []
+    command:
+      type: assetPack.create
+      payload:
+        assetPackId: pack-a
+        data:
+          type: assetPack
+          name: Starter
+          resources:
+            - resourceType: images
+              folderIds:
+                - folder-bgm
+throws: payload.data.resources[0].folderIds[0] must reference an existing folder in 'images'

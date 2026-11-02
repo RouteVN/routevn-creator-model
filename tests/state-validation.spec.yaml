@@ -1496,7 +1496,7 @@ in:
                 children: []
 throws: "state.assetPacks.tree[0].children requires 'pack-a' to be a folder asset pack item"
 ---
-case: validateState accepts asset packs that keep ids of missing folders
+case: validateState rejects asset packs that list a missing folder
 in:
   - state:
       project: {}
@@ -1551,6 +1551,78 @@ in:
               - resourceType: images
                 folderIds:
                   - folder-deleted
+        tree:
+          - id: pack-a
+            children: []
+throws: assetPack.resources.folderIds must reference an existing folder in the resourceType collection
+---
+case: validateState accepts asset packs that list nested folders
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items:
+          folder-art:
+            id: folder-art
+            type: folder
+            name: Art
+          folder-cg:
+            id: folder-cg
+            type: folder
+            name: CG
+        tree:
+          - id: folder-art
+            children:
+              - id: folder-cg
+                children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+      assetPacks:
+        items:
+          pack-a:
+            id: pack-a
+            type: assetPack
+            name: Starter
+            resources:
+              - resourceType: images
+                folderIds:
+                  - folder-cg
         tree:
           - id: pack-a
             children: []

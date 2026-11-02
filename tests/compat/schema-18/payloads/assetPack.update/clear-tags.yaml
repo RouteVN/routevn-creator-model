@@ -3,4 +3,4 @@ type: assetPack.update
 payload:
   assetPackId: item-a
   data:
-    resources: []
+    tagIds: []

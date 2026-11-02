@@ -52,6 +52,9 @@ state:
     spritesheets:
       items: {}
       tree: []
+    assetPacks:
+      items: {}
+      tree: []
   scenes:
     items:
       scene-main:

@@ -9,6 +9,9 @@ payload:
     type: assetPack
     name: Starter Pack
     description: Art and audio for the opening chapter
+    tagIds:
+      - tag-a
+      - tag-b
     resources:
       - resourceType: images
         folderIds:

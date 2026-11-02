@@ -1,0 +1,10 @@
+schemaVersion: 18
+type: assetPack.resource.create
+payload:
+  assetPackId: item-a
+  resourceType: fonts
+  position: after
+  positionTargetResourceType: layouts
+  data:
+    folderIds:
+      - folder-fonts

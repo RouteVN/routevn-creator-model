@@ -5494,5 +5494,9 @@ test("registry exposes only fully implemented command types", () => {
     "assetPack.update",
     "assetPack.delete",
     "assetPack.move",
+    "assetPack.resource.create",
+    "assetPack.resource.update",
+    "assetPack.resource.delete",
+    "assetPack.resource.move",
   ]);
 });

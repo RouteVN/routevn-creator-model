@@ -11,9 +11,9 @@ preparation scenario's illustrative transport envelopes and future model-version
 value are not model inputs. Tests call the unversioned legacy APIs, compare the
 complete ordered state from sequential processing and batch replay, and assert
 that moving the section retains its existing lines without recreating them.
-Collections added to the model after the capture, such as `assetPacks` in
-schema 18, are expected as empty collections after the captured roots; the test
-lists them, and the captured files stay unchanged.
+Collections and tag scopes added to the model after the capture, such as the
+`assetPacks` collection and tag scope in schema 18, are expected empty after the
+captured ones; the test lists them, and the captured files stay unchanged.
 
 Run `bunx vitest run tests/section-move-compatibility.test.js` or `bun run test`.
 The suite needs no client checkout, browser, database, or package release.

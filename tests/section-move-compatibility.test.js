@@ -18,14 +18,18 @@ const manifest = read("manifest.json");
 const initialState = read("initial-state.json");
 const commands = read("commands.json");
 const expectedState = read("expected-state.json");
-// Collections the model gained after this capture. A state without one gets it
-// as an empty collection after the captured roots, so the expected state is
-// the captured one followed by these, and nothing else may differ.
+// Collections and tag scopes the model gained after this capture. A state
+// without one gets it empty after the captured ones, so the expected state is
+// the captured one with these added, and nothing else may differ.
 const COLLECTIONS_ADDED_AFTER_CAPTURE = {
+  assetPacks: { items: {}, tree: [] },
+};
+const TAG_SCOPES_ADDED_AFTER_CAPTURE = {
   assetPacks: { items: {}, tree: [] },
 };
 const expectedCurrentState = {
   ...expectedState,
+  tags: { ...expectedState.tags, ...TAG_SCOPES_ADDED_AFTER_CAPTURE },
   ...COLLECTIONS_ADDED_AFTER_CAPTURE,
 };
 

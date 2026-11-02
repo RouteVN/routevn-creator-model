@@ -1,0 +1,11 @@
+schemaVersion: 18
+type: assetPack.resource.create
+payload:
+  assetPackId: item-a
+  resourceType: sounds
+  position: before
+  positionTargetResourceType: images
+  data:
+    folderIds:
+      - folder-bgm
+      - folder-se

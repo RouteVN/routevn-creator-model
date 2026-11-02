@@ -55,6 +55,20 @@ state:
     spritesheets:
       items: {}
       tree: []
+    assetPacks:
+      items:
+        tag-chapter:
+          id: tag-chapter
+          type: tag
+          name: Chapter
+          color: "#664422"
+        tag-complete:
+          id: tag-complete
+          type: tag
+          name: Complete
+      tree:
+        - id: tag-chapter
+        - id: tag-complete
   scenes:
     items:
       scene-a:
@@ -255,10 +269,22 @@ state:
         thumbnailFileId: thumb-image-rich
         width: 1920
         height: 1080
+      folder-pack-images:
+        id: folder-pack-images
+        type: folder
+        name: Pack images
+      folder-pack-images-nested:
+        id: folder-pack-images-nested
+        type: folder
+        name: Pack images nested
     tree:
       - id: folder-art
         children:
           - id: image-rich
+            children: []
+      - id: folder-pack-images
+        children:
+          - id: folder-pack-images-nested
             children: []
   spritesheets:
     items:
@@ -290,10 +316,22 @@ state:
               - 3
             animationSpeed: 1
             loop: true
+      folder-pack-spritesheets:
+        id: folder-pack-spritesheets
+        type: folder
+        name: Pack spritesheets
+      folder-pack-spritesheets-nested:
+        id: folder-pack-spritesheets-nested
+        type: folder
+        name: Pack spritesheets nested
     tree:
       - id: folder-spritesheets
         children:
           - id: spritesheet-rich
+            children: []
+      - id: folder-pack-spritesheets
+        children:
+          - id: folder-pack-spritesheets-nested
             children: []
   sounds:
     items:
@@ -309,10 +347,22 @@ state:
         fileId: file-sound-rich
         waveformDataFileId: waveform-sound-rich
         duration: 42.5
+      folder-pack-sounds:
+        id: folder-pack-sounds
+        type: folder
+        name: Pack sounds
+      folder-pack-sounds-nested:
+        id: folder-pack-sounds-nested
+        type: folder
+        name: Pack sounds nested
     tree:
       - id: folder-audio
         children:
           - id: sound-rich
+            children: []
+      - id: folder-pack-sounds
+        children:
+          - id: folder-pack-sounds-nested
             children: []
   voices:
     items: {}
@@ -332,10 +382,22 @@ state:
         thumbnailFileId: thumb-video-rich
         width: 1280
         height: 720
+      folder-pack-videos:
+        id: folder-pack-videos
+        type: folder
+        name: Pack videos
+      folder-pack-videos-nested:
+        id: folder-pack-videos-nested
+        type: folder
+        name: Pack videos nested
     tree:
       - id: folder-video
         children:
           - id: video-rich
+            children: []
+      - id: folder-pack-videos
+        children:
+          - id: folder-pack-videos-nested
             children: []
   animations:
     items:
@@ -364,9 +426,21 @@ state:
                 - duration: 100
                   delay: 25
                   value: 1
+      folder-pack-animations:
+        id: folder-pack-animations
+        type: folder
+        name: Pack animations
+      folder-pack-animations-nested:
+        id: folder-pack-animations-nested
+        type: folder
+        name: Pack animations nested
     tree:
       - id: animation-rich
         children: []
+      - id: folder-pack-animations
+        children:
+          - id: folder-pack-animations-nested
+            children: []
   audioEffects:
     items:
       folder-audio-effects:
@@ -426,6 +500,14 @@ state:
                 - value: 30
                   duration: 350
                   easing: easeInOutSine
+      folder-pack-audioEffects:
+        id: folder-pack-audioEffects
+        type: folder
+        name: Pack audioEffects
+      folder-pack-audioEffects-nested:
+        id: folder-pack-audioEffects-nested
+        type: folder
+        name: Pack audioEffects nested
     tree:
       - id: folder-audio-effects
         children:
@@ -433,9 +515,25 @@ state:
             children: []
           - id: smooth-volume
             children: []
+      - id: folder-pack-audioEffects
+        children:
+          - id: folder-pack-audioEffects-nested
+            children: []
   particles:
-    items: {}
-    tree: []
+    items:
+      folder-pack-particles:
+        id: folder-pack-particles
+        type: folder
+        name: Pack particles
+      folder-pack-particles-nested:
+        id: folder-pack-particles-nested
+        type: folder
+        name: Pack particles nested
+    tree:
+      - id: folder-pack-particles
+        children:
+          - id: folder-pack-particles-nested
+            children: []
   characters:
     items:
       character-hero:
@@ -465,9 +563,21 @@ state:
                   children: []
             - id: sprite-b
               children: []
+      folder-pack-characters:
+        id: folder-pack-characters
+        type: folder
+        name: Pack characters
+      folder-pack-characters-nested:
+        id: folder-pack-characters-nested
+        type: folder
+        name: Pack characters nested
     tree:
       - id: character-hero
         children: []
+      - id: folder-pack-characters
+        children:
+          - id: folder-pack-characters-nested
+            children: []
   fonts:
     items:
       font-ui:
@@ -479,9 +589,21 @@ state:
         minWeight: 100
         defaultWeight: 400
         maxWeight: 900
+      folder-pack-fonts:
+        id: folder-pack-fonts
+        type: folder
+        name: Pack fonts
+      folder-pack-fonts-nested:
+        id: folder-pack-fonts-nested
+        type: folder
+        name: Pack fonts nested
     tree:
       - id: font-ui
         children: []
+      - id: folder-pack-fonts
+        children:
+          - id: folder-pack-fonts-nested
+            children: []
   transforms:
     items:
       transform-rich:
@@ -496,9 +618,21 @@ state:
         anchorX: 0
         anchorY: 0
         rotation: 0
+      folder-pack-transforms:
+        id: folder-pack-transforms
+        type: folder
+        name: Pack transforms
+      folder-pack-transforms-nested:
+        id: folder-pack-transforms-nested
+        type: folder
+        name: Pack transforms nested
     tree:
       - id: transform-rich
         children: []
+      - id: folder-pack-transforms
+        children:
+          - id: folder-pack-transforms-nested
+            children: []
   colors:
     items:
       color-ui:
@@ -506,9 +640,21 @@ state:
         type: color
         name: White
         hex: "#ffffff"
+      folder-pack-colors:
+        id: folder-pack-colors
+        type: folder
+        name: Pack colors
+      folder-pack-colors-nested:
+        id: folder-pack-colors-nested
+        type: folder
+        name: Pack colors nested
     tree:
       - id: color-ui
         children: []
+      - id: folder-pack-colors
+        children:
+          - id: folder-pack-colors-nested
+            children: []
   textStyles:
     items:
       text-style-ui:
@@ -527,9 +673,21 @@ state:
           blur: 4
           offsetX: 2
           offsetY: 3
+      folder-pack-textStyles:
+        id: folder-pack-textStyles
+        type: folder
+        name: Pack textStyles
+      folder-pack-textStyles-nested:
+        id: folder-pack-textStyles-nested
+        type: folder
+        name: Pack textStyles nested
     tree:
       - id: text-style-ui
         children: []
+      - id: folder-pack-textStyles
+        children:
+          - id: folder-pack-textStyles-nested
+            children: []
   variables:
     items:
       variable-rich:
@@ -567,11 +725,23 @@ state:
               input:
                 variables:
                   variable-rich: tense
+      folder-pack-variables:
+        id: folder-pack-variables
+        type: folder
+        name: Pack variables
+      folder-pack-variables-nested:
+        id: folder-pack-variables-nested
+        type: folder
+        name: Pack variables nested
     tree:
       - id: variable-rich
         children: []
       - id: variable-rich-label
         children: []
+      - id: folder-pack-variables
+        children:
+          - id: folder-pack-variables-nested
+            children: []
   layouts:
     items:
       layout-dialogue:
@@ -698,9 +868,21 @@ state:
                   children: []
                 - id: choice-single-item
                   children: []
+      folder-pack-layouts:
+        id: folder-pack-layouts
+        type: folder
+        name: Pack layouts
+      folder-pack-layouts-nested:
+        id: folder-pack-layouts-nested
+        type: folder
+        name: Pack layouts nested
     tree:
       - id: layout-dialogue
         children: []
+      - id: folder-pack-layouts
+        children:
+          - id: folder-pack-layouts-nested
+            children: []
   controls:
     items:
       control-default:
@@ -819,9 +1001,21 @@ state:
                   children: []
                 - id: choice-single-item
                   children: []
+      folder-pack-controls:
+        id: folder-pack-controls
+        type: folder
+        name: Pack controls
+      folder-pack-controls-nested:
+        id: folder-pack-controls-nested
+        type: folder
+        name: Pack controls nested
     tree:
       - id: control-default
         children: []
+      - id: folder-pack-controls
+        children:
+          - id: folder-pack-controls-nested
+            children: []
   assetPacks:
     items:
       folder-asset-packs:
@@ -833,11 +1027,12 @@ state:
         type: assetPack
         name: Starter Pack
         description: Art and audio for the opening chapter
+        tagIds:
+          - tag-chapter
         resources:
           - resourceType: images
             folderIds:
               - folder-art
-              - folder-removed
           - resourceType: sounds
             folderIds:
               - folder-audio
@@ -859,72 +1054,76 @@ state:
         id: folder-asset-packs-nested
         type: folder
         name: Nested
+        description: Packs for later chapters
       asset-pack-everything:
         id: asset-pack-everything
         type: assetPack
         name: Everything
         description: ""
+        tagIds:
+          - tag-complete
+          - tag-chapter
         resources:
           - resourceType: images
             folderIds:
-              - folder-images
-              - folder-images-extra
+              - folder-pack-images-nested
+              - folder-pack-images
           - resourceType: sounds
             folderIds:
-              - folder-sounds
-              - folder-sounds-extra
+              - folder-pack-sounds-nested
+              - folder-pack-sounds
           - resourceType: videos
             folderIds:
-              - folder-videos
-              - folder-videos-extra
+              - folder-pack-videos-nested
+              - folder-pack-videos
           - resourceType: characters
             folderIds:
-              - folder-characters
-              - folder-characters-extra
+              - folder-pack-characters-nested
+              - folder-pack-characters
           - resourceType: transforms
             folderIds:
-              - folder-transforms
-              - folder-transforms-extra
+              - folder-pack-transforms-nested
+              - folder-pack-transforms
           - resourceType: animations
             folderIds:
-              - folder-animations
-              - folder-animations-extra
+              - folder-pack-animations-nested
+              - folder-pack-animations
           - resourceType: audioEffects
             folderIds:
-              - folder-audioEffects
-              - folder-audioEffects-extra
+              - folder-pack-audioEffects-nested
+              - folder-pack-audioEffects
           - resourceType: particles
             folderIds:
-              - folder-particles
-              - folder-particles-extra
+              - folder-pack-particles-nested
+              - folder-pack-particles
           - resourceType: spritesheets
             folderIds:
-              - folder-spritesheets
-              - folder-spritesheets-extra
+              - folder-pack-spritesheets-nested
+              - folder-pack-spritesheets
           - resourceType: colors
             folderIds:
-              - folder-colors
-              - folder-colors-extra
+              - folder-pack-colors-nested
+              - folder-pack-colors
           - resourceType: fonts
             folderIds:
-              - folder-fonts
-              - folder-fonts-extra
+              - folder-pack-fonts-nested
+              - folder-pack-fonts
           - resourceType: textStyles
             folderIds:
-              - folder-textStyles
-              - folder-textStyles-extra
+              - folder-pack-textStyles-nested
+              - folder-pack-textStyles
           - resourceType: layouts
             folderIds:
-              - folder-layouts
-              - folder-layouts-extra
+              - folder-pack-layouts-nested
+              - folder-pack-layouts
           - resourceType: variables
             folderIds:
-              - folder-variables
-              - folder-variables-extra
+              - folder-pack-variables-nested
+              - folder-pack-variables
           - resourceType: controls
             folderIds:
-              - folder-controls
-              - folder-controls-extra
+              - folder-pack-controls-nested
+              - folder-pack-controls
     tree:
       - id: folder-asset-packs
         children:

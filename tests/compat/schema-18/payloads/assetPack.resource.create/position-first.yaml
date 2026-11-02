@@ -1,0 +1,9 @@
+schemaVersion: 18
+type: assetPack.resource.create
+payload:
+  assetPackId: item-a
+  resourceType: videos
+  position: first
+  data:
+    folderIds:
+      - folder-video

@@ -57,6 +57,15 @@ payload:
       spritesheets:
         items: {}
         tree: []
+      assetPacks:
+        items:
+          tag-chapter:
+            id: tag-chapter
+            type: tag
+            name: Chapter
+            color: "#664422"
+        tree:
+          - id: tag-chapter
     scenes:
       items:
         scene-a:
@@ -835,11 +844,12 @@ payload:
           type: assetPack
           name: Starter Pack
           description: Art and audio for the opening chapter
+          tagIds:
+            - tag-chapter
           resources:
             - resourceType: images
               folderIds:
                 - folder-art
-                - folder-removed
             - resourceType: sounds
               folderIds:
                 - folder-audio
