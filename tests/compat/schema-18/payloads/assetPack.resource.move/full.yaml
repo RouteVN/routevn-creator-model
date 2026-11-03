@@ -1,0 +1,7 @@
+schemaVersion: 18
+type: assetPack.resource.move
+payload:
+  assetPackId: item-a
+  resourceType: images
+  position: after
+  positionTargetResourceType: sounds

@@ -1,0 +1,7 @@
+schemaVersion: 18
+type: particle.update
+payload:
+  particleId: item-a
+  data:
+    thumbnailFileId: thumb-particle
+    thumbnailSourceHash: hash-particle

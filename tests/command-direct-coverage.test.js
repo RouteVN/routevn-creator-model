@@ -58,6 +58,42 @@ const withFiles = (state, files) => {
 const getSceneSection = (state, sceneId, sectionId) =>
   state.scenes.items[sceneId].sections.items[sectionId];
 
+// Folders that asset packs in these cases list.
+const withAssetPackFolderRefs = (state) => {
+  state.images.items["folder-bg"] = {
+    id: "folder-bg",
+    type: "folder",
+    name: "Backgrounds",
+  };
+  state.images.items["folder-cg"] = {
+    id: "folder-cg",
+    type: "folder",
+    name: "CG",
+  };
+  state.images.tree = [
+    createTreeNode("folder-bg", [createTreeNode("folder-cg")]),
+  ];
+  state.sounds.items["folder-bgm"] = {
+    id: "folder-bgm",
+    type: "folder",
+    name: "BGM",
+  };
+  state.sounds.tree = [createTreeNode("folder-bgm")];
+  return state;
+};
+
+const createAssetPackResourceState = () => {
+  const state = withAssetPackFolderRefs(createEmptyTestState());
+  state.assetPacks.items["pack-a"] = {
+    id: "pack-a",
+    type: "assetPack",
+    name: "Starter Pack",
+    resources: [{ resourceType: "images", folderIds: ["folder-bg"] }],
+  };
+  state.assetPacks.tree = [createTreeNode("pack-a")];
+  return state;
+};
+
 const createCollectionState = ({
   collectionKey,
   items,
@@ -2353,6 +2389,155 @@ const directCases = [
       name: "Control Updated",
     },
   }),
+  ...createFolderedCommandCases({
+    familyName: "assetPack",
+    collectionKey: "assetPacks",
+    idField: "assetPackId",
+    idsField: "assetPackIds",
+    createData: {
+      type: "assetPack",
+      name: "Starter Pack",
+      resources: [{ resourceType: "images", folderIds: ["folder-bg"] }],
+    },
+    updateData: {
+      name: "Opening Pack",
+      description: "Art for the opening chapter",
+    },
+    decorateState: withAssetPackFolderRefs,
+  }),
+  {
+    type: "assetPack.resource.create",
+    runPositive: () => {
+      const result = processCommand({
+        state: createAssetPackResourceState(),
+        command: {
+          type: "assetPack.resource.create",
+          payload: {
+            assetPackId: "pack-a",
+            resourceType: "sounds",
+            data: { folderIds: ["folder-bgm"] },
+            position: "first",
+          },
+        },
+      });
+
+      expect(result.state.assetPacks.items["pack-a"].resources).toEqual([
+        { resourceType: "sounds", folderIds: ["folder-bgm"] },
+        { resourceType: "images", folderIds: ["folder-bg"] },
+      ]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validateAgainstState({
+          state: createAssetPackResourceState(),
+          command: {
+            type: "assetPack.resource.create",
+            payload: {
+              assetPackId: "pack-a",
+              resourceType: "images",
+              data: { folderIds: ["folder-cg"] },
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.resourceType must not already exist in the asset pack",
+      );
+    },
+  },
+  {
+    type: "assetPack.resource.update",
+    runPositive: () => {
+      const result = processCommand({
+        state: createAssetPackResourceState(),
+        command: {
+          type: "assetPack.resource.update",
+          payload: {
+            assetPackId: "pack-a",
+            resourceType: "images",
+            data: { folderIds: ["folder-cg", "folder-bg"] },
+          },
+        },
+      });
+
+      expect(result.state.assetPacks.items["pack-a"].resources).toEqual([
+        { resourceType: "images", folderIds: ["folder-cg", "folder-bg"] },
+      ]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validateAgainstState({
+          state: createAssetPackResourceState(),
+          command: {
+            type: "assetPack.resource.update",
+            payload: {
+              assetPackId: "pack-a",
+              resourceType: "images",
+              data: { folderIds: ["folder-missing"] },
+            },
+          },
+        }),
+      ).toThrow(
+        "payload.data.folderIds[0] must reference an existing folder in 'images'",
+      );
+    },
+  },
+  {
+    type: "assetPack.resource.delete",
+    runPositive: () => {
+      const result = processCommand({
+        state: createAssetPackResourceState(),
+        command: {
+          type: "assetPack.resource.delete",
+          payload: { assetPackId: "pack-a", resourceTypes: ["images"] },
+        },
+      });
+
+      expect(result.state.assetPacks.items["pack-a"].resources).toEqual([]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "assetPack.resource.delete",
+          payload: { assetPackId: "pack-a", resourceTypes: [] },
+        }),
+      ).toThrow("payload.resourceTypes must be a non-empty array");
+    },
+  },
+  {
+    type: "assetPack.resource.move",
+    runPositive: () => {
+      const state = createAssetPackResourceState();
+      state.assetPacks.items["pack-a"].resources.push({
+        resourceType: "sounds",
+        folderIds: ["folder-bgm"],
+      });
+      const result = processCommand({
+        state,
+        command: {
+          type: "assetPack.resource.move",
+          payload: {
+            assetPackId: "pack-a",
+            resourceType: "sounds",
+            position: "before",
+            positionTargetResourceType: "images",
+          },
+        },
+      });
+
+      expect(result.state.assetPacks.items["pack-a"].resources).toEqual([
+        { resourceType: "sounds", folderIds: ["folder-bgm"] },
+        { resourceType: "images", folderIds: ["folder-bg"] },
+      ]);
+    },
+    runNegative: () => {
+      expectValidation(() =>
+        validatePayload({
+          type: "assetPack.resource.move",
+          payload: { assetPackId: "pack-a", resourceType: "images" },
+        }),
+      ).toThrow("payload.index or payload.position is required");
+    },
+  },
   {
     type: "character.sprite.create",
     runPositive: () => {

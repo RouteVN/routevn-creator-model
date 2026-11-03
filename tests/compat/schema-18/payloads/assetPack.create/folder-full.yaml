@@ -1,0 +1,7 @@
+schemaVersion: 18
+type: assetPack.create
+payload:
+  assetPackId: folder-a
+  data:
+    type: folder
+    name: Folder A

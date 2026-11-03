@@ -2260,6 +2260,15 @@ test("validateState accepts legacy state without voices collection", () => {
   });
 });
 
+test("validateState accepts legacy state without assetPacks collection", () => {
+  const state = createEmptyTestState();
+  delete state.assetPacks;
+
+  expect(validateState({ state })).toEqual({
+    valid: true,
+  });
+});
+
 test("validateState accepts legacy state without tags root", () => {
   const state = createEmptyTestState();
   delete state.tags;
@@ -5481,5 +5490,13 @@ test("registry exposes only fully implemented command types", () => {
     "control.element.delete",
     "control.element.move",
     "layout.element.move",
+    "assetPack.create",
+    "assetPack.update",
+    "assetPack.delete",
+    "assetPack.move",
+    "assetPack.resource.create",
+    "assetPack.resource.update",
+    "assetPack.resource.delete",
+    "assetPack.resource.move",
   ]);
 });

@@ -1,0 +1,10 @@
+schemaVersion: 18
+type: assetPack.update
+payload:
+  assetPackId: item-a
+  data:
+    name: Chapter One Pack
+    description: Everything chapter one needs
+    tagIds:
+      - tag-a
+      - tag-b

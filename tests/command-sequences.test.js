@@ -2268,3 +2268,310 @@ test("applies a font and color command tape with intermediate state snapshots", 
   expect(steps[7].state).toEqual(expected7);
   expect(steps[8].state).toEqual(expected8);
 });
+
+// Image and sound folders that the asset pack tape picks; folder-cg sits inside
+// folder-bg.
+const createAssetPackSourceState = () => {
+  const state = createEmptyTestState();
+  state.images.items = {
+    "folder-bg": { id: "folder-bg", type: "folder", name: "Backgrounds" },
+    "folder-cg": { id: "folder-cg", type: "folder", name: "CG" },
+  };
+  state.images.tree = [
+    {
+      id: "folder-bg",
+      children: [{ id: "folder-cg", children: [] }],
+    },
+  ];
+  state.sounds.items = {
+    "folder-bgm": { id: "folder-bgm", type: "folder", name: "BGM" },
+  };
+  state.sounds.tree = [{ id: "folder-bgm", children: [] }];
+  return state;
+};
+
+test("applies an asset pack command tape with intermediate state snapshots", () => {
+  const steps = runCommandSequence({
+    initialState: createAssetPackSourceState(),
+    commands: [
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "assetPacks",
+          tagId: "tag-chapter",
+          data: {
+            type: "tag",
+            name: "Chapter",
+          },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "folder-packs",
+          data: {
+            type: "folder",
+            name: "Packs",
+          },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "pack-a",
+          parentId: "folder-packs",
+          data: {
+            type: "assetPack",
+            name: "Starter",
+            description: "Opening chapter",
+            tagIds: ["tag-chapter"],
+            resources: [{ resourceType: "images", folderIds: ["folder-cg"] }],
+          },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "pack-b",
+          data: {
+            type: "assetPack",
+            name: "Audio",
+          },
+        },
+      },
+      {
+        type: "assetPack.resource.create",
+        payload: {
+          assetPackId: "pack-a",
+          resourceType: "sounds",
+          data: { folderIds: ["folder-bgm"] },
+          position: "first",
+        },
+      },
+      {
+        type: "assetPack.resource.update",
+        payload: {
+          assetPackId: "pack-a",
+          resourceType: "images",
+          data: { folderIds: ["folder-bg", "folder-cg"] },
+        },
+      },
+      {
+        type: "assetPack.resource.move",
+        payload: {
+          assetPackId: "pack-a",
+          resourceType: "images",
+          index: 0,
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: {
+          scopeKey: "assetPacks",
+          tagIds: ["tag-chapter"],
+        },
+      },
+      {
+        type: "assetPack.move",
+        payload: {
+          assetPackId: "pack-b",
+          parentId: "folder-packs",
+          position: "before",
+          positionTargetId: "pack-a",
+        },
+      },
+      {
+        type: "assetPack.update",
+        payload: {
+          assetPackId: "folder-packs",
+          data: {
+            name: "Chapter Packs",
+          },
+        },
+      },
+      {
+        type: "assetPack.resource.delete",
+        payload: {
+          assetPackId: "pack-a",
+          resourceTypes: ["sounds"],
+        },
+      },
+      {
+        type: "assetPack.move",
+        payload: {
+          assetPackId: "pack-a",
+          parentId: null,
+          position: "last",
+        },
+      },
+      {
+        type: "assetPack.delete",
+        payload: {
+          assetPackIds: ["folder-packs"],
+        },
+      },
+      {
+        type: "assetPack.delete",
+        payload: {
+          assetPackIds: ["pack-a"],
+        },
+      },
+    ],
+  });
+
+  const expected0 = createAssetPackSourceState();
+  expected0.tags.assetPacks.items = {
+    "tag-chapter": {
+      id: "tag-chapter",
+      type: "tag",
+      name: "Chapter",
+    },
+  };
+  expected0.tags.assetPacks.tree = [{ id: "tag-chapter" }];
+
+  const expected1 = cloneState(expected0);
+  expected1.assetPacks.items = {
+    "folder-packs": {
+      id: "folder-packs",
+      type: "folder",
+      name: "Packs",
+    },
+  };
+  expected1.assetPacks.tree = [
+    {
+      id: "folder-packs",
+      children: [],
+    },
+  ];
+
+  const expected2 = cloneState(expected1);
+  expected2.assetPacks.items["pack-a"] = {
+    id: "pack-a",
+    type: "assetPack",
+    name: "Starter",
+    description: "Opening chapter",
+    tagIds: ["tag-chapter"],
+    resources: [{ resourceType: "images", folderIds: ["folder-cg"] }],
+  };
+  expected2.assetPacks.tree = [
+    {
+      id: "folder-packs",
+      children: [
+        {
+          id: "pack-a",
+          children: [],
+        },
+      ],
+    },
+  ];
+
+  const expected3 = cloneState(expected2);
+  expected3.assetPacks.items["pack-b"] = {
+    id: "pack-b",
+    type: "assetPack",
+    name: "Audio",
+    resources: [],
+  };
+  expected3.assetPacks.tree.push({
+    id: "pack-b",
+    children: [],
+  });
+
+  const expected4 = cloneState(expected3);
+  expected4.assetPacks.items["pack-a"].resources = [
+    { resourceType: "sounds", folderIds: ["folder-bgm"] },
+    { resourceType: "images", folderIds: ["folder-cg"] },
+  ];
+
+  const expected5 = cloneState(expected4);
+  expected5.assetPacks.items["pack-a"].resources[1].folderIds = [
+    "folder-bg",
+    "folder-cg",
+  ];
+
+  const expected6 = cloneState(expected5);
+  expected6.assetPacks.items["pack-a"].resources = [
+    { resourceType: "images", folderIds: ["folder-bg", "folder-cg"] },
+    { resourceType: "sounds", folderIds: ["folder-bgm"] },
+  ];
+
+  const expected7 = cloneState(expected6);
+  expected7.tags.assetPacks.items = {};
+  expected7.tags.assetPacks.tree = [];
+  delete expected7.assetPacks.items["pack-a"].tagIds;
+
+  const expected8 = cloneState(expected7);
+  expected8.assetPacks.tree = [
+    {
+      id: "folder-packs",
+      children: [
+        {
+          id: "pack-b",
+          children: [],
+        },
+        {
+          id: "pack-a",
+          children: [],
+        },
+      ],
+    },
+  ];
+
+  const expected9 = cloneState(expected8);
+  expected9.assetPacks.items["folder-packs"].name = "Chapter Packs";
+
+  const expected10 = cloneState(expected9);
+  expected10.assetPacks.items["pack-a"].resources = [
+    { resourceType: "images", folderIds: ["folder-bg", "folder-cg"] },
+  ];
+
+  const expected11 = cloneState(expected10);
+  expected11.assetPacks.tree = [
+    {
+      id: "folder-packs",
+      children: [
+        {
+          id: "pack-b",
+          children: [],
+        },
+      ],
+    },
+    {
+      id: "pack-a",
+      children: [],
+    },
+  ];
+
+  const expected12 = cloneState(expected11);
+  delete expected12.assetPacks.items["folder-packs"];
+  delete expected12.assetPacks.items["pack-b"];
+  expected12.assetPacks.tree = [
+    {
+      id: "pack-a",
+      children: [],
+    },
+  ];
+
+  const expected13 = createAssetPackSourceState();
+
+  const expectedStates = [
+    expected0,
+    expected1,
+    expected2,
+    expected3,
+    expected4,
+    expected5,
+    expected6,
+    expected7,
+    expected8,
+    expected9,
+    expected10,
+    expected11,
+    expected12,
+    expected13,
+  ];
+  expect(steps).toHaveLength(expectedStates.length);
+  for (const [index, expected] of expectedStates.entries()) {
+    expect(steps[index].state).toEqual(expected);
+  }
+});

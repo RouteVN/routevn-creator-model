@@ -227,6 +227,148 @@ persisted:
 }
 ```
 
+## Asset Packs
+
+Schema 18 adds the `assetPacks` collection. A project can hold several asset
+packs, each a named selection of folders from other resource collections. Like
+the other collections it owns `items` and `tree`; its items are folders,
+`{ id, type: "folder", name, description? }`, which can contain packs and
+other folders, and packs:
+
+```js
+{
+  id: "starter-pack",
+  type: "assetPack",
+  name: "Starter Pack",
+  description: "Art and audio for the opening chapter", // optional
+  tagIds: ["tag-chapter"], // optional
+  resources: [
+    { resourceType: "images", folderIds: ["folder-cg", "folder-bg"] },
+    { resourceType: "sounds", folderIds: ["folder-bgm"] },
+  ],
+}
+```
+
+`resources` lists, for each resource collection the pack takes folders from,
+the ids of those folders. Each `resourceType` is one of `images`, `sounds`,
+`videos`, `characters`, `transforms`, `animations`, `audioEffects`,
+`particles`, `spritesheets`, `colors`, `fonts`, `textStyles`, `layouts`,
+`variables`, or `controls`, and appears at most once. The order of the entries
+is the author's and is kept. `folderIds` is a non-empty array of unique ids,
+also in the author's order. A pack with nothing picked has `resources: []`.
+
+Every id in `folderIds` must name an item of type `folder` in the collection
+its `resourceType` names, at any depth in that collection's tree, the way a
+text style's `fontId` must name a font. Commands that write folder ids check
+them as a precondition:
+
+```text
+payload.data.folderIds[0] must reference an existing folder in 'images'
+```
+
+The state invariant checks them too, so `validateState` rejects a pack that
+lists a missing folder or an item that is not a folder, and `processCommand`
+rejects a command that would leave one. As with a text style's font,
+`validateAgainstState` does not apply the command, so it does not report this.
+Deleting a folder a pack lists, or a folder that
+contains one, fails until the pack no longer lists it:
+
+```js
+{
+  valid: false,
+  error: {
+    kind: "invariant",
+    code: "invariant_validation_failed",
+    message:
+      "assetPack.resources.folderIds must reference an existing folder in the resourceType collection",
+    details: {
+      assetPackId: "starter-pack",
+      assetPackName: "Starter Pack",
+      resourceType: "images",
+      folderId: "folder-cg",
+    },
+  },
+}
+```
+
+Moving a folder within its collection does not change any pack.
+
+Packs have tags like colors: the `assetPacks` tag scope holds them, `tagIds`
+is optional on packs and must reference tags in that scope, and deleting a tag
+removes it from every pack. Folders have no `tagIds`. A state saved before
+schema 18 gets an empty `tags.assetPacks` scope, and an empty `assetPacks`
+collection, when the model normalizes or processes it; `project.create` does
+the same for a new project.
+
+Packs and folders use the same payload shapes as `color.*`. A pack's resources
+are changed with the `assetPack.resource.*` commands, the way a character's
+sprites are changed with `character.sprite.*`:
+
+```js
+// assetPack.create: data is a pack or { type: "folder", name, description? };
+// a pack's resources are optional and default to []
+{
+  assetPackId: "starter-pack",
+  parentId: "folder-packs", // optional, as are index or position/positionTargetId
+  position: "before",
+  positionTargetId: "audio-pack",
+  data: {
+    type: "assetPack",
+    name: "Starter Pack",
+    description: "Art and audio for the opening chapter",
+    tagIds: ["tag-chapter"],
+    resources: [{ resourceType: "images", folderIds: ["folder-cg"] }],
+  },
+}
+
+// assetPack.update: any of name, description, tagIds; folders take name and
+// description only. An empty tagIds removes the pack's tags.
+{ assetPackId: "starter-pack", data: { name: "Opening Pack", tagIds: [] } }
+
+// assetPack.delete: deletes each item and everything inside it
+{ assetPackIds: ["folder-packs"] }
+
+// assetPack.move
+{ assetPackId: "starter-pack", parentId: null, position: "first" }
+
+// assetPack.resource.create: adds a resource type the pack does not have yet,
+// last unless index or position/positionTargetResourceType place it
+{
+  assetPackId: "starter-pack",
+  resourceType: "videos",
+  data: { folderIds: ["folder-op"] },
+  position: "after",
+  positionTargetResourceType: "images",
+}
+
+// assetPack.resource.update: replaces the folders of a type the pack has and
+// keeps its place; to remove the type, delete it
+{
+  assetPackId: "starter-pack",
+  resourceType: "images",
+  data: { folderIds: ["folder-bg", "folder-cg"] },
+}
+
+// assetPack.resource.delete: removes types the pack has
+{ assetPackId: "starter-pack", resourceTypes: ["sounds", "videos"] }
+
+// assetPack.resource.move: index or position is required
+{ assetPackId: "starter-pack", resourceType: "sounds", position: "first" }
+{
+  assetPackId: "starter-pack",
+  resourceType: "sounds",
+  position: "before",
+  positionTargetResourceType: "images",
+}
+```
+
+Resource placement follows the tree placement fields, with
+`positionTargetResourceType` in place of `positionTargetId`: `index` and
+`position` cannot be combined, `position` is `first`, `last`, `before`, or
+`after`, and `before` and `after` need a `positionTargetResourceType` that the
+pack has and that is not the type being placed. An `index` past the end places
+the type last.
+
 ## File Structure
 
 ```text
@@ -247,6 +389,8 @@ tests/
   animations.spec.yaml
   audio-effects.test.js
   audio-effects-drift.test.js
+  asset-packs.test.js
+  asset-packs.spec.yaml
   fonts-and-colors.spec.yaml
   transforms-variables-textstyles.spec.yaml
   characters-and-layouts.spec.yaml
@@ -536,6 +680,14 @@ Currently implemented command types:
 - `control.element.update`
 - `control.element.delete`
 - `control.element.move`
+- `assetPack.create`
+- `assetPack.update`
+- `assetPack.delete`
+- `assetPack.move`
+- `assetPack.resource.create`
+- `assetPack.resource.update`
+- `assetPack.resource.delete`
+- `assetPack.resource.move`
 
 The rest of the future command surface should be added only when full
 validation, preconditions, reducer behavior, and tests are added together.

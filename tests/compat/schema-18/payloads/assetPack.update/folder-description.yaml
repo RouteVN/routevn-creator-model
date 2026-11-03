@@ -1,0 +1,6 @@
+schemaVersion: 18
+type: assetPack.update
+payload:
+  assetPackId: folder-a
+  data:
+    description: Packs for chapter one

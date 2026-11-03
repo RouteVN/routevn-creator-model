@@ -1,0 +1,8 @@
+schemaVersion: 18
+type: assetPack.create
+payload:
+  assetPackId: item-a
+  data:
+    type: assetPack
+    name: Pack
+    resources: []

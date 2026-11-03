@@ -64,6 +64,10 @@ export const createEmptyTestState = () => ({
       items: {},
       tree: [],
     },
+    assetPacks: {
+      items: {},
+      tree: [],
+    },
   },
   scenes: {
     items: {},
@@ -134,6 +138,10 @@ export const createEmptyTestState = () => ({
     tree: [],
   },
   controls: {
+    items: {},
+    tree: [],
+  },
+  assetPacks: {
     items: {},
     tree: [],
   },

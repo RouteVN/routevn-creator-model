@@ -766,6 +766,13 @@ const createSparseCompatibilityState = () => {
     elements: createEmptyNestedCollection(),
   };
   state.controls.tree = [createTreeNode("control-main")];
+  state.assetPacks.items["asset-pack-main"] = {
+    id: "asset-pack-main",
+    type: "assetPack",
+    name: "Main Pack",
+    resources: [],
+  };
+  state.assetPacks.tree = [createTreeNode("asset-pack-main")];
   return state;
 };
 
@@ -1095,6 +1102,45 @@ const createRichCompatibilityState = () => {
       createTreeNode("smooth-volume"),
     ]),
   ];
+  state.tags.assetPacks.items["tag-chapter"] = {
+    id: "tag-chapter",
+    type: "tag",
+    name: "Chapter",
+    color: "#664422",
+  };
+  state.tags.assetPacks.tree = [{ id: "tag-chapter" }];
+  state.assetPacks.items["folder-asset-packs"] = {
+    id: "folder-asset-packs",
+    type: "folder",
+    name: "Asset Packs",
+  };
+  // Each folder id names a folder of the collection its resource type names.
+  state.assetPacks.items["asset-pack-starter"] = {
+    id: "asset-pack-starter",
+    type: "assetPack",
+    name: "Starter Pack",
+    description: "Art and audio for the opening chapter",
+    tagIds: ["tag-chapter"],
+    resources: [
+      { resourceType: "images", folderIds: ["folder-art"] },
+      { resourceType: "sounds", folderIds: ["folder-audio"] },
+      { resourceType: "videos", folderIds: ["folder-video"] },
+      { resourceType: "spritesheets", folderIds: ["folder-spritesheets"] },
+      { resourceType: "audioEffects", folderIds: ["folder-audio-effects"] },
+    ],
+  };
+  state.assetPacks.items["asset-pack-empty"] = {
+    id: "asset-pack-empty",
+    type: "assetPack",
+    name: "Empty Pack",
+    resources: [],
+  };
+  state.assetPacks.tree = [
+    createTreeNode("folder-asset-packs", [
+      createTreeNode("asset-pack-starter"),
+    ]),
+    createTreeNode("asset-pack-empty"),
+  ];
   return state;
 };
 
@@ -1286,6 +1332,79 @@ const createThumbnailSourceHashState = () => {
 const createDefaultAvatarState = () => {
   const state = createRichCompatibilityState();
   state.project.defaultDialogueAvatarTransformId = "transform-rich";
+  return state;
+};
+
+const ASSET_PACK_RESOURCE_TYPES = [
+  "images",
+  "sounds",
+  "videos",
+  "characters",
+  "transforms",
+  "animations",
+  "audioEffects",
+  "particles",
+  "spritesheets",
+  "colors",
+  "fonts",
+  "textStyles",
+  "layouts",
+  "variables",
+  "controls",
+];
+
+// A pack that takes two folders from every resource type, a top-level folder
+// and one inside it, listed nested first. The pack sits two folders deep.
+const createAssetPacksState = () => {
+  const state = createRichCompatibilityState();
+  for (const resourceType of ASSET_PACK_RESOURCE_TYPES) {
+    const folderId = `folder-pack-${resourceType}`;
+    const nestedFolderId = `${folderId}-nested`;
+    state[resourceType].items[folderId] = {
+      id: folderId,
+      type: "folder",
+      name: `Pack ${resourceType}`,
+    };
+    state[resourceType].items[nestedFolderId] = {
+      id: nestedFolderId,
+      type: "folder",
+      name: `Pack ${resourceType} nested`,
+    };
+    state[resourceType].tree.push(
+      createTreeNode(folderId, [createTreeNode(nestedFolderId)]),
+    );
+  }
+  state.tags.assetPacks.items["tag-complete"] = {
+    id: "tag-complete",
+    type: "tag",
+    name: "Complete",
+  };
+  state.tags.assetPacks.tree.push({ id: "tag-complete" });
+  state.assetPacks.items["folder-asset-packs-nested"] = {
+    id: "folder-asset-packs-nested",
+    type: "folder",
+    name: "Nested",
+    description: "Packs for later chapters",
+  };
+  state.assetPacks.items["asset-pack-everything"] = {
+    id: "asset-pack-everything",
+    type: "assetPack",
+    name: "Everything",
+    description: "",
+    tagIds: ["tag-complete", "tag-chapter"],
+    resources: ASSET_PACK_RESOURCE_TYPES.map((resourceType) => ({
+      resourceType,
+      folderIds: [
+        `folder-pack-${resourceType}-nested`,
+        `folder-pack-${resourceType}`,
+      ],
+    })),
+  };
+  state.assetPacks.tree[0].children.push(
+    createTreeNode("folder-asset-packs-nested", [
+      createTreeNode("asset-pack-everything"),
+    ]),
+  );
   return state;
 };
 
@@ -2074,6 +2193,175 @@ const payloadFixtures = [
       hex: "#223344",
     },
   }),
+  ...createFolderedPayloadSets({
+    family: "assetPack",
+    idField: "assetPackId",
+    idsField: "assetPackIds",
+    minimalCreateData: {
+      type: "assetPack",
+      name: "Pack",
+    },
+    fullCreateData: {
+      type: "assetPack",
+      name: "Starter Pack",
+      description: "Art and audio for the opening chapter",
+      tagIds: ["tag-a", "tag-b"],
+      resources: [
+        { resourceType: "images", folderIds: ["folder-art", "folder-cg"] },
+        { resourceType: "sounds", folderIds: ["folder-audio"] },
+        { resourceType: "layouts", folderIds: ["folder-ui"] },
+      ],
+    },
+    minimalUpdateData: {
+      name: "Renamed Pack",
+    },
+    fullUpdateData: {
+      name: "Chapter One Pack",
+      description: "Everything chapter one needs",
+      tagIds: ["tag-a", "tag-b"],
+    },
+    createExtras: {
+      "folder-with-description": {
+        assetPackId: "folder-a",
+        data: {
+          type: "folder",
+          name: "Folder A",
+          description: "Packs for chapter one",
+        },
+      },
+      "empty-resources": {
+        assetPackId: "item-a",
+        data: {
+          type: "assetPack",
+          name: "Pack",
+          resources: [],
+        },
+      },
+      "all-resource-types": {
+        assetPackId: "item-a",
+        data: {
+          type: "assetPack",
+          name: "Everything",
+          resources: ASSET_PACK_RESOURCE_TYPES.map((resourceType) => ({
+            resourceType,
+            folderIds: [`folder-${resourceType}`],
+          })),
+        },
+      },
+    },
+    updateExtras: {
+      "clear-tags": {
+        assetPackId: "item-a",
+        data: {
+          tagIds: [],
+        },
+      },
+      "folder-description": {
+        assetPackId: "folder-a",
+        data: {
+          description: "Packs for chapter one",
+        },
+      },
+      "folder-rename": {
+        assetPackId: "folder-a",
+        data: {
+          name: "Folder B",
+        },
+      },
+    },
+  }),
+  ...payloadSet(
+    "assetPack.resource.create",
+    {
+      assetPackId: "item-a",
+      resourceType: "images",
+      data: { folderIds: ["folder-art"] },
+    },
+    {
+      assetPackId: "item-a",
+      resourceType: "sounds",
+      position: "before",
+      positionTargetResourceType: "images",
+      data: { folderIds: ["folder-bgm", "folder-se"] },
+    },
+    {
+      index: {
+        assetPackId: "item-a",
+        resourceType: "layouts",
+        index: 1,
+        data: { folderIds: ["folder-ui"] },
+      },
+      "position-first": {
+        assetPackId: "item-a",
+        resourceType: "videos",
+        position: "first",
+        data: { folderIds: ["folder-video"] },
+      },
+      "position-after": {
+        assetPackId: "item-a",
+        resourceType: "fonts",
+        position: "after",
+        positionTargetResourceType: "layouts",
+        data: { folderIds: ["folder-fonts"] },
+      },
+    },
+  ),
+  ...payloadSet(
+    "assetPack.resource.update",
+    {
+      assetPackId: "item-a",
+      resourceType: "images",
+      data: { folderIds: ["folder-art"] },
+    },
+    {
+      assetPackId: "item-a",
+      resourceType: "images",
+      data: { folderIds: ["folder-cg", "folder-art", "folder-bg"] },
+    },
+  ),
+  ...payloadSet(
+    "assetPack.resource.delete",
+    {
+      assetPackId: "item-a",
+      resourceTypes: ["images"],
+    },
+    {
+      assetPackId: "item-a",
+      resourceTypes: ["images", "sounds", "layouts"],
+    },
+  ),
+  ...payloadSet(
+    "assetPack.resource.move",
+    {
+      assetPackId: "item-a",
+      resourceType: "images",
+      position: "first",
+    },
+    {
+      assetPackId: "item-a",
+      resourceType: "images",
+      position: "after",
+      positionTargetResourceType: "sounds",
+    },
+    {
+      index: {
+        assetPackId: "item-a",
+        resourceType: "layouts",
+        index: 0,
+      },
+      "position-last": {
+        assetPackId: "item-a",
+        resourceType: "images",
+        position: "last",
+      },
+      "position-before": {
+        assetPackId: "item-a",
+        resourceType: "sounds",
+        position: "before",
+        positionTargetResourceType: "images",
+      },
+    },
+  ),
   ...createFolderedPayloadSets({
     family: "particle",
     idField: "particleId",
@@ -3351,6 +3639,10 @@ const stateFixtures = [
   {
     fixtureName: "default-dialogue-avatar-project",
     state: createDefaultAvatarState(),
+  },
+  {
+    fixtureName: "asset-packs-project",
+    state: createAssetPacksState(),
   },
   { fixtureName: "camera-project", state: createCameraState() },
   {
@@ -4722,6 +5014,263 @@ const streamFixtures = [
         payload: { animationIds: ["animation-a", "folder-motion"] },
       },
     ],
+  },
+  {
+    // Packs are created, tagged, updated, moved, and deleted, and their
+    // resources are added, changed, reordered, and removed. A pack lists a
+    // nested image folder; its parent is deleted only after the pack no longer
+    // lists it. Deleting a tag removes it from the packs that have it.
+    fixtureName: "asset-pack-crud",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "tag.create",
+        payload: {
+          scopeKey: "assetPacks",
+          tagId: "tag-music",
+          data: { type: "tag", name: "Music" },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "folder-packs",
+          data: { type: "folder", name: "Packs" },
+        },
+      },
+      {
+        type: "image.create",
+        payload: {
+          imageId: "folder-chapter-two",
+          data: { type: "folder", name: "Chapter Two" },
+        },
+      },
+      {
+        type: "image.create",
+        payload: {
+          imageId: "folder-chapter-two-cg",
+          parentId: "folder-chapter-two",
+          data: { type: "folder", name: "Chapter Two CG" },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          parentId: "folder-packs",
+          data: {
+            type: "assetPack",
+            name: "Chapter Pack",
+            description: "Art for chapter two",
+            tagIds: ["tag-chapter"],
+            resources: [
+              {
+                resourceType: "images",
+                folderIds: ["folder-chapter-two-cg", "folder-art"],
+              },
+            ],
+          },
+        },
+      },
+      {
+        type: "assetPack.create",
+        payload: {
+          assetPackId: "asset-pack-audio",
+          position: "first",
+          data: {
+            type: "assetPack",
+            name: "Audio Pack",
+          },
+        },
+      },
+      {
+        type: "assetPack.resource.create",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "sounds",
+          position: "first",
+          data: { folderIds: ["folder-audio"] },
+        },
+      },
+      {
+        type: "assetPack.resource.update",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "images",
+          data: { folderIds: ["folder-art", "folder-chapter-two-cg"] },
+        },
+      },
+      {
+        type: "assetPack.resource.create",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "videos",
+          position: "after",
+          positionTargetResourceType: "sounds",
+          data: { folderIds: ["folder-video"] },
+        },
+      },
+      {
+        type: "assetPack.resource.move",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "images",
+          index: 0,
+        },
+      },
+      {
+        type: "assetPack.update",
+        payload: {
+          assetPackId: "folder-packs",
+          data: { name: "Chapter Packs", description: "Packs for chapter two" },
+        },
+      },
+      {
+        type: "assetPack.resource.update",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "images",
+          data: { folderIds: ["folder-art"] },
+        },
+      },
+      {
+        type: "image.delete",
+        payload: { imageIds: ["folder-chapter-two"] },
+      },
+      {
+        type: "assetPack.move",
+        payload: {
+          assetPackId: "asset-pack-audio",
+          parentId: "folder-packs",
+          position: "before",
+          positionTargetId: "asset-pack-chapter",
+        },
+      },
+      {
+        type: "assetPack.move",
+        payload: {
+          assetPackId: "asset-pack-empty",
+          parentId: "folder-asset-packs",
+          position: "last",
+        },
+      },
+      {
+        type: "assetPack.move",
+        payload: {
+          assetPackId: "asset-pack-starter",
+          parentId: null,
+          position: "first",
+        },
+      },
+      {
+        type: "assetPack.delete",
+        payload: { assetPackIds: ["folder-asset-packs"] },
+      },
+      {
+        type: "assetPack.update",
+        payload: {
+          assetPackId: "asset-pack-audio",
+          data: {
+            name: "Music",
+            description: "Background music",
+            tagIds: ["tag-music"],
+          },
+        },
+      },
+      {
+        type: "assetPack.resource.create",
+        payload: {
+          assetPackId: "asset-pack-audio",
+          resourceType: "sounds",
+          data: { folderIds: ["folder-audio"] },
+        },
+      },
+      {
+        type: "assetPack.resource.delete",
+        payload: {
+          assetPackId: "asset-pack-starter",
+          resourceTypes: ["videos", "audioEffects"],
+        },
+      },
+      {
+        type: "tag.delete",
+        payload: { scopeKey: "assetPacks", tagIds: ["tag-chapter"] },
+      },
+      {
+        type: "assetPack.resource.move",
+        payload: {
+          assetPackId: "asset-pack-chapter",
+          resourceType: "videos",
+          position: "before",
+          positionTargetResourceType: "images",
+        },
+      },
+    ],
+    expectedFinalState: {
+      tags: {
+        assetPacks: {
+          items: {
+            "tag-music": { id: "tag-music", type: "tag", name: "Music" },
+          },
+          tree: [{ id: "tag-music" }],
+        },
+      },
+      images: {
+        tree: [createTreeNode("folder-art", [createTreeNode("image-rich")])],
+      },
+      assetPacks: {
+        items: {
+          "asset-pack-starter": {
+            id: "asset-pack-starter",
+            type: "assetPack",
+            name: "Starter Pack",
+            description: "Art and audio for the opening chapter",
+            resources: [
+              { resourceType: "images", folderIds: ["folder-art"] },
+              { resourceType: "sounds", folderIds: ["folder-audio"] },
+              {
+                resourceType: "spritesheets",
+                folderIds: ["folder-spritesheets"],
+              },
+            ],
+          },
+          "folder-packs": {
+            id: "folder-packs",
+            type: "folder",
+            name: "Chapter Packs",
+            description: "Packs for chapter two",
+          },
+          "asset-pack-chapter": {
+            id: "asset-pack-chapter",
+            type: "assetPack",
+            name: "Chapter Pack",
+            description: "Art for chapter two",
+            resources: [
+              { resourceType: "videos", folderIds: ["folder-video"] },
+              { resourceType: "images", folderIds: ["folder-art"] },
+              { resourceType: "sounds", folderIds: ["folder-audio"] },
+            ],
+          },
+          "asset-pack-audio": {
+            id: "asset-pack-audio",
+            type: "assetPack",
+            name: "Music",
+            description: "Background music",
+            tagIds: ["tag-music"],
+            resources: [
+              { resourceType: "sounds", folderIds: ["folder-audio"] },
+            ],
+          },
+        },
+        tree: [
+          createTreeNode("asset-pack-starter"),
+          createTreeNode("folder-packs", [
+            createTreeNode("asset-pack-audio"),
+            createTreeNode("asset-pack-chapter"),
+          ]),
+        ],
+      },
+    },
   },
   {
     fixtureName: "audio-effect-crud",
