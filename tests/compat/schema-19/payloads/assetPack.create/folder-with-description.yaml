@@ -1,0 +1,8 @@
+schemaVersion: 19
+type: assetPack.create
+payload:
+  assetPackId: folder-a
+  data:
+    type: folder
+    name: Folder A
+    description: Packs for chapter one

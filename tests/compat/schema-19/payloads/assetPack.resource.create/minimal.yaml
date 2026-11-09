@@ -1,0 +1,8 @@
+schemaVersion: 19
+type: assetPack.resource.create
+payload:
+  assetPackId: item-a
+  resourceType: images
+  data:
+    folderIds:
+      - folder-art

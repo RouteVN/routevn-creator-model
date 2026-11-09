@@ -1,0 +1,53 @@
+schemaVersion: 19
+type: assetPack.create
+payload:
+  assetPackId: item-a
+  data:
+    type: assetPack
+    name: Everything
+    resources:
+      - resourceType: images
+        folderIds:
+          - folder-images
+      - resourceType: sounds
+        folderIds:
+          - folder-sounds
+      - resourceType: videos
+        folderIds:
+          - folder-videos
+      - resourceType: characters
+        folderIds:
+          - folder-characters
+      - resourceType: transforms
+        folderIds:
+          - folder-transforms
+      - resourceType: animations
+        folderIds:
+          - folder-animations
+      - resourceType: audioEffects
+        folderIds:
+          - folder-audioEffects
+      - resourceType: particles
+        folderIds:
+          - folder-particles
+      - resourceType: spritesheets
+        folderIds:
+          - folder-spritesheets
+      - resourceType: colors
+        folderIds:
+          - folder-colors
+      - resourceType: fonts
+        folderIds:
+          - folder-fonts
+      - resourceType: textStyles
+        folderIds:
+          - folder-textStyles
+      - resourceType: layouts
+        folderIds:
+          - folder-layouts
+      - resourceType: variables
+        folderIds:
+          - folder-variables
+      - resourceType: controls
+        folderIds:
+          - folder-controls

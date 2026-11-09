@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: assetPack.resource.delete
+payload:
+  assetPackId: item-a
+  resourceTypes:
+    - images

@@ -382,6 +382,7 @@ const LAYOUT_ELEMENT_BASE_TYPES = [
   "rect",
   "sprite",
   "particle",
+  "video",
   "spritesheet-animation",
   "text",
   "text-revealing",
@@ -412,7 +413,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 18;
+export const SCHEMA_VERSION = 19;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -6171,6 +6172,9 @@ const validateLayoutElementData = ({
     "initialValue",
     "variableId",
     "particleId",
+    "videoId",
+    "loop",
+    "volume",
     "fragmentLayoutId",
     "paginationMode",
     "paginationVariableId",
@@ -6381,6 +6385,7 @@ const validateLayoutElementData = ({
     "resourceId",
     "animationName",
     "particleId",
+    "videoId",
     "imageId",
     "hoverImageId",
     "clickImageId",
@@ -6446,6 +6451,48 @@ const validateLayoutElementData = ({
         `${path}.particleId must be a non-empty string`,
       );
     }
+  }
+
+  for (const field of ["videoId", "loop", "volume"]) {
+    if (
+      data[field] !== undefined &&
+      data.type !== undefined &&
+      data.type !== "video"
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${field} can only be provided for video elements`,
+      );
+    }
+  }
+
+  if (data.type === "video") {
+    if (
+      (!allowPartial || data.videoId !== undefined) &&
+      !isNonEmptyString(data.videoId)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.videoId must be a non-empty string`,
+      );
+    }
+  }
+
+  if (data.loop !== undefined && typeof data.loop !== "boolean") {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.loop must be a boolean when provided`,
+    );
+  }
+
+  if (
+    data.volume !== undefined &&
+    (!isFiniteNumber(data.volume) || data.volume < 0 || data.volume > 100)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${path}.volume must be a finite number between 0 and 100 when provided`,
+    );
   }
 
   if (data.type === "input") {
@@ -6915,6 +6962,9 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "resourceId",
           "animationName",
           "particleId",
+          "videoId",
+          "loop",
+          "volume",
           "imageId",
           "hoverImageId",
           "clickImageId",
@@ -10761,6 +10811,29 @@ export const assertInvariants = ({ state }) => {
     return VALID_RESULT;
   };
 
+  const assertVideoReference = ({
+    ownerIdField,
+    ownerId,
+    ownerLabel,
+    elementId,
+    targetId,
+  }) => {
+    const video = state.videos?.items?.[targetId];
+    if (!isPlainObject(video) || video.type !== "video") {
+      return invalidInvariant(
+        `${ownerLabel} element videoId must reference an existing non-folder video`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "videoId",
+          targetId,
+        },
+      );
+    }
+
+    return VALID_RESULT;
+  };
+
   const assertElementReferencesForCollection = ({
     items,
     ownerIdField,
@@ -10798,6 +10871,19 @@ export const assertInvariants = ({ state }) => {
             ownerLabel,
             elementId,
             targetId: element.particleId,
+          });
+          if (!result.valid) {
+            return result;
+          }
+        }
+
+        if (element.type === "video" || element.videoId !== undefined) {
+          const result = assertVideoReference({
+            ownerIdField,
+            ownerId,
+            ownerLabel,
+            elementId,
+            targetId: element.videoId,
           });
           if (!result.valid) {
             return result;
@@ -15440,6 +15526,32 @@ const validateVisualElementReferenceTargets = ({
           elementId,
           field: "particleId",
           targetId: data.particleId,
+        },
+      );
+    }
+  }
+
+  for (const field of ["videoId", "loop", "volume"]) {
+    if (data[field] !== undefined && data.type !== "video") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element ${field} can only be provided for video elements`,
+        { [ownerIdField]: ownerId, elementId, field },
+      );
+    }
+  }
+
+  if (data.type === "video") {
+    const video = state.videos?.items?.[data.videoId];
+    if (!isPlainObject(video) || video.type !== "video") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element videoId must reference an existing non-folder video`,
+        {
+          [ownerIdField]: ownerId,
+          elementId,
+          field: "videoId",
+          targetId: data.videoId,
         },
       );
     }
