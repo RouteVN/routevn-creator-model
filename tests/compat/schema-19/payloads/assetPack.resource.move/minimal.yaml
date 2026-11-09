@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: assetPack.resource.move
+payload:
+  assetPackId: item-a
+  resourceType: images
+  position: first

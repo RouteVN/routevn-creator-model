@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: assetPack.delete
+payload:
+  assetPackIds:
+    - item-a
+    - item-b

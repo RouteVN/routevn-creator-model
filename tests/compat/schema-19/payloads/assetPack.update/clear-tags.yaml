@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: assetPack.update
+payload:
+  assetPackId: item-a
+  data:
+    tagIds: []

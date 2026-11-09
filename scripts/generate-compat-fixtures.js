@@ -758,6 +758,17 @@ const createSparseCompatibilityState = () => {
     layoutType: "general",
     elements: createEmptyNestedCollection(),
   };
+  state.layouts.items["layout-main"].elements.items["video-element"] = {
+    id: "video-element",
+    type: "video",
+    name: "Opening Video",
+    videoId: "video-main",
+    loop: true,
+    volume: 75,
+  };
+  state.layouts.items["layout-main"].elements.tree = [
+    createTreeNode("video-element"),
+  ];
   state.layouts.tree = [createTreeNode("layout-main")];
   state.controls.items["control-main"] = {
     id: "control-main",
@@ -3170,6 +3181,17 @@ const payloadFixtures = [
       },
     },
     {
+      "video-full": {
+        layoutId: "layout-dialogue",
+        elementId: "video-element",
+        data: {
+          type: "video",
+          name: "Opening",
+          videoId: "video-main",
+          loop: true,
+          volume: 75,
+        },
+      },
       "container-full": {
         layoutId: "layout-dialogue",
         elementId: "container-body",
@@ -3672,6 +3694,34 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    fixtureName: "layout-video",
+    initialState: createSparseCompatibilityState(),
+    commands: [
+      {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "video-second",
+          data: {
+            type: "video",
+            name: "Second Video",
+            videoId: "video-main",
+            loop: true,
+            volume: 100,
+          },
+        },
+      },
+      {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "video-second",
+          data: { loop: false, volume: 0 },
+        },
+      },
+    ],
+  },
   {
     fixtureName: "preview-settings",
     initialState: createRichCompatibilityState(),

@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: variable.delete
+payload:
+  variableIds:
+    - item-a
+    - item-b

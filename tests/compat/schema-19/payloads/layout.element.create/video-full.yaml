@@ -1,0 +1,11 @@
+schemaVersion: 19
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: video-element
+  data:
+    type: video
+    name: Opening
+    videoId: video-main
+    loop: true
+    volume: 75

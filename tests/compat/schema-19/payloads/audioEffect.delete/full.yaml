@@ -1,0 +1,6 @@
+schemaVersion: 19
+type: audioEffect.delete
+payload:
+  audioEffectIds:
+    - item-a
+    - item-b

@@ -1,0 +1,10 @@
+schemaVersion: 19
+type: assetPack.resource.update
+payload:
+  assetPackId: item-a
+  resourceType: images
+  data:
+    folderIds:
+      - folder-cg
+      - folder-art
+      - folder-bg
