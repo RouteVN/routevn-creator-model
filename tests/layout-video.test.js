@@ -108,3 +108,76 @@ test("missing and folder videos fail preconditions and state invariants; referen
     "videoId must reference an existing non-folder video",
   );
 });
+
+test.each([
+  ["loop", true],
+  ["volume", 50],
+  ["videoId", "video-main"],
+])("rejects %s on a non-video create payload", (field, value) => {
+  const result = validatePayload({
+    type: "layout.element.create",
+    payload: {
+      layoutId: "layout-main",
+      elementId: "rect",
+      data: { type: "rect", name: "R", [field]: value },
+    },
+  });
+  expect(result.valid).toBe(false);
+  expect(result.error.message).toContain(
+    `${field} can only be provided for video elements`,
+  );
+});
+
+const stateWithRect = () => {
+  const result = processCommand({
+    state: state(),
+    command: {
+      type: "layout.element.create",
+      payload: {
+        layoutId: "layout-main",
+        elementId: "rect",
+        data: { type: "rect", name: "R" },
+      },
+    },
+  });
+  expect(result.valid).toBe(true);
+  return result.state;
+};
+
+test("rejects video fields in partial updates of non-video elements", () => {
+  const update = {
+    type: "layout.element.update",
+    payload: {
+      layoutId: "layout-main",
+      elementId: "rect",
+      data: { volume: 50 },
+    },
+  };
+  const precondition = validateAgainstState({
+    state: stateWithRect(),
+    command: update,
+  });
+  expect(precondition.valid).toBe(false);
+  expect(precondition.error.message).toBe(
+    "layout element volume can only be provided for video elements",
+  );
+  const result = processCommand({ state: stateWithRect(), command: update });
+  expect(result.valid).toBe(false);
+  expect(result.error.message).toContain(
+    "volume can only be provided for video elements",
+  );
+});
+
+test.each([
+  ["videoId", "video-main"],
+  ["loop", true],
+  ["volume", 50],
+])("rejects stored non-video elements with %s", (field, value) => {
+  const invalid = stateWithRect();
+  invalid.layouts.items["layout-main"].elements.items.rect[field] = value;
+  const result = validateState({ state: invalid });
+  expect(result.valid).toBe(false);
+  expect(result.error.message).toContain(
+    `${field} can only be provided for video elements`,
+  );
+});

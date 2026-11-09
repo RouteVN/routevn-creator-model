@@ -6453,6 +6453,19 @@ const validateLayoutElementData = ({
     }
   }
 
+  for (const field of ["videoId", "loop", "volume"]) {
+    if (
+      data[field] !== undefined &&
+      data.type !== undefined &&
+      data.type !== "video"
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.${field} can only be provided for video elements`,
+      );
+    }
+  }
+
   if (data.type === "video") {
     if (
       (!allowPartial || data.videoId !== undefined) &&
@@ -15518,7 +15531,17 @@ const validateVisualElementReferenceTargets = ({
     }
   }
 
-  if (data.type === "video" || data.videoId !== undefined) {
+  for (const field of ["videoId", "loop", "volume"]) {
+    if (data[field] !== undefined && data.type !== "video") {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${ownerLabel} element ${field} can only be provided for video elements`,
+        { [ownerIdField]: ownerId, elementId, field },
+      );
+    }
+  }
+
+  if (data.type === "video") {
     const video = state.videos?.items?.[data.videoId];
     if (!isPlainObject(video) || video.type !== "video") {
       return invalidFromErrorFactory(

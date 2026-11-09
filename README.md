@@ -232,7 +232,8 @@ persisted:
 Schema 19 adds the `video` layout element. Its required `videoId` references an
 existing non-folder video. Optional `loop` is a boolean, and optional `volume`
 is a finite number from 0 to 100 inclusive. Referenced videos cannot be deleted
-while a layout element uses them.
+while a layout element uses them. These fields are only allowed on `video`
+elements.
 
 ## Asset Packs
 
