@@ -144,6 +144,15 @@ const createMediaBootstrapState = () =>
     { id: "file-font", type: "font", mimeType: "font/ttf" },
   ]);
 
+const createSpritesheetBootstrapState = () =>
+  withFiles(createEmptyTestState(), [
+    { id: "file-sheet", type: "image", mimeType: "image/png" },
+    { id: "file-sheet-imported", type: "image", mimeType: "image/png" },
+    { id: "file-frame-a", type: "image", mimeType: "image/png" },
+    { id: "file-frame-b", type: "image", mimeType: "image/png" },
+    { id: "file-frame-c", type: "image", mimeType: "image/png" },
+  ]);
+
 const createUiResourcesBootstrapState = () =>
   withFiles(createEmptyTestState(), [
     { id: "file-font", type: "font", mimeType: "font/ttf" },
@@ -866,6 +875,312 @@ test("applies an image command tape with intermediate state snapshots", () => {
   expect(steps[3].state).toEqual(expected3);
   expect(steps[4].state).toEqual(expected4);
   expect(steps[5].state).toEqual(expected5);
+});
+
+test("applies a spritesheet frame source command tape with intermediate state snapshots", () => {
+  const steps = runCommandSequence({
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "project.create",
+        payload: {
+          state: createSpritesheetBootstrapState(),
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            type: "spritesheet",
+            name: "Walk",
+            fileId: "file-sheet",
+            jsonData: { meta: { image: "walk.png" } },
+            animations: { walk: { frames: [0, 1, 2, 1], fps: 12 } },
+            frameSource: {
+              frameWidth: 64,
+              frameHeight: 64,
+              frames: [
+                { fileId: "file-frame-a" },
+                { fileId: "file-frame-b" },
+                { fileId: "file-frame-c" },
+              ],
+            },
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            frameSource: {
+              frameWidth: 64,
+              frameHeight: 64,
+              frames: [
+                { fileId: "file-frame-a" },
+                { fileId: "file-frame-b" },
+                { fileId: "file-frame-a" },
+              ],
+            },
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            fileId: "file-sheet-imported",
+            jsonData: { meta: { image: "imported.png" } },
+            frameSource: null,
+          },
+        },
+      },
+      {
+        type: "file.delete",
+        payload: {
+          fileIds: ["file-frame-a", "file-frame-b", "file-frame-c"],
+        },
+      },
+    ],
+  });
+
+  const expected0 = createSpritesheetBootstrapState();
+
+  const expected1 = cloneState(expected0);
+  expected1.spritesheets.items["sheet-walk"] = {
+    id: "sheet-walk",
+    type: "spritesheet",
+    name: "Walk",
+    fileId: "file-sheet",
+    jsonData: { meta: { image: "walk.png" } },
+    animations: { walk: { frames: [0, 1, 2, 1], fps: 12 } },
+    frameSource: {
+      frameWidth: 64,
+      frameHeight: 64,
+      frames: [
+        { fileId: "file-frame-a" },
+        { fileId: "file-frame-b" },
+        { fileId: "file-frame-c" },
+      ],
+    },
+  };
+  expected1.spritesheets.tree = [
+    {
+      id: "sheet-walk",
+      children: [],
+    },
+  ];
+
+  const expected2 = cloneState(expected1);
+  expected2.spritesheets.items["sheet-walk"].frameSource.frames = [
+    { fileId: "file-frame-a" },
+    { fileId: "file-frame-b" },
+    { fileId: "file-frame-a" },
+  ];
+
+  const expected3 = cloneState(expected2);
+  expected3.spritesheets.items["sheet-walk"] = {
+    id: "sheet-walk",
+    type: "spritesheet",
+    name: "Walk",
+    fileId: "file-sheet-imported",
+    jsonData: { meta: { image: "imported.png" } },
+    animations: { walk: { frames: [0, 1, 2, 1], fps: 12 } },
+  };
+
+  const expected4 = cloneState(expected3);
+  for (const fileId of ["file-frame-a", "file-frame-b", "file-frame-c"]) {
+    delete expected4.files.items[fileId];
+  }
+  expected4.files.tree = [
+    { id: "file-sheet", children: [] },
+    { id: "file-sheet-imported", children: [] },
+  ];
+
+  expect(steps).toHaveLength(5);
+  expect(steps[0].state).toEqual(expected0);
+  expect(steps[1].state).toEqual(expected1);
+  expect(steps[2].state).toEqual(expected2);
+  expect(steps[3].state).toEqual(expected3);
+  expect(steps[4].state).toEqual(expected4);
+  expect(steps[3].state.spritesheets.items["sheet-walk"]).not.toHaveProperty(
+    "frameSource",
+  );
+});
+
+test("rejects spritesheet frame source commands that would break the sheet", () => {
+  const [, created] = runCommandSequence({
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "project.create",
+        payload: {
+          state: createSpritesheetBootstrapState(),
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            type: "spritesheet",
+            name: "Walk",
+            fileId: "file-sheet",
+            jsonData: { meta: { image: "walk.png" } },
+            animations: { walk: { frames: [0, 1] } },
+            frameSource: {
+              frameWidth: 64,
+              frameHeight: 64,
+              frames: [{ fileId: "file-frame-a" }, { fileId: "file-frame-b" }],
+            },
+          },
+        },
+      },
+    ],
+  });
+  const state = deepFreeze(created.state);
+
+  const rejected = [
+    [
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: { fileId: "file-sheet-imported" },
+        },
+      },
+      "payload.data.frameSource must be provided, or null to clear it, when payload.data.fileId or payload.data.jsonData changes a spritesheet that has frameSource",
+    ],
+    [
+      {
+        type: "file.delete",
+        payload: { fileIds: ["file-frame-b"] },
+      },
+      "payload.fileIds cannot delete a referenced file",
+    ],
+    [
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: { animations: { walk: { frames: [0, 1, 2] } } },
+        },
+      },
+      "payload.data.animations.walk.frames.2 must be less than the spritesheet.frameSource.frames length",
+    ],
+  ];
+
+  for (const [command, message] of rejected) {
+    const result = processCommand({ state, command });
+    expect(result.valid).toBe(false);
+    expect(result.error.kind).toBe("precondition");
+    expect(result.error.message).toBe(message);
+  }
+});
+
+test("applies an empty spritesheet command tape with intermediate state snapshots", () => {
+  const steps = runCommandSequence({
+    initialState: createEmptyTestState(),
+    commands: [
+      {
+        type: "project.create",
+        payload: {
+          state: createSpritesheetBootstrapState(),
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            type: "spritesheet",
+            name: "Walk",
+            jsonData: {},
+            animations: {},
+          },
+        },
+      },
+      {
+        type: "file.delete",
+        payload: {
+          fileIds: ["file-sheet-imported"],
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "sheet-walk",
+          data: {
+            fileId: "file-sheet",
+            jsonData: { meta: { image: "walk.png" } },
+            animations: { walk: { frames: [0, 1, 2, 1], fps: 12 } },
+            frameSource: {
+              frameWidth: 64,
+              frameHeight: 64,
+              frames: [
+                { fileId: "file-frame-a" },
+                { fileId: "file-frame-b" },
+                { fileId: "file-frame-c" },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  const expected0 = createSpritesheetBootstrapState();
+
+  const expected1 = cloneState(expected0);
+  expected1.spritesheets.items["sheet-walk"] = {
+    id: "sheet-walk",
+    type: "spritesheet",
+    name: "Walk",
+    jsonData: {},
+    animations: {},
+  };
+  expected1.spritesheets.tree = [
+    {
+      id: "sheet-walk",
+      children: [],
+    },
+  ];
+
+  const expected2 = cloneState(expected1);
+  delete expected2.files.items["file-sheet-imported"];
+  expected2.files.tree = expected2.files.tree.filter(
+    (node) => node.id !== "file-sheet-imported",
+  );
+
+  const expected3 = cloneState(expected2);
+  expected3.spritesheets.items["sheet-walk"] = {
+    id: "sheet-walk",
+    type: "spritesheet",
+    name: "Walk",
+    fileId: "file-sheet",
+    jsonData: { meta: { image: "walk.png" } },
+    animations: { walk: { frames: [0, 1, 2, 1], fps: 12 } },
+    frameSource: {
+      frameWidth: 64,
+      frameHeight: 64,
+      frames: [
+        { fileId: "file-frame-a" },
+        { fileId: "file-frame-b" },
+        { fileId: "file-frame-c" },
+      ],
+    },
+  };
+
+  expect(steps).toHaveLength(4);
+  expect(steps[0].state).toEqual(expected0);
+  expect(steps[1].state).toEqual(expected1);
+  expect(steps[2].state).toEqual(expected2);
+  expect(steps[3].state).toEqual(expected3);
+  expect(steps[1].state.spritesheets.items["sheet-walk"]).not.toHaveProperty(
+    "fileId",
+  );
 });
 
 test("applies a sound and video command tape with intermediate state snapshots", () => {

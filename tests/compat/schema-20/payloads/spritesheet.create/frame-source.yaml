@@ -1,0 +1,33 @@
+schemaVersion: 20
+type: spritesheet.create
+payload:
+  spritesheetId: item-a
+  data:
+    type: spritesheet
+    name: Hero Walk
+    fileId: file-image
+    sheetWidth: 512
+    sheetHeight: 128
+    frameCount: 4
+    width: 128
+    height: 128
+    jsonData:
+      meta:
+        image: hero-walk.png
+    animations:
+      walk:
+        frames:
+          - 0
+          - 1
+          - 2
+          - 3
+        fps: 12
+        loop: true
+    frameSource:
+      frameWidth: 128
+      frameHeight: 128
+      frames:
+        - fileId: file-frame-a
+        - fileId: file-frame-b
+        - fileId: file-frame-c
+        - fileId: file-frame-b

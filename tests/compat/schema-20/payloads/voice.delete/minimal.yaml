@@ -1,0 +1,5 @@
+schemaVersion: 20
+type: voice.delete
+payload:
+  voiceIds:
+    - item-a
