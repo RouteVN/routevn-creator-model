@@ -22,9 +22,17 @@ const createState = () => {
     size: 1,
     sha256: "file-sheet-one-sha256",
   };
+  state.files.items["file-frame-one"] = {
+    id: "file-frame-one",
+    type: "image",
+    mimeType: "image/png",
+    size: 1,
+    sha256: "file-frame-one-sha256",
+  };
   state.files.tree.push(
     { id: "file-font-one", children: [] },
     { id: "file-sheet-one", children: [] },
+    { id: "file-frame-one", children: [] },
   );
   state.fonts.items["font-one"] = {
     id: "font-one",
@@ -256,5 +264,79 @@ test("spritesheet.update rejects a frame size that is not a number or null", () 
   ).toMatchObject({
     valid: false,
     error: { message: "payload.data.frameCount must be a finite number" },
+  });
+});
+
+const createFramedSpritesheet = () =>
+  apply(createState(), {
+    type: "spritesheet.create",
+    payload: {
+      spritesheetId: "sheet-one",
+      data: {
+        type: "spritesheet",
+        name: "Sheet One",
+        fileId: "file-sheet-one",
+        width: 256,
+        height: 128,
+        jsonData: { meta: { image: "sheet.png" } },
+        animations: { idle: { frames: [0] } },
+        frameSource: {
+          frameWidth: 256,
+          frameHeight: 128,
+          frames: [{ fileId: "file-frame-one" }],
+        },
+      },
+    },
+  });
+
+const clearFrameSourceCommand = {
+  type: "spritesheet.update",
+  payload: {
+    spritesheetId: "sheet-one",
+    data: {
+      fileId: "file-sheet-one",
+      jsonData: { meta: { image: "imported.png" } },
+      frameSource: null,
+    },
+  },
+};
+
+test("spritesheet.update removes the frame source when it is null", () => {
+  const state = apply(createFramedSpritesheet(), clearFrameSourceCommand);
+
+  expect(state.spritesheets.items["sheet-one"]).toEqual({
+    id: "sheet-one",
+    type: "spritesheet",
+    name: "Sheet One",
+    fileId: "file-sheet-one",
+    width: 256,
+    height: 128,
+    jsonData: { meta: { image: "imported.png" } },
+    animations: { idle: { frames: [0] } },
+  });
+});
+
+test("a frame source cleared with null stays cleared once stored, unlike undefined", () => {
+  const replayed = apply(
+    createFramedSpritesheet(),
+    stored(clearFrameSourceCommand),
+  );
+  expect(replayed.spritesheets.items["sheet-one"]).not.toHaveProperty(
+    "frameSource",
+  );
+
+  const undefinedClear = stored({
+    type: "spritesheet.update",
+    payload: {
+      spritesheetId: "sheet-one",
+      data: { frameSource: undefined },
+    },
+  });
+  expect(undefinedClear.payload.data).toEqual({});
+  expect(validatePayload(undefinedClear)).toMatchObject({
+    valid: false,
+    error: {
+      message: "payload.data must include at least one updatable field",
+    },
   });
 });

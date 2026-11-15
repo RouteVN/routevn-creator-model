@@ -227,6 +227,64 @@ persisted:
 }
 ```
 
+## Spritesheet Frame Sources
+
+Schema 20 adds an optional `frameSource` to spritesheets. It records the frame
+pictures a spritesheet was built from, so an editor can reopen the frames and
+rebuild the sheet image and atlas from them:
+
+```js
+{
+  frameSource: {
+    frameWidth: 64,
+    frameHeight: 64,
+    frames: [
+      { fileId: "file-walk-1" },
+      { fileId: "file-walk-2" },
+      { fileId: "file-walk-1" },
+    ],
+  },
+}
+```
+
+`frameWidth` and `frameHeight` are integers of at least 1. `frames` is a
+non-empty array, and `frames[i]` is the picture for atlas frame `i`, the index
+that `animations.<name>.frames` use. Each `fileId` must reference an existing
+non-folder file, and the same file may appear more than once. No other keys
+are allowed. `fileId`, `jsonData`, and `animations` stay what the runtime
+plays; `frameSource` is source data only. Folders cannot have it.
+
+While a spritesheet has `frameSource`, every animation frame index must be less
+than the number of `frames`, and a file a frame uses cannot be deleted. A
+`spritesheet.update` that changes `fileId` or `jsonData` must also send
+`frameSource`, either the frames of the new sheet or `null` to remove them, so
+the frames and the sheet stay in step:
+
+```text
+payload.data.frameSource must be provided, or null to clear it, when payload.data.fileId or payload.data.jsonData changes a spritesheet that has frameSource
+```
+
+## Empty Spritesheets
+
+Schema 20 also makes a spritesheet's `fileId` optional, so a spritesheet can
+exist before it has a sheet image. An empty spritesheet has no `fileId` and
+uses `{}` for the still required `jsonData` and `animations`:
+
+```js
+{
+  type: "spritesheet",
+  name: "Hero Walk",
+  jsonData: {},
+  animations: {},
+}
+```
+
+A later `spritesheet.update` adds the sheet by sending `fileId`, `jsonData`,
+`animations`, and, for a sheet built from frame pictures, `frameSource`
+together. When `fileId` is present it must be a non-empty string that
+references an existing non-folder file. Once set, `fileId` cannot be removed:
+`spritesheet.update` rejects `null` for it.
+
 ## Video Layout Elements
 
 Schema 19 adds the `video` layout element. Its required `videoId` references an
@@ -596,8 +654,9 @@ not rewrite existing dialogue avatar actions.
 Stored commands are JSON, which drops keys set to `undefined`, so an update
 cannot clear an optional field by setting it to `undefined`. Send `null`
 instead for these fields: `strokeColorId` in `textStyle.update` removes a text
-style's outline color, and `width` or `height` in `spritesheet.update` removes
-a spritesheet's default frame size. A `null` value is never stored.
+style's outline color, `width` or `height` in `spritesheet.update` removes a
+spritesheet's default frame size, and `frameSource` in `spritesheet.update`
+removes its frame pictures. A `null` value is never stored.
 
 ## Current Scope
 

@@ -1626,3 +1626,492 @@ in:
         tree:
           - id: pack-a
             children: []
+---
+case: validateState accepts spritesheet frame sources that repeat a picture
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items:
+          file-sheet:
+            id: file-sheet
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-sheet-sha256
+          file-frame-a:
+            id: file-frame-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-a-sha256
+          file-frame-b:
+            id: file-frame-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-b-sha256
+        tree:
+          - id: file-sheet
+            children: []
+          - id: file-frame-a
+            children: []
+          - id: file-frame-b
+            children: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-walk:
+            id: sheet-walk
+            type: spritesheet
+            name: Walk
+            fileId: file-sheet
+            jsonData:
+              meta:
+                image: walk.png
+            animations:
+              walk:
+                frames: [0, 1, 2, 1]
+            frameSource:
+              frameWidth: 64
+              frameHeight: 64
+              frames:
+                - fileId: file-frame-a
+                - fileId: file-frame-b
+                - fileId: file-frame-a
+        tree:
+          - id: sheet-walk
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+---
+case: validateState rejects spritesheet frame entries with unknown keys
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items:
+          file-sheet:
+            id: file-sheet
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-sheet-sha256
+          file-frame-a:
+            id: file-frame-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-a-sha256
+          file-frame-b:
+            id: file-frame-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-b-sha256
+        tree:
+          - id: file-sheet
+            children: []
+          - id: file-frame-a
+            children: []
+          - id: file-frame-b
+            children: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-walk:
+            id: sheet-walk
+            type: spritesheet
+            name: Walk
+            fileId: file-sheet
+            jsonData:
+              meta:
+                image: walk.png
+            animations:
+              walk:
+                frames: [0, 1]
+            frameSource:
+              frameWidth: 64
+              frameHeight: 64
+              frames:
+                - fileId: file-frame-a
+                - fileId: file-frame-b
+                  duration: 100
+        tree:
+          - id: sheet-walk
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: state.spritesheets.items.sheet-walk.frameSource.frames.1.duration is not allowed
+---
+case: validateState rejects spritesheet frame pictures that are not files
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items:
+          file-sheet:
+            id: file-sheet
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-sheet-sha256
+          file-frame-a:
+            id: file-frame-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-a-sha256
+          file-frame-b:
+            id: file-frame-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-b-sha256
+        tree:
+          - id: file-sheet
+            children: []
+          - id: file-frame-a
+            children: []
+          - id: file-frame-b
+            children: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-walk:
+            id: sheet-walk
+            type: spritesheet
+            name: Walk
+            fileId: file-sheet
+            jsonData:
+              meta:
+                image: walk.png
+            animations:
+              walk:
+                frames: [0, 1]
+            frameSource:
+              frameWidth: 64
+              frameHeight: 64
+              frames:
+                - fileId: file-frame-a
+                - fileId: file-frame-missing
+        tree:
+          - id: sheet-walk
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: spritesheet.frameSource.frames.fileId must reference an existing non-folder file
+---
+case: validateState rejects spritesheet animation frames without a frame picture
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items:
+          file-sheet:
+            id: file-sheet
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-sheet-sha256
+          file-frame-a:
+            id: file-frame-a
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-a-sha256
+          file-frame-b:
+            id: file-frame-b
+            type: image
+            mimeType: image/png
+            size: 1
+            sha256: file-frame-b-sha256
+        tree:
+          - id: file-sheet
+            children: []
+          - id: file-frame-a
+            children: []
+          - id: file-frame-b
+            children: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-walk:
+            id: sheet-walk
+            type: spritesheet
+            name: Walk
+            fileId: file-sheet
+            jsonData:
+              meta:
+                image: walk.png
+            animations:
+              walk:
+                frames: [0, 1, 2]
+            frameSource:
+              frameWidth: 64
+              frameHeight: 64
+              frames:
+                - fileId: file-frame-a
+                - fileId: file-frame-b
+        tree:
+          - id: sheet-walk
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: spritesheet.animations frames must be less than the spritesheet.frameSource.frames length
+---
+case: validateState accepts an empty spritesheet without a sheet file
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-empty:
+            id: sheet-empty
+            type: spritesheet
+            name: Empty
+            jsonData: {}
+            animations: {}
+        tree:
+          - id: sheet-empty
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+---
+case: validateState rejects a spritesheet with an empty fileId
+in:
+  - state:
+      project: {}
+      story:
+        initialSceneId: null
+      scenes:
+        items: {}
+        tree: []
+      files:
+        items: {}
+        tree: []
+      images:
+        items: {}
+        tree: []
+      spritesheets:
+        items:
+          sheet-empty:
+            id: sheet-empty
+            type: spritesheet
+            name: Empty
+            fileId: ""
+            jsonData: {}
+            animations: {}
+        tree:
+          - id: sheet-empty
+            children: []
+      sounds:
+        items: {}
+        tree: []
+      videos:
+        items: {}
+        tree: []
+      animations:
+        items: {}
+        tree: []
+      characters:
+        items: {}
+        tree: []
+      fonts:
+        items: {}
+        tree: []
+      transforms:
+        items: {}
+        tree: []
+      colors:
+        items: {}
+        tree: []
+      textStyles:
+        items: {}
+        tree: []
+      variables:
+        items: {}
+        tree: []
+      layouts:
+        items: {}
+        tree: []
+throws: state.spritesheets.items.sheet-empty.fileId must be a non-empty string when provided

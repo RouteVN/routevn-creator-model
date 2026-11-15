@@ -814,6 +814,24 @@ const createRichCompatibilityState = () => {
       size: 128,
     },
     {
+      id: "file-spritesheet-rich-frame-0",
+      type: "image",
+      mimeType: "image/png",
+      size: 512,
+    },
+    {
+      id: "file-spritesheet-rich-frame-1",
+      type: "image",
+      mimeType: "image/png",
+      size: 512,
+    },
+    {
+      id: "file-spritesheet-rich-frame-2",
+      type: "image",
+      mimeType: "image/png",
+      size: 512,
+    },
+    {
       id: "thumb-animation-rich",
       type: "image-thumbnail",
       mimeType: "image/webp",
@@ -958,6 +976,17 @@ const createRichCompatibilityState = () => {
         animationSpeed: 1,
         loop: true,
       },
+    },
+    // The last frame reuses the second picture.
+    frameSource: {
+      frameWidth: 256,
+      frameHeight: 256,
+      frames: [
+        { fileId: "file-spritesheet-rich-frame-0" },
+        { fileId: "file-spritesheet-rich-frame-1" },
+        { fileId: "file-spritesheet-rich-frame-2" },
+        { fileId: "file-spritesheet-rich-frame-1" },
+      ],
     },
   };
   state.spritesheets.tree = [
@@ -1337,6 +1366,19 @@ const createThumbnailSourceHashState = () => {
     "hash-layout-dialogue";
   state.controls.items["control-default"].thumbnailSourceHash =
     "hash-control-default";
+  return state;
+};
+
+const createEmptySpritesheetState = () => {
+  const state = createRichCompatibilityState();
+  state.spritesheets.items["spritesheet-empty"] = {
+    id: "spritesheet-empty",
+    type: "spritesheet",
+    name: "Hero Run",
+    jsonData: {},
+    animations: {},
+  };
+  state.spritesheets.tree[0].children.push(createTreeNode("spritesheet-empty"));
   return state;
 };
 
@@ -1871,6 +1913,104 @@ const payloadFixtures = [
       data: {
         width: null,
         height: null,
+      },
+    },
+  },
+  {
+    type: "spritesheet.create",
+    fixtureName: "frame-source",
+    payload: {
+      spritesheetId: "item-a",
+      data: {
+        type: "spritesheet",
+        name: "Hero Walk",
+        fileId: "file-image",
+        sheetWidth: 512,
+        sheetHeight: 128,
+        frameCount: 4,
+        width: 128,
+        height: 128,
+        jsonData: {
+          meta: {
+            image: "hero-walk.png",
+          },
+        },
+        animations: {
+          walk: {
+            frames: [0, 1, 2, 3],
+            fps: 12,
+            loop: true,
+          },
+        },
+        frameSource: {
+          frameWidth: 128,
+          frameHeight: 128,
+          frames: [
+            { fileId: "file-frame-a" },
+            { fileId: "file-frame-b" },
+            { fileId: "file-frame-c" },
+            { fileId: "file-frame-b" },
+          ],
+        },
+      },
+    },
+  },
+  {
+    type: "spritesheet.update",
+    fixtureName: "frame-source",
+    payload: {
+      spritesheetId: "item-a",
+      data: {
+        fileId: "file-image-rebuilt",
+        sheetWidth: 640,
+        frameCount: 5,
+        jsonData: {
+          meta: {
+            image: "hero-walk-rebuilt.png",
+          },
+        },
+        animations: {
+          walk: {
+            frames: [0, 1, 2, 3, 4],
+            fps: 12,
+            loop: true,
+          },
+        },
+        frameSource: {
+          frameWidth: 128,
+          frameHeight: 128,
+          frames: [
+            { fileId: "file-frame-a" },
+            { fileId: "file-frame-b" },
+            { fileId: "file-frame-c" },
+            { fileId: "file-frame-b" },
+            { fileId: "file-frame-d" },
+          ],
+        },
+      },
+    },
+  },
+  {
+    type: "spritesheet.update",
+    fixtureName: "clear-frame-source",
+    payload: {
+      spritesheetId: "item-a",
+      data: {
+        frameSource: null,
+      },
+    },
+  },
+  {
+    // An empty spritesheet has no sheet file until its frames are added.
+    type: "spritesheet.create",
+    fixtureName: "empty",
+    payload: {
+      spritesheetId: "item-a",
+      data: {
+        type: "spritesheet",
+        name: "Hero Run",
+        jsonData: {},
+        animations: {},
       },
     },
   },
@@ -3659,6 +3799,10 @@ const stateFixtures = [
     state: createThumbnailSourceHashState(),
   },
   {
+    fixtureName: "empty-spritesheet-project",
+    state: createEmptySpritesheetState(),
+  },
+  {
     fixtureName: "default-dialogue-avatar-project",
     state: createDefaultAvatarState(),
   },
@@ -4121,8 +4265,331 @@ const streamFixtures = [
                 loop: true,
               },
             },
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+              ],
+            },
           },
         },
+      },
+    },
+  },
+  {
+    // A spritesheet rebuilt from its frame pictures. The sheet file, atlas,
+    // and frames change together, and clearing the frames releases their
+    // files.
+    fixtureName: "spritesheet-frame-source",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-spritesheet-walk",
+          data: {
+            mimeType: "image/png",
+            size: 2048,
+            sha256: "file-spritesheet-walk-sha256",
+          },
+        },
+      },
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "spritesheet-walk",
+          parentId: "folder-spritesheets",
+          data: {
+            type: "spritesheet",
+            name: "Hero Walk",
+            fileId: "file-spritesheet-walk",
+            sheetWidth: 768,
+            sheetHeight: 256,
+            frameCount: 3,
+            width: 256,
+            height: 256,
+            jsonData: {
+              meta: {
+                image: "hero-walk.png",
+              },
+            },
+            animations: {
+              walk: {
+                frames: [0, 1, 2, 1],
+                fps: 12,
+                loop: true,
+              },
+            },
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+              ],
+            },
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-spritesheet-walk-frame-3",
+          data: {
+            mimeType: "image/png",
+            size: 512,
+            sha256: "file-spritesheet-walk-frame-3-sha256",
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-spritesheet-walk-rebuilt",
+          data: {
+            mimeType: "image/png",
+            size: 2048,
+            sha256: "file-spritesheet-walk-rebuilt-sha256",
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-walk",
+          data: {
+            fileId: "file-spritesheet-walk-rebuilt",
+            sheetWidth: 1024,
+            frameCount: 4,
+            jsonData: {
+              meta: {
+                image: "hero-walk-rebuilt.png",
+              },
+            },
+            animations: {
+              walk: {
+                frames: [0, 1, 2, 3],
+                fps: 12,
+                loop: true,
+              },
+            },
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+                { fileId: "file-spritesheet-walk-frame-3" },
+              ],
+            },
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-walk",
+          data: {
+            fileId: "file-spritesheet-walk",
+            jsonData: {
+              meta: {
+                image: "hero-walk.png",
+              },
+            },
+            frameSource: null,
+          },
+        },
+      },
+      {
+        type: "file.delete",
+        payload: {
+          fileIds: [
+            "file-spritesheet-walk-frame-3",
+            "file-spritesheet-walk-rebuilt",
+          ],
+        },
+      },
+    ],
+    // That frameSource is gone from the walk spritesheet is checked by
+    // tests/clear-optional-fields.test.js and tests/command-sequences.test.js.
+    expectedFinalState: {
+      spritesheets: {
+        items: {
+          "spritesheet-walk": {
+            id: "spritesheet-walk",
+            type: "spritesheet",
+            name: "Hero Walk",
+            fileId: "file-spritesheet-walk",
+            sheetWidth: 1024,
+            sheetHeight: 256,
+            frameCount: 4,
+            width: 256,
+            height: 256,
+            jsonData: {
+              meta: {
+                image: "hero-walk.png",
+              },
+            },
+            animations: {
+              walk: {
+                frames: [0, 1, 2, 3],
+                fps: 12,
+                loop: true,
+              },
+            },
+          },
+          "spritesheet-rich": {
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+              ],
+            },
+          },
+        },
+        tree: [
+          {
+            id: "folder-spritesheets",
+            children: [
+              { id: "spritesheet-rich", children: [] },
+              { id: "spritesheet-walk", children: [] },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  {
+    // An empty spritesheet is created without a sheet file, then gets its
+    // sheet file, atlas, animations, and frames in one update.
+    fixtureName: "spritesheet-empty",
+    initialState: createRichCompatibilityState(),
+    commands: [
+      {
+        type: "spritesheet.create",
+        payload: {
+          spritesheetId: "spritesheet-run",
+          parentId: "folder-spritesheets",
+          data: {
+            type: "spritesheet",
+            name: "Hero Run",
+            jsonData: {},
+            animations: {},
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-run",
+          data: {
+            description: "Frames not added yet",
+          },
+        },
+      },
+      {
+        type: "file.create",
+        payload: {
+          fileId: "file-spritesheet-run",
+          data: {
+            mimeType: "image/png",
+            size: 2048,
+            sha256: "file-spritesheet-run-sha256",
+          },
+        },
+      },
+      {
+        type: "spritesheet.update",
+        payload: {
+          spritesheetId: "spritesheet-run",
+          data: {
+            fileId: "file-spritesheet-run",
+            sheetWidth: 768,
+            sheetHeight: 256,
+            frameCount: 3,
+            width: 256,
+            height: 256,
+            jsonData: {
+              meta: {
+                image: "hero-run.png",
+              },
+            },
+            animations: {
+              run: {
+                frames: [0, 1, 2, 1],
+                fps: 12,
+                loop: true,
+              },
+            },
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+              ],
+            },
+          },
+        },
+      },
+    ],
+    expectedFinalState: {
+      spritesheets: {
+        items: {
+          "spritesheet-run": {
+            id: "spritesheet-run",
+            type: "spritesheet",
+            name: "Hero Run",
+            description: "Frames not added yet",
+            fileId: "file-spritesheet-run",
+            sheetWidth: 768,
+            sheetHeight: 256,
+            frameCount: 3,
+            width: 256,
+            height: 256,
+            jsonData: {
+              meta: {
+                image: "hero-run.png",
+              },
+            },
+            animations: {
+              run: {
+                frames: [0, 1, 2, 1],
+                fps: 12,
+                loop: true,
+              },
+            },
+            frameSource: {
+              frameWidth: 256,
+              frameHeight: 256,
+              frames: [
+                { fileId: "file-spritesheet-rich-frame-0" },
+                { fileId: "file-spritesheet-rich-frame-1" },
+                { fileId: "file-spritesheet-rich-frame-2" },
+              ],
+            },
+          },
+        },
+        tree: [
+          {
+            id: "folder-spritesheets",
+            children: [
+              { id: "spritesheet-rich", children: [] },
+              { id: "spritesheet-run", children: [] },
+            ],
+          },
+        ],
       },
     },
   },
