@@ -1,0 +1,16 @@
+schemaVersion: 21
+type: animation.create
+payload:
+  animationId: animation-thumbnail
+  data:
+    type: animation
+    name: Fade
+    thumbnailFileId: thumb-animation
+    thumbnailSourceHash: hash-animation
+    animation:
+      type: update
+      tween:
+        alpha:
+          keyframes:
+            - duration: 100
+              value: 1

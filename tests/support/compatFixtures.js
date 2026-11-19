@@ -377,6 +377,7 @@ const upgradeFixtureForCurrentSchema = (fixture) => {
     case 18:
     case 19:
     case 20:
+    case 21:
       if (fixture.kind === "state") {
         return upgradeSchema4StateFixture(fixture);
       }

@@ -91,6 +91,23 @@ const RESOURCES = [
       },
     },
   },
+  {
+    family: "animation",
+    collectionKey: "animations",
+    idField: "animationId",
+    data: {
+      type: "animation",
+      name: "Fade",
+      animation: {
+        type: "update",
+        tween: {
+          alpha: {
+            keyframes: [{ duration: 100, value: 1 }],
+          },
+        },
+      },
+    },
+  },
 ];
 
 const thumbnailOne = {

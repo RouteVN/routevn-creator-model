@@ -1,0 +1,7 @@
+schemaVersion: 21
+type: audioEffect.create
+payload:
+  audioEffectId: folder-a
+  data:
+    type: folder
+    name: Folder A
