@@ -413,7 +413,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 20;
+export const SCHEMA_VERSION = 21;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -2547,6 +2547,7 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
                 "description",
                 "tagIds",
                 "thumbnailFileId",
+                "thumbnailSourceHash",
                 "preview",
                 "cameraTracks",
                 "animation",
@@ -2588,14 +2589,15 @@ const validateAnimationItems = ({ items, path, errorFactory }) => {
     }
 
     if (item.type === "animation") {
-      if (
-        item.thumbnailFileId !== undefined &&
-        !isNonEmptyString(item.thumbnailFileId)
-      ) {
-        return invalidFromErrorFactory(
+      {
+        const result = validateThumbnailFields({
+          value: item,
+          path: itemPath,
           errorFactory,
-          `${itemPath}.thumbnailFileId must be a non-empty string when provided`,
-        );
+        });
+        if (result?.valid === false) {
+          return result;
+        }
       }
 
       {
@@ -13467,6 +13469,7 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
               "description",
               "tagIds",
               "thumbnailFileId",
+              "thumbnailSourceHash",
               "preview",
               "cameraTracks",
               "animation",
@@ -13494,14 +13497,15 @@ const validateAnimationCreateData = ({ data, errorFactory }) => {
   }
 
   if (data.type === "animation") {
-    if (
-      data.thumbnailFileId !== undefined &&
-      !isNonEmptyString(data.thumbnailFileId)
-    ) {
-      return invalidFromErrorFactory(
+    {
+      const result = validateThumbnailFields({
+        value: data,
+        path: "payload.data",
         errorFactory,
-        "payload.data.thumbnailFileId must be a non-empty string when provided",
-      );
+      });
+      if (result?.valid === false) {
+        return result;
+      }
     }
 
     {
@@ -13554,6 +13558,7 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
         "description",
         "tagIds",
         "thumbnailFileId",
+        "thumbnailSourceHash",
         "preview",
         "cameraTracks",
         "animation",
@@ -13587,14 +13592,15 @@ const validateAnimationUpdateData = ({ data, errorFactory }) => {
     );
   }
 
-  if (
-    data.thumbnailFileId !== undefined &&
-    !isNonEmptyString(data.thumbnailFileId)
-  ) {
-    return invalidFromErrorFactory(
+  {
+    const result = validateThumbnailFields({
+      value: data,
+      path: "payload.data",
       errorFactory,
-      "payload.data.thumbnailFileId must be a non-empty string when provided",
-    );
+    });
+    if (result?.valid === false) {
+      return result;
+    }
   }
 
   {
@@ -20547,6 +20553,9 @@ const COMMAND_DEFINITIONS = [
         if (payload.data.thumbnailFileId !== undefined) {
           nextAnimation.thumbnailFileId = payload.data.thumbnailFileId;
         }
+        if (payload.data.thumbnailSourceHash !== undefined) {
+          nextAnimation.thumbnailSourceHash = payload.data.thumbnailSourceHash;
+        }
         if (payload.data.preview !== undefined) {
           nextAnimation.preview = structuredClone(payload.data.preview);
         }
@@ -20664,7 +20673,7 @@ const COMMAND_DEFINITIONS = [
     },
     reduce: ({ state, payload }) => {
       const currentAnimation = state.animations.items[payload.animationId];
-      state.animations.items[payload.animationId] = applyTagIdsUpdate({
+      state.animations.items[payload.animationId] = applyThumbnailItemUpdate({
         currentItem: currentAnimation,
         data: payload.data,
       });

@@ -1,0 +1,30 @@
+schemaVersion: 21
+type: spritesheet.update
+payload:
+  spritesheetId: item-a
+  data:
+    fileId: file-image-rebuilt
+    sheetWidth: 640
+    frameCount: 5
+    jsonData:
+      meta:
+        image: hero-walk-rebuilt.png
+    animations:
+      walk:
+        frames:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+        fps: 12
+        loop: true
+    frameSource:
+      frameWidth: 128
+      frameHeight: 128
+      frames:
+        - fileId: file-frame-a
+        - fileId: file-frame-b
+        - fileId: file-frame-c
+        - fileId: file-frame-b
+        - fileId: file-frame-d

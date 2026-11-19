@@ -629,7 +629,7 @@ one of that character's sprites, of any kind but a folder; none of them can be
 deleted while a transform preview uses it. Send `preview: {}` in
 `transform.update` to clear both.
 
-Transforms, particles, layouts, and controls can record
+Transforms, particles, layouts, controls, and animations can record
 `thumbnailSourceHash` next to `thumbnailFileId`: a non-empty string the editor
 derives from what it drew for that thumbnail, so it can tell whether the
 thumbnail is still current. The model does not interpret it or check it

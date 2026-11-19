@@ -1366,6 +1366,8 @@ const createThumbnailSourceHashState = () => {
     "hash-layout-dialogue";
   state.controls.items["control-default"].thumbnailSourceHash =
     "hash-control-default";
+  state.animations.items["animation-rich"].thumbnailSourceHash =
+    "hash-animation-rich";
   return state;
 };
 
@@ -2788,6 +2790,38 @@ const payloadFixtures = [
       },
     },
   },
+  {
+    type: "animation.create",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      animationId: "animation-thumbnail",
+      data: {
+        type: "animation",
+        name: "Fade",
+        thumbnailFileId: "thumb-animation",
+        thumbnailSourceHash: "hash-animation",
+        animation: {
+          type: "update",
+          tween: {
+            alpha: {
+              keyframes: [{ duration: 100, value: 1 }],
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "animation.update",
+    fixtureName: "thumbnail-source-hash",
+    payload: {
+      animationId: "item-a",
+      data: {
+        thumbnailFileId: "thumb-animation",
+        thumbnailSourceHash: "hash-animation",
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "variable",
     idField: "variableId",
@@ -4017,6 +4051,16 @@ const streamFixtures = [
         },
       },
       {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-rich",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-animation-rich-1",
+          },
+        },
+      },
+      {
         type: "transform.update",
         payload: {
           transformId: "transform-rich",
@@ -4056,6 +4100,15 @@ const streamFixtures = [
         type: "control.update",
         payload: {
           controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-spritesheet-ui",
+          },
+        },
+      },
+      {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-rich",
           data: {
             thumbnailFileId: "thumb-spritesheet-ui",
           },
@@ -4102,6 +4155,16 @@ const streamFixtures = [
         },
       },
       {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-rich",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-animation-rich-2",
+          },
+        },
+      },
+      {
         type: "transform.update",
         payload: {
           transformId: "transform-rich",
@@ -4132,6 +4195,15 @@ const streamFixtures = [
         type: "control.update",
         payload: {
           controlId: "control-default",
+          data: {
+            thumbnailFileId: "thumb-image-rich",
+          },
+        },
+      },
+      {
+        type: "animation.update",
+        payload: {
+          animationId: "animation-rich",
           data: {
             thumbnailFileId: "thumb-image-rich",
           },
@@ -4169,6 +4241,14 @@ const streamFixtures = [
           "control-default": {
             thumbnailFileId: "thumb-image-rich",
             thumbnailSourceHash: "hash-control-default-2",
+          },
+        },
+      },
+      animations: {
+        items: {
+          "animation-rich": {
+            thumbnailFileId: "thumb-image-rich",
+            thumbnailSourceHash: "hash-animation-rich-2",
           },
         },
       },
