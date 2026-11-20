@@ -293,6 +293,14 @@ is a finite number from 0 to 100 inclusive. Referenced videos cannot be deleted
 while a layout element uses them. These fields are only allowed on `video`
 elements.
 
+## Text Writing Mode And Direction
+
+Schema 21 (from 1.21.1) lets text layout and control elements set
+`writingMode` to `horizontal-tb`, `vertical-rl` or `vertical-lr`, and
+`direction` to `ltr` or `rtl`. Vertical text uses `height` as its column
+length. Both fields are only allowed on text elements, and `direction` on
+containers and sliders still takes `absolute`, `horizontal` or `vertical`.
+
 ## Asset Packs
 
 Schema 18 adds the `assetPacks` collection. A project can hold several asset
