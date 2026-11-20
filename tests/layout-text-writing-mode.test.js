@@ -126,9 +126,12 @@ test("an update cannot give a non-text element a writing mode or reading directi
   for (const [data, message] of [
     [
       { writingMode: "vertical-rl" },
-      "writingMode can only be provided for text",
+      "layout element writingMode can only be provided for text elements",
     ],
-    [{ direction: "rtl" }, "direction can be 'ltr' or 'rtl' only for text"],
+    [
+      { direction: "rtl" },
+      "layout element direction can be 'ltr' or 'rtl' only for text elements",
+    ],
   ]) {
     // The update does not name the element type, so the payload alone is
     // valid and the stored element is checked.
@@ -137,6 +140,20 @@ test("an update cannot give a non-text element a writing mode or reading directi
 
     const result = processCommand({ state: state(), command });
     expect(result.valid).toBe(false);
+    expect(result.error.kind).toBe("precondition");
     expect(result.error.message).toContain(message);
+  }
+});
+
+test("state with a writing mode or reading direction on a non-text element is invalid", () => {
+  for (const [field, value] of [
+    ["writingMode", "vertical-rl"],
+    ["direction", "rtl"],
+  ]) {
+    const invalid = state();
+    invalid.layouts.items["layout-main"].elements.items["video-element"][
+      field
+    ] = value;
+    expect(validateState({ state: invalid }).valid).toBe(false);
   }
 });

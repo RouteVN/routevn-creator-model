@@ -15739,6 +15739,36 @@ const validateVisualElementReferenceTargets = ({
   }
 
   if (
+    data.writingMode !== undefined &&
+    !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element writingMode can only be provided for text elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "writingMode",
+      },
+    );
+  }
+
+  if (
+    LAYOUT_TEXT_DIRECTIONS.includes(data.direction) &&
+    !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element direction can be 'ltr' or 'rtl' only for text elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "direction",
+      },
+    );
+  }
+
+  if (
     data.type === "spritesheet-animation" ||
     data.resourceId !== undefined ||
     data.animationName !== undefined
