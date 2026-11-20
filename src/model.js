@@ -363,6 +363,14 @@ const LAYOUT_TYPE_KEYS = [
 ];
 const LAYOUT_ELEMENT_TEXT_STYLE_ALIGN_KEYS = ["left", "center", "right"];
 const LAYOUT_TEXT_REVEAL_EFFECT_KEYS = ["typewriter", "softWipe", "none"];
+const LAYOUT_TEXT_WRITING_MODES = [
+  "horizontal-tb",
+  "vertical-rl",
+  "vertical-lr",
+];
+// Containers and sliders lay out along a direction; text reads in one.
+const LAYOUT_FLOW_DIRECTIONS = ["absolute", "horizontal", "vertical"];
+const LAYOUT_TEXT_DIRECTIONS = ["ltr", "rtl"];
 const LAYOUT_TEXT_REVEAL_SOUND_STOP_TIMING_KEYS = ["loopEnd", "immediate"];
 const LAYOUT_ELEMENT_BLUR_KERNEL_SIZE_OPTIONS = [5, 7, 9, 11, 13, 15];
 const CONTROL_KEYBOARD_KEYS = [
@@ -6216,6 +6224,7 @@ const validateLayoutElementData = ({
     "content",
     "dateFormat",
     "textStyle",
+    "writingMode",
     "displaySpeed",
     "revealEffect",
     "indicator",
@@ -6828,16 +6837,44 @@ const validateLayoutElementData = ({
     );
   }
 
-  if (
-    data.direction !== undefined &&
-    data.direction !== "absolute" &&
-    data.direction !== "horizontal" &&
-    data.direction !== "vertical"
-  ) {
-    return invalidFromErrorFactory(
-      errorFactory,
-      `${path}.direction must be 'absolute', 'horizontal' or 'vertical' when provided`,
-    );
+  if (data.direction !== undefined) {
+    const isTextDirection = LAYOUT_TEXT_DIRECTIONS.includes(data.direction);
+    if (!isTextDirection && !LAYOUT_FLOW_DIRECTIONS.includes(data.direction)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.direction must be 'absolute', 'horizontal', 'vertical', 'ltr' or 'rtl' when provided`,
+      );
+    }
+
+    if (
+      isTextDirection &&
+      data.type !== undefined &&
+      !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.direction can be 'ltr' or 'rtl' only for text elements`,
+      );
+    }
+  }
+
+  if (data.writingMode !== undefined) {
+    if (!LAYOUT_TEXT_WRITING_MODES.includes(data.writingMode)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.writingMode must be one of ${LAYOUT_TEXT_WRITING_MODES.join(", ")} when provided`,
+      );
+    }
+
+    if (
+      data.type !== undefined &&
+      !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.writingMode can only be provided for text elements`,
+      );
+    }
   }
 
   if (
@@ -7052,6 +7089,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "content",
           "dateFormat",
           "textStyle",
+          "writingMode",
           "displaySpeed",
           "revealEffect",
           "indicator",
@@ -15696,6 +15734,36 @@ const validateVisualElementReferenceTargets = ({
         [ownerIdField]: ownerId,
         elementId,
         field: "content",
+      },
+    );
+  }
+
+  if (
+    data.writingMode !== undefined &&
+    !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element writingMode can only be provided for text elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "writingMode",
+      },
+    );
+  }
+
+  if (
+    LAYOUT_TEXT_DIRECTIONS.includes(data.direction) &&
+    !LAYOUT_TEXT_CONTENT_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element direction can be 'ltr' or 'rtl' only for text elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "direction",
       },
     );
   }

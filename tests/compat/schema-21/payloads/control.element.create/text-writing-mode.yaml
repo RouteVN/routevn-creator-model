@@ -1,0 +1,12 @@
+schemaVersion: 21
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: text-vertical
+  data:
+    type: text
+    name: Vertical Text
+    text: Vertical
+    textStyleId: text-style-ui
+    writingMode: vertical-rl
+    direction: rtl

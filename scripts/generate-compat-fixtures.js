@@ -1371,6 +1371,19 @@ const createThumbnailSourceHashState = () => {
   return state;
 };
 
+// Added to schema 21 in 1.21.1: text elements set their writing mode and
+// reading direction.
+const createTextWritingModeState = () => {
+  const state = createRichCompatibilityState();
+  const layoutElements = state.layouts.items["layout-dialogue"].elements.items;
+  layoutElements["text-a"].writingMode = "vertical-rl";
+  layoutElements["text-a"].height = 480;
+  layoutElements["text-b"].direction = "rtl";
+  state.controls.items["control-default"].elements.items["text-a"].writingMode =
+    "vertical-lr";
+  return state;
+};
+
 const createEmptySpritesheetState = () => {
   const state = createRichCompatibilityState();
   state.spritesheets.items["spritesheet-empty"] = {
@@ -2822,6 +2835,73 @@ const payloadFixtures = [
       },
     },
   },
+  {
+    type: "layout.element.create",
+    fixtureName: "text-writing-mode",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "text-vertical",
+      data: {
+        type: "text",
+        name: "Vertical Text",
+        x: 0,
+        y: 0,
+        height: 480,
+        text: "Vertical",
+        textStyleId: "text-style-ui",
+        writingMode: "vertical-rl",
+      },
+    },
+  },
+  {
+    type: "layout.element.create",
+    fixtureName: "text-right-to-left",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "dialogue-content",
+      data: {
+        type: "text-revealing-ref-dialogue-content",
+        name: "Dialogue Content",
+        x: 0,
+        y: 0,
+        width: 600,
+        textStyleId: "text-style-ui",
+        textStyle: {
+          align: "right",
+        },
+        direction: "rtl",
+      },
+    },
+  },
+  {
+    type: "layout.element.update",
+    fixtureName: "text-writing-mode",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "text-a",
+      data: {
+        writingMode: "vertical-lr",
+        direction: "ltr",
+        height: 360,
+      },
+    },
+  },
+  {
+    type: "control.element.create",
+    fixtureName: "text-writing-mode",
+    payload: {
+      controlId: "control-default",
+      elementId: "text-vertical",
+      data: {
+        type: "text",
+        name: "Vertical Text",
+        text: "Vertical",
+        textStyleId: "text-style-ui",
+        writingMode: "vertical-rl",
+        direction: "rtl",
+      },
+    },
+  },
   ...createFolderedPayloadSets({
     family: "variable",
     idField: "variableId",
@@ -3833,6 +3913,10 @@ const stateFixtures = [
     state: createThumbnailSourceHashState(),
   },
   {
+    fixtureName: "text-writing-mode-project",
+    state: createTextWritingModeState(),
+  },
+  {
     fixtureName: "empty-spritesheet-project",
     state: createEmptySpritesheetState(),
   },
@@ -3872,6 +3956,79 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    // Vertical text with a column length turns horizontal and right to left,
+    // and a control gets vertical text.
+    fixtureName: "layout-text-writing-mode",
+    initialState: createSparseCompatibilityState(),
+    commands: [
+      {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "text-vertical",
+          data: {
+            type: "text",
+            name: "Vertical Text",
+            text: "Vertical",
+            height: 480,
+            writingMode: "vertical-rl",
+          },
+        },
+      },
+      {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "text-vertical",
+          data: { writingMode: "horizontal-tb", direction: "rtl" },
+        },
+      },
+      {
+        type: "control.element.create",
+        payload: {
+          controlId: "control-main",
+          elementId: "text-vertical",
+          data: {
+            type: "text",
+            name: "Vertical Text",
+            text: "Vertical",
+            writingMode: "vertical-lr",
+          },
+        },
+      },
+    ],
+    expectedFinalState: {
+      layouts: {
+        items: {
+          "layout-main": {
+            elements: {
+              items: {
+                "text-vertical": {
+                  height: 480,
+                  writingMode: "horizontal-tb",
+                  direction: "rtl",
+                },
+              },
+            },
+          },
+        },
+      },
+      controls: {
+        items: {
+          "control-main": {
+            elements: {
+              items: {
+                "text-vertical": {
+                  writingMode: "vertical-lr",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   {
     fixtureName: "layout-video",
     initialState: createSparseCompatibilityState(),
