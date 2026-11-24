@@ -1,0 +1,12 @@
+schemaVersion: 22
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: choice-item
+  data:
+    type: container-ref-choice-item
+    name: Choice Item
+    x: 0
+    "y": 0
+    direction: vertical
+    readingDirection: rtl

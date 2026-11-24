@@ -301,6 +301,15 @@ Schema 21 (from 1.21.1) lets text layout and control elements set
 length. Both fields are only allowed on text elements, and `direction` on
 containers and sliders still takes `absolute`, `horizontal` or `vertical`.
 
+## Container Reading Direction
+
+Schema 22 lets container layout and control elements set `readingDirection`
+to `ltr` or `rtl`. A right-to-left container starts its children at the right
+edge: a horizontal row runs leftwards, and a vertical column lines its
+children up on the right. Route Graphics ignores it for containers whose
+`direction` is `absolute`. The field is only allowed on container elements,
+not on folders or other element types.
+
 ## Asset Packs
 
 Schema 18 adds the `assetPacks` collection. A project can hold several asset

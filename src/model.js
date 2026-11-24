@@ -421,7 +421,7 @@ const SAVE_LOAD_DATE_FORMATS = new Set([
   "DD MMM YYYY",
   "YYYY年MM月DD日",
 ]);
-export const SCHEMA_VERSION = 21;
+export const SCHEMA_VERSION = 22;
 const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "folder",
   "container",
@@ -433,6 +433,10 @@ const LAYOUT_CONTAINER_ELEMENT_TYPES = [
   "container-ref-confirm-dialog-ok",
   "container-ref-confirm-dialog-cancel",
 ];
+// Containers that lay their children out; folders only group them.
+const LAYOUT_READING_DIRECTION_ELEMENT_TYPES =
+  LAYOUT_CONTAINER_ELEMENT_TYPES.filter((type) => type !== "folder");
+const LAYOUT_READING_DIRECTIONS = ["ltr", "rtl"];
 const LAYOUT_TEXT_CONTENT_ELEMENT_TYPES = [
   "text",
   "text-revealing",
@@ -6250,6 +6254,7 @@ const validateLayoutElementData = ({
     "padding",
     "conditionalOverrides",
     "direction",
+    "readingDirection",
     "gapX",
     "gapY",
     "containerType",
@@ -6877,6 +6882,25 @@ const validateLayoutElementData = ({
     }
   }
 
+  if (data.readingDirection !== undefined) {
+    if (!LAYOUT_READING_DIRECTIONS.includes(data.readingDirection)) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.readingDirection must be one of ${LAYOUT_READING_DIRECTIONS.join(", ")} when provided`,
+      );
+    }
+
+    if (
+      data.type !== undefined &&
+      !LAYOUT_READING_DIRECTION_ELEMENT_TYPES.includes(data.type)
+    ) {
+      return invalidFromErrorFactory(
+        errorFactory,
+        `${path}.readingDirection can only be provided for container elements`,
+      );
+    }
+  }
+
   if (
     data.paginationMode !== undefined &&
     data.paginationMode !== "continuous" &&
@@ -7119,6 +7143,7 @@ const validateLayoutElementItems = ({ items, path, errorFactory }) => {
           "padding",
           "conditionalOverrides",
           "direction",
+          "readingDirection",
           "gapX",
           "gapY",
           "containerType",
@@ -15749,6 +15774,21 @@ const validateVisualElementReferenceTargets = ({
         [ownerIdField]: ownerId,
         elementId,
         field: "writingMode",
+      },
+    );
+  }
+
+  if (
+    data.readingDirection !== undefined &&
+    !LAYOUT_READING_DIRECTION_ELEMENT_TYPES.includes(data.type)
+  ) {
+    return invalidFromErrorFactory(
+      errorFactory,
+      `${ownerLabel} element readingDirection can only be provided for container elements`,
+      {
+        [ownerIdField]: ownerId,
+        elementId,
+        field: "readingDirection",
       },
     );
   }

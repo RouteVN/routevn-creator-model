@@ -1,0 +1,13 @@
+schemaVersion: 22
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: container-choices
+  data:
+    type: container
+    name: Choices
+    x: 0
+    "y": 0
+    direction: horizontal
+    readingDirection: rtl
+    gapX: 16

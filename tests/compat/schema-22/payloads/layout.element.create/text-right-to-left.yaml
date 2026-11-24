@@ -1,0 +1,15 @@
+schemaVersion: 22
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: dialogue-content
+  data:
+    type: text-revealing-ref-dialogue-content
+    name: Dialogue Content
+    x: 0
+    "y": 0
+    width: 600
+    textStyleId: text-style-ui
+    textStyle:
+      align: right
+    direction: rtl

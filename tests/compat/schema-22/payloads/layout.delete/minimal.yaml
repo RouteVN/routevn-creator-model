@@ -1,0 +1,5 @@
+schemaVersion: 22
+type: layout.delete
+payload:
+  layoutIds:
+    - item-a

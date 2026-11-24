@@ -1,0 +1,7 @@
+schemaVersion: 22
+type: animation.update
+payload:
+  animationId: item-a
+  data:
+    thumbnailFileId: thumb-animation
+    thumbnailSourceHash: hash-animation

@@ -1,0 +1,9 @@
+schemaVersion: 22
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: text-a
+  data:
+    writingMode: vertical-lr
+    direction: ltr
+    height: 360

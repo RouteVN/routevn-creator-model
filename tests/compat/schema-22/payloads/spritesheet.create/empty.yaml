@@ -1,0 +1,9 @@
+schemaVersion: 22
+type: spritesheet.create
+payload:
+  spritesheetId: item-a
+  data:
+    type: spritesheet
+    name: Hero Run
+    jsonData: {}
+    animations: {}

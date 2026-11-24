@@ -1,0 +1,8 @@
+schemaVersion: 22
+type: layout.element.update
+payload:
+  layoutId: layout-dialogue
+  elementId: container-root
+  data:
+    direction: vertical
+    readingDirection: ltr

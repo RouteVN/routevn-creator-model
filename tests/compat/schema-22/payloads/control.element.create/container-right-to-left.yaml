@@ -1,0 +1,10 @@
+schemaVersion: 22
+type: control.element.create
+payload:
+  controlId: control-default
+  elementId: container-buttons
+  data:
+    type: container
+    name: Buttons
+    direction: horizontal
+    readingDirection: rtl
