@@ -1,0 +1,14 @@
+schemaVersion: 22
+type: layout.element.create
+payload:
+  layoutId: layout-dialogue
+  elementId: text-vertical
+  data:
+    type: text
+    name: Vertical Text
+    x: 0
+    "y": 0
+    height: 480
+    text: Vertical
+    textStyleId: text-style-ui
+    writingMode: vertical-rl

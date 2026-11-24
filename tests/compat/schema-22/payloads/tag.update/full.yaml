@@ -1,0 +1,8 @@
+schemaVersion: 22
+type: tag.update
+payload:
+  scopeKey: characterSprites:character-hero
+  tagId: tag-smile
+  data:
+    name: Smile Updated
+    color: null

@@ -1384,6 +1384,16 @@ const createTextWritingModeState = () => {
   return state;
 };
 
+// Added in schema 22: containers lay their children out right to left.
+const createContainerReadingDirectionState = () => {
+  const state = createRichCompatibilityState();
+  const root =
+    state.layouts.items["layout-dialogue"].elements.items["container-root"];
+  root.direction = "horizontal";
+  root.readingDirection = "rtl";
+  return state;
+};
+
 const createEmptySpritesheetState = () => {
   const state = createRichCompatibilityState();
   state.spritesheets.items["spritesheet-empty"] = {
@@ -2887,6 +2897,65 @@ const payloadFixtures = [
     },
   },
   {
+    type: "layout.element.create",
+    fixtureName: "container-right-to-left",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "container-choices",
+      data: {
+        type: "container",
+        name: "Choices",
+        x: 0,
+        y: 0,
+        direction: "horizontal",
+        readingDirection: "rtl",
+        gapX: 16,
+      },
+    },
+  },
+  {
+    type: "layout.element.create",
+    fixtureName: "choice-item-right-to-left",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "choice-item",
+      data: {
+        type: "container-ref-choice-item",
+        name: "Choice Item",
+        x: 0,
+        y: 0,
+        direction: "vertical",
+        readingDirection: "rtl",
+      },
+    },
+  },
+  {
+    type: "layout.element.update",
+    fixtureName: "container-reading-direction",
+    payload: {
+      layoutId: "layout-dialogue",
+      elementId: "container-root",
+      data: {
+        direction: "vertical",
+        readingDirection: "ltr",
+      },
+    },
+  },
+  {
+    type: "control.element.create",
+    fixtureName: "container-right-to-left",
+    payload: {
+      controlId: "control-default",
+      elementId: "container-buttons",
+      data: {
+        type: "container",
+        name: "Buttons",
+        direction: "horizontal",
+        readingDirection: "rtl",
+      },
+    },
+  },
+  {
     type: "control.element.create",
     fixtureName: "text-writing-mode",
     payload: {
@@ -3917,6 +3986,10 @@ const stateFixtures = [
     state: createTextWritingModeState(),
   },
   {
+    fixtureName: "container-reading-direction-project",
+    state: createContainerReadingDirectionState(),
+  },
+  {
     fixtureName: "empty-spritesheet-project",
     state: createEmptySpritesheetState(),
   },
@@ -3956,6 +4029,80 @@ const stateFixtures = [
 ];
 
 const streamFixtures = [
+  {
+    // A right-to-left row turns back to left to right, and a control gets a
+    // right-to-left column.
+    fixtureName: "layout-container-reading-direction",
+    initialState: createSparseCompatibilityState(),
+    commands: [
+      {
+        type: "layout.element.create",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "container-row",
+          data: {
+            type: "container",
+            name: "Row",
+            direction: "horizontal",
+            readingDirection: "rtl",
+            gapX: 16,
+          },
+        },
+      },
+      {
+        type: "layout.element.update",
+        payload: {
+          layoutId: "layout-main",
+          elementId: "container-row",
+          data: { readingDirection: "ltr" },
+        },
+      },
+      {
+        type: "control.element.create",
+        payload: {
+          controlId: "control-main",
+          elementId: "container-column",
+          data: {
+            type: "container",
+            name: "Column",
+            direction: "vertical",
+            readingDirection: "rtl",
+          },
+        },
+      },
+    ],
+    expectedFinalState: {
+      layouts: {
+        items: {
+          "layout-main": {
+            elements: {
+              items: {
+                "container-row": {
+                  direction: "horizontal",
+                  readingDirection: "ltr",
+                  gapX: 16,
+                },
+              },
+            },
+          },
+        },
+      },
+      controls: {
+        items: {
+          "control-main": {
+            elements: {
+              items: {
+                "container-column": {
+                  direction: "vertical",
+                  readingDirection: "rtl",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   {
     // Vertical text with a column length turns horizontal and right to left,
     // and a control gets vertical text.
